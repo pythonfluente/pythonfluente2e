@@ -84,7 +84,7 @@ Considere a classe `Vowels` no <<ex_minimal_sequence>>.
 
 
 [[ex_minimal_sequence]]
-.Implementação parcial do protocolo de sequência usando `__getitem__`
+.Implementação parcial do protocolo de sequência usando `+__getitem__+`
 ====
 [source, pycon]
 ----
@@ -111,8 +111,8 @@ False
 ----
 ====
 
-Implementar `__getitem__` é o suficiente para obter itens pelo índice, e também para permitir iteração e o operador `in`.
-O método especial `__getitem__` é de fato o ponto central do protocolo de sequência.
+Implementar `+__getitem__+` é o suficiente para obter itens pelo índice, e também para permitir iteração e o operador `in`.
+O método especial `+__getitem__+` é de fato o ponto central do protocolo de sequência.
 
 Veja essa parte do pass:[<a href="https://docs.python.org/pt-br/3/c-api/index.html" class="orm:hideurl"><em>Manual de referência da API Python/C</em></a>], https://docs.python.org/pt-br/3/c-api/sequence.html["Seção Protocolo de Sequência"]:
 
@@ -120,8 +120,8 @@ Veja essa parte do pass:[<a href="https://docs.python.org/pt-br/3/c-api/index.ht
     Retorna `1` se o objeto oferecer o protocolo de sequência, caso contrário retorna `0`.
     Observe que ela retorna `1` para classes Python com um método `__getitem__()`, a menos que sejam subclasses de `dict` [...].
 
-Esperamos que uma sequência também ofereça `len()`, através da implementação de `__len__`.
-`Vowels` não tem um método `__len__`, mas ainda assim se comporta como uma sequência em alguns contextos.
+Esperamos que uma sequência também ofereça `len()`, através da implementação de `+__len__+`.
+`Vowels` não tem um método `+__len__+`, mas ainda assim se comporta como uma sequência em alguns contextos.
 E isso pode ser o suficiente para nossos propósitos.
 Por isso que gosto de dizer que um protocolo é uma "interface informal."
 Também é assim que protocolos sào entendidos em Smalltalk, o primeiro ambiente de programação orientado a objetos a usar esse termo.
@@ -179,19 +179,19 @@ A maior parte das ABCs no módulo `collections.abc` existem para formalizar inte
 As ABCs são úteis como pontos de partida para novas classes, e para permitir checagem de tipo explícita durante a execução (também conhecida como _goose typing_), bem como para servirem de dicas de tipo para verificadores de tipo estáticos.
 ====
 
-Estudando a <<sequence_uml_repeat>>, vemos que uma subclasse correta de `Sequence` deve implementar `__getitem__` e `__len__` (de `Sized`).
+Estudando a <<sequence_uml_repeat>>, vemos que uma subclasse correta de `Sequence` deve implementar `+__getitem__+` e `+__len__+` (de `Sized`).
 Todos os outros métodos `Sequence` são concretos, então as subclasses podem herdar suas implementações - ou fornecer versões melhores.
 
 Agora, lembre-se da classe `Vowels` no <<ex_minimal_sequence>>.
-Ela não herda de `abc.Sequence` e implementa apenas `__getitem__`.
+Ela não herda de `abc.Sequence` e implementa apenas `+__getitem__+`.
 
-Não há um método `__iter__`, mas as instâncias de `Vowels` são iteráveis porque - como alternativa - se o Python encontra um método `__getitem__`, tenta iterar sobre o object chamando aquele método com índices inteiros começando de `0`.
-Da mesma forma que o Python é esperto o suficiente para iterar sobre instâncias de `Vowels`, ele também consegue fazer o operador `in` funcionar memso quando o método `__contains__` não existe: ele faz uma busca sequencial para verificar se o item está presente.
+Não há um método `+__iter__+`, mas as instâncias de `Vowels` são iteráveis porque - como alternativa - se o Python encontra um método `+__getitem__+`, tenta iterar sobre o object chamando aquele método com índices inteiros começando de `0`.
+Da mesma forma que o Python é esperto o suficiente para iterar sobre instâncias de `Vowels`, ele também consegue fazer o operador `in` funcionar memso quando o método `+__contains__+` não existe: ele faz uma busca sequencial para verificar se o item está presente.
 
-Em resumo, dada a importância de estruturas como a sequência, o Python consegue fazer a iteração e o operador `in` funcionarem invocando `__getitem__` quando `__iter__` e `__contains__` não estão presentes.
+Em resumo, dada a importância de estruturas como a sequência, o Python consegue fazer a iteração e o operador `in` funcionarem invocando `+__getitem__+` quando `+__iter__+` e `+__contains__+` não estão presentes.
 
 O `FrenchDeck` original de <<data_model>> também não é subclasse de `abc.Sequence`,
-mas ele implementa os dois métodos do protocolo de sequência: `__getitem__` e `__len__`.
+mas ele implementa os dois métodos do protocolo de sequência: `+__getitem__+` e `+__len__+`.
 Veja o <<ex_pythonic_deck_repeat>>.
 
 [[ex_pythonic_deck_repeat]]
@@ -209,7 +209,7 @@ o interpretador tenta dois metodos diferentes para iterar sobre objetos.
 
 Para deixar mais claro, os comportamentos que que descrevi nessa seção estão implementados no próprio interpretador, na maioria dos casos em C.
 Eles não dependem dos métodos da ABC `Sequence`.
-Por exemplo, os métodos concretos `__iter__` e `__contains__` na classe `Sequence` emulam comportamentos internos do interpretador Python.
+Por exemplo, os métodos concretos `+__iter__+` e `+__contains__+` na classe `Sequence` emulam comportamentos internos do interpretador Python.
 Se você estiver curiosa(o), olhe o código-fonte destes métodos em https://fpy.li/13-3[_Lib/_collections_abc.py_].
 
 Agora vamos estudar outro exemplo que enfatiza a natureza dinâmica dos protocolos - e mostra porque verificadores de tipo estáticos não tem como lidar com eles.((("", startref="Pseqit13")))((("", startref="seqpro13")))((("", startref="itpro13")))
@@ -271,7 +271,7 @@ TypeError: 'FrenchDeck' object does not support item assignment
 
 A mensagem de erro é clara: `O objeto 'FrenchDeck' não suporta a atribuição de itens`.
 O problema é que +shuffle+ opera _internamente_, trocando os itens de lugar dentro da coleção, e `FrenchDeck` só implementa o protocolo de sequência _imutável_.
-Sequências mutáveis precisam também oferecer um método `__setitem__`.
+Sequências mutáveis precisam também oferecer um método `+__setitem__+`.
 
 Como o Python é dinâmico, podemos consertar isso durante a execução, até mesmo no console interativo.
 O <<ex_monkey_patch>> mostra como fazer isso.
@@ -292,16 +292,16 @@ suit='clubs'), Card(rank='7', suit='hearts'), Card(rank='9', suit='spades')]
 ----
 ====
 <1> Cria uma função que recebe `deck`, `position`, e `card` como argumentos.
-<2> Atribui aquela função a um atributo chamado `__setitem__` na classe `FrenchDeck`.
+<2> Atribui aquela função a um atributo chamado `+__setitem__+` na classe `FrenchDeck`.
 <3> `deck` agora pode ser embaralhado, pois acrescentei o método necessário do protocolo de sequência mutável.
 
-A assinatura do método especial `__setitem__` está definida na _A Referência da Linguagem Python_ em https://docs.python.org/pt-br/3/reference/datamodel.html#emulating-container-types["3.3.6. Emulando de tipos contêineres"].
+A assinatura do método especial `+__setitem__+` está definida na _A Referência da Linguagem Python_ em https://docs.python.org/pt-br/3/reference/datamodel.html#emulating-container-types["3.3.6. Emulando de tipos contêineres"].
 Aqui nomeei os argumentos `deck, position, card`&#x2014;e não `self, key, value` como na referência da linguagem - para mostrar que todo método Python começa sua vida como uma função comum, e [.keep-together]#nomear# o primeiro argumento `self` é só uma convenção.
 Isso está bom para uma sessão no console, mas em um arquivo de código-fonte de Python é muito melhor usar `self`, `key`, e `value`, seguindo a [.keep-together]#documentação#.
 
 O truque é que `set_card` sabe que o `deck` tem um atributo chamado `_cards`,
 e `_cards` tem que ser uma sequência mutável.
-A função `set_cards` é então anexada à classe `FrenchDeck` class como o método especial `__setitem__`.
+A função `set_cards` é então anexada à classe `FrenchDeck` class como o método especial `+__setitem__+`.
 Isso é um exemplo de _monkey patching_:
 modificar uma classe ou módulo durante a execuçào, sem tocar no código finte.
 O "monkey patching" é poderoso, mas o código que efetivamente executa a modificação está muito intimamente ligado ao programa sendo modificado, muitas vezes trabalhando com atributos privados e não-documentados.
@@ -327,7 +327,7 @@ Falhar rápido significa provocar erros de tempo de execução o mais cedo poss�
 Aqui está um exemplo:
 quando você escreve código que aceita uma sequência de ítens para processar internamente como uma `list`, não imponha um argumento `list` através de checagem de tipo.
 Em vez disso, receba o argumento e construa imediatamente uma `list` a partir dele. 
-Um exemplo desse padrão de programação é o método `__init__` no <<ex_lotto>>,
+Um exemplo desse padrão de programação é o método `+__init__+` no <<ex_lotto>>,
 visto mais à frente nesse capítulo:
 
 [source, python3]
@@ -499,7 +499,7 @@ Esse é o caso para as ABCs cuja essência se resume em alguns métodos especiai
 True
 ----
 
-Como se vê, `abc.Sized` reconhece `Struggle` como uma `subclasse`, sem necessidade de registro, já que implementar o método especial chamado `__len__` é o suficiente (o método deve ser implementado com a sintaxe e semântica corretas - deve poder ser chamado sem argumentos e retornar um inteiro não-negativo indicando o "comprimento" do objeto; mas qualquer código que implemente um método com nome especial, como `__len__`, com uma sintaxe e uma semântica arbitrárias e incompatíveis tem problemas muitos maiores que esses).
+Como se vê, `abc.Sized` reconhece `Struggle` como uma `subclasse`, sem necessidade de registro, já que implementar o método especial chamado `+__len__+` é o suficiente (o método deve ser implementado com a sintaxe e semântica corretas - deve poder ser chamado sem argumentos e retornar um inteiro não-negativo indicando o "comprimento" do objeto; mas qualquer código que implemente um método com nome especial, como `+__len__+`, com uma sintaxe e uma semântica arbitrárias e incompatíveis tem problemas muitos maiores que esses).
 
 Então, aqui está minha mensagem de despedida: sempre que você estiver implementando uma classe que incorpore qualquer dos conceitos representados nas ABCs de `number`, `collections.abc` ou em outra framework que estiver usando, se assegure (caso necessário) de ser uma subclasse ou de registrar sua classe com a ABC correspondente. No início de seu programa usando uma biblioteca ou framework que definam classes que omitiram esse passo, registre você mesmo as classes. Daí, quando precisar verificar se (tipicamente) um argumento é, por exemplo, "uma sequência", verifique se:
 [source, python3]
@@ -573,8 +573,8 @@ include::code/13-protocol-abc/frenchdeck2.py[]
 ----
 ====
 [role="pagebreak-before less_space"]
-<1> `__setitem__` é tudo que precisamos para possibilitar o embaralhamento...
-<2> ...mas uma subclasse de `MutableSequence` é forçada a implementar `__delitem__`, um método abstrato daquela ABC.
+<1> `+__setitem__+` é tudo que precisamos para possibilitar o embaralhamento...
+<2> ...mas uma subclasse de `MutableSequence` é forçada a implementar `+__delitem__+`, um método abstrato daquela ABC.
 <3> Também precisamos implementar `insert`, o terceiro método abstrato de pass:[<span class="keep-together"><code>MutableSequence</code></span>].
 
 O Python não verifica a implementação de métodos abstratos durante a importação 
@@ -583,7 +583,7 @@ mas apenas durante a execução, quando nós tentamos de fato instanciar `French
 Ali, se deixamos de implementar qualquer [.keep-together]#dos# métodos abstratos,
 recebemos uma exceção de `TypeError` com uma mensagem como
 pass:[<span class="keep-together"><code>"Can't instantiate</code></span><code>&nbsp;abstract class FrenchDeck2 with abstract methods __delitem__, insert"</code>] ("_Impossível instanciar a classe abstrata FrenchDeck2 com os métodos abstratos __delitem__, _insert_").
-Por isso precisamos implementar `__delitem__` e `insert`,
+Por isso precisamos implementar `+__delitem__+` e `insert`,
 mesmo se nossos exemplos usando `FrenchDeck2` não precisem desses comportamentos: a ABC `MutableSequence` os exige.
 
 Como((("UML class diagrams", "MutableSequence ABC and superclasses"))) <<mutablesequence_uml>> mostra, nem todos os métodos das ABCs `Sequence` e `MutableSequence` ABCs são abstratos.
@@ -592,10 +592,10 @@ Como((("UML class diagrams", "MutableSequence ABC and superclasses"))) <<mutable
 .Diagrama de classe UML para a ABC `MutableSequence` e suas superclasses em `collections.abc` (as setas de herança apontam das subclasses para as ancestrais; nomes em itálico são classes e métodos abstratos).
 image::images/flpy_1303.png[Diagrama de classe UML para `Sequence` e `MutableSequence`]
 
-Para escrever `FrenchDeck2` como uma subclasse de `MutableSequence`, tive que pagar o preço de implementar `__delitem__` e `insert`, desnecessários em meus exemplos.
+Para escrever `FrenchDeck2` como uma subclasse de `MutableSequence`, tive que pagar o preço de implementar `+__delitem__+` e `insert`, desnecessários em meus exemplos.
 Em troca, `FrenchDeck2` herda cinco métodos concretos de `Sequence`:
-`__contains__`, `__iter__`, `__reversed__`, `index`, e `count`.
-De `MutableSequence`, ela recebe outros seis métodos: `append`, `reverse`, `extend`, `pop`, `remove`, e `__iadd__`— que suporta o operador `+=` para concatenação direta.
+`+__contains__+`, `+__iter__+`, `+__reversed__+`, `index`, e `count`.
+De `MutableSequence`, ela recebe outros seis métodos: `append`, `reverse`, `extend`, `pop`, `remove`, e `+__iadd__+`— que suporta o operador `+=` para concatenação direta.
 
 Os métodos concretos em cada ABC de `collections.abc` ABC são implementados nos termos da interface pública da classe, então funcionam sem qualquer conhecimento da estrutura interna das instâncias.
 
@@ -603,7 +603,7 @@ Os métodos concretos em cada ABC de `collections.abc` ABC são implementados no
 [TIP]
 ====
 Como programador de uma subclasse concreta, é possível sobrepor os métodos herdados das ABCs com implementações mais eficientes.
-Por exemplo, `__contains__` funciona executando uma busca sequencial na sequência, mas se sua a sua sequência concreta mantém seus itens e ordenados, você pode escrever um  `__contains__` que execute uma busca binária usando a função https://fpy.li/13-13[`bisect`] da biblioteca padrão.
+Por exemplo, `+__contains__+` funciona executando uma busca sequencial na sequência, mas se sua a sua sequência concreta mantém seus itens e ordenados, você pode escrever um  `+__contains__+` que execute uma busca binária usando a função https://fpy.li/13-13[`bisect`] da biblioteca padrão.
 
 Veja https://fpy.li/bisect["Managing Ordered Sequences with Bisect"] (EN)
 em pass:[<a href=" http://fluentpython.com" class="orm:hideurl"><em>fluentpython.com</em></a>]  para conhecer mais sobre esse método.
@@ -642,9 +642,9 @@ Vamos revisar os grupos em <<collections_uml>>:
 
 `Iterable`, `Container`, `Sized`::
 Toda coleção deveria ou herdar dessas ABCs ou implementar protocolos compatíveis.
-`Iterable` oferece iteração com `__iter__`,
-`Container` oferece o operador `in` com `__contains__`,
-e `Sized` oferece `len()` with `__len__`.
+`Iterable` oferece iteração com `+__iter__+`,
+`Container` oferece o operador `in` com `+__contains__+`,
+e `Sized` oferece `len()` with `+__len__+`.
 
 `Collection`::
 Essa ABC não tem nenhum método próprio, mas foi acrescentada no Python 3.6 para facilitar a criação de subclasses de `Iterable`, `Container`, e `Sized`.
@@ -679,13 +679,13 @@ The next box explains.
 .isinstance com Hashable e Iterable pode enganar você
 ****
 É fácil interpretar errado os resultados de testes usando `isinstance` e `issubclass` com as ABCs `Hashable` and `Iterable`.
-Se `isinstance(obj, Hashable)` retorna `True`, is significa apenas que a classe de `obj` implementa ou herda `__hash__`.
+Se `isinstance(obj, Hashable)` retorna `True`, is significa apenas que a classe de `obj` implementa ou herda `+__hash__+`.
 Mas se `obj` é uma tupla contendo itens _unhashable_, então `obj` não é _hashable_, apesar do resultado positivo da verificação com `isinstance`.
 O revisor técnico Jürgen Gmach esclareceu que o _duck typing_ fornece a forma mais precisa de determinar se uma instância é _hashable_: chamar `hash(obj)`.
 Essa chamada vai levantar um `TypeError` se `obj` não for _hashable_.
 
 Por outro lado, mesmo quando `isinstance(obj, Iterable)` retorna `False`,
-o Python ainda pode ser capaz de iterar sobre `obj` usando `__getitem__` com índices baseados em 0, como vimos em <<data_model>> e na seção  <<python_digs_seq_sec>>.
+o Python ainda pode ser capaz de iterar sobre `obj` usando `+__getitem__+` com índices baseados em 0, como vimos em <<data_model>> e na seção  <<python_digs_seq_sec>>.
 A documentação de
 https://docs.python.org/pt-br/3/library/collections.abc.html#collections.abc.Iterable[`collections.abc.Iterable`]
 afirma:
@@ -904,7 +904,7 @@ a API `random` sobre a função `os.urandom(…)`, que fornece bytes aleatórios
 <3> Delega o carregamento inicial para o método `.load()`
 <4> Em vez da função `random.shuffle()` normal, usamos o método `.shuffle()` de nossa instância de `SystemRandom`.
 <5> `pick` é implementado como em <<ex_bingo_callable>>.
-<6> `__call__` também é de <<ex_bingo_callable>>. Ele não é necessário para satisfazer a interface de `Tombola`, mas não há nenhum problema em adicionar métodos extra.
+<6> `+__call__+` também é de <<ex_bingo_callable>>. Ele não é necessário para satisfazer a interface de `Tombola`, mas não há nenhum problema em adicionar métodos extra.
 
 `BingoCage` herda o custoso método `loaded` e o tolo `inspect` de `Tombola`.
 Ambos poderiam ser sobrepostos com métodos de uma linha muito mais rápidos, como no <<ex_lotto>>. A questão é: podemos ser preguiçosos e escolher apenas herdar os método concretos menos que ideais de uma ABC. Os métodos herdados de `Tombola` não são tão rápidos quanto poderia ser em `BingoCage`, mas fornecem os resultados esperados para qualquer subclasse de `Tombola` que implemente `pick` e `load` corretamente.
@@ -928,7 +928,7 @@ include::code/13-protocol-abc/lotto.py[tags=LOTTERY_BLOWER]
 <5> Sobrepõe `inspect` com uma linha de código.
 
 O <<ex_lotto>> ilustra um idioma que vale a pena mencionar:
-em `__init__`, `self._balls` armazena `list(iterable)`, e não apenas uma referência para `iterable`
+em `+__init__+`, `self._balls` armazena `list(iterable)`, e não apenas uma referência para `iterable`
 (isto é, nós não meramente atribuimos `self._balls = iterable`, apelidando o argumento).
 Como mencionado na <<defensive_duck_prog_sec>>, isso torna nossa `LottoBlower` flexível, pois o argumento `iterable` pode ser de qualquer tipo iterável.
 Ao mesmo tempo, garantimos que os itens serão armazenados em uma `list`, da onde podemos `pop` os itens.
@@ -977,7 +977,7 @@ include::code/13-protocol-abc/tombolist.py[]
 <3> `Tombolist` herda seu comportamento booleano de `list`, e isso retorna `True` se a lista não estiver vazia.
 <4> Nosso `pick` chama `self.pop`, herdado de `list`, passando um índice aleatório para um item.
 <5> `Tombolist.load` é o mesmo que `list.extend`.
-<6> `loaded` delega para `bool`.footnote:[O truque usado com `load()` não funciona com `loaded()`, pois o tipo `list` não implementa `__bool__`, o método que eu teria de vincular a `loaded`. O `bool()` nativo não precisa de `__bool__` para funcionar, porque pode também usar `__len__`. Veja https://docs.python.org/pt-br/3/library/stdtypes.html#truth["4.1. Teste do Valor Verdade"] no capítulo "Tipos Embutidos" da documentáação do Python.]
+<6> `loaded` delega para `bool`.footnote:[O truque usado com `load()` não funciona com `loaded()`, pois o tipo `list` não implementa `+__bool__+`, o método que eu teria de vincular a `loaded`. O `bool()` nativo não precisa de `+__bool__+` para funcionar, porque pode também usar `+__len__+`. Veja https://docs.python.org/pt-br/3/library/stdtypes.html#truth["4.1. Teste do Valor Verdade"] no capítulo "Tipos Embutidos" da documentáação do Python.]
 <7> É sempre possível chamar `register` dessa forma, e é útil fazer assim quando você precisa registrar uma classe que você não mantém, mas que implementa a interface.
 
 Note que, por causa do registro,
@@ -994,9 +994,9 @@ True
 True
 ----
 
-Entretanto, a herança é guiada por um atributo de classe especial chamado `__mro__`&#x2014;a Ordem de Resolução do Método (_mro é a sigla de Method Resolution Order_).
-Esse atributo basicamente lista a classe e suas superclasses na ordem que o Python usa para procurar métodos.footnote:[Há toda uma explicação sobre o atributo de classe `__mro__` na <<mro_section>>. Por agora, essas informações básicas são o suficiente.] 
-Se você inspecionar o `__mro__` de `TomboList`,
+Entretanto, a herança é guiada por um atributo de classe especial chamado `+__mro__+`&#x2014;a Ordem de Resolução do Método (_mro é a sigla de Method Resolution Order_).
+Esse atributo basicamente lista a classe e suas superclasses na ordem que o Python usa para procurar métodos.footnote:[Há toda uma explicação sobre o atributo de classe `+__mro__+` na <<mro_section>>. Por agora, essas informações básicas são o suficiente.] 
+Se você inspecionar o `+__mro__+` de `TomboList`,
 verá que ele lista apenas as superclasses "reais" - `list` e `object`:
 
 [source, pycon]
@@ -1065,9 +1065,9 @@ True
 ----
 
 A classe `Struggle` é considerada uma subclasse de `abc.Sized` pela função `issubclass`
-(e, consequentemente, também por `isinstance`) porque `abc.Sized` implementa um método de classe especial chamado `__subclasshook__`.
+(e, consequentemente, também por `isinstance`) porque `abc.Sized` implementa um método de classe especial chamado `+__subclasshook__+`.
 
-O `__subclasshook__` de `Sized` verifica se o argumento classe tem um atributo chamado `__len__`.
+O `+__subclasshook__+` de `Sized` verifica se o argumento classe tem um atributo chamado `+__len__+`.
 Se tiver, então a classe é considerada uma subclasse virtual de `Sized`.
 Veja <<sized_source_code>>.
 
@@ -1092,7 +1092,7 @@ class Sized(metaclass=ABCMeta):
         return NotImplemented  # <3>
 ----
 ====
-<1> Se há um atributo chamado `__len__` no `__dict__` de qualquer classe listada em `C.__mro__` (isto é, `C` e suas superclasses)...
+<1> Se há um atributo chamado `+__len__+` no `+__dict__+` de qualquer classe listada em `C.__mro__` (isto é, `C` e suas superclasses)...
 <2> ...retorna `True`, sinalizando que `C` é uma subclasse virtual de `Sized`.
 <3> Caso contrário retorna `NotImplemented`, para permitir que a verificação de subclasse continue.
 
@@ -1108,25 +1108,25 @@ A implementação atual de `ABCMeta.__subclasscheck__` simplemente chama `_abc_s
 O código-fonte em C relevante está em https://fpy.li/13-28[_cpython/Modules/&#x5f;abc.c#L605_].
 ====
 
-É assim que `__subclasshook__` permite às ABCs suportarem a tipagem estrutural.
+É assim que `+__subclasshook__+` permite às ABCs suportarem a tipagem estrutural.
 Você pode formalizar uma interface com uma ABC, você pode fazer `isinstance` verificar com a ABC,
 e ainda ter um classe sem qualquer relação passando uma verificação de `issubclass` porque ela implementa um certo método.
-(ou porque ela faz o que quer que seja necessário para convencer um `__subclasshook__` a dar a ela seu aval).
+(ou porque ela faz o que quer que seja necessário para convencer um `+__subclasshook__+` a dar a ela seu aval).
 
-É uma boa ideia implementar `__subclasshook__` em nossas próprias ABCs? Provavelmente não. 
-Todas as implementações de `__subclasshook__` que eu vi no código-fonte do Python estão em ABCs como `Sized`, que declara apenas um método especial, e elas simplemente verificam a presença do nome daquele método especial.
-Dado seu status "especial", é quase certeza que qualquer método chamado `__len__` faz o que se espera.
+É uma boa ideia implementar `+__subclasshook__+` em nossas próprias ABCs? Provavelmente não. 
+Todas as implementações de `+__subclasshook__+` que eu vi no código-fonte do Python estão em ABCs como `Sized`, que declara apenas um método especial, e elas simplemente verificam a presença do nome daquele método especial.
+Dado seu status "especial", é quase certeza que qualquer método chamado `+__len__+` faz o que se espera.
 Mas mesmo no reino dos métodos especiais e ABCs fundamentais,
 pode ser arriscado fazer tais suposições.
-Por exemplo, mapeamentos implementam `__len__`, `__getitem__`, e `__iter__`, mas corretamente não são considerados subtipos de `Sequence`,
+Por exemplo, mapeamentos implementam `+__len__+`, `+__getitem__+`, e `+__iter__+`, mas corretamente não são considerados subtipos de `Sequence`,
 pois você não pode recuperar itens usando deslocamentos inteiros ou faixas.
-Por isso a classe https://fpy.li/13-29[`abc.Sequence`] não implementa [.keep-together]#`__subclasshook__`#.
+Por isso a classe https://fpy.li/13-29[`abc.Sequence`] não implementa [.keep-together]#`+__subclasshook__+`#.
 
-Para ABCs que você ou eu podemos escrever, um `__subclasshook__` seria ainda menos confiável.
+Para ABCs que você ou eu podemos escrever, um `+__subclasshook__+` seria ainda menos confiável.
 Não estou preparado para acreditar que qualquer classe chamada `Spam` que implemente ou herde 
 `load`, `pick`, `inspect`, e `loaded` vai necessariamente se comportar como uma `Tombola`.
 É melhor deixar o programador afirmar isso, fazendo de `Spam` uma subclasse de `Tombola`, ou registrando a classe com `Tombola.register(Spam)`.
-Claro, o seu `__subclasshook__` poderia também verificar assinaturas de métodos e outras características, mas não creio que valha o esforço.((("", startref="GTstruct13")))((("", startref="ABCstruct13")))((("", startref="strtype13")))
+Claro, o seu `+__subclasshook__+` poderia também verificar assinaturas de métodos e outras características, mas não creio que valha o esforço.((("", startref="GTstruct13")))((("", startref="ABCstruct13")))((("", startref="strtype13")))
 
 
 [[static_protocols_sec]]
@@ -1193,8 +1193,8 @@ O <<repeatable_protocol_ex>> mostra como.
 include::code/13-protocol-abc/double/double_protocol.py[]
 ----
 ====
-<1> Vamos usar esse `T` na assinatura de `__mul__`.
-<2> `__mul__` é a essência do protocolo `Repeatable`.
+<1> Vamos usar esse `T` na assinatura de `+__mul__+`.
+<2> `+__mul__+` é a essência do protocolo `Repeatable`.
 O parâmetro `self` normalmente não é anotado - se pressume que seu tipo seja a classe.
 Aqui usamos `T` para assegurar que o tipo do resultado é o mesmo tipo de `self`.
 Além disso observe que `repeat_count` está limitado nesse protocolo a `int`.
@@ -1204,7 +1204,7 @@ o verificador de tipo vai exigir que o tipo efetivo implemente `Repeatable`.
 
 Este exemplo mostra porque o título da https://fpy.li/pep544[PEP 544] é
 "_Protocols: Structural subtyping (static duck typing)._ (Protocolos: Subtipagem estrutural (duck typing estático))."
-O tipo nominal de `x`, argumento efetivamente passado a `double`, é irrelevante, desde que grasne - ou seja, desde que implemente `__mul__`.((("", startref="SPtypeddouble13")))((("", startref="typdblf13")))((("", startref="double13")))
+O tipo nominal de `x`, argumento efetivamente passado a `double`, é irrelevante, desde que grasne - ou seja, desde que implemente `+__mul__+`.((("", startref="SPtypeddouble13")))((("", startref="typdblf13")))((("", startref="double13")))
 
 
 [[runtime_checkable_proto_sec]]
@@ -1212,22 +1212,22 @@ O tipo nominal de `x`, argumento efetivamente passado a `double`, é irrelevante
 
 No ((("static protocols", "runtime checkable", id="SPruntime13"))) Mapa de Tipagem (<<type_systems_described>>), `typing.Protocol` aparece na área de verificação estática - a metade inferior do diagrama.
 Entretanto, ao definir uma subclasse de `typing.Protocol`, você pode usar o decorador `@runtime_checkable` para fazer aquele protocolo aceitar verificações com `isinstance/issubclass` durante a execução.
-Isso funciona porque `typing.Protocol` é uma ABC, assim suporta o `__subclasshook__` que vimos na <<subclasshook_sec>>.
+Isso funciona porque `typing.Protocol` é uma ABC, assim suporta o `+__subclasshook__+` que vimos na <<subclasshook_sec>>.
 
 No Python 3.9, o módulo `typing` inclui sete protocolos prontos para uso que são verificáveis durante a execução.
 Aqui estão dois deles, citados diretamente da https://fpy.li/13-30[documentação de `typing`]:
 
 `class typing.SupportsComplex`::
-    An ABC with one abstract method, `__complex__`. 
-    ("Uma ABC com um método abstrato, `__complex__`.")
+    An ABC with one abstract method, `+__complex__+`. 
+    ("Uma ABC com um método abstrato, `+__complex__+`.")
 
 `class typing.SupportsFloat`::
-    An ABC with one abstract method, `__float__`.
-    ("Uma ABC com um método abstrato, `__float__`.")
+    An ABC with one abstract method, `+__float__+`.
+    ("Uma ABC com um método abstrato, `+__float__+`.")
 
 Esse((("numeric types", "checking for convertibility"))) protocolos foram projetados para verificar a "convertibilidade" de tipos numéricos:
-se um objeto `o` implementa `__complex__`,
-então deveria ser possível obter um `complex` invocando `complex(o)`— pois o método especial `__complex__` existe para suportar a função embutida [.keep-together]#`complex()`#.
+se um objeto `o` implementa `+__complex__+`,
+então deveria ser possível obter um `complex` invocando `complex(o)`— pois o método especial `+__complex__+` existe para suportar a função embutida [.keep-together]#`complex()`#.
 
 <<supportscomplex_ex>> mostra o 
 https://fpy.li/13-31[código-fonte]
@@ -1249,8 +1249,8 @@ class SupportsComplex(Protocol):
 ----
 ====
 
-A chave é o método abstrato `__complex__`.footnote:[O atributo `__slots__` é irrelevante para nossa discussão aqui - é uma otimização sobre a qual falamos na <<slots_section>>.]
-Durante a checagem de tipo estática, um objeto será considerado _consistente-com_ o protocolo `SupportsComplex` se implementar um método `__complex__` que recebe apenas `self` e retorna um `complex`.
+A chave é o método abstrato `+__complex__+`.footnote:[O atributo `+__slots__+` é irrelevante para nossa discussão aqui - é uma otimização sobre a qual falamos na <<slots_section>>.]
+Durante a checagem de tipo estática, um objeto será considerado _consistente-com_ o protocolo `SupportsComplex` se implementar um método `+__complex__+` que recebe apenas `self` e retorna um `complex`.
 
 Graças ao decorador de classe `@runtime_checkable`, aplicado a `SupportsComplex`,
 aquele protocolo também pode ser utilizado em verificações com `isinstance` no <<repeatable_protocol_demo_ex>>.
@@ -1278,9 +1278,9 @@ False
 ====
 <1> `complex64` é um dos cinco tipos de números complexos fornecidos pelo NumPy.
 <2> Nenhum dos tipos complexos do NumPy é subclasse do `complex` embutido.
-<3> Mas os tipos complexos de NumPy implementam `__complex__`, então cumprem o protocolo `SupportsComplex`.
+<3> Mas os tipos complexos de NumPy implementam `+__complex__+`, então cumprem o protocolo `SupportsComplex`.
 <4> Portanto, você pode criar objetos `complex` a partir deles.
-<5> Infelizmente, o tipo `complex` embutido não implementa `__complex__`, apesar de [.keep-together]#`complex(c)`# funcionar sem problemas se `c` for um `complex`.
+<5> Infelizmente, o tipo `complex` embutido não implementa `+__complex__+`, apesar de [.keep-together]#`complex(c)`# funcionar sem problemas se `c` for um `complex`.
 
 Como consequência deste último ponto, se você quiser testar se um objeto `c` é um `complex` ou `SupportsComplex`,
 você pode passar uma tupla de tipos como segundo argumento para [.keep-together]#`isinstance`#, assim:
@@ -1379,9 +1379,9 @@ precisamos discutir as limitações de protocolos verificáveis durante a execu�
 Vimos((("static protocols", "limitations of runtime protocol checks"))) que dicas de tipo são geralmente ignoradas durante a execução,
 e isso também afeta o uso de verificações com `isinstance` or `issubclass` com protocolos estáticos.
 
-Por exemplo, qualquer classe com um método `__float__` 
+Por exemplo, qualquer classe com um método `+__float__+` 
 é considerada - durante a execução - uma subclasse virtual de `SupportsFloat`,
-mesmo se seu método `__float__` não retorne um `float`.
+mesmo se seu método `+__float__+` não retorne um `float`.
 
 Veja essa sessão no console:
 
@@ -1399,9 +1399,9 @@ Traceback (most recent call last):
 TypeError: can't convert complex to float
 ----
 
-Em Python 3.9, o tipo `complex` tem um método `__float__`,
+Em Python 3.9, o tipo `complex` tem um método `+__float__+`,
 mas ele existe apenas para gerar `TypeError` com uma mensagem de erro explícita.
-Se aquele método `__float__` tivesse anotações,
+Se aquele método `+__float__+` tivesse anotações,
 o tipo de retorno seria `NoReturn`— que vimos na <<noreturn_sec>>.
 
 Mas incluir dicas de tipo em `complex.__float__` no _typeshed_ não resolveria esse problema, porque o interpretador Python em geral ignora dicas de tipo - e, de qualquer forma, não tem acesso aos arquivos stub do _typeshed_.
@@ -1443,7 +1443,7 @@ Agora veremos como implementar um protocolo estático em uma classe definida pel
 Lembra((("static protocols", "supporting", id="SPsupport13"))) da classe `Vector2d`, que desenvolvemos em <<pythonic_objects>>?
 Dado que tanto um número `complex` quanto uma instância de `Vector2d` consistem em um par de números de ponto flutuante, faz sentido suportar a conversão de `Vector2d` para `complex`.
 
-O <<ex_vector2d_complex_v4>> mostra a implementação do método `__complex__`,
+O <<ex_vector2d_complex_v4>> mostra a implementação do método `+__complex__+`,
 para melhorar a última versão de `Vector2d`, vista no <<ex_vector2d_v3_full>>.
 Para deixar o serviço completo, podemos suportar a operação inversa, com um método de classe `fromcomplex`, que constrói um `Vector2d` a partir de um `complex`.
 
@@ -1457,7 +1457,7 @@ include::code/13-protocol-abc/typing/vector2d_v4.py[tags=VECTOR2D_V4_COMPLEX]
 ====
 <1> Presume que `datum` tem atributos `.real` e `.imag`. Veremos uma implementação melhor no <<ex_vector2d_complex_v5>>.
 
-Dado o código acima, e o método `__abs__` que o `Vector2d` já tinha em <<ex_vector2d_v3_full>>, temos o seguinte:
+Dado o código acima, e o método `+__abs__+` que o `Vector2d` já tinha em <<ex_vector2d_v3_full>>, temos o seguinte:
 
 [source, pycon]
 ----
@@ -1478,7 +1478,7 @@ Vector2d(3.0, 4.0)
 
 Para verificação de tipo durante a execução, o <<ex_vector2d_complex_v4>> serve bem,
 mas para uma cobertura estática e relatório de erros melhores com o Mypy, os métodos 
-`__abs__`, `__complex__`, e `fromcomplex` deveriam receber dicas de tipo, como mostrado no <<ex_vector2d_complex_v5>>.
+`+__abs__+`, `+__complex__+`, e `fromcomplex` deveriam receber dicas de tipo, como mostrado no <<ex_vector2d_complex_v5>>.
 
 [[ex_vector2d_complex_v5]]
 ._vector2d_v5.py_: acrescentando anotações aos métodos mencionados
@@ -1493,14 +1493,14 @@ include::code/13-protocol-abc/typing/vector2d_v5.py[tags=VECTOR2D_V5_COMPLEX]
 <2> Mesmo sem a anotação, o Mypy foi capaz de inferir que isso retorna um `complex`. A anotação evita um aviso, dependendo da sua configuração do Mypy.
 <3> Aqui `SupportsComplex` garante que `datum` é conversível.
 <4> Essa conversão explícita é necessária, pois o tipo `SupportsComplex` não declara os atributos `.real` e `.img`, usados na linha seguinte.
-Por exemplo, `Vector2d` não tem esses atributos, mas implementa `__complex__`.
+Por exemplo, `Vector2d` não tem esses atributos, mas implementa `+__complex__+`.
 
 O tipo de retorno de `fromcomplex` pode ser `Vector2d` se a linha `from __future__ import annotations` aparecer no início do módulo.
 Aquela importação faz as dicas de tipo serem armazenadas como strings, sem serem processadas durante a importação, quando as definições de função são tratadas.
-Sem o `__future__` import of `annotations`,
+Sem o `+__future__+` import of `annotations`,
 `Vector2d` é uma referência inválida neste momento (a classe não está inteiramente definida ainda) e deveria ser escrita como uma string:
 `'Vector2d'`, como se fosse uma referência adiantada.
-Essa importação de `__future__` foi  introduzida na 
+Essa importação de `+__future__+` foi  introduzida na 
 https://fpy.li/pep563[PEP 563—Postponed Evaluation of Annotations], implementada no Python 3.7.
 Aquele comportamento estava marcado para se tornar default no 3.10, mas a mudança foi adiada para uma versão futura.footnote:[Leia a https://fpy.li/13-32[decisão] (EN) do Python Steering Council no python-dev.]
 Quando isso acontecer, a importaçào será redundante mas inofensiva.
@@ -1681,14 +1681,14 @@ que discutimos na <<runtime_checkable_proto_sec>>.
 
 Infelizmente, durante a execução os protocolos numéricos podem deixar você na mão.
 Como mencionado em <<protocol_type_hints_ignored>>,
-o tipo `complex` no Python 3.9 implementa `__float__`,
+o tipo `complex` no Python 3.9 implementa `+__float__+`,
 mas o método existe apenas para lançar uma `TypeError` com uma mensagem explícita:
 "can't convert complex to float." ("não é possível converter complex para float")
-Por alguma razão, ele também implementa `__int__`.
+Por alguma razão, ele também implementa `+__int__+`.
 A presença desses métodos faz `isinstance` produzir resultados enganosos no Python 3.9. No Python 3.10, os métodos de `complex` que geravam `TypeError` incondicionalmente foram removidos.footnote:[ver
 https://fpy.li/13-41[Issue #41974—Remove `complex.__float__`, `complex.__floordiv__`, etc].]
 
-Por outro lado, os tipos complexos do NumPy implementam métodos `__float__` e `__int__` que funcionam,
+Por outro lado, os tipos complexos do NumPy implementam métodos `+__float__+` e `+__int__+` que funcionam,
 emitindo apenas um aviso quando cada um deles é usado pela primeira vez:
 
 [source, pycon]
@@ -1705,8 +1705,8 @@ discards the imaginary part
 
 O problema oposto também acontece:
 Os tipos embutidos `complex`, `float`, e `int`, além `numpy.float16` e `numpy.uint8`, não
-tem um método `__complex__`, então `isinstance(x, SupportsComplex)` retorna `False` para eles.footnote:[Eu não testei todas as outras variantes de _float_ e _integer_ que o NumPy oferece.]
-Os tipo complexos do NumPy, tal como `np.complex64`, implementam `__complex__` para conversão em um `complex` embutido.
+tem um método `+__complex__+`, então `isinstance(x, SupportsComplex)` retorna `False` para eles.footnote:[Eu não testei todas as outras variantes de _float_ e _integer_ que o NumPy oferece.]
+Os tipo complexos do NumPy, tal como `np.complex64`, implementam `+__complex__+` para conversão em um `complex` embutido.
 
 Entretanto, na prática, o construtor embutido `complex()` trabalha com instâncias de todos esses tipos sem erros ou avisos.
 
@@ -1736,7 +1736,7 @@ def to_complex(n: SupportsComplex) -> complex:
 
 No momento em que escrevo isso, o NumPy não tem dicas de tipo, então seus tipos numéricos são todos `Any`.footnote:[Os tipos numéricos do NumPy são todos registrados com as ABCs apropriadas de `numbers`, que o Mypy ignora.]
 Por outro lado, o Mypy de alguma maneira "sabe" que o `int` e o `float` embutidos podem ser convertidos para `complex`,
-apesar de, no _typeshed_, apenas a classe embutida `complex` ter o método `__complex__`.footnote:[Isso é uma mentira bem intencionada da parte do typeshed: a partir do Python 3.9, o tipo embutido `complex` na verdade não tem amis um método `__complex__`.]
+apesar de, no _typeshed_, apenas a classe embutida `complex` ter o método `+__complex__+`.footnote:[Isso é uma mentira bem intencionada da parte do typeshed: a partir do Python 3.9, o tipo embutido `complex` na verdade não tem amis um método `+__complex__+`.]
 
 Concluindo, apesar((("numeric types", "checking for convertibility"))) da impressão que a verificação de tipo para tipos numéricos não deveria ser difícil, 
 a situação atual é a seguinte:
@@ -1744,7 +1744,7 @@ as dicas de tipo da PEP 484
 https://fpy.li/cardxvi[evitam] (EN) a torre numérica 
 e recomendam implicitamente que os verificadores de tipo codifiquem explicitamente as relações de tipo entre os `complex`, `float`, e `int` embutidos.
 O Mypy faz isso, e também, [.keep-together]#pragmaticamente#, aceita que `int` e `float`
-são _consistente-com_ `SupportsComplex`, apesar deles não implementarem `__complex__`.
+são _consistente-com_ `SupportsComplex`, apesar deles não implementarem `+__complex__+`.
 
 [TIP]
 ====
@@ -1781,11 +1781,11 @@ vimos como criar subclasses de ABCs existentes,
 examinamos algumas ABCs importantes da biblioteca padrão,
 e criamos uma ABC do zero,
 que nós então implementamos da forma tradicional, criando subclasses, e por registro.
-Finalizamos aquela seção vendo como o método especial `__subclasshook__` permite às ABCs suportarem a tipagem estrutural, pelo reconhecimento de classes não-relacionadas, mas que fornecem os métodos que preenchem os requisistos da interface definida na ABC.
+Finalizamos aquela seção vendo como o método especial `+__subclasshook__+` permite às ABCs suportarem a tipagem estrutural, pelo reconhecimento de classes não-relacionadas, mas que fornecem os métodos que preenchem os requisistos da interface definida na ABC.
 
 A última grande seção foi a <<static_protocols_sec>>,
 onde retomamos o estudo do duck typing estático, que havia começado no <<type_hints_in_def_ch>>, em <<protocols_in_fn>>.
-Vimos como o decorador `@runtime_checkable` tambem aproveita o `__subclasshook__` para suportar tipagem estrutural durante a execução - mesmo que o melhor uso dos protocolos estáticos seja com verificadores de tipo estáticos, 
+Vimos como o decorador `@runtime_checkable` tambem aproveita o `+__subclasshook__+` para suportar tipagem estrutural durante a execução - mesmo que o melhor uso dos protocolos estáticos seja com verificadores de tipo estáticos, 
 que podem levar em consideração as dicas de tipo, tornando a tipagem estrutural mais confiável.
 Então falamos sobre o projeto e a codificação de um protocolo estático e como estendê-lo.
 O capítulo terminou com <<numbers_abc_proto_sec>>, que conta a triste história do estado lastismável da torre numérica e das poucas insuficiências existentes na  alternativa proposta:
