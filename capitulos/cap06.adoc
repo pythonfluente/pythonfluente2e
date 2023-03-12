@@ -1,6 +1,7 @@
 [[mutability_and_references]]
 == Referências, Mutabilidade, e Memória
 :example-number: 0
+:xrefstyle: short
 
 [quote, Adaptado de <em>“Alice Através do Espelho e o que Ela Encontrou Lá”, de Lewis Caroll</em>]
 ____
@@ -69,12 +70,24 @@ A <<var-boxes-x-labels>> ilustra o motivo de metáfora da caixa estar errada em 
 .Se você imaginar variáveis como caixas, não é possível entender a atribuição em Python; por outro lado, pense em variáveis como etiquetas autocolantes e <<ex_a_b_refs>> é facilmente explicável.
 image::images/flpy_0601.png[Boxes and labels diagram]
 
-Assim, a linha `b = a` não copia o conteúdo de uma caixa `a` para uma caixa `b`.
-Ela cola a etiqueta `b` no objeto que já tem uma etiqueta `a`.
+Assim, a instrução `b = a` não copia o conteúdo de uma caixa `a` para uma caixa `b`.
+Ela cola uma nova etiqueta `b` no objeto que já tem a etiqueta `a`.
 
-A professora Stein também falava sobre atribuição de uma maneira bastante específica. Por exemplo, quando discutia sobre um objeto serrote em uma simulação, ela dizia: “A variável g foi atribuída à gangorra”, mas nunca “A gangorra foi atribuída à variável g”. Com variáveis de referência, faz muito mais sentido dizer que a variável é atribuída a um objeto, não o contrário. Afinal, o objeto é criado antes da atribuição. <<ex_var_assign_after>> prova que o lado direito de uma atribuição é processado primeiro.
+A professora Stein também falava sobre atribuição de uma maneira bastante específica.
+Por exemplo, quando discutia sobre um objeto representando uma gangorra em uma simulação,
+ela dizia:
+“A variável g foi atribuída à gangorra”, mas nunca “A gangorra foi atribuída à variável g”.
+Com variáveis de referência,
+faz muito mais sentido dizer que a variável é atribuída a um objeto, não o contrário.
+Afinal, o objeto é criado antes da atribuição.
+<<ex_var_assign_after>> prova que o lado direito de uma atribuição é processado primeiro.
 
-Já que o verbo “atribuir” é usado de maneiras contraditórias, uma alternativa útil é “vincular”: a declaração de atribuição em Python `x = …` vincula o nome `x` ao objeto criado ou referenciado no lado direito. E o objeto precisa existir antes que um nome possa ser vinculado a ele, como prova <<ex_var_assign_after>>.
+Já que o verbo “atribuir” é usado de diferentes maneiras,
+uma alternativa útil é “vincular”:
+a declaração de atribuição em Python `x = …` vincula o nome `x`
+ao objeto criado ou referenciado no lado direito.
+E o objeto precisa existir antes que um nome possa ser vinculado a ele,
+como demonstra <<ex_var_assign_after>>.
 
 [[ex_var_assign_after]]
 .Variáveis são vinculadas a objetos somente após os objetos serem criados
@@ -156,7 +169,7 @@ True
 ----
 ====
 <1> `alex` é uma referência a um objeto que é uma réplica  do objeto vinculado a `charles`.
-<2> Os objetos são iguais quando comparados devido à implementação de `__eq__` na classe `dict`.
+<2> Os objetos são iguais quando comparados devido à implementação de `+__eq__+` na classe `dict`.
 <3> Mas são objetos distintos. Essa é a forma pythônica de escrever a negação de uma comparação de identidade: `a is not b`.
 
 <<ex_equal_and_same>> é um exemplo de _apelidamento_ (aliasing). Naquele código, `lewis` e `charles` são apelidos: duas variáveis vinculadas ao mesmo objeto. Por outro lado, `alex` não é um apelido para `charles`: essas variáveis estão vinculadas a objetos diferentes. Os ((("&#x3D;&#x3D; (equality) operator")))((("equality (&#x3D;&#x3D;) operator")))((("comparison operators"))) objetos vinculados a `alex` e `charles` tem o mesmo __valor__  -- é isso que `==` compara -- mas tem identidades diferentes.
@@ -216,11 +229,11 @@ def traverse(...):
     # etc.
 ----
 
-O operador `is` é mais rápido que `==`, pois não pode ser sobrecarregado. Daí o Python não precisa encontrar e invocar métodos especiais para calcular seu resultado, e o processamento é tão simples quanto comparar dois IDs inteiros. Por outro lado, `a == b` é açúcar sintático para `a.__eq__(b)`. O método `__eq__`, herdado de `object`, compara os IDs dos objetos, então produz o mesmo resultado de `is`. Mas a maioria do tipos embutidos sobrepõe `__eq__` com implementações mais significativas, que realmente levam em consideração os valores dos atributos dos objetos. A determinação da igualdade pode envolver muito processamento -- por exemplo, quando se comparam coleções grandes ou estruturas aninhadas com muitos níveis.
+O operador `is` é mais rápido que `==`, pois não pode ser sobrecarregado. Daí o Python não precisa encontrar e invocar métodos especiais para calcular seu resultado, e o processamento é tão simples quanto comparar dois IDs inteiros. Por outro lado, `a == b` é açúcar sintático para `a.__eq__(b)`. O método `+__eq__+`, herdado de `object`, compara os IDs dos objetos, então produz o mesmo resultado de `is`. Mas a maioria do tipos embutidos sobrepõe `+__eq__+` com implementações mais significativas, que realmente levam em consideração os valores dos atributos dos objetos. A determinação da igualdade pode envolver muito processamento -- por exemplo, quando se comparam coleções grandes ou estruturas aninhadas com muitos níveis.
 
 [WARNING]
 ====
-Nós normalmente estamos mais interessados na igualdade que na identidade de objetos. Checar se o objeto é `None` é _o único_ caso de uso comum do operador `is`. A maioria dos outros usos que eu vejo quando reviso código estão errados. Se você não estiver seguro, use `==`. Em geral é o que você quer, e ele também funciona com `None`, ainda que não seja tão rápido.
+Normalmente estamos mais interessados na igualdade que na identidade de objetos. Checar se o objeto é `None` é _o único_ caso de uso comum do operador `is`. A maioria dos outros usos que eu vejo quando reviso código estão errados. Se você não estiver seguro, use `==`. Em geral é o que você quer, e ele também funciona com `None`, ainda que não seja tão rápido.
 ====
 
 Para concluir essa discussão de identidade versus igualdade, vamos ver como o tipo notoriamente imutável `tuple` não é assim tão invariável quanto você poderia supor.
@@ -409,7 +422,7 @@ Observe que, em geral, criar cópias profundas não é uma questão simples. Obj
 ----
 ====
 
-Além disso, algumas vezes uma cópia profunda pode ser profunda demais. Por exemplo, objetos podem ter referências para recursos externos ou para singletons (objetos únicos) que não devem ser copiados. Você pode controlar o comportamento de `copy` e de `deepcopy` implementando os métodos especiais `__copy__()` e `__deepcopy()__`, como descrito em https://docs.python.org/pt-br/3/library/copy.html [documentação do módulo `copy`]
+Além disso, algumas vezes uma cópia profunda pode ser profunda demais. Por exemplo, objetos podem ter referências para recursos externos ou para singletons (objetos únicos) que não devem ser copiados. Você pode controlar o comportamento de `copy` e de `deepcopy` implementando os métodos especiais `+__copy__+` e `+__deepcopy__+`, como descrito em https://docs.python.org/pt-br/3/library/copy.html [documentação do módulo `copy`]
 
 O compartilhamento de objetos através de apelidos também explica como a passagens de parâmetros funciona em Python, e o problema do uso de tipo mutáveis como parâmetros default. Vamos falar sobre essas questões a seguir.((("", startref="deepcopy06")))((("", startref="Cdeep06")))((("", startref="ORdeep06")))
 
@@ -463,7 +476,7 @@ Outra questão relacionada a parâmetros de função é o uso de valores mutáve
 
 Parâmetros opcionais((("mutable parameters", id="muttype06")))((("parameters", "mutable", id="Pmut06"))) com valores default são um grande recurso para definição de funções em Python, permitindo que nossas APIs evoluam mantendo a compatibilidade com versões anteriores. Entretanto, você deve evitar usar objetos mutáveis como valores default de parâmetros. 
 
-Para ilustrar esse ponto, em <<ex_haunted_bus>>, modificamos o método `__init__` da classe `Bus` de <<ex_bus1>> para criar `HauntedBus`. Tentamos ser espertos, e em vez do va,or default `passengers=None`, temos `passengers=[]`, de forma a evitar o `if` do `__init__` anterior. Essa "esperteza" nos traz problemas.
+Para ilustrar esse ponto, em <<ex_haunted_bus>>, modificamos o método `+__init__+` da classe `Bus` de <<ex_bus1>> para criar `HauntedBus`. Tentamos ser espertos, e em vez do va,or default `passengers=None`, temos `passengers=[]`, de forma a evitar o `if` do `+__init__+` anterior. Essa "esperteza" nos traz problemas.
  
 [[ex_haunted_bus]]
 .Uma classe simples ilustrando o perigo de um default mutável
@@ -520,7 +533,7 @@ O problema é que instâncias de `HauntedBus` que não recebem uma lista de pass
 
 Este tipo de bug pode ser muito sutil. Como <<demo_haunted_bus>> demonstra, quando `HauntedBus`` recebe uma lista com passageiros como parâmetro, ele funciona como esperado. As coisas estranhas acontecem somente quando `HauntedBus` começa vazio, pois aí `self.passengers` se torna um apelido para o valor default do parâmetro `passengers`. O problema é que cada valor default é processado quando a função é definida -- i.e., normalmente quando o módulo é carregado-- e os valores default se tornam atributos do objeto-função. Assim, se o valor default é um objeto [.keep-together]#mutável# e você o altera, a alteração vai afetar todas as futuras chamadas da [.keep-together]#função#.
 
-Após executar as linhas do exemplo em <<demo_haunted_bus>>, você pode inspecionar o objeto `HauntedBus__init__` e ver os estudantes fantasma assombrando o atributo `__defaults__`:
+Após executar as linhas do exemplo em <<demo_haunted_bus>>, você pode inspecionar o objeto `HauntedBus__init__` e ver os estudantes fantasma assombrando o atributo `+__defaults__+`:
 
 [source, pycon]
 ----
@@ -538,7 +551,7 @@ Por fim, podemos verificar que `bus2.passengers` é um apelido vinculado ao prim
 True
 ----
 
-O problema com defaults mutáveis explica porque `None` é normalmente usado como valor default para parâmetros que podem receber valores mutáveis. Em <<ex_bus1>>, `__init__` checa se o argumento `passengers` é `None`. Se for, `self.passengers` é vinculado a uma nova lista vazia. Se `passengers` não for `None`, a implementação correta vincula uma cópia daquele argumento a `self.passengers`.
+O problema com defaults mutáveis explica porque `None` é normalmente usado como valor default para parâmetros que podem receber valores mutáveis. Em <<ex_bus1>>, `+__init__+` checa se o argumento `passengers` é `None`. Se for, `self.passengers` é vinculado a uma nova lista vazia. Se `passengers` não for `None`, a implementação correta vincula uma cópia daquele argumento a `self.passengers`.
 A próxima seção explica porque copiar o argumento é uma boa prática.
 
 
@@ -584,10 +597,10 @@ include::code/06-obj-ref/twilight_bus.py[tags=TWILIGHT_BUS_CLASS]
 ====
 [role="pagebreak-before less_space"]
 <1> Aqui nós cuidadosamente criamos uma lista vazia quando `passengers` é `None`.
-<2> Entretanto, esta atribuição transforma `self.passengers` em um apelido para `passengers`, que por sua vez é um apelido para o argumento efetivamente passado para `__init__` (i.e. `basketball_team` em <<demo_twilight_bus>>).
+<2> Entretanto, esta atribuição transforma `self.passengers` em um apelido para `passengers`, que por sua vez é um apelido para o argumento efetivamente passado para `+__init__+` (i.e. `basketball_team` em <<demo_twilight_bus>>).
 <3> Quando os métodos `.remove()` e `.append()` são usados com `self.passengers`, estamos na verdade modificando a lista original recebida como argumento pelo construtor.
 
-O problema aqui é que o ônibus está apelidando a lista passada para o construtor. Ao invés disso, ele deveria manter sua própria lista de passageiros. A solução é simples: em `__init__`, quando o parâmetro `passengers` é fornecido, `self.passengers` deveria ser inicializado com uma cópia daquela lista, como fizemos, de forma correta, em <<ex_bus1>>:
+O problema aqui é que o ônibus está apelidando a lista passada para o construtor. Ao invés disso, ele deveria manter sua própria lista de passageiros. A solução é simples: em `+__init__+`, quando o parâmetro `passengers` é fornecido, `self.passengers` deveria ser inicializado com uma cópia daquela lista, como fizemos, de forma correta, em <<ex_bus1>>:
 
 [source, python3]
 ----
@@ -641,10 +654,18 @@ O segundo aspecto surpreeendente é que `del` apaga referências, não objetos. 
 
 [WARNING]
 ====
-Há((("&#x005F;&#x005F;del&#x005F;&#x005F;"))) um método especial `__del__`, mas ele não causa a remoção de uma instância e não deve ser usado em seu código. `__del__`  é invocado pelo interpretador Python quando a instância está prestes a ser destruída, para dar a ela a chance de liberar recursos externos. Você muito raramente precisa implementar `__del__` em seu código, mas ainda assim alguns programadores Python perdem tempo escrevendo esse código sem qualquer necessidade. O uso correto de `__del__` é bastante complexo. Consulte https://docs.python.org/pt-br/3/reference/datamodel.html#object.%5C_%5C_del__ no capítulo "Modelo de Dados" em _A Referência da Linguagem Python_. 
+Existe((("&#x005F;&#x005F;del&#x005F;&#x005F;"))) um método especial `+__del__+`,
+mas ele não causa a remoção de uma instância e não deve ser usado em seu código.
+`+__del__+` é invocado pelo interpretador Python quando a instância está prestes a ser destruída,
+para dar a ela a chance de liberar recursos externos.
+É muito raro ser preciso implementar `+__del__+` em seu código,
+mas ainda assim alguns programadores Python perdem tempo codando este método sem necessidade.
+O uso correto de `+__del__+` é bastante complexo.
+Consulte
+https://docs.python.org/pt-br/3/reference/datamodel.html#object.%5C_%5C_del__[`+__del__+`] no capítulo "Modelo de Dados" em _A Referência da Linguagem Python_. 
 ====
 
-Em CPython, o algoritmo primário de coleta de lixo é ((("reference counting")))a contagem de referências. Essencialmente, cada objeto mantém uma contagem do número de referências apontando para si. Assim que a contagem chega a zero, o objeto é imediatamente destruído: CPython invoca o método `__del__` no objeto (se definido) e daí libera a memória alocada para aquele objeto. Em CPython 2.0, um algorítmo de coleta de lixo geracional foi acrescentado, para detectar grupos de objetos envolvidos em referências cíclicas -- grupos que pode ser inacessíveis mesmo que existam referências restantes, quando todas as referências mútuas estão contidas dentro daquele grupo. Outras implementações de Python tem coletores de lixo mais sofisticados, que não se baseiam na contagem de referências, o que significa que o método `__del__` pode não ser chamado imediatamente quando não existem mais referências ao objeto. Veja https://fpy.li/6-7["PyPy, Garbage Collection, and a Deadlock"] (EN) by A. Jesse Jiryu Davis para uma discussão sobre os usos próprios e impróprios de `__del__`.
+Em CPython, o algoritmo primário de coleta de lixo é ((("reference counting")))a contagem de referências. Essencialmente, cada objeto mantém uma contagem do número de referências apontando para si. Assim que a contagem chega a zero, o objeto é imediatamente destruído: CPython invoca o método `+__del__+` no objeto (se definido) e daí libera a memória alocada para aquele objeto. Em CPython 2.0, um algorítmo de coleta de lixo geracional foi acrescentado, para detectar grupos de objetos envolvidos em referências cíclicas -- grupos que pode ser inacessíveis mesmo que existam referências restantes, quando todas as referências mútuas estão contidas dentro daquele grupo. Outras implementações de Python tem coletores de lixo mais sofisticados, que não se baseiam na contagem de referências, o que significa que o método `+__del__+` pode não ser chamado imediatamente quando não existem mais referências ao objeto. Veja https://fpy.li/6-7["PyPy, Garbage Collection, and a Deadlock"] (EN) by A. Jesse Jiryu Davis para uma discussão sobre os usos próprios e impróprios de `+__del__+`.
 
 Para demonstrar o fim da vida de um objeto, <<ex_finalize>> usa `weakref.finalize` para registrar uma função callback a ser chamada quando o objeto é destruído.
 
@@ -752,7 +773,7 @@ Os truques discutidos nessa seção, incluindo o comportamento de `frozenset.cop
 
 === Resumo do Capítulo
 
-Todo((("object references", "overview of"))) objeto em Python tem uma identidade, um tipo e um valor. Apenas o valor do objeto pode mudar ao longo do tempo.footnote:[Na verdade, o tipo de um objeto pode ser modificado, bastando para isso atribuir uma classe diferente ao atributo `__class__` do objeto. Mas isso é pura perversidade, e eu me arrependo de ter escrito essa nota de rodapé.]
+Todo((("object references", "overview of"))) objeto em Python tem uma identidade, um tipo e um valor. Apenas o valor do objeto pode mudar ao longo do tempo.footnote:[Na verdade, o tipo de um objeto pode ser modificado, bastando para isso atribuir uma classe diferente ao atributo `+__class__+` do objeto. Mas isso é uma perversão, e eu me arrependo de ter escrito essa nota de rodapé.]
 
 Se duas variáveis se referem a objetos imutáveis de igual valor (`a == b` is `True`), na prática dificilmente importa se elas se referem a cópias de mesmo valor ou são apelidos do mesmo objeto, porque o valor de objeto imutável não muda, com uma exceção. A exceção são as coleções imutáveis, como as tuplas: se uma coleção imutável contém referências para itens mutáveis, então seu valor pode de fato mudar quando o valor de um item mutável for modificado. Na prática, esse cenário não é tão comum. O que nunca muda numa coleção imutável são as identidades dos objetos mantidos ali. A classe `frozenset` não sofre desse problema, porque ela só pode manter elementos hashable, e o valor de um objeto hashble não pode mudar nunca, por [.keep-together]#definição#.
 
@@ -795,7 +816,7 @@ https://fpy.li/6-12["Design of CPython’s Garbage Collector"] (EN)
 no https://fpy.li/6-13[_Python Developer’s Guide_],
 voltado para contribuidores novos e experientes da implementação CPython.
 
-O coletor de lixo do CPython 3.4 aperfeiçoou o tratamento de objetos contendo um método `__del__`, como descrito em https://fpy.li/6-14[PEP 442--Safe object finalization] (EN).
+O coletor de lixo do CPython 3.4 aperfeiçoou o tratamento de objetos contendo um método `+__del__+`, como descrito em https://fpy.li/6-14[PEP 442--Safe object finalization] (EN).
 
 A Wikipedia tem um artigo sobre https://fpy.li/6-15[string interning] (EN), que menciona o uso desta técnica em várias linguagens, incluindo Python.
 
@@ -811,7 +832,7 @@ Eu((("object references", "Soapbox discussion")))((("Soapbox sidebars", "equalit
 
 Python faz melhor. O operador `==` compara valores de objetos; `is` compara referências. E como Python permite sobrecarregar operadores, `==` funciona de forma sensata com todos os objetos na biblioteca padrão, incluindo `None`, que é um objeto verdadeiro, ao contrário do `Null` de Java. 
 
-E claro, você pode definir `__eq__` nas suas próprias classes para controlar o que `==` significa para suas instâncias. Se você não sobrecarregar `__eq__`, o método herdado de `object` compara os IDs dos objetos, então a regra básica é que cada instância de uma classe definida pelo usuário é considerada diferente.
+E claro, você pode definir `+__eq__+` nas suas próprias classes para controlar o que `==` significa para suas instâncias. Se você não sobrecarregar `+__eq__+`, o método herdado de `object` compara os IDs dos objetos, então a regra básica é que cada instância de uma classe definida pelo usuário é considerada diferente.
 
 Estas são algumas das coisas que me fizeram mudar de Java para Python assim que terminei de ler _The Python Tutorial_ em uma tarde de setembro de 1998.
 

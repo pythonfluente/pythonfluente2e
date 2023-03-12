@@ -368,7 +368,7 @@ def double(x):
     return x * 2
 ----
 
-O tipo do parâmetro `x` pode ser numérico (`int`, `complex`, `Fraction`, `numpy.uint32`, etc.), mas também pode ser uma sequência (`str`, `tuple`, `list`, `array`), uma `numpy.array` N-dimensional, ou qualquer outro tipo que implemente ou herde um método `__mul__` que aceite um inteiro como argumento.
+O tipo do parâmetro `x` pode ser numérico (`int`, `complex`, `Fraction`, `numpy.uint32`, etc.), mas também pode ser uma sequência (`str`, `tuple`, `list`, `array`), uma `numpy.array` N-dimensional, ou qualquer outro tipo que implemente ou herde um método `+__mul__+` que aceite um inteiro como argumento.
 
 Entretanto, considere a anotação `double` abaixo. Ignore por enquanto a ausência do tipo do retorno, vamos nos concentrar no tipo do parâmetro: 
 
@@ -381,7 +381,7 @@ def double(x: abc.Sequence):
 ----
 
 Um verificador de tipo irá rejeitar esse código.
-Se você informar ao Mypy que `x` é do tipo `abc.Sequence`, ele vai marcar `x * 2` como erro, pois a https://fpy.li/8-13[`Sequence` ABC] não implementa ou herda o método `__mul__`. Durante a execução, o código vai funcionar com sequências concretas como `str`, `tuple`, `list`, `array`, etc., bem como com números, pois durante a execução as dicas de tipo são ignoradas. Mas o verificador de tipo se preocupa apenas com o quê estiver explicitamente declarado, e `abc.Sequence` não suporta `__mul__`.
+Se você informar ao Mypy que `x` é do tipo `abc.Sequence`, ele vai marcar `x * 2` como erro, pois a https://fpy.li/8-13[`Sequence` ABC] não implementa ou herda o método `+__mul__+`. Durante a execução, o código vai funcionar com sequências concretas como `str`, `tuple`, `list`, `array`, etc., bem como com números, pois durante a execução as dicas de tipo são ignoradas. Mas o verificador de tipo se preocupa apenas com o quê estiver explicitamente declarado, e `abc.Sequence` não suporta `+__mul__+`.
 
 Por essa razão o título dessa seção é  "Tipos São Definidos pelas Operações Possíveis." O runtime do Python aceita qualquer objeto como argumento `x` nas duas versões da função `double`. O cálculo de `x * 2` pode funcionar, ou pode causar um `TypeError`, se a operação não for suportada por `x`. Por outro lado, Mypy vai marcar `x * 2` como um erro quando analisar o código-fonte anotado de `double`, pois é uma operaçào não suportada pelo tipo declarado `x: abc.Sequence`.
 
@@ -596,7 +596,7 @@ Entretanto, um verificador de tipo vai rejeitar essa função:
 def double(x: object) -> object:
     return x * 2
 ----
-O problema é que `object` não suporta a operação `__mul__`. Veja o que diz o Mypy:
+O problema é que `object` não suporta a operação `+__mul__+`. Veja o que diz o Mypy:
 
 [source]
 ----
@@ -856,7 +856,7 @@ No Python 3.10, não há uma boa maneira de anotar `array.array`, levando em con
 
 (Você pode pular esse box se usa apenas Python 3.9 ou posterior.)
 
-Em((("deprecated collection types")))((("gradual type system", "legacy support and deprecated collection types"))) Python 3.7 e 3.8, você precisa importar um `__future__` para fazer a notação `[]` funcionar com as coleções nativas, tal como `list`, como ilustrado no <<tokenize_3_7_ex>>.
+Em((("deprecated collection types")))((("gradual type system", "legacy support and deprecated collection types"))) Python 3.7 e 3.8, você precisa importar um `+__future__+` para fazer a notação `[]` funcionar com as coleções nativas, tal como `list`, como ilustrado no <<tokenize_3_7_ex>>.
 
 [[tokenize_3_7_ex]]
 .`tokenize` com dicas de tipo para Python ≥ 3.7
@@ -870,7 +870,7 @@ def tokenize(text: str) -> list[str]:
 ----
 ====
 
-O `__future__` não funciona com Python 3.6 ou anterior. O
+O `+__future__+` não funciona com Python 3.6 ou anterior. O
 <<tokenize_3_5_ex>> mostra como anotar `tokenize` de uma forma que funciona com Python ≥ 3.5.
 
 [[tokenize_3_5_ex]]
@@ -1376,7 +1376,7 @@ def mode(data: Iterable[Hashable]) -> Hashable:
 ----
 
 Agora o problema é que o tipo do item retornado é `Hashable`: 
-um ABC que implementa apenas o método `__hash__`.
+um ABC que implementa apenas o método `+__hash__+`.
 Então o verificador de tipo não vai permitir que façamos nada com o valor retornado, exceto chamar seu método `hash()`. Não é muito útil.
 
 A solução está em outro parâmetro opcional de `TypeVar`: o parâmetro representado pela palavra-chave `bound`. Ele estabelece um limite superior para os tipos aceitos.
@@ -1490,10 +1490,10 @@ A mensagem de erro mostra que `sorted` usa o operador `<` nos elementos do iter�
 [Spam(1), Spam(2), Spam(3), Spam(4), Spam(5)]
 ----
 
-Isso confirma a suspeita: eu consigo passar um lista de `Spam` para `sort`, porque `Spam` implementa `__lt__` — o método especial subjacente ao operador `<`.
+Isso confirma a suspeita: eu consigo passar um lista de `Spam` para `sort`, porque `Spam` implementa `+__lt__+` — o método especial subjacente ao operador `<`.
 
-Então o parâmetro de tipo `T` no <<top_undefined_t_ex>> deveria ser limitado a tipos que implementam `__lt__`.
-No <<mode_hashable_ex>>, precisávamos de um parâmetro de tipo que implementava `__hash__`, para poder usar `typing.Hashable` como limite superior do parâmetro de tipo.
+Então o parâmetro de tipo `T` no <<top_undefined_t_ex>> deveria ser limitado a tipos que implementam `+__lt__+`.
+No <<mode_hashable_ex>>, precisávamos de um parâmetro de tipo que implementava `+__hash__+`, para poder usar `typing.Hashable` como limite superior do parâmetro de tipo.
 Mas agora não há um tipo adequado em `typing` ou `abc` para usarmos, então precisamos criar um.
 
 O <<comparable_protocol_ex>> mostra o novo tipo `SupportsLessThan`, um `Protocol`.
@@ -1581,12 +1581,12 @@ Found 1 error in 1 file (checked 1 source file)
 
 A principal vantagem de um tipo protocolo sobre os ABCs é que o tipo não precisa de nenhuma declaração especial para ser _consistente-com_ um tipo protocolo. Isso permite que um protocolo seja criado aproveitando tipos pré-existentes, ou tipos implementados em bases de código que não estão sob nosso controle. 
 Eu não tenho que derivar ou registrar `str`, `tuple`, `float`, `set`, etc. com `SupportsLessThan` para usá-los onde um parâmetro `SupportsLessThan` é esperado.
-Eles só precisam implementar `__lt__`.
+Eles só precisam implementar `+__lt__+`.
 E o verificador de tipo ainda será capaz de realizar seu trabalho, porque `SupportsLessThan` está explicitamente declarado como um `Protocol`— diferente dos protocolos implícitos comuns no duck typing, que são invisíveis para o verificador de tipos.
 
 A classe especial `Protocol` foi introduzida na
 https://fpy.li/pep544[PEP 544—Protocols: Structural subtyping (static duck typing)].
-O <<top_protocol_ex>> demonstra((("static duck typing"))) porque esse recurso é conhecido como _duck typing estático_ (_static duck typing_): a solução para anotar o parâmetro `series` de `top` era dizer "O tipo nominal de `series` não importa, desde que ele implemente o método `__lt__`."
+O <<top_protocol_ex>> demonstra((("static duck typing"))) porque esse recurso é conhecido como _duck typing estático_ (_static duck typing_): a solução para anotar o parâmetro `series` de `top` era dizer "O tipo nominal de `series` não importa, desde que ele implemente o método `+__lt__+`."
 Em Python, o duck typing sempre permitiu dizer isso de forma implícita, deixando os verificadores de tipo estáticos sem ação.
 Um verificador de tipo não consegue ler o código fonte em C do CPython, ou executar experimentos no console para descobrir que `sorted` só requer que seus elementos suportem `<`.
 
@@ -1597,7 +1597,7 @@ Além disso, a <<overload_sec>> (no <<more_types_ch>>) explica como declarar ass
 
 [NOTE]
 ====
-O `typing.Protocol` torna possível anotar a função `double` na <<types_defined_by_ops_sec>> sem perder funcionalidade. O segredo é definir uma classe de protocolo com o método `__mul__`.
+O `typing.Protocol` torna possível anotar a função `double` na <<types_defined_by_ops_sec>> sem perder funcionalidade. O segredo é definir uma classe de protocolo com o método `+__mul__+`.
 Convido o leitor a fazer isso como um exercício. A solução está na <<typed_double_sec>> (<<ifaces_prot_abc>>).((("", startref="GTSstatic08")))((("", startref="stprot08")))((("", startref="proto08")))
 ====
 
@@ -1696,7 +1696,7 @@ isso me diz exatamente o que posso atribuir a `scores`.
 Não posso atribuir objetos declarados como `list[int]` ou `list[complex]`:
 
 * Um objeto `list[int]` não é aceitável porque ele não pode conter valores `float` que meu código pode precisar colocar em `scores`.
-* Um objeto `list[complex]` não é aceitável porque meu código pode precisar ordenar `scores` para encontrar a mediana, mas `complex` não fornece o método `__lt__`, então `list[complex]` não é ordenável.
+* Um objeto `list[complex]` não é aceitável porque meu código pode precisar ordenar `scores` para encontrar a mediana, mas `complex` não fornece o método `+__lt__+`, então `list[complex]` não é ordenável.
 ====
 
 Agora chegamos ou último tipo especial que examinaremos nesse capítulo.
@@ -1717,7 +1717,7 @@ Sua assinatura no `typeshed` é:
 def exit(__status: object = ...) -> NoReturn: ...
 ----
 
-O parâmetro `__status__` é apenas posicional, e tem um valor default.
+O parâmetro `+__status__+` é apenas posicional, e tem um valor default.
 Arquivos stub não contém valores default, em vez disso eles usam `...`.
 O tipo de `__status` é `object`, o que significa que pode também ser `None`,
 assim seria redundante escrever `Optional[object]`.
