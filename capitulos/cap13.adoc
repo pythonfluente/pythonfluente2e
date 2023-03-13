@@ -1,11 +1,12 @@
-:xrefstyle: short
+[[ifaces_prot_abc]]
+== Interfaces, Protocolos, e ABCs
 :figure-caption: Figura
 :example-caption: Exemplo
 :table-caption: Tabela
 :section-caption: Seção
 :chapter-caption: Capítulo
-[[ifaces_prot_abc]]
-== Interfaces, Protocolos, e ABCs
+:xrefstyle: short
+:example-number: 0
 
 ++++
 <blockquote>
@@ -43,8 +44,9 @@ As((("interfaces", "typing map")))((("typing map"))) quatro abordagens retratada
 .A metade superior descreve abordagens de checagem de tipo durante a execução usando apenas o interpretador Python; a metade inferior requer um verificador de tipo estático externo, como o Mypy ou um IDE como o PyCharm. Os quadrantes da esquerda se referem a tipagem baseada na estrutura do objeto - isto é, dos métodos oferecidos pelo objeto, independente do nome de sua classe ou superclasses; os quadrantes da direita dependem dos objetos terem tipos explicitamente nomeados: o nome da classe do objeto, ou o nome de suas superclasses.
 image::images/flpy_1301.png[Quatro abordagens para verificaçào de tipo]
 
-Cada uma dessas quatro abordagens dependem de interfaces para funcionarem, mas a tipagem estática pode ser implementada de forma pobre - usando apenas tipos concretos em vez de abstrações de interfaces como protocolos e classes base abstratas.
-Este capítulo é sobre duck typing, goose typing (_tipagem ganso_), e duck typing estática - disciplinas de tipagem que circulam em torno de interfaces.
+Cada uma dessas quatro abordagens dependem de interfaces para funcionarem,
+mas a tipagem estática pode ser implementada de forma limitada usando apenas tipos concretos em vez de abstrações de interfaces como protocolos e classes base abstratas.
+Este capítulo é sobre duck typing, goose typing (_tipagem ganso_), e duck typing estática - disciplinas de tipagem com foco em interfaces.
 
 O((("interfaces", "topics covered")))((("protocols", "topics covered"))) capítulo está dividido em quatro seções principais, tratando de três dos quatro quadrantes no Mapa de Sistemas de Tipagem. (<<type_systems_described>>):
 
@@ -118,9 +120,9 @@ Veja essa parte do pass:[<a href="https://docs.python.org/pt-br/3/c-api/index.ht
 
 `int PySequence_Check(PyObject *o)`::
     Retorna `1` se o objeto oferecer o protocolo de sequência, caso contrário retorna `0`.
-    Observe que ela retorna `1` para classes Python com um método `__getitem__()`, a menos que sejam subclasses de `dict` [...].
+    Observe que ela retorna `1` para classes Python com um método `+__getitem__+`, a menos que sejam subclasses de `dict` [...]
 
-Esperamos que uma sequência também ofereça `len()`, através da implementação de `+__len__+`.
+Esperamos que uma sequência também suporte `len()`, através da implementação de `+__len__+`.
 `Vowels` não tem um método `+__len__+`, mas ainda assim se comporta como uma sequência em alguns contextos.
 E isso pode ser o suficiente para nossos propósitos.
 Por isso que gosto de dizer que um protocolo é uma "interface informal."
@@ -343,7 +345,7 @@ De toda forma, a chamada errônea vai aparecer perto do final do traceback, torn
 Se você não barrar o argumento inválido no construtor da classe, o programa vai quebrar mais tarde, quando algum outro método da classe precisar usar a variável `self.balls` e ela não for uma `list`.
 Então a causa primeira do problema será mais difícil de encontrar.
 
-Naturalmente, seria ruim passar o argumento para `list()` se os dados não devem ser copiados, ou por seu tamanho ou porque quem chama a função, por projeto, espera que  os itens sejam modificados internamente, como no caso de `random.shuffle`.
+Naturalmente, seria ruim passar o argumento para `list()` se os dados não devem ser copiados, ou por seu tamanho ou porque quem chama a função, por projeto, espera que os itens sejam modificados internamente, como no caso de `random.shuffle`.
 Neste caso, uma verificação durante a execução como `isinstance(x, abc.MutableSequence)` seria a melhor opção,
 
 Se você estiver com receio de produzir um gerador infinito - algo que não é um problema muito comum - pode começar chamando `len()` com o argumento. 
@@ -723,7 +725,7 @@ Para deixar claro aos usuário do `ADAM` o quê se espera de um componente de "e
 
 Na bibliografia sobre estruturas de dados, "stack" e "queue" descrevem interfaces abstratas em termos dos arranjos físicos dos objetos.
 Vamos seguir o mesmo caminho e usar uma metáfora do mundo real para batizar nossa ABC:
-gaiolas de bingo e sorteadores de loteria são máquinas projetadas para escolher aleatoriamente itens  de um conjunto, finito sem repetições, até o conjunto ser exaurido.
+gaiolas de bingo e sorteadores de loteria são máquinas projetadas para escolher aleatoriamente itens de um conjunto, finito sem repetições, até o conjunto ser exaurido.
 
 A ABC vai ser chamada `Tombola`, seguindo o nome italiano do bingo (e do recipiente balançante que mistura os números)
 
@@ -797,11 +799,11 @@ Veja a <<exc_tree_part>>.
 image::images/flpy_1306.png["Árvore de ponta cabeça, com BaseException no topo, e quatro ramos principais, incluindo Exception."]
 
 
-➊ `LookupError` is the exception we handle in `Tombola.inspect`.
+➊ `LookupError` é a exceção que tratamos em `Tombola.inspect`.
 
-➋  `IndexError` is the `LookupError` subclass raised when we try to get an item from a sequence with an index beyond the last position.
+➋ `IndexError` é a subclasse de `LookupError` gerada quando tentamos acessar um item em uma sequência usando um índice além da última posição.
 
-➌ `KeyError` is raised when we use a nonexistent key to get an item from a mapping.
+➌ `KeyError` ocorre quando usamos uma chave inexistente para acessar um item em um mapeamento (`dict` etc.).
 
 ////
 ++++
@@ -1028,7 +1030,7 @@ Esses registros ocorrem apenas quando aquele módulo é importado,
 o que não causa problema, pois você terá mesmo que importar o módulo para obter as ABCs.
 Por exemplo, você precisa importar `MutableMapping` de `collections.abc` para verificar algo como `isinstance(my_dict, MutableMapping)`.
 
-Criar uma subclasse de uma  ABC ou se registrar com uma ABC são ambas maneiras explícitas de fazer nossas classes passarem verificações com `issubclass` e `isinstance` (que também se apoia em `issubclass`).
+Criar uma subclasse de uma ABC ou se registrar com uma ABC são duas maneiras explícitas de fazer nossas classes passarem verificações com `issubclass` e `isinstance` (que também se apoia em `issubclass`).
 Mas algumas ABCs também suportam tipagem estrutural. A próxima seção explica isso.
 
 [[subclasshook_sec]]
@@ -1161,7 +1163,7 @@ Quando((("static protocols", "typed double function", id="SPtypeddouble13")))(((
 Fraction(4, 5)
 ----
 
-Antes da introdução dos protocolos estáticos, não havia uma forma prática de acrescentar dicas de tipo a `double` sem limitar seus usos possíveis.footnote:[Certo, double()` não é muito útil, exceto como um exemplo. Mas a biblioteca padrão do Python tem muitas funções que não poderiam ser anotadas de modo apropriado antes dos protocolos estáticos serem adicionados, no Python 3.8. Eu ajudei a corrigir alguns bugs no _typeshed_ acrescentando dicas de tipo com o uso de protocolos. Por exemplo, o _pull request_ (nome do processo de pedido de envio de modificações a um repositório de código) que consertou  https://fpy.li/shed4051["Should Mypy warn about potential invalid arguments to `max`? (Deveria o Mypy avisar sobre argumentos potencialmente inválidos passados a `max`?)"] aproveitava um protocolo `_SupportsLessThan`, que usei para melhorar as anotações de `max`, `min`, `sorted`, e `list.sort`.]
+Antes da introdução dos protocolos estáticos, não havia uma forma prática de acrescentar dicas de tipo a `double` sem limitar seus usos possíveis.footnote:[Certo, double()` não é muito útil, exceto como um exemplo. Mas a biblioteca padrão do Python tem muitas funções que não poderiam ser anotadas de modo apropriado antes dos protocolos estáticos serem adicionados, no Python 3.8. Eu ajudei a corrigir alguns bugs no _typeshed_ acrescentando dicas de tipo com o uso de protocolos. Por exemplo, o _pull request_ (nome do processo de pedido de envio de modificações a um repositório de código) que consertou https://fpy.li/shed4051["Should Mypy warn about potential invalid arguments to `max`? (Deveria o Mypy avisar sobre argumentos potencialmente inválidos passados a `max`?)"] aproveitava um protocolo `_SupportsLessThan`, que usei para melhorar as anotações de `max`, `min`, `sorted`, e `list.sort`.]
 
 
 Graças ao duck typing, `double` funciona mesmo com tipos do futuro, tal como a classe `Vector` aprimorada que veremos no <<overloading_mul>> (<<operator_overloading>>):
@@ -1385,7 +1387,7 @@ Veja essa sessão no console:
 ----
 >>> import sys
 >>> sys.version
-'3.9.5 (v3.9.5:0a7dcbdb13, May  3 2021, 13:17:02) \n[Clang 6.0 (clang-600.0.57)]'
+'3.9.5 (v3.9.5:0a7dcbdb13, May 3 2021, 13:17:02) \n[Clang 6.0 (clang-600.0.57)]'
 >>> c = 3+4j
 >>> c.__float__
 <method-wrapper '__float__' of complex object at 0x10a16c590>
@@ -1496,7 +1498,7 @@ Aquela importação faz as dicas de tipo serem armazenadas como strings, sem ser
 Sem o `+__future__+` import of `annotations`,
 `Vector2d` é uma referência inválida neste momento (a classe não está inteiramente definida ainda) e deveria ser escrita como uma string:
 `'Vector2d'`, como se fosse uma referência adiantada.
-Essa importação de `+__future__+` foi  introduzida na 
+Essa importação de `+__future__+` foi introduzida na 
 https://fpy.li/pep563[PEP 563—Postponed Evaluation of Annotations], implementada no Python 3.7.
 Aquele comportamento estava marcado para se tornar default no 3.10, mas a mudança foi adiada para uma versão futura.footnote:[Leia a https://fpy.li/13-32[decisão] (EN) do Python Steering Council no python-dev.]
 Quando isso acontecer, a importaçào será redundante mas inofensiva.
@@ -1625,7 +1627,7 @@ Estender um protocolo estático em Python tem algumas ressalvas, como mostra o <
 include::code/13-protocol-abc/typing/randompickload.py[]
 ----
 ====
-<1> Se você quer que o protocolo derivado possa ser verificado durante a execução, você precisa aplicar o decorador novamente - seu comportamento não é herdado.footnote:[Para detalhes e  justificativa, veja por favor a seção sobre https://fpy.li/13-37[`@runtime_checkable`] (EN)
+<1> Se você quer que o protocolo derivado possa ser verificado durante a execução, você precisa aplicar o decorador novamente - seu comportamento não é herdado.footnote:[Para detalhes e justificativa, veja por favor a seção sobre https://fpy.li/13-37[`@runtime_checkable`] (EN)
 na PEP 544—Protocols: Structural subtyping (static duck typing).]
 <2> Todo protocolo deve nomear explicitamente `typing.Protocol` como uma de suas classes base, além do protocolo que estamos estendendo. Isso é diferente da forma como herança funciona em Python.footnote:[Novamente, leia por favor https://fpy.li/13-38["Merging and extending protocols"] (EN) na PEP 544 para os detalhes e [.keep-together]#justificativas#.]
 <3> De volta à programação orientada a objetos "normal": só precisamos declarar o método novo no protocolo derivado. A declaração do método `pick` é herdada de `RandomPicker`.
@@ -1656,7 +1658,7 @@ então se você declarar `x: Number`, o Mypy não vai deixar você fazer operaç
 
 Se as ABCs de `numbers` não tem suporte, quais as opções?
 
-Um bom lugar para procurar soluções de tipagem é no projeto  _typeshed_.
+Um bom lugar para procurar soluções de tipagem é no projeto _typeshed_.
 Como parte da biblioteca padrão do Python, o módulo `statistics` tem um arquivo stub correspondente no _typeshed_ com dicas de tipo, o https://fpy.li/13-40[_statistics.pyi_], 
 
 Lá você encontrará as seguintes definições, que são usadas para anotar várias funções:
@@ -1784,8 +1786,10 @@ onde retomamos o estudo do duck typing estático, que havia começado no <<type_
 Vimos como o decorador `@runtime_checkable` tambem aproveita o `+__subclasshook__+` para suportar tipagem estrutural durante a execução - mesmo que o melhor uso dos protocolos estáticos seja com verificadores de tipo estáticos, 
 que podem levar em consideração as dicas de tipo, tornando a tipagem estrutural mais confiável.
 Então falamos sobre o projeto e a codificação de um protocolo estático e como estendê-lo.
-O capítulo terminou com <<numbers_abc_proto_sec>>, que conta a triste história do estado lastismável da torre numérica e das poucas insuficiências existentes na  alternativa proposta:
-os protocolos numéricos estáticos tal como `SupportsFloat` e outros, adicionados ao módulo `typing` no Python 3.8.
+O capítulo terminou com <<numbers_abc_proto_sec>>,
+que conta a triste história do abandono da torre numérica e das limitações da alternativa proposta:
+os protocolos numéricos estáticos tal como `SupportsFloat` e outros,
+adicionados ao módulo `typing` no Python 3.8.
 
 A mensagem principal desse capítulo é que temos quatro maneiras complementares de programar com interfaces no Python moderno, 
 cada uma com diferentes vantagens e deficiências.
@@ -1940,7 +1944,7 @@ Metáforas e Idiomas em Interfaces
 
 Uma((("Soapbox sidebars", "interfaces"))) metáfora promove o entendimento tornando restrições e acessos visíveis. 
 Esse é o valor das palavras "stack" (_pilha_) e "queue" (_fila_) para descrever estruturas de dados fundamentais: elas tornam claras aa operações permitidas, isto é, como os itens podem ser adicionados ou removidos. 
-Por outro lado, Alan Cooper et al. escrevem em  _About Face, the Essentials of Interaction Design_ (), 4th ed. (Wiley):
+Por outro lado, Alan Cooper et al. escrevem em _About Face, the Essentials of Interaction Design_, 4th ed. (Wiley):
 
 [quote]
 ____
