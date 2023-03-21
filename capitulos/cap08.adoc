@@ -25,7 +25,7 @@ Entretanto, as dicas de tipo não beneficiam igualmente a todos as pessoas que u
 Por isso deverão ser sempre opcionais.
 
 A 
-https://fpy.li/pep484[PEP 484—Type Hints] introduziu a sintaxe e a semântica para desclarações explícitas de tipo em argumentos de funções, valores de retorno e variáveis. O objetivo é ajudar ferramentas de desenvolvimento a encontrarem bugs nas bases de código em Python através de análise estática, isto é, sem precisar efetivamente executar o código através de testes.
+https://fpy.li/pep484[PEP 484—Type Hints] introduziu a sintaxe e a semântica para declarações explícitas de tipo em argumentos de funções, valores de retorno e variáveis. O objetivo é ajudar ferramentas de desenvolvimento a encontrarem bugs nas bases de código em Python através de análise estática, isto é, sem precisar efetivamente executar o código através de testes.
 
 Os maiores beneficiários são engenheiros de software profissionais que usam IDEs (_Ambientes de Desenvolvimento Integrados_) e CI (_Integração Contínua_)
 A análise de custo-benefício que torna as dicas de tipo atrativas para esse grupo não se aplica a todos os usuários de Python.
@@ -62,7 +62,7 @@ Outras linguagens com sistemas de tipagem gradual são o Typescript da Microsoft
 Um sistema gradual de tipagem:
 
 É opcional::
-Por default, o verificador de tipo não deve emitir avisos para código que não tenha dicas de tipo. Em vez disso, o verificador supõe o tipo `Any` quando não consegue determinar o tipo de um objeto. O tipo `Any` é considerado compátivel com todos os outros tipos.
+Por default, o verificador de tipo não deve emitir avisos para código que não tenha dicas de tipo. Em vez disso, o verificador supõe o tipo `Any` quando não consegue determinar o tipo de um objeto. O tipo `Any` é considerado compatível com todos os outros tipos.
 Não captura erros de tipagem durante a execução do código::
 Dicas de tipo são usadas por verificadores de tipo, analisadores de código-fonte (_linters_) e IDEs para emitir avisos. Eles não evitam que valores inconsistentes sejam passados para funções ou atribuídos a variáveis durante a execução.
 Não melhora a performance::
@@ -383,7 +383,7 @@ def double(x: abc.Sequence):
 Um verificador de tipo irá rejeitar esse código.
 Se você informar ao Mypy que `x` é do tipo `abc.Sequence`, ele vai marcar `x * 2` como erro, pois a https://fpy.li/8-13[`Sequence` ABC] não implementa ou herda o método `+__mul__+`. Durante a execução, o código vai funcionar com sequências concretas como `str`, `tuple`, `list`, `array`, etc., bem como com números, pois durante a execução as dicas de tipo são ignoradas. Mas o verificador de tipo se preocupa apenas com o que estiver explicitamente declarado, e `abc.Sequence` não suporta `+__mul__+`.
 
-Por essa razão o título dessa seção é  "Tipos São Definidos pelas Operações Possíveis." O runtime do Python aceita qualquer objeto como argumento `x` nas duas versões da função `double`. O cálculo de `x * 2` pode funcionar, ou pode causar um `TypeError`, se a operação não for suportada por `x`. Por outro lado, Mypy vai marcar `x * 2` como um erro quando analisar o código-fonte anotado de `double`, pois é uma operaçào não suportada pelo tipo declarado `x: abc.Sequence`.
+Por essa razão o título dessa seção é  "Tipos São Definidos pelas Operações Possíveis." O runtime do Python aceita qualquer objeto como argumento `x` nas duas versões da função `double`. O cálculo de `x * 2` pode funcionar, ou pode causar um `TypeError`, se a operação não for suportada por `x`. Por outro lado, Mypy vai marcar `x * 2` como um erro quando analisar o código-fonte anotado de `double`, pois é uma operação não suportada pelo tipo declarado `x: abc.Sequence`.
 
 Em um sistema de tipagem gradual, acontece uma interação entre duas perspectivas diferentes de tipo:
 
@@ -468,7 +468,7 @@ Funciona perfeitamente! Viva o duck typing!
 Durante a execução do programa, o Python não se importa com os tipos declarados. Ele usa apenas duck typing. O Mypy apontou um erro em `alert_bird`, mas a chamada da função com `daffy` funciona corretamente quando executada.
 À primeira vista isso pode surpreender muitos pythonistas: um verificador de tipo estático muitas vezes encontra erros em código que sabemos que vai funcionar quanto executado.
 
-Entretanto, se daqui a alguns meses você for encarregado de estender o exemplo bobo do pássaro, você agredecerá ao Mypy. Observe esse módulo _woody.py_ module, que também usa `birds`, no <<woody_module_ex>>.
+Entretanto, se daqui a alguns meses você for encarregado de estender o exemplo bobo do pássaro, você agradecerá ao Mypy. Observe esse módulo _woody.py_ module, que também usa `birds`, no <<woody_module_ex>>.
 
 [[woody_module_ex]]
 ._woody.py_
@@ -694,7 +694,7 @@ Todo sistema de tipagem gradual precisa de um tipo coringa como `Any`
 
 [TIP]
 ====
-O verbo "inferir" é um sinônimo bonito para "advinhar", quando usado no contexto da análise de tipos. Verificadores de tipo modernos, em Python e outras linguagens, não precisam de anotações de tipo em todo lugar porque conseguem inferir o tipo de muitas expressões. Por exemplo, se eu escrever `x = len(s) * 10`, o verificador não precisa de uma declaração local explícita para saber que `x` é um `int`, desde que consiga encontrar dicas de tipo para `len` em algum lugar.
+O verbo "inferir" é um sinônimo bonito para "adivinhar", quando usado no contexto da análise de tipos. Verificadores de tipo modernos, em Python e outras linguagens, não precisam de anotações de tipo em todo lugar porque conseguem inferir o tipo de muitas expressões. Por exemplo, se eu escrever `x = len(s) * 10`, o verificador não precisa de uma declaração local explícita para saber que `x` é um `int`, desde que consiga encontrar dicas de tipo para `len` em algum lugar.
 ====
 
 Agora podemos explorar o restante dos tipos usados em anotações.((("", startref="GTSsub08")))((("", startref="dynamic08")))((("", startref="anytype08")))
@@ -848,7 +848,7 @@ frozenset   abc.Collection
 
 Os tipos `tuple` e mapping aceitam dicas de tipo mais complexas, como veremos em suas respectivas seções.
 
-No Python 3.10, não há uma boa maneira de anotar `array.array`, levando em consideração o argumento `typecode` do construtor, que determina se a array contém inteiros ou floats. Um problema ainda mais complicado é verificar a faixa dos inteiros, para prevenir `OverflowError` durante a execução, ao se adcionar elementos a arrays. Por exemplo, uma `array` com `typecode=B` só pode receber valores `int` de 0 a 255. Atualmente o sistema de tipagem estática do Python não consegue lidar com esse desafio.((("", startref="GTSgeneric08")))((("", startref="generic08")))
+No Python 3.10, não há uma boa maneira de anotar `array.array`, levando em consideração o argumento `typecode` do construtor, que determina se a array contém inteiros ou floats. Um problema ainda mais complicado é verificar a faixa dos inteiros, para prevenir `OverflowError` durante a execução, ao se adicionar elementos a arrays. Por exemplo, uma `array` com `typecode=B` só pode receber valores `int` de 0 a 255. Atualmente o sistema de tipagem estática do Python não consegue lidar com esse desafio.((("", startref="GTSgeneric08")))((("", startref="generic08")))
 
 [[legacy_deprecated_typing_box]]
 .Suporte a Tipos de Coleção Legadas e Descontinuadas
@@ -911,7 +911,7 @@ Podemos resumir esse processo em quatro etapas:
 
 . Tornar aquele comportamento o default no Python 3.9: `list[str]` agora funciona sem que  `future` precise ser importado.
 
-. Descontinuar (_deprecate_) todos os tipos genéricos do módulo `typing`.footnote:[Uma de minhas contribuições para a documentação do módulo `typing` foi acrescentar dúzias de avisos de descontinuação, enquanto eu reorganizava as entradas abaixo de https://docs.python.org/pt-br/3/library/typing.html#module-contents["Conteúdo do Módulo"] em subseções, sob a supervisão de Guido van [.keep-together]#Rossum#.] Avisos de descontinuaçào não serão emitidos pelo interpretador Python, porque os verificadores de tipo devem sinalizar os tipos descontinuados quando o programa sendo verificado tiver como alvo Python 3.9 ou posterior.
+. Descontinuar (_deprecate_) todos os tipos genéricos do módulo `typing`.footnote:[Uma de minhas contribuições para a documentação do módulo `typing` foi acrescentar dúzias de avisos de descontinuação, enquanto eu reorganizava as entradas abaixo de https://docs.python.org/pt-br/3/library/typing.html#module-contents["Conteúdo do Módulo"] em subseções, sob a supervisão de Guido van [.keep-together]#Rossum#.] Avisos de descontinuação não serão emitidos pelo interpretador Python, porque os verificadores de tipo devem sinalizar os tipos descontinuados quando o programa sendo verificado tiver como alvo Python 3.9 ou posterior.
 
 . Remover aqueles tipos genéricos redundantes na primeira versão de Python lançada cinco anos após o Python 3.9. No ritmo atual, esse deverá ser o Python 3.14, também conhecido como Python Pi.
 ****
@@ -958,7 +958,7 @@ include::code/08-def-type-hints/coordinates/coordinates.py[tags=GEOHASH]
 
 [TIP]
 ====
-Com Pythom < 3.9, importe e use `typing.Tuple` nas dicas de tipo.
+Com Python < 3.9, importe e use `typing.Tuple` nas dicas de tipo.
 Este tipo está descontinuado mas permanecerá na biblioteca padrão pelo menos até 2024.
 ====
 
@@ -1111,7 +1111,7 @@ Por outro lado, veja essa assinatura:
 def name2hex(name: str, color_map: dict[str, int]) -> str:
 ----
 
-Agora `color_map` tem que ser um `dict` ou um de seus subtipos, tal como `defaultDict` ou [.keep-together]#`OrderedDict`#.
+Agora `color_map` tem que ser um `dict` ou um de seus subtipos, tal como `defaultdict` ou [.keep-together]#`OrderedDict`#.
 Especificamente, uma subclasse de `collections.UserDict` não passaria pela verificação de [.keep-together]#tipo# para `color_map`, a despeito de ser a maneira recomendada de criar mapeamentos [.keep-together]#definidos pelo usuário#, como vimos na <<sublcassing_userdict_sec>>.
 O Mypy rejeitaria um `UserDict` ou uma instância de classe derivada dele, porque `UserDict` [.keep-together]#não é# uma subclasse de `dict`; eles são irmãos. Ambos são subclasses de pass:[<span class="keep-together"><code>abc.MutableMapping</code></span>].footnote:[Na verdade, `dict` é uma subclasse virtual de `abc.MutableMapping`. O conceito de subclasse virtual será explicado em <<ifaces_prot_abc>>. Por hora, basta saber que `issubclass(dict, abc.MutableMapping)` é `True`, apesar de dict ser implementado em C e não herdar nada de `abc.MutableMapping`, apenas de `object`.]
 
@@ -1148,7 +1148,7 @@ Para encerrar nossa discussão de ABCs em dicas de tipo, precisamos falar sobre 
 ===== A queda da torre numérica
 
 O((("numbers package")))((("numeric tower"))) pacote https://docs.python.org/pt-br/3/library/numbers.html[`numbers`] define a assim chamada _torre numérica_ (_numeric tower_) descrita na https://fpy.li/pep3141[PEP 3141—A Type Hierarchy for Numbers] (EN).
-A torre é uma hieraquia linear de ABCs, com `Number` no topo:
+A torre é uma hierarquia linear de ABCs, com `Number` no topo:
 
 * `Number`
 * `Complex`
@@ -1230,7 +1230,7 @@ FromTo: TypeAlias = tuple[str, str]
 
 ===== abc.Iterable versus abc.Sequence
 
-Tanto((("abc.Iterable")))((("abc.Sequence"))) `math.fsum` quanto `replacer.zip_replace` tem que percorrer todos os argumentos do `Iterable` para produzir um resultado. Dado um iterável sem fim tal como o gerador `itertools.cycle` como entrada, essas funções consumiriam toda a mémória e derrubariam o processo Python. Apesar desse perigo potencial, é muito comum no Python moderno se oferecer funções que aceitam um `Iterable` como argumento, mesmo se elas tem que processar a estrutura inteira para obter um resultado. Isso dá a quem chama a função a opção de fornecer um gerador como dado de entrada, em vez de uma sequência pré-construída, com uma grande esconomia potencial de memória se o número de itens de entrada for grande.
+Tanto((("abc.Iterable")))((("abc.Sequence"))) `math.fsum` quanto `replacer.zip_replace` tem que percorrer todos os argumentos do `Iterable` para produzir um resultado. Dado um iterável sem fim tal como o gerador `itertools.cycle` como entrada, essas funções consumiriam toda a memória e derrubariam o processo Python. Apesar desse perigo potencial, é muito comum no Python moderno se oferecer funções que aceitam um `Iterable` como argumento, mesmo se elas tem que processar a estrutura inteira para obter um resultado. Isso dá a quem chama a função a opção de fornecer um gerador como dado de entrada, em vez de uma sequência pré-construída, com uma grande economia potencial de memória se o número de itens de entrada for grande.
 
 Por outro lado, a função `columnize` no <<columnize_ex>> requer uma `Sequence`, não um `Iterable`, pois ela precisa obter a `len()` do argumento para calcular previamente o número de linhas.
 
@@ -1248,7 +1248,7 @@ O <<generic_sample_ex>> define `sample`, uma função que recebe dois argumentos
 uma `Sequence` de elementos de tipo `T` e um `int`.
 Ela retorna uma `list` de elementos do mesmo tipo `T`, escolhidos aleatoriamente do primeiro argumento.
 
-O <<generic_sample_ex>> mostra a implementção.
+O <<generic_sample_ex>> mostra a implementação.
 
 [[generic_sample_ex]]
 ._sample.py_
@@ -1294,7 +1294,7 @@ Aqui é uma exemplo de uso da https://docs.python.org/pt-br/3/library/statistics
 Sem o uso de `TypeVar`, `mode` poderia ter uma assinatura como a apresentada no <<mode_float_ex>>.
 
 [[mode_float_ex]]
-._mode_float.py_: `mode` que opera com `float` e seus subtipos footnote:[A implemantação aqui é mais simples que aquela do módulo https://fpy.li/8-29[`statistics`] na biblioteca padrão do Python]
+._mode_float.py_: `mode` que opera com `float` e seus subtipos footnote:[A implementação aqui é mais simples que aquela do módulo https://fpy.li/8-29[`statistics`] na biblioteca padrão do Python]
 ====
 [source, py]
 ----
@@ -1302,7 +1302,7 @@ include::code/08-def-type-hints/mode/mode_float.py[tags=MODE_FLOAT]
 ----
 ====
 
-Muitos dos usos de `mode` envovem valores `int` ou `float`, mas o Python tem outros tipos numéricos, e é desejável que o tipo de retorno siga o tipo dos elementos do `Iterable` recebido.
+Muitos dos usos de `mode` envolvem valores `int` ou `float`, mas o Python tem outros tipos numéricos, e é desejável que o tipo de retorno siga o tipo dos elementos do `Iterable` recebido.
 Podemos melhorar aquela assinatura usando `TypeVar`. Vamos começar com uma assinatura parametrizada simples, mas errada.
  
 [source, python3]
@@ -1590,7 +1590,7 @@ O <<top_protocol_ex>> demonstra((("static duck typing"))) porque esse recurso é
 Em Python, o duck typing sempre permitiu dizer isso de forma implícita, deixando os verificadores de tipo estáticos sem ação.
 Um verificador de tipo não consegue ler o código fonte em C do CPython, ou executar experimentos no console para descobrir que `sorted` só requer que seus elementos suportem `<`.
 
-Agora podemos tornar o duck typing explícito para os vericadores estáticos de tipo. Por isso faz sentido dizer que `typing.Protocol` nos oferece _duck typing estático_.footnote:[Eu não sei quem inventou a expressão _duck tying estático_, mas ela se tornou mais popular com a linguagem Go, que tem uma semântica de interfaces que é mais parecida com os protocolos de Python que com as interfaces nominais de Java.]
+Agora podemos tornar o duck typing explícito para os verificadores estáticos de tipo. Por isso faz sentido dizer que `typing.Protocol` nos oferece _duck typing estático_.footnote:[Eu não sei quem inventou a expressão _duck tying estático_, mas ela se tornou mais popular com a linguagem Go, que tem uma semântica de interfaces que é mais parecida com os protocolos de Python que com as interfaces nominais de Java.]
  
 Há mais para falar sobre `typing.Protocol`. Vamos voltar a ele na Parte IV, onde <<ifaces_prot_abc>> compara as abordagens da tipagem estrutural, do duck typing e dos ABCs - outro modo de formalizar protocolos.
 Além disso, a <<overload_sec>> (no <<more_types_ch>>) explica como declarar assinaturas de funções de sobrecarga (_overload_) com `@typing.overload`, e inclui um exemplo bastante extenso usando `typing.Protocol` e uma `TypeVar` delimitada.
@@ -1653,7 +1653,7 @@ A interação de parâmetros de tipo genéricos com uma hierarquia de tipos intr
 ===== Variância em tipos Callable
 
 Imagine um sistema de controle de temperatura com uma função `update` simples, como mostrada no <<callable_variance_ex>>.((("variance", "in callable types")))((("covariance", see="variance")))((("contravariance", see="variance"))) 
-A função `update` chama a função `probe` para obter a tempertura atual, e chama `display` para mostrar a temperatura para o usuário.
+A função `update` chama a função `probe` para obter a temperatura atual, e chama `display` para mostrar a temperatura para o usuário.
 `probe` e `display` são ambas passadas como argumentos para `update`, por motivos didáticos. O objetivo do exemplo é contrastar duas anotações de `Callable`: uma com um tipo de retorno e outro com um tipo de parâmetro.
 
 [[callable_variance_ex]]
@@ -1666,15 +1666,15 @@ include::code/08-def-type-hints/callable/variance.py[]
 ====
 <1> `update` recebe duas funções callable como argumentos.
 <2> `probe` precisa ser uma callable que não recebe nenhuma argumento e retorna um `float`
-<3> `display` recebe um argumneto `float` e retorna `None`.
+<3> `display` recebe um argumento `float` e retorna `None`.
 <4> `probe_ok` é _consistente-com_ `Callable[[], float]` porque retornar um `int` não quebra código que espera um `float`.
-<5> `display_wrong` não é _consistente-com_ `Callable[[float], None]` porque não há garantia que uma função esperando um `int` consiga lidar com um `float`; por exemplo, a funçào `hex` do Python aceita  um `int` mas rejeita um `float`.
+<5> `display_wrong` não é _consistente-com_ `Callable[[float], None]` porque não há garantia que uma função esperando um `int` consiga lidar com um `float`; por exemplo, a função `hex` do Python aceita  um `int` mas rejeita um `float`.
 <6> O Mypy marca essa linha porque `display_wrong` é incompatível com a dica de tipo no parâmetro `display` em `update`.
 <7> `disply_ok` é _consistente_com_ `Callable[[float], None]` porque uma função que aceita um `complex` também consegue lidar com um argumento `float`.
 <8> Mypy está satisfeito com essa linha.
 
 Resumindo,
-não há problema em fornecer uma funcão de callback que retorne um `int` quando o código espera uma função callback que retorne um `float`, porque um valor `int` sempre pode ser usado onde um `float` é esperado.
+não há problema em fornecer uma função de callback que retorne um `int` quando o código espera uma função callback que retorne um `float`, porque um valor `int` sempre pode ser usado onde um `float` é esperado.
 
 Formalmente, dizemos que `Callable[[], int]` é _subtipo-de_ `Callable[[], float]`— assim como `int` é _subtipo-de_ `float`.
 Isso significa que `Callable` é _covariante_ no que diz respeito aos tipos de retorno, porque a relação _subtipo-de_ dos tipos `int` e `float` aponta na mesma direção que os tipo `Callable` que os usam como tipos de retorno.
@@ -1690,7 +1690,7 @@ A <<variance_sec>> no <<more_types_ch>> explica variância em mais detalhes e co
 
 [TIP]
 ====
-Por hora, saiba que a maioria dos tipos genéricos parametrizafos são _invariantes_, portanto mais simples.
+Por hora, saiba que a maioria dos tipos genéricos parametrizados são _invariantes_, portanto mais simples.
 Por exemplo, se eu declaro `scores: list[float]`,
 isso me diz exatamente o que posso atribuir a `scores`.
 Não posso atribuir objetos declarados como `list[int]` ou `list[complex]`:
@@ -1706,7 +1706,7 @@ Agora chegamos ou último tipo especial que examinaremos nesse capítulo.
 
 Esse((("gradual type system", "NoReturn type")))((("NoReturn type"))) é um tipo especial usado apenas para anotar o tipo de retorno de funções que nunca retornam.
 Normalmente, elas existem para gerar exceções.
-Há dúzias dessas funçòes na biblioteca padrão.
+Há dúzias dessas funções na biblioteca padrão.
 
 Por exemplo, `sys.exit()` levanta `SystemExit` para encerrar o processo Python.
 
@@ -1729,7 +1729,7 @@ A última seção desse capítulo épico é sobre parâmetros posicionais e vari
 ((("", startref="THTusable08")))((("", startref="FTHusable08")))
 
 [[arbitrary_arguments_sec]]
-=== Anotanto Parâmetros Apenas Posicionais e Variádicos
+=== Anotando Parâmetros Apenas Posicionais e Variádicos
 
 Lembra((("functions, type hints in", "annotating positional only and variadic parameters")))((("type hints (type annotations)", "annotating positional only and variadic parameters")))((("parameters", "annotating positional only and variadic parameters")))((("variadic parameters"))) da função `tag` do <<tagger_ex>>?
 Da última vez que vimos sua assinatura foi em <<positional_only_params>>:
@@ -1784,7 +1784,7 @@ Para encerrar esse capítulo, vamos considerar brevemente os limites das dicas d
 
 === Tipos Imperfeitos e Testes Poderosos
 
-Os mantenedores((("functions, type hints in", "flawed typing and strong testing")))((("type hints (type annotations)", "flawed typing and strong testing")))((("flawed typing")))((("strong testing"))) de grandes bases de código corporativas relatam que muitos bugs são escontrados por verificadores de tipo estáticos, e o custo de resolvê-los é menor que se os mesmos bugs fossem descobertos apenas após o código estar rodando em produção.
+Os mantenedores((("functions, type hints in", "flawed typing and strong testing")))((("type hints (type annotations)", "flawed typing and strong testing")))((("flawed typing")))((("strong testing"))) de grandes bases de código corporativas relatam que muitos bugs são encontrados por verificadores de tipo estáticos, e o custo de resolvê-los é menor que se os mesmos bugs fossem descobertos apenas após o código estar rodando em produção.
 Entretanto, é essencial observar que a testagem automatizada era uma prática padrão largamente adotada muito antes da tipagem estática ser introduzida nas empresas que eu conheço.
 
 Mesmo em contextos onde ela é mais benéfica, a tipagem estática não pode ser elevada a árbitro final da correção.
@@ -1805,7 +1805,7 @@ Em geral, dicas de tipo não são úteis para localizar erros na lógica do neg�
 
 Dadas essas ressalvas, dicas de tipo não podem ser o pilar central da qualidade do software, e torná-las obrigatórias sem qualquer exceção só amplificaria os aspectos negativos.
 
-Considere o vericador de tipo estático como uma das ferramentas na estrutura moderna de integração de código, ao lado de testadores, analisadores de código (_linters_), etc.
+Considere o verificador de tipo estático como uma das ferramentas na estrutura moderna de integração de código, ao lado de testadores, analisadores de código (_linters_), etc.
 O objetivo de uma estrutura de produção de integração de código é reduzir as falhas no software, e testes automatizados podem encontrar muitos bugs que estão fora do alcance de dicas de tipo. Qualquer código que possa ser escrito em Python pode ser testado em Python - com ou sem dicas de tipo.
 
 [NOTE]
@@ -1824,7 +1824,7 @@ Até lá, as dicas de tipo ainda vão ter participações especiais em vários e
 
 === Resumo do Capítulo
 
-Começamos((("functions, type hints in", "overview of")))((("type hints (type annotations)", "overview of"))) com uma pequena introdução ao conceito de tipagem gradual, depois adotamos uma abordagem prática. É difícl ver como a tipagem gradual funciona sem uma ferramenta que efetivamente leia as dicas de tipo, então desenvolvemos uma função anotada guiados pelos relatórios de erro do Mypy.
+Começamos((("functions, type hints in", "overview of")))((("type hints (type annotations)", "overview of"))) com uma pequena introdução ao conceito de tipagem gradual, depois adotamos uma abordagem prática. É difícil ver como a tipagem gradual funciona sem uma ferramenta que efetivamente leia as dicas de tipo, então desenvolvemos uma função anotada guiados pelos relatórios de erro do Mypy.
 
 Voltando à ideia de tipagem gradual, vimos como ela é um híbrido do duck typing tradicional de Python e da tipagem nominal mais familiar aos usuários de Java, C++ e de outra linguagens de tipagem estática.
 
@@ -1842,7 +1842,7 @@ Como só surgiu no Python 3.8, `Protocol` ainda não é muito usado - mas é de 
 `Protocol` permite duck typing estático:
 É a ponte fundamental entre o núcleo do Python, coberto pelo duck typing, e a tipagem nominal que permite a verificadores de tipo estáticos encontrarem bugs.
 
-Ao discutir alguns desses tipos, usamos o Mypy para localizar erros de chacagem de tipo e tipos inferidos, com a ajuda da função mágica `reveal_type()` do Mypy.
+Ao discutir alguns desses tipos, usamos o Mypy para localizar erros de checagem de tipo e tipos inferidos, com a ajuda da função mágica `reveal_type()` do Mypy.
 
 A seção final mostrou como anotar parâmetros exclusivamente posicionais e variádicos.
 
@@ -1873,7 +1873,7 @@ Eu sou um grande fã de testes, mas também escrevo muito código exploratório.
 
 Esse post do Gábor é uma das melhores introduções a dicas de tipo em Python que eu já encontrei, junto com o texto de Geir Arne Hjelle,
 https://fpy.li/8-42["Python Type Checking (Guide)"] (EN).
-https://fpy.li/8-43["Hypermodern Python Chapter 4: Typing"] (EN), de Claudio Jolowicz, é uma introduçào mas curta que também fala de validação de checagem de tipo durante a execução.
+https://fpy.li/8-43["Hypermodern Python Chapter 4: Typing"] (EN), de Claudio Jolowicz, é uma introdução mas curta que também fala de validação de checagem de tipo durante a execução.
 
 Para uma abordagem mais aprofundada, a https://fpy.li/8-44[documentação do Mypy]
 é a melhor fonte. Ela é útil independente do verificador de tipo que você esteja usando, pois tem páginas de tutorial e de referência sobre tipagem em Python em geral - não apenas sobre o próprio Mypy.
@@ -1888,7 +1888,7 @@ A documentação do módulo https://docs.python.org/pt-br/3/library/typing.html[
 A https://fpy.li/pep483[PEP 483—The Theory of Type Hints] (EN) inclui uma explicação aprofundada sobre variância, usando `Callable` para ilustrar a contravariância. 
 As referências definitivas são as PEP relacionadas a tipagem. 
 Já existem mais de 20 delas.
-A audiência alvo das PEPs são os core devvelopers (_desenvolvedores principais da linguagem em si_) e o Steering Council do Python, então elas presupõe uma grande quantidade de conhecimento prévio, e certamente não são uma leitura leve.
+A audiência alvo das PEPs são os core developers (_desenvolvedores principais da linguagem em si_) e o Steering Council do Python, então elas pressupõe uma grande quantidade de conhecimento prévio, e certamente não são uma leitura leve.
 
 Como já mencionado, o <<more_types_ch>> cobre outros tópicos sobre tipagem, e a 
 <<more_type_hints_further_sec>> traz referências adicionais, incluindo a
@@ -1948,10 +1948,10 @@ Em 2017 os mantenedores de `requests` https://fpy.li/8-51[decidiram] não perder
 
 [quote]
 ____
-Acho que bibliotecas com APIs 'pithônicas' são as menos propensas a adotar esse sistema de tipagem, pois ele vai adicionar muito pouco valor a elas.
+Acho que bibliotecas com APIs 'pythônicas' são as menos propensas a adotar esse sistema de tipagem, pois ele vai adicionar muito pouco valor a elas.
 ____
 
-Naquela mensagem, Benfield incluiu esse exemplo extremo de uma tentativa de definiçào de tipo para o argumento de palavra-chave `files` em https://fpy.li/8-53[`requests.request()`]:
+Naquela mensagem, Benfield incluiu esse exemplo extremo de uma tentativa de definição de tipo para o argumento de palavra-chave `files` em https://fpy.li/8-53[`requests.request()`]:
 
 ----
 Optional[
@@ -2017,7 +2017,7 @@ Para alguns projetos e contextos, dicas de tipo simplesmente não fazem sentido.
 Mesmo em contextos onde elas fazer muito sentido, não fazem sentido o tempo todo. 
 Qualquer política razoável sobre o uso de dicas de tipo precisa conter exceções.
 
-Alan Kay, o recipiente do Turing Award que foi um dos pioneiros da programaçào orientada a objetos, certa vez disse:
+Alan Kay, o recipiente do Turing Award que foi um dos pioneiros da programação orientada a objetos, certa vez disse:
 
 [quote]
 ____
