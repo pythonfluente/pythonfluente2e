@@ -1,0 +1,33 @@
+name: Generate epub
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  Generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0
+
+      - name: Install Asciidoctor EPUB3
+        run: gem install asciidoctor-epub3
+
+      - name: Generate EPUB from AsciiDoc
+        run: |
+          asciidoctor-epub3 livro.adoc -o 'Python Fluente, Segunda Edição (2023).epub'
+
+      - name: Save EPUB to Repository
+        run: |
+          git config user.name '${{ secrets.GIT_USER_NAME }}'
+          git config user.email '${{ secrets.GIT_USER_EMAIL }}'
+          git add 'Python Fluente, Segunda Edição (2023).epub'
+          git commit -m 'Gerando nova versão do epub'
+          git push origin
