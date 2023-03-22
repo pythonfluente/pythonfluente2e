@@ -51,7 +51,7 @@ A <<py_in_multicore_world_sec>> é diferente do resto do livro: não há código
 
 Há((("concurrency models", "basics of concurrency"))) muitos fatores que tornam a programação concorrente difícil, mas quero tocar no mais básico deles: iniciar threads ou processos é bastante simples, mas como acompanhá-los?footnote:[Essa seção foi sugerida por meu amigo Bruce Eckel — autor de livros sobre Kotlin, Scala, Java, e C&#x2b;&#x2b;.]
 
-Quando você chama uma função, o código que origina a chamada fica bloqueado até que funçào retorne. Então você sabe que a função terminou, e pode facilmente acessar o valor retornado. Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para capturar o erro.
+Quando você chama uma função, o código que origina a chamada fica bloqueado até que função retorne. Então você sabe que a função terminou, e pode facilmente acessar o valor retornado. Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para capturar o erro.
 
 Essas opções familiares não estão disponíveis quando você inicia uma thread ou um processo: você não sabe automaticamente quando eles terminaram, e obter os resultados ou os erros requer criar algum canal de comunicação, tal como uma fila de mensagens.
 
@@ -219,7 +219,7 @@ lista as duas primeiras funções no script, e o <<spinner_thread_rest_ex>> most
 [[spinner_thread_top_ex]]
 .spinner_thread.py: as funções `spin` e `slow`
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/spinner_thread.py[tags=SPINNER_THREAD_TOP]
 ----
@@ -255,7 +255,7 @@ A função `supervisor`, que aparece no <<spinner_thread_rest_ex>>, usa um `Even
 [[spinner_thread_rest_ex]]
 .spinner_thread.py: as funções `supervisor` e `main`
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/spinner_thread.py[tags=SPINNER_THREAD_REST]
 ----
@@ -288,7 +288,7 @@ O objetivo dessa seção é apresentar o `multiprocessing` e mostrar como sua AP
 [[spinner_proc_ex]]
 .spinner_proc.py: apenas as partes modificadas são mostradas; todo o resto é idêntico a spinner_thread.py
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/spinner_proc.py[tags=SPINNER_PROC_IMPORTS]
 
@@ -348,7 +348,7 @@ A versão com corrotinas do programa de animação é mais fácil de entender se
 [[spinner_async_start_ex]]
 .spinner_async.py: a função `main` e a corrotina `supervisor`
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/spinner_async.py[tags=SPINNER_ASYNC_START]
 ----
@@ -380,7 +380,7 @@ The same issue is affecting other recently introduced Python keywords: `await`, 
 O <<spinner_async_start_ex>> demonstra as três principais formas de rodar uma corrotina:
 
 `asyncio.run(coro())`::
-    É chamado a partir de uma funcão regular, para controlar o objeto corrotina, que é normalmente o ponto de entrada para todo o código assíncrono no programa, como a `supervisor` nesse exemplo. Esta chamada bloqueia a função até que `coro` retorne. O valor de retorno da chamada a `run()` é o que quer que `coro` retorne.
+    É chamado a partir de uma função regular, para controlar o objeto corrotina, que é normalmente o ponto de entrada para todo o código assíncrono no programa, como a `supervisor` nesse exemplo. Esta chamada bloqueia a função até que `coro` retorne. O valor de retorno da chamada a `run()` é o que quer que `coro` retorne.
 `asyncio.create_task(coro())`::
     É chamado de uma corrotina para agendar a execução futura de outra corrotina.
     Essa chamada não suspende a corrotina atual.
@@ -399,7 +399,7 @@ Vamos estudar agora as corrotinas `spin` e `slow` no <<spinner_async_top_ex>>.
 [[spinner_async_top_ex]]
 .spinner_async.py: as corrotinas `spin` e `slow`
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/spinner_async.py[tags=SPINNER_ASYNC_TOP]
 ----
@@ -416,7 +416,7 @@ Aqui está um experimento que recomendo para entender como _spinner_async.py_ fu
 [[spinner_async_time_sleep_ex]]
 .spinner_async.py: substituindo `await asyncio.sleep(3)` por `time.sleep(3)`
 ====
-[source, py]
+[source, python]
 ----
 async def slow() -> int:
     time.sleep(3)
@@ -442,7 +442,7 @@ No <<spinner_async_experiment_ex>>, vamos nos concentrar no que ocorre nas corro
 [[spinner_async_experiment_ex]]
 .spinner_async_experiment.py: as corrotinas `supervisor` e `slow`
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/spinner_async_experiment.py[tags=SPINNER_ASYNC_EXPERIMENT]
 ----
@@ -490,7 +490,7 @@ O((("spinners (loading indicators)", "comparing supervisor functions"))) número
 [[thread_supervisor_ex]]
 .spinner_thread.py: a função `supervisor` com threads
 ====
-[source, python3]
+[source, python]
 ----
 def supervisor() -> int:
     done = Event()
@@ -510,7 +510,7 @@ Para comparar, o <<asyncio_supervisor_ex>> mostra a corrotina  `supervisor` do <
 [[asyncio_supervisor_ex]]
 .spinner_async.py: a corrotina assíncrona `supervisor`
 ====
-[source, python3]
+[source, python]
 ----
 async def supervisor() -> int:
     spinner = asyncio.create_task(spin('thinking!'))
@@ -550,7 +550,7 @@ Para entregar o controle, você usa `await` para passar o controle de volta ao a
 Por isso é possível cancelar uma corrotina de forma segura:
 por definição, uma corrotina só pode ser cancelada quando está suspensa em uma expressão `await`, então é possível realizar qualquer limpeza necessária capturando a exceção `CancelledError`.
 
-A chamada `time.sleep()` bloqueia mas não faz nada. Vamos agora experimentar com uma chamada de uso intesivo da CPU, para entender melhor a GIL, bem como o efeito de funções de processamento intensivo sobre código assíncrono.((("", startref="CMhello19")))
+A chamada `time.sleep()` bloqueia mas não faz nada. Vamos agora experimentar com uma chamada de uso intensivo da CPU, para entender melhor a GIL, bem como o efeito de funções de processamento intensivo sobre código assíncrono.((("", startref="CMhello19")))
 
 
 
@@ -572,7 +572,7 @@ que retorna `True` se o argumento for um número primo, `False` se não for.
 [[def_is_prime_ex]]
 .primes.py: uma verificação de números primos fácil de entender, do exemplo em https://docs.python.org/pt-br/3/library/concurrent.futures.html#processpoolexecutor-example[pass:[<code>ProcessPool&#x200b;Executor</code>] na documentação do Python]
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/primes/primes.py[tags=IS_PRIME]
 ----
@@ -640,7 +640,7 @@ e periodicamente chamar `asyncio.sleep(0)` em uma expressão `await`, para passa
 [[example-19-11]]
 .spinner_async_nap.py: `is_prime` agora é uma corrotina
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/primes/spinner_prime_async_nap.py[tags=PRIME_NAP]
 ----
@@ -712,7 +712,7 @@ mas está computado separadamente, como se vê no <<primes_sequential_ex>>.
 [[primes_sequential_ex]]
 .sequential.py: verificação de números primos em um pequeno conjunto de dados
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/primes/sequential.py[]
 ----
@@ -791,7 +791,7 @@ pode substituir `SimpleQueue` por `Queue` no <<primes_procs_top_ex>>.
 [[primes_procs_top_ex]]
 .procs.py: verificação de primos com múltiplos processos; importações, tipos, e funções
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_TOP]
 ----
@@ -840,7 +840,7 @@ Agora vamos estudar a função `main` de _procs.py_ no <<primes_procs_main_ex>>.
 [[primes_procs_main_ex]]
 .procs.py: verificação de números primos com múltiplos processos; função `main`
 ====
-[source, py]
+[source, python]
 ----
 include::code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_MAIN]
 ----
@@ -1126,7 +1126,7 @@ Esses produtos encapsulam uma fila de mensagens e oferecem uma API de alto níve
 
 [NOTE]
 ====
-No contexto de filas de tarefaas, as palavras _produtor_ e _consumidor_ são usado no lugar da terminologia tradicional de cliente/servidor. Por exemplo, um processador de views _Django_ _produz_ requisições de serviço, que são colocadas em uma fila para serem _consumidas_ por um ou mais processos renderizadores de PDFs.
+No contexto de filas de tarefas, as palavras _produtor_ e _consumidor_ são usado no lugar da terminologia tradicional de cliente/servidor. Por exemplo, um processador de views _Django_ _produz_ requisições de serviço, que são colocadas em uma fila para serem _consumidas_ por um ou mais processos renderizadores de PDFs.
 ====
 
 Citando diretamente o https://fpy.li/19-49[FAQ] do Celery, cá estão alguns casos de uso:
@@ -1210,7 +1210,7 @@ Além de `multiprocessing`, Gorelick e Ozsvald apresentam muitas outras formas d
 O https://fpy.li/19-57[_Advanced Python Development_], de Matthew Wilkes (Apress),
 é um dos raros livros a incluir pequenos exemplos para explicar conceitos,
 mostrando ao mesmo tempo como desenvolver uma aplicação realista pronta para implantação em produção:
-um agregador de dados, similar aos sistemas de monitoramenteo DevOps ou aos coletores de dados para sensores distribuídos IoT.
+um agregador de dados, similar aos sistemas de monitoramento DevOps ou aos coletores de dados para sensores distribuídos IoT.
 Dois capítulos no _Advanced Python Development_ tratam de programação concorrente com `threading` e `asyncio`.
 
 O https://fpy.li/19-58[_Parallel Programming with Python_] (Packt, 2014), de Jan Palach,
@@ -1284,7 +1284,7 @@ Ambos os pacotes são baseados na biblioteca _multiprocessing_.
 Eric Snow, um dos desenvolvedores principais do Python, mantém um wiki chamado https://fpy.li/19-79[Multicore Python], com observações sobre os esforços dele e de outros para melhorar o suporte do Python a execução em paralelo.
 Snow é o autor da https://fpy.li/pep554[PEP 554--Multiple Interpreters in the Stdlib].
 Se aprovada e implementada, a PEP 554 assenta as bases para melhorias futuras, que podem um dia permitir que o Python use múltiplos núcleos sem as sobrecargas do _multiprocessing_.
-Um dos grandes empecilhos é a iteração complexa entre mútiplos subinterpretadores ativos e extensões que assumem a existência de um único interpretador.
+Um dos grandes empecilhos é a iteração complexa entre múltiplos subinterpretadores ativos e extensões que assumem a existência de um único interpretador.
 
 Mark Shannon--também um mantenedor do Python—criou uma 
 https://fpy.li/19-80[tabela útil]

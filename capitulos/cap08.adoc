@@ -97,7 +97,7 @@ Eu escolhi usar o https://fpy.li/mypy[Mypy] nos exemplos por ele ser o mais conh
 
 Vamos anotar uma função `show_count`, que retorna uma string com um número e uma palavra no singular ou no plural, dependendo do número:
 
-[source, pycon]
+[source, python]
 ----
 include::code/08-def-type-hints/messages/no_hints/messages.py[tags=SHOW_COUNT_DOCTEST]
 ----
@@ -107,7 +107,7 @@ include::code/08-def-type-hints/messages/no_hints/messages.py[tags=SHOW_COUNT_DO
 [[msgs_no_hints]]
 .`show_count` de _messages.py_ sem dicas de tipo.
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/messages/no_hints/messages.py[tags=SHOW_COUNT]
 ----
@@ -143,7 +143,7 @@ Este é código de _messages_test.py_.
 [[msgs_test_no_hints]]
 ._messages_test.py_ sem dicas de tipo.
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/messages/no_hints/messages_test.py[]
 ----
@@ -200,7 +200,7 @@ Found 1 error in 1 file (checked 1 source file)
 Agora posso gradualmente acrescentar dicas de tipo, função por função, sem receber avisos sobre as funções onde ainda não adicionei anotações
 Essa é uma assinatura completamente anotada que satisfaz o Mypy:
 
-[source, py]
+[source, python]
 ----
 def show_count(count: int, word: str) -> str:
 ----
@@ -224,7 +224,7 @@ disallow_incomplete_defs = True
 
 A função `show_count` no <<msgs_no_hints>> só funciona com substantivos regulares. Se o plural não pode ser composto acrescentando um `'s'`, devemos deixar o usuário fornecer a forma plural, assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> show_count(3, 'mouse', 'mice')
 '3 mice'
@@ -234,7 +234,7 @@ Vamos tentar um pouco de "desenvolvimento orientado a tipos (_type-driven develo
 Primeiro acrescento um teste usando aquele terceiro argumento.
 Não esqueça de adicionar a dica do tipo de retorno à função de teste, senão o Mypy não vai inspecioná-la.
 
-[source, py3]
+[source, python]
 ----
 def test_irregular() -> None:
     got = show_count(2, 'child', 'children')
@@ -242,7 +242,7 @@ def test_irregular() -> None:
 ----
 
 O Mypy detecta o erro:
-[source, py]
+[source, python]
 ----
 …/hints_2/ $ mypy messages_test.py
 messages_test.py:22: error: Too many arguments for "show_count"
@@ -254,7 +254,7 @@ Então edito `show_count`, acrescentando o argumento opcional `plural` no <<msgs
 [[msgs_optional_str_param]]
 .`showcount` de _hints_2/messages.py_ com um argumento opcional
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/messages/hints_2/messages.py[tags=SHOW_COUNT]
 ----
@@ -266,7 +266,7 @@ E agora o Mypy reporta "Success."
 ====
 Aqui está um erro de digitação que o Python não reconhece. Você consegue encontrá-lo?
 
-[source, py]
+[source, python]
 ----
 def hex2rgb(color=str) -> tuple[int, int, int]:
 ----
@@ -302,7 +302,7 @@ https://fpy.li/8-11[_black_].
 
 Se o objetivo é impor um estilo de programação "padrão", _blue_ é melhor que _black_, porque segue o estilo próprio do Python, de usar aspas simples por default e aspas duplas como alternativa.
 
-[source, py]
+[source, python]
 ----
 >>> "I prefer single quotes"
 'I prefer single quotes'
@@ -324,7 +324,7 @@ Eu gosto dessa solução, mas em outros contextos `None` é um default melhor. S
 
 Com `None` como default para o parâmetro `plural`, a assinatura ficaria assim:
 
-[source, py]
+[source, python]
 ----
 from typing import Optional
 
@@ -383,7 +383,7 @@ def double(x: abc.Sequence):
 Um verificador de tipo irá rejeitar esse código.
 Se você informar ao Mypy que `x` é do tipo `abc.Sequence`, ele vai marcar `x * 2` como erro, pois a https://fpy.li/8-13[`Sequence` ABC] não implementa ou herda o método `+__mul__+`. Durante a execução, o código vai funcionar com sequências concretas como `str`, `tuple`, `list`, `array`, etc., bem como com números, pois durante a execução as dicas de tipo são ignoradas. Mas o verificador de tipo se preocupa apenas com o quê estiver explicitamente declarado, e `abc.Sequence` não suporta `+__mul__+`.
 
-Por essa razão o título dessa seção é  "Tipos São Definidos pelas Operações Possíveis." O runtime do Python aceita qualquer objeto como argumento `x` nas duas versões da função `double`. O cálculo de `x * 2` pode funcionar, ou pode causar um `TypeError`, se a operação não for suportada por `x`. Por outro lado, Mypy vai marcar `x * 2` como um erro quando analisar o código-fonte anotado de `double`, pois é uma operaçào não suportada pelo tipo declarado `x: abc.Sequence`.
+Por essa razão o título dessa seção é  "Tipos São Definidos pelas Operações Possíveis." O runtime do Python aceita qualquer objeto como argumento `x` nas duas versões da função `double`. O cálculo de `x * 2` pode funcionar, ou pode causar um `TypeError`, se a operação não for suportada por `x`. Por outro lado, Mypy vai marcar `x * 2` como um erro quando analisar o código-fonte anotado de `double`, pois é uma operação não suportada pelo tipo declarado `x: abc.Sequence`.
 
 Em um sistema de tipagem gradual, acontece uma interação entre duas perspectivas diferentes de tipo:
 
@@ -407,7 +407,7 @@ O <<birds_module_ex>> é um exemplo bobo que contrapõe duck typing e tipagem no
 [[birds_module_ex]]
 ._birds.py_
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/birds/birds.py[]
 ----
@@ -433,7 +433,7 @@ Agora vamos tentar usar o módulo `birds` em _daffy.py_ no <<daffy_module_ex>>.
 [[daffy_module_ex]]
 ._daffy.py_
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/birds/daffy.py[]
 ----
@@ -473,7 +473,7 @@ Entretanto, se daqui a alguns meses você for encarregado de estender o exemplo 
 [[woody_module_ex]]
 ._woody.py_
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/birds/woody.py[]
 ----
@@ -500,7 +500,7 @@ A sucessão de falhas é melhor ilustrada em uma sessão no console, através da
 [[birdie_errors_ex]]
 .Erros durante a execução e como o Mypy poderia ter ajudado
 ====
-[source, py]
+[source, python]
 ----
 >>> from birds import *
 >>> woody = Bird()
@@ -728,7 +728,7 @@ Para `i = 3`, `i.real` é `3` e `i.imag` é `0`.
 
 Nós((("gradual type system", "Optional and Union types")))((("Union type")))((("Optional type"))) vimos o tipo especial `Optional` em <<dealing_with_none_sec>>. Ele resolve o problema de ter `None` como default, como no exemplo daquela seção:
 
-[source, py]
+[source, python]
 ----
 from typing import Optional
 
@@ -745,7 +745,7 @@ Desde o Python 3.10 é possível escrever `str | bytes` em vez de `Union[str, by
 É menos digitação, e não há necessidade de importar `Optional` ou `Union` de `typing`.
 Compare a sintaxe antiga com a nova para a dica de tipo do parâmetro `plural` em `show_count`:
 
-[source, py]
+[source, python]
 ----
 plural: Optional[str] = None    # before
 plural: str | None = None       # after
@@ -759,14 +759,14 @@ A assinatura da função nativa `ord` é um exemplo simples de `Union` - ela ace
 e retorna um `int`:footnote:[Para ser mais preciso, `ord` só aceita `str` ou `bytes` com `len(s) == 1`.
 Mas no momento o sistema de tipagem não consegue expressar essa restrição.]
 
-[source, py]
+[source, python]
 ----
 def ord(c: Union[str, bytes]) -> int: ...
 ----
 
 Aqui está um exemplo de uma função que aceita uma `str`, mas pode retornar uma `str` ou um `float`:
 
-[source, py]
+[source, python]
 ----
 from typing import Union
 
@@ -790,14 +790,14 @@ Para anotar tais funções corretamente, precisamos usar um tipo variável - apr
 Tipos `Union` aninhados tem o mesmo efeito que uma `Union` "achatada" .
 Então esta dica de tipo:
 
-[source, py]
+[source, python]
 ----
 Union[A, B, Union[C, D, E]]
 ----
 
 é o mesmo que:
 
-[source, py]
+[source, python]
 ----
 Union[A, B, C, D, E]
 ----
@@ -936,7 +936,7 @@ Por exemplo, a dica de tipo seria `tuple[str, float, str]` para aceitar uma tupl
 
 Observe uma função que recebe um par de coordenadas geográficas e retorna uma https://fpy.li/8-18[Geohash], usada assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> shanghai = 31.2304, 121.4737
 >>> geohash(shanghai)
@@ -948,7 +948,7 @@ O <<geohash_ex_1>> mostra a definição da função `geohash`, usando o pacote `
 [[geohash_ex_1]]
 ._coordinates.py_ com a função `geohash`
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/coordinates/coordinates.py[tags=GEOHASH]
 ----
@@ -970,7 +970,7 @@ O <<geohash_ex_2>> mostra uma variante de <<geohash_ex_1>> com `NamedTuple`.
 [[geohash_ex_2]]
 ._coordinates_named.py_ com `NamedTuple`, `Coordinates` e a função `geohash`
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/coordinates/coordinates_named.py[tags=GEOHASH]
 ----
@@ -980,7 +980,7 @@ Como explicado na <<data_class_overview_sec>>, `typing.NamedTuple` é uma factor
 
 Na prática, isso significa que é seguro (do ponto de vista do tipo de argumento) passar uma instância de `Coordinate` para a função `display`, definida assim:
 
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/coordinates/coordinates_named.py[tags=DISPLAY]
 ----
@@ -1001,7 +1001,7 @@ As anotações `stuff: tuple[Any, ...]` e `stuff: tuple` são equivalentes:
 Aqui temos um função `columnize`, que transforma uma sequência em uma tabela de colunas e células, na forma de uma lista de tuplas de tamanho desconhecido.
 É útil para mostrar os itens em colunas, assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> animals = 'drake fawn heron ibex koala lynx tahr xerus yak zapus'.split()
 >>> table = columnize(animals)
@@ -1020,7 +1020,7 @@ ibex      xerus
 O <<columnize_ex>> mostra a implementação de `columnize`.
 Observe o tipo((("", startref="Thint08")))((("", startref="GTStupple08"))) do retorno:
 
-[source, py]
+[source, python]
 ----
 list[tuple[str, ...]]
 ----
@@ -1028,7 +1028,7 @@ list[tuple[str, ...]]
 [[columnize_ex]]
 ._columnize.py_ retorna uma lista de tuplas de strings
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/columnize.py[tags=COLUMNIZE]
 ----
@@ -1045,7 +1045,7 @@ O <<charindex_ex>> mostra um uso na prática de uma função que retorna um http
 
 Dado o início e o final dos códigos de caractere Unicode, `name_index` retorna um `dict[str, set[str]]`, que é um índice invertido mapeando cada palavra para um conjunto de caracteres que tem aquela palavra em seus nomes. Por exemplo, após indexar os caracteres ASCII de 32 a 64, aqui estão os conjuntos de caracteres mapeados para as palavras `'SIGN'` e `'DIGIT'`, e a forma de encontrar o caractere chamado `'DIGIT EIGHT'`:
 
-[source, pycon]
+[source, python]
 ----
 >>> index = name_index(32, 65)
 >>> index['SIGN']
@@ -1063,7 +1063,7 @@ Além de uma dica de tipo `dict[]`, este exemplo tem três outros aspectos que e
 [[charindex_ex]]
 ._charindex.py_
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/charindex.py[tags=CHARINDEX]
 ----
@@ -1095,7 +1095,7 @@ Idealmente, uma função deveria aceitar argumentos desses tipos abstratos - ou 
 
 Considere essa assinatura de função:
 
-[source, py3]
+[source, python]
 ----
 from collections.abc import Mapping
 
@@ -1106,7 +1106,7 @@ Usar  `abc.Mapping` permite ao usuário da função fornecer uma instância de `
 
 Por outro lado, veja essa assinatura:
 
-[source, py3]
+[source, python]
 ----
 def name2hex(name: str, color_map: dict[str, int]) -> str:
 ----
@@ -1148,7 +1148,7 @@ Para encerrar nossa discussão de ABCs em dicas de tipo, precisamos falar sobre 
 ===== A queda da torre numérica
 
 O((("numbers package")))((("numeric tower"))) pacote https://docs.python.org/pt-br/3/library/numbers.html[`numbers`] define a assim chamada _torre numérica_ (_numeric tower_) descrita na https://fpy.li/pep3141[PEP 3141—A Type Hierarchy for Numbers] (EN).
-A torre é uma hieraquia linear de ABCs, com `Number` no topo:
+A torre é uma hierarquia linear de ABCs, com `Number` no topo:
 
 * `Number`
 * `Complex`
@@ -1191,7 +1191,7 @@ A assinatura para `math.fsum` está em https://fpy.li/8-27[_/stdlib/2and3/math.p
 
 O <<replacer_ex>> é outro exemplo do uso de um parâmetro `Iterable`, que produz itens que são `tuple[str, str]`. A função é usada assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> l33t = [('a', '4'), ('e', '3'), ('i', '1'), ('o', '0')]
 >>> text = 'mad skilled noob powned leet'
@@ -1205,7 +1205,7 @@ O <<replacer_ex>> mostra a implementação.
 [[replacer_ex]]
 ._replacer.py_
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/replacer.py[tags=ZIP_REPLACE]
 ----
@@ -1219,7 +1219,7 @@ include::code/08-def-type-hints/replacer.py[tags=ZIP_REPLACE]
 https://fpy.li/pep613[PEP 613—Explicit Type Aliases] introduziu um tipo especial, o `TypeAlias`, para tornar as atribuições que criam apelidos de tipos mais visíveis e mais fáceis para os verificadores de tipo.
 A partir do Python 3.0, esta é a forma preferencial de criar um apelidos de tipo.
 
-[source, py3]
+[source, python]
 ----
 from typing import TypeAlias
 
@@ -1230,7 +1230,7 @@ FromTo: TypeAlias = tuple[str, str]
 
 ===== abc.Iterable versus abc.Sequence
 
-Tanto((("abc.Iterable")))((("abc.Sequence"))) `math.fsum` quanto `replacer.zip_replace` tem que percorrer todos os argumentos do `Iterable` para produzir um resultado. Dado um iterável sem fim tal como o gerador `itertools.cycle` como entrada, essas funções consumiriam toda a mémória e derrubariam o processo Python. Apesar desse perigo potencial, é muito comum no Pyhton moderno se oferecer funções que aceitam um `Iterable` como argumento, mesmo se elas tem que processar a estrutura inteira para obter um resultado. Isso dá a quem chama a função a opção de fornecer um gerador como dado de entrada, em vez de uma sequência pré-construída, com uma grande esconomia potencial de memória se o número de itens de entrada for grande.
+Tanto((("abc.Iterable")))((("abc.Sequence"))) `math.fsum` quanto `replacer.zip_replace` tem que percorrer todos os argumentos do `Iterable` para produzir um resultado. Dado um iterável sem fim tal como o gerador `itertools.cycle` como entrada, essas funções consumiriam toda a memória e derrubariam o processo Python. Apesar desse perigo potencial, é muito comum no Pyhton moderno se oferecer funções que aceitam um `Iterable` como argumento, mesmo se elas tem que processar a estrutura inteira para obter um resultado. Isso dá a quem chama a função a opção de fornecer um gerador como dado de entrada, em vez de uma sequência pré-construída, com uma grande esconomia potencial de memória se o número de itens de entrada for grande.
 
 Por outro lado, a função `columnize` no <<columnize_ex>> requer uma `Sequence`, não um `Iterable`, pois ela precisa obter a `len()` do argumento para calcular previamente o número de linhas.
 
@@ -1248,12 +1248,12 @@ O <<generic_sample_ex>> define `sample`, uma função que recebe dois argumentos
 uma `Sequence` de elementos de tipo `T` e um `int`.
 Ela retorna uma `list` de elementos do mesmo tipo `T`, escolhidos aleatoriamente do primeiro argumento.
 
-O <<generic_sample_ex>> mostra a implementção.
+O <<generic_sample_ex>> mostra a implementação.
 
 [[generic_sample_ex]]
 ._sample.py_
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/sample.py[tags=SAMPLE]
 ----
@@ -1285,7 +1285,7 @@ Outro exemplo é a função `statistics.mode` da biblioteca padrão, que retorna
 
 Aqui é uma exemplo de uso da https://docs.python.org/pt-br/3/library/statistics.html#statistics.mode[documentação]:
 
-[source, pycon]
+[source, python]
 ----
 >>> mode([1, 1, 2, 3, 3, 3, 3, 4])
 3
@@ -1294,9 +1294,9 @@ Aqui é uma exemplo de uso da https://docs.python.org/pt-br/3/library/statistics
 Sem o uso de `TypeVar`, `mode` poderia ter uma assinatura como a apresentada no <<mode_float_ex>>.
 
 [[mode_float_ex]]
-._mode_float.py_: `mode` que opera com `float` e seus subtipos footnote:[A implemantação aqui é mais simples que aquela do módulo https://fpy.li/8-29[`statistics`] na biblioteca padrão do Python]
+._mode_float.py_: `mode` que opera com `float` e seus subtipos footnote:[A implementação aqui é mais simples que aquela do módulo https://fpy.li/8-29[`statistics`] na biblioteca padrão do Python]
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/mode/mode_float.py[tags=MODE_FLOAT]
 ----
@@ -1305,7 +1305,7 @@ include::code/08-def-type-hints/mode/mode_float.py[tags=MODE_FLOAT]
 Muitos dos usos de `mode` envovem valores `int` ou `float`, mas o Python tem outros tipos numéricos, e é desejável que o tipo de retorno siga o tipo dos elementos do `Iterable` recebido.
 Podemos melhorar aquela assinatura usando `TypeVar`. Vamos começar com uma assinatura parametrizada simples, mas errada.
  
-[source, python3]
+[source, python]
 ----
 from collections.abc import Iterable
 from typing import TypeVar
@@ -1327,7 +1327,7 @@ Vamos ver maneiras diferentes de fazer isso nas duas seções seguintes.
 O `TypeVar` aceita argumentos posicionais adicionais para restringir o tipo parametrizado.
 Podemos melhorar a assinatura de `mode` para aceitar um número específico de tipos, assim:
 
-[source, python3]
+[source, python]
 ----
 from collections.abc import Iterable
 from decimal import Decimal
@@ -1344,7 +1344,7 @@ https://fpy.li/8-30[_statistics.pyi_], o arquivo stub em `typeshed` em 25 de mai
 
 Entretanto, a documentação em https://fpy.li/8-28[`statistics.mode`] inclui esse exemplo:
 
-[source, pycon]
+[source, python]
 ----
 >>> mode(["red", "blue", "blue", "red", "green", "red", "red"])
 'red'
@@ -1352,7 +1352,7 @@ Entretanto, a documentação em https://fpy.li/8-28[`statistics.mode`] inclui es
 
 Na pressa, poderíamos apenas adicionar `str` à definição de `NumberT`:
 
-[source, python3]
+[source, python]
 ----
 NumberT = TypeVar('NumberT', float, Decimal, Fraction, str)
 ----
@@ -1368,7 +1368,7 @@ Examinando o corpo de `mode` no <<mode_float_ex>>, vemos que a classe `Counter` 
 
 A princípio, essa assinatura pode parecer que funciona:
 
-[source, python3]
+[source, python]
 ----
 from collections.abc import Iterable, Hashable
 
@@ -1386,7 +1386,7 @@ https://fpy.li/8-32[_statistics.pyi_].]
 [[mode_hashable_ex]]
 ._mode_hashable.py_: igual a <<mode_float_ex>>, mas com uma assinatura mais flexível
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/mode/mode_hashable.py[tags=MODE_HASHABLE_T]
 ----
@@ -1413,7 +1413,7 @@ Agora vamos concluir essa introdução a `TypeVar` com `AnyStr`.
 O((("AnyStr"))) módulo `typing` inclui um TypeVar pré-definido chamado `AnyStr`.
 Ele está definido assim:
 
-[source, python3]
+[source, python]
 ----
 AnyStr = TypeVar('AnyStr', bytes, str)
 ----
@@ -1439,7 +1439,7 @@ Entretanto, classes que _implementam_ um protocolo não precisan herdar, registr
 Abaixo temos um problema que pode ser resolvido com a ajuda de `Protocol` e `TypeVar`.
 Suponha que você quisesse criar uma função `top(it, n)`, que retorna os `n` maiores elementos do iterável `it`:
 
-[source, pycon]
+[source, python]
 ----
 include::code/08-def-type-hints/comparable/top.py[tags=TOP_DOCTEST]
 ----
@@ -1449,7 +1449,7 @@ Um genérico parametrizado `top` ficaria parecido com o mostrado no <<top_undefi
 [[top_undefined_t_ex]]
 .a função `top` function com um parâmetro de tipo `T` indefinido
 ====
-[source, py]
+[source, python]
 ----
 def top(series: Iterable[T], length: int) -> list[T]:
     ordered = sorted(series, reverse=True)
@@ -1461,7 +1461,7 @@ O problema é, como restringir `T`?
 Ele não pode ser `Any` ou `object`, pois `series` precisa funcionar com `sorted`. A `sorted` nativa na verdade aceita `Iterable[Any]`, mas só porque o parâmetro opcional `key` recebe uma função que calcula uma chave de ordenação arbitrária para cada elemento. O que acontece se você passar para `sorted` uma lista de objetos simples, mas não fornecer um argumento `key`?
 Vamos tentar:
 
-[source, pycon]
+[source, python]
 ----
 >>> l = [object() for _ in range(4)]
 >>> l
@@ -1476,7 +1476,7 @@ TypeError: '<' not supported between instances of 'object' and 'object'
 A mensagem de erro mostra que `sorted` usa o operador `<` nos elementos do iterável.
 É só isso? Vamos tentar outro experimento rápido:footnote:[Não é maravilhoso poder abrir um console iterativo e contar com o duck typing para explorar recursos da linguagem, como acabei de fazer? Eu sinto muita falta deste tipo de exploração quando uso linguagem que não tem esse recurso.]
 
-[source, pycon]
+[source, python]
 ----
 >>> class Spam:
 ...     def __init__(self, n): self.n = n
@@ -1501,7 +1501,7 @@ O <<comparable_protocol_ex>> mostra o novo tipo `SupportsLessThan`, um `Protocol
 [[comparable_protocol_ex]]
 ._comparable.py_: a definição de um tipo `Protocol`, `SupportsLessThan`
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/comparable/comparable.py[]
 ----
@@ -1516,7 +1516,7 @@ Dado `SupportsLessThan`, nós agora podemos definir essa versão funcional de `t
 [[top_protocol_ex]]
 ._top.py_: definição da função `top` usando uma `TypeVar` com `bound=SupportsLessThan`
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/comparable/top.py[tags=TOP]
 ----
@@ -1530,7 +1530,7 @@ Com a lista de `object`, esperamos receber uma exceção de `TypeError`.
 [[top_protocol_test]]
 ._top_test.py_: visão parcial da bateria de testes para `top`
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/comparable/top_test.py[tags=TOP_IMPORT]
 
@@ -1607,7 +1607,7 @@ Convido o leitor a fazer isso como um exercício. A solução está na <<typed_d
 Para((("gradual type system", "Callable type", id="GTScallable08")))((("Callable type", id="callable08"))) anotar parâmetros de callback ou objetos _callable_ retornados por funções de ordem superior, o módulo `collections.abc` oferece o tipo `Callable`, disponível no módulo `typing` para quem ainda não estiver usando Python 3.9.
 Um tipo `Callable` é parametrizado assim:
 
-[source, python3]
+[source, python]
 ----
 Callable[[ParamType1, ParamType2], ReturnType]
 ----
@@ -1617,7 +1617,7 @@ A lista de parâmetros - `[ParamType1, ParamType2]` — pode ter zero ou mais ti
 Aqui está um exemplo no contexto de uma função `repl`, parte do interpretador iterativo simples que veremos na <<pattern_matching_case_study_sec>>:footnote:[REPL
 significa Read-Eval-Print-Loop (_Ler-Calcular-Imprimir-Recomeçar_), o comportamento básico de interpretadores iterativos.]
 
-[source, python3]
+[source, python]
 ----
 def repl(input_fn: Callable[[Any], str] = input]) -> None:
 ----
@@ -1627,7 +1627,7 @@ um `Callable` com o mesmo parâmetro e tipo de retorno de `input`.
 
 A `input` nativa tem a seguinte assinatura no typeshed:
 
-[source, python3]
+[source, python]
 ----
 def input(__prompt: Any = ...) -> str: ...
 ----
@@ -1635,14 +1635,14 @@ def input(__prompt: Any = ...) -> str: ...
 A assinatura de `input` é _consistente-com_ esta dica de tipo `Callable`
 
 
-[source, python3]
+[source, python]
 ----
 Callable[[Any], str]
 ----
 Não existe sintaxe para a nomear tipo de argumentos opcionais ou de palavra-chave. A
 https://docs.python.org/pt-br/3/library/typing.html#typing.Callable[documentação] de `typing.Callable` diz "tais funções são raramente usadas como tipo de callback." Se você precisar de um dica de tipo para acompanhar uma função com assinatura flexível, substitua o lista de parâmetros inteira por `...` - assim: 
 
-[source, python3]
+[source, python]
 ----
 Callable[..., ReturnType]
 ----
@@ -1653,13 +1653,13 @@ A interação de parâmetros de tipo genéricos com uma hierarquia de tipos intr
 ===== Variância em tipos Callable
 
 Imagine um sistema de controle de temperatura com uma função `update` simples, como mostrada no <<callable_variance_ex>>.((("variance", "in callable types")))((("covariance", see="variance")))((("contravariance", see="variance"))) 
-A função `update` chama a função `probe` para obter a tempertura atual, e chama `display` para mostrar a temperatura para o usuário.
+A função `update` chama a função `probe` para obter a temperatura atual, e chama `display` para mostrar a temperatura para o usuário.
 `probe` e `display` são ambas passadas como argumentos para `update`, por motivos didáticos. O objetivo do exemplo é contrastar duas anotações de `Callable`: uma com um tipo de retorno e outro com um tipo de parâmetro.
 
 [[callable_variance_ex]]
 .Ilustrando a variância.
 ====
-[source, py]
+[source, python]
 ----
 include::code/08-def-type-hints/callable/variance.py[]
 ----
@@ -1668,13 +1668,13 @@ include::code/08-def-type-hints/callable/variance.py[]
 <2> `probe` precisa ser uma callable que não recebe nenhuma argumento e retorna um `float`
 <3> `display` recebe um argumneto `float` e retorna `None`.
 <4> `probe_ok` é _consistente-com_ `Callable[[], float]` porque retornar um `int` não quebra código que espera um `float`.
-<5> `display_wrong` não é _consistente-com_ `Callable[[float], None]` porque não há garantia que uma função esperando um `int` consiga lidar com um `float`; por exemplo, a funçào `hex` do Python aceita  um `int` mas rejeita um `float`.
+<5> `display_wrong` não é _consistente-com_ `Callable[[float], None]` porque não há garantia que uma função esperando um `int` consiga lidar com um `float`; por exemplo, a função `hex` do Python aceita  um `int` mas rejeita um `float`.
 <6> O Mypy marca essa linha porque `display_wrong` é incompatível com a dica de tipo no parâmetro `display` em `update`.
 <7> `disply_ok` é _consistente_com_ `Callable[[float], None]` porque uma função que aceita um `complex` também consegue lidar com um argumento `float`.
 <8> Mypy está satisfeito com essa linha.
 
 Resumindo,
-não há problema em fornecer uma funcão de callback que retorne um `int` quando o código espera uma função callback que retorne um `float`, porque um valor `int` sempre pode ser usado onde um `float` é esperado.
+não há problema em fornecer uma função de callback que retorne um `int` quando o código espera uma função callback que retorne um `float`, porque um valor `int` sempre pode ser usado onde um `float` é esperado.
 
 Formalmente, dizemos que `Callable[[], int]` é _subtipo-de_ `Callable[[], float]`— assim como `int` é _subtipo-de_ `float`.
 Isso significa que `Callable` é _covariante_ no que diz respeito aos tipos de retorno, porque a relação _subtipo-de_ dos tipos `int` e `float` aponta na mesma direção que os tipo `Callable` que os usam como tipos de retorno.
@@ -1706,13 +1706,13 @@ Agora chegamos ou último tipo especial que examinaremos nesse capítulo.
 
 Esse((("gradual type system", "NoReturn type")))((("NoReturn type"))) é um tipo especial usado apenas para anotar o tipo de retorno de funções que nunca retornam.
 Normalmente, elas existem para gerar exceções.
-Há dúzias dessas funçòes na biblioteca padrão.
+Há dúzias dessas funções na biblioteca padrão.
 
 Por exemplo, `sys.exit()` levanta `SystemExit` para encerrar o processo Python.
 
 Sua assinatura no `typeshed` é:
 
-[source, python3]
+[source, python]
 ----
 def exit(__status: object = ...) -> NoReturn: ...
 ----
@@ -1873,7 +1873,7 @@ Eu sou um grande fã de testes, mas também escrevo muito código exploratório.
 
 Esse post do Gábor é uma das melhores introduções a dicas de tipo em Python que eu já encontrei, junto com o texto de Geir Arne Hjelle,
 https://fpy.li/8-42["Python Type Checking (Guide)"] (EN).
-https://fpy.li/8-43["Hypermodern Python Chapter 4: Typing"] (EN), de Claudio Jolowicz, é uma introduçào mas curta que também fala de validação de checagem de tipo durante a execução.
+https://fpy.li/8-43["Hypermodern Python Chapter 4: Typing"] (EN), de Claudio Jolowicz, é uma introdução mas curta que também fala de validação de checagem de tipo durante a execução.
 
 Para uma abordagem mais aprofundada, a https://fpy.li/8-44[documentação do Mypy]
 é a melhor fonte. Ela é útil independente do verificador de tipo que você esteja usando, pois tem páginas de tutorial e de referência sobre tipagem em Python em geral - não apenas sobre o próprio Mypy.
