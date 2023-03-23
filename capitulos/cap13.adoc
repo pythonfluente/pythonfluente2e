@@ -494,7 +494,7 @@ class Lottery:
 
 Obviamente, a mera existência de um método chamado `draw`, chamado sem argumentos, [.keep-together]#está longe# de ser suficiente para garantir que dois objetos `x` e `y`, da forma como `x.draw()` e `y.draw()` podem ser chamados, são de qualquer forma intercambiáveis ou abstratamente pass:[equivalentes &mdash;<span class="keep-together"> nada</span>] sobre a similaridade da semântica resultante de tais chamadas pode ser inferido. Na verdade, é necessário um programador inteligente para, de alguma forma, _assegurar_ positivamente que tal equivalência é verdadeira em algum nível.
 
-Em biologia (e outras disciplinas), este problema levou à emergência (e, em muitas facetas, à dominância) de uma abordagem alternativa à _fenética_, conhecida como ((("cladistics"))) __cladística__ — que baseia as escolhas taxinômicas em características herdadas de ancestrais comuns em vez daquelas que evoluíram de forma independente (o sequenciamento de DNA cada vez mais barato e rápido vem tornando a cladística muito prática em muito mais casos)
+Em biologia (e outras disciplinas), este problema levou à emergência (e, em muitas facetas, à dominância) de uma abordagem alternativa à _fenética_, conhecida como ((("cladistics"))) __cladística__ — que baseia as escolhas taxinômicas em características herdadas de ancestrais comuns em vez daquelas que evoluíram de forma independente (o sequenciamento de DNA cada vez mais barato e rápido vem tornando a cladística bastante prática em mais casos).
 
 Por exemplo, os Chloephaga, gênero de gansos sul-americanos (antes classificados como próximos a outros gansos) e as tadornas (gênero de patos sul-americanos) estão agora agrupados juntos [.keep-together]#na subfamília# Tadornidae (sugerindo que eles são mais próximos entre si que de qualquer outro Anatidae, pois compartilham um ancestral comum mais próximo). Além disso, a análise de DNA mostrou que o Asarcornis (pato da floresta ou pato de asas brancas) não é tão próximo do Cairina moschata (pato-do-mato), esse último uma tadorna, como as similaridades corporais e comportamentais sugeriram por tanto tempo - então o pato da floresta foi reclassificado em um gênero próprio, inteiramente fora da [.keep-together]#subfamília#!
 
@@ -507,7 +507,8 @@ A _goose typing_ significa o seguinte: `isinstance(obj, cls)` agora é plenament
 Você vai encontrar muitas classes abstratas prontas em `collections.abc` (e outras no módulo `numbers` da _Biblioteca Padrão do Python_)footnote:[Você também pode, claro, definir suas próprias ABCs - mas eu não recomendaria esse caminho a ninguém, exceto aos mais avançados pythonistas, da mesma forma que eu os desencorajaria de definir suas próprias metaclasses personalizadas... e mesmo para os ditos "mais avançados pythonistas", aqueles de nós que exibem o domínio de todos os recantos por mais obscuros da linguagem, essas não são ferramentas de uso frequente. Este tipo de "metaprogramação profunda", se alguma vez for apropriada, o será no contexto dos autores de frameworks abrangentes, projetadas para serem estendidas de forma independente por inúmeras equipes de desenvolvimento diferentes... menos que 1% dos "mais avançados pythonistas" precisará disso alguma vez na vida! - _A.M_]
 
 Dentre as muitas vantagens conceituais das ABCs sobre classes concretas 
-(e.g., Scott Meyer’s “toda classe não-final ("não-folha") deveria ser abstrata”; veja o https://fpy.li/13-12[Item 33] de seu livro, _More_ [.keep-together]#_Effective_# pass:[<em>C++</em>], Addison-Wesley), as ABCs do Python acrescentam uma grande vantagem prática: o método de classe `register`, que permite ao código do usuário final "declarar" que determinada classe é uma subclasse "virtual" de uma ABC (para este propósito, a classe registrada precisa cumprir os requerimentos de nome de métodos e assinatura da ABC e, mais importante, o contrato semântico subjacente - mas não precisa ter sido desenvolvida com qualquer conhecimento da ABC, e especificamente não precisa herdar dela!), Isso é um longo caminho andado na direção de quebrar a rigidez e o acoplamento forte que torna herança algo para ser usado com muito mais cautela que aquela tipicamente praticada pela maioria do programadores orientados a .[.keep-together]#objetos#.
+(e.g., Scott Meyer’s “toda classe não-final ("não-folha") deveria ser abstrata”; veja o https://fpy.li/13-12[Item 33] de seu livro, _More_ [.keep-together]#_Effective_# pass:[<em>C++</em>], Addison-Wesley), as ABCs do Python acrescentam uma grande vantagem prática: o método de classe `register`, que permite ao código do usuário final "declarar" que determinada classe é uma subclasse "virtual" de uma ABC (para este propósito, a classe registrada precisa cumprir os requerimentos de nome de métodos e assinatura da ABC e, mais importante, o contrato semântico subjacente - mas não precisa ter sido desenvolvida com qualquer conhecimento da ABC, e especificamente não precisa herdar dela!).
+Isso é um longo caminho andado na direção de quebrar a rigidez e o acoplamento forte que torna herança algo para ser usado com muito mais cautela que aquela tipicamente praticada pela maioria do programadores orientados a .[.keep-together]#objetos#.
 
 Em algumas ocasiões você sequer precisa registrar uma classe para que uma ABC a reconheça como uma [.keep-together]#subclasse#!
 
@@ -621,20 +622,21 @@ Em troca, `FrenchDeck2` herda cinco métodos concretos de `Sequence`:
 `+__contains__+`, `+__iter__+`, `+__reversed__+`, `index`, e `count`.
 De `MutableSequence`, ela recebe outros seis métodos: `append`, `reverse`, `extend`, `pop`, `remove`, e `+__iadd__+`— que suporta o operador `+=` para concatenação direta.
 
-Os métodos concretos em cada ABC de `collections.abc` ABC são implementados nos termos da interface pública da classe, então funcionam sem qualquer conhecimento da estrutura interna das instâncias.
+Os métodos concretos em cada ABC de `collections.abc` são implementados nos termos da interface pública da classe, então funcionam sem qualquer conhecimento da estrutura interna das instâncias.
 
 
 [TIP]
 ====
 Como programador de uma subclasse concreta, é possível sobrepor os métodos herdados das ABCs com implementações mais eficientes.
-Por exemplo, `+__contains__+` funciona executando uma busca sequencial na sequência, mas se sua a sua sequência concreta mantém seus itens e ordenados, você pode escrever um  `+__contains__+` que execute uma busca binária usando a função https://fpy.li/13-13[`bisect`] da biblioteca padrão.
+Por exemplo, `+__contains__+` funciona executando uma busca sequencial, mas se a sua classe de sequência mantém os itens ordenados,
+você pode escrever um `+__contains__+` que executa uma busca binária usando a função https://fpy.li/13-13[`bisect`] da biblioteca padrão.
 
 Veja https://fpy.li/bisect["Managing Ordered Sequences with Bisect"] (EN)
 em pass:[<a href=" http://fluentpython.com" class="orm:hideurl"><em>fluentpython.com</em></a>]  para conhecer mais sobre esse método.
 ====
 //  (see <<bisect_section>>).
 
-Para usar bem as ABCs, você precisa saber o que está dispinível. Vamos então revisar as ABCs de `collections` a seguir.((("", startref="GTsub13")))((("", startref="ABCsub13")))((("", startref="IASabcs13")))
+Para usar bem as ABCs, você precisa saber o que está disponível. Vamos então revisar as ABCs de `collections` a seguir.((("", startref="GTsub13")))((("", startref="ABCsub13")))((("", startref="IASabcs13")))
 
 [[abc_in_stdlib_sec]]
 ==== ABCs na Biblioteca Padrão
@@ -651,7 +653,7 @@ O((("abc.ABC class"))) outro módulo `abc` é apenas `abc` (i.e., https://fpy.li
 Toda ABC depende do módulo `abc`, mas não precisamos importá-lo nós mesmos, exceto para criar um nova ABC.
 ====
 
-O <<collections_uml>> é((("UML class diagrams", "ABCs in collections.abc"))) um diagrama de classe resumido (sem os nomes dos atributos) das 17 ABCs definidas em `collections.abc`.
+A <<collections_uml>> é((("UML class diagrams", "ABCs in collections.abc"))) um diagrama de classe resumido (sem os nomes dos atributos) das 17 ABCs definidas em `collections.abc`.
 A documentação de `collections.abc` inclui https://fpy.li/13-16[uma ótima tabela] resumindo as ABCs, suas relações e seus métodos abstratos e concretos (chamados "métodos mixin").
 Há muita herança múltipla acontecendo na <<collections_uml>>.
 Vamos dedicar a maior parte de <<herança>> à herança múltipla,
@@ -697,7 +699,6 @@ Para a detecção de 'callable', a função nativa `callable(obj)` é muito mais
 Se `insinstance(obj, Hashable)` retornar `False`, você pode ter certeza que `obj`
 não é hashable. Mas se ela retornar `True`, pode ser um falso positivo.
 Isso é explicado no box seguinte.
-The next box explains.
 
 [[isinstance_mislead_box]]
 .isinstance com Hashable e Iterable pode enganar você
@@ -766,7 +767,7 @@ A <<tombola_uml>> mostra a ABC `Tombola` e três implementações concretas.
 [role="width-80"]
 [[tombola_uml]]
 
-.Diagrama UML para uma ABC e três subclasses. O nome da ABC `Tombola` e de seus métodos abstratos estão escritoa em _itálico_, segundo as convenções da UML. A seta tracejada é usada para implementações de interface - as estou usando aqui para mostrar que `TomboList` implementa não apenas a interface `Tombola`, mas também está registrada como uma _subclasse virtual_ de `Tombola` - como veremos mais tarde nesse capítulo.pass:[<span data-type="footnote"><span class="roman">«registrada» and «subclasse virtual» não são termos da UML padrão. Estão sendo usados para representar uma relação de classe específica do Python.</span></span>]
+.Diagrama UML para uma ABC e três subclasses. O nome da ABC `Tombola` e de seus métodos abstratos estão escritos em _itálico_, segundo as convenções da UML. A seta tracejada é usada para implementações de interface - as estou usando aqui para mostrar que `TomboList` implementa não apenas a interface `Tombola`, mas também está registrada como uma _subclasse virtual_ de `Tombola` - como veremos mais tarde nesse capítulo.pass:[<span data-type="footnote"><span class="roman">«registrada» and «subclasse virtual» não são termos da UML padrão. Estão sendo usados para representar uma relação de classe específica do Python.</span></span>]
 image::images/flpy_1305.png[UML for Tombola]
 
 O <<ex_tombola_abc>> mostra a definição da ABC `Tombola`.
