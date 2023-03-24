@@ -36,7 +36,7 @@ Após uma pequena introdução conceitual, vamos estudar exemplos simples, para 
 O último terço do capítulo é uma revisão geral de ferramentas, servidores de aplicação e filas de tarefa distribuídas (_distributed task queues_) de vários desenvolvedores—todos capazes de melhorar a performance e escalabilidade de aplicações Python.
 Todos esses são tópicos importantes, mas fogem do escopo de um livro focado nos recursos fundamentais da linguagem Python.
 Mesmo assim, achei importante mencionar esses temas nessa segunbda edição do _Python Fluente_, porque a aptidão do Python para computação concorrente e paralela não está limitada ao que a biblioteca padrão oferece.
-Por isso o YouTube, o DropBox, o Instagram, o Reddit e outros foram capazes de obter escalabidade quando começaram, usando Python como sua linguagem primária—apesar de alegações persistentes dizendo que "O Python não escala." 
+Por isso o YouTube, o DropBox, o Instagram, o Reddit e outros foram capazes de obter escalabilidade quando começaram, usando Python como sua linguagem primária—apesar de alegações persistentes dizendo que "O Python não escala." 
 
 
 === Novidades nesse capítulo
@@ -52,7 +52,7 @@ A <<py_in_multicore_world_sec>> é diferente do resto do livro: não há código
 
 Há((("concurrency models", "basics of concurrency"))) muitos fatores que tornam a programação concorrente difícil, mas quero tocar no mais básico deles: iniciar threads ou processos é bastante simples, mas como acompanhá-los?footnote:[Essa seção foi sugerida por meu amigo Bruce Eckel — autor de livros sobre Kotlin, Scala, Java, e C&#x2b;&#x2b;.]
 
-Quando você chama uma função, o código que origina a chamada fica bloqueado até que funçào retorne. Então você sabe que a função terminou, e pode facilmente acessar o valor retornado. Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para capturar o erro.
+Quando você chama uma função, o código que origina a chamada fica bloqueado até que função retorne. Então você sabe que a função terminou, e pode facilmente acessar o valor retornado. Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para capturar o erro.
 
 Essas opções familiares não estão disponíveis quando você inicia uma thread ou um processo: você não sabe automaticamente quando eles terminaram, e obter os resultados ou os erros requer criar algum canal de comunicação, tal como uma fila de mensagens.
 
@@ -159,7 +159,7 @@ A thread pode então tentar readquirir a GIL, mas se existirem outras threads es
 
 . Quando escrevemos código Python, não temos controle sobre a GIL. Mas uma função embutida ou um extensão escrita em C—ou qualquer linguagem que trabalhe no nível da API Python/C—pode liberar a GIL enquanto estiver rodando alguma tarefa longa.
 
-. Toda função na biblioteca padrão do Python que executa uma syscallfootnote:[Uma syscall é uma chamada a partir do código do usuário para uma função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para aprender mais sobre esse tópico, leia o artigo https://pt.wikipedia.org/wiki/Chamada_de_sistema["Chamada de sistema"] na Wikipedia.] libera a GIL. Isso inclui todas as funções que executam operações de escrtia e leitura em disco, escrita e leitura na rede, e `time.sleep()`. Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as funções de compressão e descompressão dos módulos `zlib` and `bz2`, também liberam a GIL.footnote:[Os módulos `zlib` e `bz2` são mencionados nominalmente em uma https://fpy.li/19-6[mensagem de Antoine Pitrou na python-dev] (EN). Pitrou contribuiu para a lógica da divisão de tempo da GIL no Python 3.2.]
+. Toda função na biblioteca padrão do Python que executa uma syscallfootnote:[Uma syscall é uma chamada a partir do código do usuário para uma função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para aprender mais sobre esse tópico, leia o artigo https://pt.wikipedia.org/wiki/Chamada_de_sistema["Chamada de sistema"] na Wikipedia.] libera a GIL. Isso inclui todas as funções que executam operações de escrita e leitura em disco, escrita e leitura na rede, e `time.sleep()`. Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as funções de compressão e descompressão dos módulos `zlib` and `bz2`, também liberam a GIL.footnote:[Os módulos `zlib` e `bz2` são mencionados nominalmente em uma https://fpy.li/19-6[mensagem de Antoine Pitrou na python-dev] (EN). Pitrou contribuiu para a lógica da divisão de tempo da GIL no Python 3.2.]
 
 . Extensões que se integram no nível da API Python/C também podem iniciar outras threads não-Python, que não são afetadas pela GIL. Essas threads fora do controle da GIL normalmente não podem modificar objetos Python, mas podem ler e escrever na memória usada por objetos que suportam o https://fpy.li/pep3118[buffer protocol] (EN), como `bytearray`, `array.array`, e arrays do _NumPy_.
 
@@ -211,7 +211,7 @@ na mesma posição da tela.footnote:[O Unicode tem muitos caracteres úteis para
 <<spinner_fig>> mostra a saída de duas versões do exemplo: primeiro com threads, depois com corrotinas. Se você estiver longe do computador, imagine que o `\` na última linha está girando.
 
 [[spinner_fig]]
-.Os scripts spinner_thread.py e spinner_async.py produzem um resultado similar: o repr do objeto spinner e o texto "Answer: 42". Na captura de tela, spinner_async.py ainda está rodando, e a mensagem animada "/ thinking!" é apresentada; aquela linha será substituida por "Answer: 42" após 3 segundos.
+.Os scripts spinner_thread.py e spinner_async.py produzem um resultado similar: o repr do objeto spinner e o texto "Answer: 42". Na captura de tela, spinner_async.py ainda está rodando, e a mensagem animada "/ thinking!" é apresentada; aquela linha será substituída por "Answer: 42" após 3 segundos.
 image::images/flpy_1901.png[Captura de tela do console mostrando a saída dos dois exemplos.]
 
 Vamos revisar o script _spinner_thread.py_ primeiro. O <<spinner_thread_top_ex>>
@@ -281,7 +281,7 @@ Agora vamos ver um exemplo similar usando o pacote `multiprocessing`.((("", star
 
 O((("spinners (loading indicators)", "created with multiprocessing package")))((("multiprocessing package"))) pacote `multiprocessing` permite executar tarefas concorrentes em processos Python separados em vez de threads.
 Quando você cria uma instância de `multiprocessing.Process`, todo um novo interpretador Python é iniciado como um processo filho, em segundo plano.
-Como cada processo Python tem sua prórpia GIL, isto permite que seu programa use todos os núcleos de CPU disponíveis—mas isso depende, em última instância, do agendador do sistema operacional.
+Como cada processo Python tem sua própria GIL, isto permite que seu programa use todos os núcleos de CPU disponíveis—mas isso depende, em última instância, do agendador do sistema operacional.
 Veremos os efeitos práticos em <<naive_multiprocessing_sec>>, mas para esse programa simples não faz grande diferença.
 
 O objetivo dessa seção é apresentar o `multiprocessing` e mostrar como sua API emula a API de `threading`, tornando fácil converter programas simples de threads para processos, como mostra o _spinner_proc.py_ (<<spinner_proc_ex>>).
@@ -317,7 +317,7 @@ No <<spinner_proc_ex>>, o único dado que cruza a fronteira entre os processos �
 
 [TIP]
 ====
-Desde o Python 3.8, há o pacote https://docs.python.org/pt-br/3/library/multiprocessing.shared_memory.html[`multiprocessing.shared_memory`] (_memória compartilhada para acesso direto entre processos_) na bibloteca padrão, mas ele não suporta instâncias de classes definidas pelo usuário.
+Desde o Python 3.8, há o pacote https://docs.python.org/pt-br/3/library/multiprocessing.shared_memory.html[`multiprocessing.shared_memory`] (_memória compartilhada para acesso direto entre processos_) na biblioteca padrão, mas ele não suporta instâncias de classes definidas pelo usuário.
 Além bytes nus, o pacote permite que processos compartilhem uma `ShareableList`, uma sequência mutável que pode manter um número fixo de itens dos tipos `int`, `float`, `bool`, e `None`, bem como `str` e `bytes`, até o limite de 10 MB por item.
 Veja a documentação de
 https://docs.python.org/pt-br/3/library/multiprocessing.shared_memory.html#multiprocessing.shared_memory.ShareableList[`ShareableList`]
@@ -343,7 +343,7 @@ Alocar tempo da CPU para a execução de threads e processos é trabalho dos age
 O loop de eventos e as corrotinas da biblioteca e as corrotinas do usuário todas rodam em uma única thread.
 Assim, o tempo gasto em uma corrotina desacelera loop de eventos—e de todas as outras corrotinas.
 
-A versão com corrotinas do programa de animação é mais fácil de entender se comerçarmos por uma função `main`, e depois olharmos a `supervisor`.
+A versão com corrotinas do programa de animação é mais fácil de entender se começarmos por uma função `main`, e depois olharmos a `supervisor`.
 É isso que o <<spinner_async_start_ex>> mostra.
 
 [[spinner_async_start_ex]]
@@ -381,7 +381,7 @@ The same issue is affecting other recently introduced Python keywords: `await`, 
 O <<spinner_async_start_ex>> demonstra as três principais formas de rodar uma corrotina:
 
 `asyncio.run(coro())`::
-    É chamado a partir de uma funcão regular, para controlar o objeto corrotina, que é normalmente o ponto de entrada para todo o código assíncrono no programa, como a `supervisor` nesse exemplo. Esta chamada bloqueia a função até que `coro` retorne. O valor de retorno da chamada a `run()` é o que quer que `coro` retorne.
+    É chamado a partir de uma função regular, para controlar o objeto corrotina, que é normalmente o ponto de entrada para todo o código assíncrono no programa, como a `supervisor` nesse exemplo. Esta chamada bloqueia a função até que `coro` retorne. O valor de retorno da chamada a `run()` é o que quer que `coro` retorne.
 `asyncio.create_task(coro())`::
     É chamado de uma corrotina para agendar a execução futura de outra corrotina.
     Essa chamada não suspende a corrotina atual.
@@ -430,7 +430,7 @@ Vai lá, eu espero.
 
 Quando você roda o experimento, você vê isso:
 
-. O ponterio animado é mostrado, de forma similar a isso: `<Task pending name='Task-2' coro=<spin() running at /path/to/spinner_async.py:12>>`.
+. O ponteiro animado é mostrado, de forma similar a isso: `<Task pending name='Task-2' coro=<spin() running at /path/to/spinner_async.py:12>>`.
 . A animação nunca aparece. O programa trava por 3 segundos.
 . `Answer: 42` aparece e o programa termina.
 
@@ -551,7 +551,7 @@ Para entregar o controle, você usa `await` para passar o controle de volta ao a
 Por isso é possível cancelar uma corrotina de forma segura:
 por definição, uma corrotina só pode ser cancelada quando está suspensa em uma expressão `await`, então é possível realizar qualquer limpeza necessária capturando a exceção `CancelledError`.
 
-A chamada `time.sleep()` bloqueia mas não faz nada. Vamos agora experimentar com uma chamada de uso intesivo da CPU, para entender melhor a GIL, bem como o efeito de funções de processamento intensivo sobre código assíncrono.((("", startref="CMhello19")))
+A chamada `time.sleep()` bloqueia mas não faz nada. Vamos agora experimentar com uma chamada de uso intensivo da CPU, para entender melhor a GIL, bem como o efeito de funções de processamento intensivo sobre código assíncrono.((("", startref="CMhello19")))
 
 
 
@@ -588,7 +588,7 @@ Uma das partes da resposta é um pouco mais complicada (pelo menos para mim foi)
 
 [quote]
 ____
-O quê aconteceria à animação se fossem feitas as seguintes modificações, pressumindo que `n = 5_000_111_000_222_021`—aquele mesmo número primo que minha máquina levou 3,3s para checar:
+O quê aconteceria à animação se fossem feitas as seguintes modificações, presumindo que `n = 5_000_111_000_222_021`—aquele mesmo número primo que minha máquina levou 3,3s para checar:
 
 . Em _spinner_proc.py_, substitua `time.sleep(3)` com uma chamada a `is_prime(n)`?
 . Em _spinner_thread.py_, substitua `time.sleep(3)` com uma chamada a `is_prime(n)`?
@@ -770,7 +770,7 @@ O tempo total neste caso é muito menor que a soma dos tempos decorridos para ca
 
 [NOTE]
 ====
-A função `multiprocessing.cpu_count()` retorna `12` no MacBook Pro que estou usando para escrever esse capítulo. Ele é na verdade um i7 com uma CPU de 6 núcleos, mas o SO informa 12 CPUs devido ao _hyperthreading_, uma tecnologia da Intel que executa duas threads por núcleo. Entretando, _hyperthreading_ funciona melhor quando uma das threads não está trabalhando tão pesado quanto a outra thread no mesmo núcleo—talvez a primeira esteja parada, esperando por dados após uma perda de cache, e a outra está mastigando números. De qualquer forma, não há almoço grátis: este laptop tem o desempenho de uma máquina com 6 CPUs para atividades de processamento intensivo com pouco uso de memória—como essa verificação simples de números primos.
+A função `multiprocessing.cpu_count()` retorna `12` no MacBook Pro que estou usando para escrever esse capítulo. Ele é na verdade um i7 com uma CPU de 6 núcleos, mas o SO informa 12 CPUs devido ao _hyperthreading_, uma tecnologia da Intel que executa duas threads por núcleo. Entretanto, _hyperthreading_ funciona melhor quando uma das threads não está trabalhando tão pesado quanto a outra thread no mesmo núcleo—talvez a primeira esteja parada, esperando por dados após uma perda de cache, e a outra está mastigando números. De qualquer forma, não há almoço grátis: este laptop tem o desempenho de uma máquina com 6 CPUs para atividades de processamento intensivo com pouco uso de memória—como essa verificação simples de números primos.
 ====
 
 [[code_for_multicore_prime_sec]]
@@ -943,7 +943,7 @@ A GIL também torna mais fácil escrever extensões simples com a API Python/C.
 [NOTE]
 ====
 Escrevi "extensões simples"  porque uma extensão não precisa de forma alguma lidar com a GIL.
-Uma função escrita em C ou Fortran pode ser centenas de vezes mais rápida que sua equivalente em Python.footnote:[Na faculdade, como exercício, tive que implementar o algorítmo de compressão LZW em C. Mas antes escrevi o código em Python, para verificar meu entendimento da especificação. A versão C foi cerca de 900 vezes mais rápida.]
+Uma função escrita em C ou Fortran pode ser centenas de vezes mais rápida que sua equivalente em Python.footnote:[Na faculdade, como exercício, tive que implementar o algorítimo de compressão LZW em C. Mas antes escrevi o código em Python, para verificar meu entendimento da especificação. A versão C foi cerca de 900 vezes mais rápida.]
 Assim, a complexidade adicional de liberar a GIL para tirar proveito de CPUs multi-núcleo pode, em muitos casos, não ser necessária.
 Então podemos agradecer à GIL por muitas das extensões disponíveis em Python—e isso é certamente uma das razões fundamentais da popularidade que linguagem goza hoje.
 ====
@@ -983,7 +983,7 @@ Em 2021, o ecossistema de ciência de dados de Python já incluia algumas ferram
 
 https://fpy.li/19-34[Project Jupyter]::
     Duas((("Project Jupyter"))) interfaces para navegadores—Jupyter Notebook e JupyterLab—que permitem aos usuários rodar e documentar código analítico, potencialmente sendo executado através da rede em máquinas remotas.
-    Ambas são aplicações híbridas Python/Javascripot, suportando kernels de processamento escritos em diferentes linguagens, todos integrados via ZeroMQ—uma biblioteca de comunicação por mensagens assíncrona para aplicações distribuídas.
+    Ambas são aplicações híbridas Python/Javascript, suportando kernels de processamento escritos em diferentes linguagens, todos integrados via ZeroMQ—uma biblioteca de comunicação por mensagens assíncrona para aplicações distribuídas.
     O nome _Jupyter_, inclusive, vem de Julia, Python, e R, as três primeiras linguagens suportadas pelo Notebook.
     O rico ecossistema construído sobre as ferramentas Jupyter incluí o https://fpy.li/19-35[Bokeh], uma poderosa biblioteca de visualização iterativa que permite aos usuários navegarem e interagirem com grandes conjuntos de dados ou um fluxo de dados continuamente atualizado, graças à performance das engines e dos navegadores Javascript modernos.
 
@@ -1095,7 +1095,7 @@ enquanto o _uWSGI_ e o _NGINX Unit_ funcionam também com outras linguagens.
 Para saber mais, consulte a documentação de cada um deles.
 
 O ponto principal: todos esses servidores de aplicação podem, potencialmente, utilizar todos os núcleos de CPU no servidor, criando múltiplos processos Python para executar apps web tradicionais escritas no bom e velho código sequencial em _Django_, _Flask_, _Pyramid_, etc.
-Isso explica porque tem sido possivel ganhar a vida como desenvolvedor Python sem nunca ter estudado os módulos `threading`, `multiprocessing`, ou `asyncio`:
+Isso explica porque tem sido possível ganhar a vida como desenvolvedor Python sem nunca ter estudado os módulos `threading`, `multiprocessing`, ou `asyncio`:
 o servidor de aplicação lida de forma transparente com a concorrência.
 
 [[asgi_note]]
@@ -1117,7 +1117,7 @@ Agora vamos examinar outra forma de evitar a GIL para obter uma melhor performan
 Quando((("multicore processing", "distributed task queues")))((("distributed task queues")))((("queues", "distributed task queues"))) o servidor de aplicação entrega uma requisição a um dos processos Python rodando seu código, 
 sua aplicação precisa responder rápido:
 você quer que o processo esteja disponível para processar a requisição seguinte assim que possível.
-Entretando, algumas requisições exigem ações que podem demorar—por exemplo, enviar um email ou gerar um PDF.
+Entretanto, algumas requisições exigem ações que podem demorar—por exemplo, enviar um email ou gerar um PDF.
 Este é o problema que filas de tarefas distribuídas foram projetadas para resolver.
 
 A https://fpy.li/19-47[_Celery_] e a https://fpy.li/19-48[_RQ_] são as mais conhecidas filas de tarefas de código aberto com uma API Python.
@@ -1127,7 +1127,7 @@ Esses produtos encapsulam uma fila de mensagens e oferecem uma API de alto níve
 
 [NOTE]
 ====
-No contexto de filas de tarefaas, as palavras _produtor_ e _consumidor_ são usado no lugar da terminologia tradicional de cliente/servidor. Por exemplo, um processador de views _Django_ _produz_ requisições de serviço, que são colocadas em uma fila para serem _consumidas_ por um ou mais processos renderizadores de PDFs.
+No contexto de filas de tarefas, as palavras _produtor_ e _consumidor_ são usado no lugar da terminologia tradicional de cliente/servidor. Por exemplo, um processador de views _Django_ _produz_ requisições de serviço, que são colocadas em uma fila para serem _consumidas_ por um ou mais processos renderizadores de PDFs.
 ====
 
 Citando diretamente o https://fpy.li/19-49[FAQ] do Celery, cá estão alguns casos de uso:
@@ -1285,7 +1285,7 @@ Ambos os pacotes são baseados na biblioteca _multiprocessing_.
 Eric Snow, um dos desenvolvedores principais do Python, mantém um wiki chamado https://fpy.li/19-79[Multicore Python], com observações sobre os esforços dele e de outros para melhorar o suporte do Python a execução em paralelo.
 Snow é o autor da https://fpy.li/pep554[PEP 554--Multiple Interpreters in the Stdlib].
 Se aprovada e implementada, a PEP 554 assenta as bases para melhorias futuras, que podem um dia permitir que o Python use múltiplos núcleos sem as sobrecargas do _multiprocessing_.
-Um dos grandes empecilhos é a iteração complexa entre mútiplos subinterpretadores ativos e extensões que assumem a existência de um único interpretador.
+Um dos grandes empecilhos é a iteração complexa entre múltiplos subinterpretadores ativos e extensões que assumem a existência de um único interpretador.
 
 Mark Shannon--também um mantenedor do Python—criou uma 
 https://fpy.li/19-80[tabela útil]
@@ -1317,8 +1317,8 @@ recomendo esse livro por sua abordagem dos conceitos, da motivação e dos model
 
 Aprendi muito lendo https://fpy.li/19-93[_Seven Concurrency Models in Seven Weeks_],
 de Paul Butcher (Pragmatic Bookshelf), que traz o eloquente subtítulo _When Threads Unravel_.footnote:[Trocadilho intraduzível com thread no sentido de "fio"ou "linha", algo como "Quando os fios desfiam" (NT)]
-O capítulo 1 do livro apresenta os conceitos centrais e os desafios da programação com threads e travas em Java.footnote:[As APIs Python `threading` e `concurrent.futures` foram fortemente influencidas pela biblioteca padrão do Java.]
-Os outros seis capítulos do livro são dedicados ao que o autor considera as melhores alternativas para programação concorrente e paralela, e como funcionam com diferenes linguagens, ferramentas e bibliotecas.
+O capítulo 1 do livro apresenta os conceitos centrais e os desafios da programação com threads e travas em Java.footnote:[As APIs Python `threading` e `concurrent.futures` foram fortemente influenciadas pela biblioteca padrão do Java.]
+Os outros seis capítulos do livro são dedicados ao que o autor considera as melhores alternativas para programação concorrente e paralela, e como funcionam com diferentes linguagens, ferramentas e bibliotecas.
 Os exemplos usam Java, Clojure, Elixir, e
 C (no capítulo sobre programação paralela com a framework https://fpy.li/19-94[OpenCL]).
 O modelo CSP é exemplificado com código Clojure, apesar da linguagem Go merecer os créditos pela popularização daquela abordagem.
@@ -1406,7 +1406,7 @@ Ao resumir o capítulo 1 de _Seven Concurrency Models in Seven Weeks_, Paul Butc
 
 [quote]
 ____
-A maior fraqueza da abordagem, entretando, é que programação com threads—e—travas é _difícil_.
+A maior fraqueza da abordagem, entretanto, é que programação com threads—e—travas é _difícil_.
 Pode ser fácil para um projetista de linguagens acrescentá-las a uma linguagem,
 mas elas nos dão, a nós pobres programadores, muito pouca ajuda.
 ____

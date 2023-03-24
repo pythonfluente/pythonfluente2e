@@ -30,7 +30,7 @@ Dependendo ((("interfaces", "ways of defining and using"))) da linguagem de prog
 temos uma ou mais maneiras de definir e usar interfaces.
 Desde o Python 3.8, temos quatro maneiras.
 Elas estão ilustradas no _Mapa de Sistemas de Tipagem_ (<<type_systems_described>>).
-Podemos resumí-las assim:
+Podemos resumi-las assim:
 
 Duck typing (_tipagem pato_)::
     A((("duck typing"))) abordagem default do Python para tipagem desde o início.
@@ -64,7 +64,7 @@ Não faz sentido descartar qualquer uma delas.
 
 [[type_systems_described]]
 .A metade superior descreve abordagens de checagem de tipo durante a execução usando apenas o interpretador Python; a metade inferior requer um verificador de tipo estático externo, como o Mypy ou um IDE como o PyCharm. Os quadrantes da esquerda se referem a tipagem baseada na estrutura do objeto - isto é, dos métodos oferecidos pelo objeto, independente do nome de sua classe ou superclasses; os quadrantes da direita dependem dos objetos terem tipos explicitamente nomeados: o nome da classe do objeto, ou o nome de suas superclasses.
-image::images/flpy_1301.png[Quatro abordagens para verificaçào de tipo]
+image::images/flpy_1301.png[Quatro abordagens para verificação de tipo]
 
 Cada uma dessas quatro abordagens dependem de interfaces para funcionarem,
 mas a tipagem estática pode ser implementada de forma limitada usando apenas tipos concretos em vez de abstrações de interfaces como protocolos e classes base abstratas.
@@ -148,7 +148,7 @@ Esperamos que uma sequência também suporte `len()`, através da implementaçã
 `Vowels` não tem um método `+__len__+`, mas ainda assim se comporta como uma sequência em alguns contextos.
 E isso pode ser o suficiente para nossos propósitos.
 Por isso que gosto de dizer que um protocolo é uma "interface informal."
-Também é assim que protocolos sào entendidos em Smalltalk, o primeiro ambiente de programação orientado a objetos a usar esse termo.
+Também é assim que protocolos são entendidos em Smalltalk, o primeiro ambiente de programação orientado a objetos a usar esse termo.
 
 Exceto em páginas sobre programação de redes, a maioria dos usos da palavra "protocolo" na documentação do Python se refere a essas interfaces informais.
 
@@ -194,7 +194,7 @@ Só estou usando a figura para descrever o que uma `Sequence` completa deve ofer
 
 [role="width-90"]
 [[sequence_uml_repeat]]
-.Diagrama de classe UML para a ABC `Sequence` e classes abstratas relacionadas de `collections.abc`. As setas de herança apontam de uma subclasse para suas superclasses. Nomes em itálico são métodos abstratos. Antes do Pyhthon 3.6, não existia uma ABC `Collection` - `Sequence` era uma subclasse direta de `Container`, `Iterable` e `Sized`.
+.Diagrama de classe UML para a ABC `Sequence` e classes abstratas relacionadas de `collections.abc`. As setas de herança apontam de uma subclasse para suas superclasses. Nomes em itálico são métodos abstratos. Antes do Python 3.6, não existia uma ABC `Collection` - `Sequence` era uma subclasse direta de `Container`, `Iterable` e `Sized`.
 image::images/flpy_1302.png[UML class diagram for `Sequence`]
 
 [TIP]
@@ -210,7 +210,7 @@ Agora, lembre-se da classe `Vowels` no <<ex_minimal_sequence>>.
 Ela não herda de `abc.Sequence` e implementa apenas `+__getitem__+`.
 
 Não há um método `+__iter__+`, mas as instâncias de `Vowels` são iteráveis porque - como alternativa - se o Python encontra um método `+__getitem__+`, tenta iterar sobre o object chamando aquele método com índices inteiros começando de `0`.
-Da mesma forma que o Python é esperto o suficiente para iterar sobre instâncias de `Vowels`, ele também consegue fazer o operador `in` funcionar memso quando o método `+__contains__+` não existe: ele faz uma busca sequencial para verificar se o item está presente.
+Da mesma forma que o Python é esperto o suficiente para iterar sobre instâncias de `Vowels`, ele também consegue fazer o operador `in` funcionar mesmo quando o método `+__contains__+` não existe: ele faz uma busca sequencial para verificar se o item está presente.
 
 Em resumo, dada a importância de estruturas como a sequência, o Python consegue fazer a iteração e o operador `in` funcionarem invocando `+__getitem__+` quando `+__iter__+` e `+__contains__+` não estão presentes.
 
@@ -229,7 +229,7 @@ include::code/01-data-model/frenchdeck.py[]
 
 Muitos dos exemplos no <<data_model>> funcionam por causa do tratamento especial que o Python dá a qualquer estrutura vagamente semelhante a uma sequência.
 O protocolo iterável em Python representa uma forma extrema de duck typing:
-o interpretador tenta dois metodos diferentes para iterar sobre objetos.
+o interpretador tenta dois métodos diferentes para iterar sobre objetos.
 
 Para deixar mais claro, os comportamentos que que descrevi nessa seção estão implementados no próprio interpretador, na maioria dos casos em C.
 Eles não dependem dos métodos da ABC `Sequence`.
@@ -241,7 +241,7 @@ Agora vamos estudar outro exemplo que enfatiza a natureza dinâmica dos protocol
 
 ==== Monkey Patching: Implementando um Protocolo durante a Execução
 
-"Monkey patching"((("protocols", "implementing at runtime", id="Prun13")))((("monkey-patching", id="monkey13"))) é a ação de modificar dinamicamente um módulo, uma classe ou uma função durante a execuçào do código, para acrescentar funcionalidade ou corrigir bugs.
+"Monkey patching"((("protocols", "implementing at runtime", id="Prun13")))((("monkey-patching", id="monkey13"))) é a ação de modificar dinamicamente um módulo, uma classe ou uma função durante a execução do código, para acrescentar funcionalidade ou corrigir bugs.
 Por exemplo, a biblioteca de rede gevent faz um "monkey patch" em partes da biblioteca padrão do Python, para permitir concorrência com baixo impacto, sem threads ou `async`/`await`.footnote:[O artigo https://fpy.li/13-4["Monkey patch"] (EN) na Wikipedia tem um exemplo engraçado em Python.]
 // Because it does not change the source code like a regular patch,
 // a monkey patch only affects the currently running instance of the program.
@@ -327,7 +327,7 @@ O truque é que `set_card` sabe que o `deck` tem um atributo chamado `_cards`,
 e `_cards` tem que ser uma sequência mutável.
 A função `set_cards` é então anexada à classe `FrenchDeck` class como o método especial `+__setitem__+`.
 Isso é um exemplo de _monkey patching_:
-modificar uma classe ou módulo durante a execuçào, sem tocar no código finte.
+modificar uma classe ou módulo durante a execução, sem tocar no código finte.
 O "monkey patching" é poderoso, mas o código que efetivamente executa a modificação está muito intimamente ligado ao programa sendo modificado, muitas vezes trabalhando com atributos privados e não-documentados.
 
 Além de ser um exemplo de "monkey patching", o
@@ -476,7 +476,7 @@ Em Python, isso essencialmente significa evitar o uso de `isinstance` para verif
 
 No geral, a abordagem da _duck typing_ continua muito útil em inúmeros contextos - mas em muitos outros, um nova abordagem muitas vezes preferível evoluiu ao longo do tempo. E aqui começa nossa história...
 
-Em gerações recentes, a taxinomia de gênero e espécies (incluindo, mas não limitada à família de pássaros aquáticos conhecida como Anatidae) foi guiada principalmete pela _fenética_ - uma abordagem focalizada nas similaridades de morfologia e comportamento... principalmente traços _observáveis_. A analogia com o "duck typing" era patente.
+Em gerações recentes, a taxinomia de gênero e espécies (incluindo, mas não limitada à família de pássaros aquáticos conhecida como Anatidae) foi guiada principalmente pela _fenética_ - uma abordagem focalizada nas similaridades de morfologia e comportamento... principalmente traços _observáveis_. A analogia com o "duck typing" era patente.
 
 Entretanto, a evolução paralela muitas vezes pode produzir características similares, tanto morfológicas quanto comportamentais, em espécies sem qualquer relação de parentesco, que apenas calharam de evoluir em nichos ecológicos similares, porém separados. "Similaridades acidentais" parecidas acontecem também em programação - por exemplo, considere o [seguinte] exemplo clássico de programação orientada a objetos:
 
@@ -542,8 +542,8 @@ Em((("goose typing", "overview of"))) resumo, _goose typing_ implica:
 * Criar subclasses de ABCs, para tornar explícito que você está implementando uma interface previamente definida.
 * Checagem de tipo durante a execução usando as ABCs em vez de classes concretas como segundo argumento para `isinstance` e `issubclass`.
 
-Alex tambem aponta que herdar de uma ABC é mais que implementar os métodos necessários:
-é também uma declaraçào de intenções clara da parte do desenvolvedor.
+Alex também aponta que herdar de uma ABC é mais que implementar os métodos necessários:
+é também uma declaração de intenções clara da parte do desenvolvedor.
 A intenção também pode ficar explícita através do registro de uma subclasse virtual.
 
 [NOTE]
@@ -559,7 +559,7 @@ Sequence.register(FrenchDeck)
 ====
 
 O uso de `isinstance` e `issubclass` se torna mais aceitável se você está verificando ABCs em vez de classes concretas. 
-Se usadas com classes concretas, verificações de tipo limitam o polimorfismo - um recurso essencial da programaçào orientada a objetos.
+Se usadas com classes concretas, verificações de tipo limitam o polimorfismo - um recurso essencial da programação orientada a objetos.
 Mas com ABCs esses testes são mais flexíveis.
 Afinal, se um componente não implementa uma ABC sendo uma subclasse - mas implementa os métodos necessários - ele sempre pode ser registrado posteriormente e passar naquelas verificações de tipo explícitas.
 
@@ -898,7 +898,7 @@ ____
 Quando abstractmethod() é aplicado em combinação com outros descritores de método, ele deve ser aplicado como o decorador mais interno...footnote:[O verbete https://docs.python.org/pt-br/dev/library/abc.html#abc.abstractmethod[`@abc.abstractmethod`] na https://docs.python.org/pt-br/dev/library/abc.html[documentação do módulo `abc`].]
 ____
 
-Em outras palavrs, nenhum outro decorador pode aparecer entre `@abstractmethod` e o comando `def`.
+Em outras palavras, nenhum outro decorador pode aparecer entre `@abstractmethod` e o comando `def`.
 ====
 
 Agora que abordamos essas questões de sintaxe das ABCs, vamos colocar `Tombola` em uso, implementando dois descendentes concretos dessa classe.
@@ -950,10 +950,10 @@ include::code/13-protocol-abc/lotto.py[tags=LOTTERY_BLOWER]
 
 O <<ex_lotto>> ilustra um idioma que vale a pena mencionar:
 em `+__init__+`, `self._balls` armazena `list(iterable)`, e não apenas uma referência para `iterable`
-(isto é, nós não meramente atribuimos `self._balls = iterable`, apelidando o argumento).
+(isto é, nós não meramente atribuímos `self._balls = iterable`, apelidando o argumento).
 Como mencionado na <<defensive_duck_prog_sec>>, isso torna nossa `LottoBlower` flexível, pois o argumento `iterable` pode ser de qualquer tipo iterável.
 Ao mesmo tempo, garantimos que os itens serão armazenados em uma `list`, da onde podemos `pop` os itens.
-E mesmo se nós sempre recebecemos listas no argumento `iterable`,
+E mesmo se nós sempre recebêssemos listas no argumento `iterable`,
 `list(iterable)` produz uma cópia do argumento, o que é uma boa prática, considerando que vamos remover itens dali, e o cliente pode não estar esperando que a lista passada seja modificada.footnote:[<<defensive_argument>> em <<mutability_and_references>> foi dedicado à questão de apelidamento que acabamos de evitar aqui.]
 
 Chegamos agora à característica dinâmica crucial da goose typing: 
@@ -977,7 +977,7 @@ E mais, neste momento verificadores de tipo estáticos não conseguem tratar sub
 Mais detalhes em https://fpy.li/13-22[Mypy issue 2922—ABCMeta.register support].
 ====
 
-O método `register` normalmente é invocado como uma funçào comum (veja <<register_usage>>),
+O método `register` normalmente é invocado como uma função comum (veja <<register_usage>>),
 mas também pode ser usado como decorador. No ((("UML class diagrams", "TomboList"))) <<ex_tombolist>>, usamos a sintaxe de decorador e implementamos `TomboList`, uma subclasse virtual de `Tombola`, ilustrada em <<tombolist_uml>>.
 
 [role="width-50"]
@@ -998,7 +998,7 @@ include::code/13-protocol-abc/tombolist.py[]
 <3> `Tombolist` herda seu comportamento booleano de `list`, e isso retorna `True` se a lista não estiver vazia.
 <4> Nosso `pick` chama `self.pop`, herdado de `list`, passando um índice aleatório para um item.
 <5> `Tombolist.load` é o mesmo que `list.extend`.
-<6> `loaded` delega para `bool`.footnote:[O truque usado com `load()` não funciona com `loaded()`, pois o tipo `list` não implementa `+__bool__+`, o método que eu teria de vincular a `loaded`. O `bool()` nativo não precisa de `+__bool__+` para funcionar, porque pode também usar `+__len__+`. Veja https://docs.python.org/pt-br/3/library/stdtypes.html#truth["4.1. Teste do Valor Verdade"] no capítulo "Tipos Embutidos" da documentáação do Python.]
+<6> `loaded` delega para `bool`.footnote:[O truque usado com `load()` não funciona com `loaded()`, pois o tipo `list` não implementa `+__bool__+`, o método que eu teria de vincular a `loaded`. O `bool()` nativo não precisa de `+__bool__+` para funcionar, porque pode também usar `+__len__+`. Veja https://docs.python.org/pt-br/3/library/stdtypes.html#truth["4.1. Teste do Valor Verdade"] no capítulo "Tipos Embutidos" da documentação do Python.]
 <7> É sempre possível chamar `register` dessa forma, e é útil fazer assim quando você precisa registrar uma classe que você não mantém, mas que implementa a interface.
 
 Note que, por causa do registro,
@@ -1162,7 +1162,7 @@ mas decidi que a apresentação inicial de dicas de tipo em funções precisava 
 e verificação de tipo estática sem protocolos não consegue lidar muito bem com as APIs pythônicas.
 ====
 
-Vamos encerrar esse capítulo ilustrando os protocolos estáticos com dois exemplos simples, e uma discusssão sobre as ABCs numéricas e protocolos.
+Vamos encerrar esse capítulo ilustrando os protocolos estáticos com dois exemplos simples, e uma discussão sobre as ABCs numéricas e protocolos.
 Começaremos mostrando como um protocolo estático torna possível anotar e verificar tipos na função `double()`, que vimos antes na <<types_defined_by_ops_sec>>.
 
 [[typed_double_sec]]
@@ -1216,7 +1216,7 @@ include::code/13-protocol-abc/double/double_protocol.py[]
 ====
 <1> Vamos usar esse `T` na assinatura de `+__mul__+`.
 <2> `+__mul__+` é a essência do protocolo `Repeatable`.
-O parâmetro `self` normalmente não é anotado - se pressume que seu tipo seja a classe.
+O parâmetro `self` normalmente não é anotado - presume-se que seu tipo seja a classe.
 Aqui usamos `T` para assegurar que o tipo do resultado é o mesmo tipo de `self`.
 Além disso observe que `repeat_count` está limitado nesse protocolo a `int`.
 <3> A variável de tipo `RT` é vinculada pelo protocolo `Repeatable`:
@@ -1459,7 +1459,7 @@ por apontar que checagem de tipo não é apenas uma questão de verificar se o t
 Agora veremos como implementar um protocolo estático em uma classe definida pelo usuário.
 
 [[support_typing_proto]]
-==== Suportanto um Protocolo Estático
+==== Suportando um Protocolo Estático
 
 Lembra((("static protocols", "supporting", id="SPsupport13"))) da classe `Vector2d`, que desenvolvemos em <<pythonic_objects>>?
 Dado que tanto um número `complex` quanto uma instância de `Vector2d` consistem em um par de números de ponto flutuante, faz sentido suportar a conversão de `Vector2d` para `complex`.
@@ -1524,7 +1524,7 @@ Sem o `+__future__+` import of `annotations`,
 Essa importação de `+__future__+` foi introduzida na 
 https://fpy.li/pep563[PEP 563—Postponed Evaluation of Annotations], implementada no Python 3.7.
 Aquele comportamento estava marcado para se tornar default no 3.10, mas a mudança foi adiada para uma versão futura.footnote:[Leia a https://fpy.li/13-32[decisão] (EN) do Python Steering Council no python-dev.]
-Quando isso acontecer, a importaçào será redundante mas inofensiva.
+Quando isso acontecer, a importação será redundante mas inofensiva.
 
 Agora vamos criar - e depois estender - um novo protocolo estático.((("", startref="SPsupport13")))
 
@@ -1606,7 +1606,7 @@ vamos estudar algumas recomendações sobre essa prática.((("", startref="SPdes
 Após((("static protocols", "best practices for protocol design"))) 10 anos de experiência com duck typing estático em Go, está claro que protocolos estreitos são mais úteis - muitas vezes tais protocolos tem um único método, raramente mais que um par de métodos. 
 Martin Fowler escreveu um post definindo a https://fpy.li/13-33[_interface papel_]footnote:["papel" aqui é usado no sentido de incorporação de um personagem (NT)], uma ideia útil de ter em mente ao desenvolver protocolos.
 
-Além disso, algumas vezes vemos um protocolo definido próximo a uma função que o usa - ou seja, definido em "código do cliente" em vez de ser definido em uma bibliotecaa separada.
+Além disso, algumas vezes vemos um protocolo definido próximo a uma função que o usa - ou seja, definido em "código do cliente" em vez de ser definido em uma biblioteca separada.
 Isso torna mais fácil criar novos tipos para chamar aquela função, algo bom para a extensibilidade e para testes com simulações ou protótipos.
 
 Ambas as práticas, protocolos estreitos e protocolos em código cliente, evitam um acoplamento muito firme, em acordo com o 
@@ -1802,11 +1802,11 @@ vimos como criar subclasses de ABCs existentes,
 examinamos algumas ABCs importantes da biblioteca padrão,
 e criamos uma ABC do zero,
 que nós então implementamos da forma tradicional, criando subclasses, e por registro.
-Finalizamos aquela seção vendo como o método especial `+__subclasshook__+` permite às ABCs suportarem a tipagem estrutural, pelo reconhecimento de classes não-relacionadas, mas que fornecem os métodos que preenchem os requisistos da interface definida na ABC.
+Finalizamos aquela seção vendo como o método especial `+__subclasshook__+` permite às ABCs suportarem a tipagem estrutural, pelo reconhecimento de classes não-relacionadas, mas que fornecem os métodos que preenchem os requisitos da interface definida na ABC.
 
 A última grande seção foi a <<static_protocols_sec>>,
 onde retomamos o estudo do duck typing estático, que havia começado no <<type_hints_in_def_ch>>, em <<protocols_in_fn>>.
-Vimos como o decorador `@runtime_checkable` tambem aproveita o `+__subclasshook__+` para suportar tipagem estrutural durante a execução - mesmo que o melhor uso dos protocolos estáticos seja com verificadores de tipo estáticos, 
+Vimos como o decorador `@runtime_checkable` também aproveita o `+__subclasshook__+` para suportar tipagem estrutural durante a execução - mesmo que o melhor uso dos protocolos estáticos seja com verificadores de tipo estáticos, 
 que podem levar em consideração as dicas de tipo, tornando a tipagem estrutural mais confiável.
 Então falamos sobre o projeto e a codificação de um protocolo estático e como estendê-lo.
 O capítulo terminou com <<numbers_abc_proto_sec>>,
@@ -1877,7 +1877,7 @@ A https://fpy.li/13-52[PEP 3119--Introducing Abstract Base Classes] (EN)
 apresenta a justificativa para as ABCs. A https://fpy.li/13-53[PEP 3141--A Type Hierarchy for Numbers] (EN)
 apresenta as ABCs do https://fpy.li/13-54[módulo `numbers`],
 mas a discussão no Mypy issue https://fpy.li/13-55[#3186 "int is not a Number?"]
-inclui alguns argumentos sobre a razão da torrre numérica ser inadequada para verificação estática de tipo.
+inclui alguns argumentos sobre a razão da torre numérica ser inadequada para verificação estática de tipo.
 Alex Waygood escreveu uma 
 https://fpy.li/13-56[resposta abrangente no StackOverflow], discutindo formas de anotar tipos numéricos.
 
@@ -1899,7 +1899,7 @@ PROD: Please check for orphans within the Soapbox. I could not use section title
 A Jornada PMV da Tipagem Estática em Python 
 
 Eu((("interfaces", "Soapbox discussion", id="Isoap13")))((("protocols", "Soapbox discussion", id="Psoap13")))((("ABCs (abstract base classes)", "Soapbox discussion", id="ABCsoap13")))((("Soapbox sidebars", "static typing")))((("static protocols", "Soapbox discussion"))) trabalho para a Thoughtworks, uma líder global em desenvolvimento de software ágil.
-Na Thoughtworks, muitas vezes recomendamos a nossos clientes que procurem criar e implanta PMVs: produtos mínimos viáveis, "uma versão simples de um produto, que é disponibilizada para os usuários com o objetivo de validar hipóteeses centrais do negócio," como definido or meu colega Paulo Caroli in https://fpy.li/13-58["Lean Inception"],
+Na Thoughtworks, muitas vezes recomendamos a nossos clientes que procurem criar e implanta PMVs: produtos mínimos viáveis, "uma versão simples de um produto, que é disponibilizada para os usuários com o objetivo de validar hipóteses centrais do negócio," como definido or meu colega Paulo Caroli in https://fpy.li/13-58["Lean Inception"],
 um post no https://fpy.li/13-59[Martin Fowler's collective blog].
 
 Guido van Rossum e os outros core developers que projetaram e implementaram a tipagem estática tem seguido a estratégia do PMV desde 2006.
@@ -1911,7 +1911,7 @@ Isso foi feito para explicitamente permitir experimentação e receber feedback 
 Oito anos depois, a https://fpy.li/pep484[PEP 484—Type Hints] foi proposta e aprovada.
 Sua implementação, no Python 3.5, não exigiu mudanças na linguagem ou na biblioteca padrão - exceto a adição do módulo `typing`, do qual nenhuma outra parte da biblioteca padrão dependia.
 A PEP 484 suportava apenas tipos nominais com genéricos - similar ao Java - mas com a verificação estática efetiva sendo executada por ferramentas externas.
-Recursos importantes não existiam, como anotações de variáveis, tipos embutidos genéricos, e protocolos. Apesar dessas limitações, esse PMV de tipagem foi bem sucedida o suficiente para atrair investimento e adoção por parte de empresas com enormes bases de código em Python, como a Dropbox, o Google e o Facebook, bem como apoio de IDEs profisiionais como o https://fpy.li/13-60[PyCharm],
+Recursos importantes não existiam, como anotações de variáveis, tipos embutidos genéricos, e protocolos. Apesar dessas limitações, esse PMV de tipagem foi bem sucedida o suficiente para atrair investimento e adoção por parte de empresas com enormes bases de código em Python, como a Dropbox, o Google e o Facebook, bem como apoio de IDEs profissionais como o https://fpy.li/13-60[PyCharm],
 o https://fpy.li/13-61[Wing], e o https://fpy.li/13-62[VS Code].
 
 A https://fpy.li/pep526[PEP 526—Syntax for Variable Annotations]
@@ -1959,7 +1959,7 @@ Mas o monkey patching pode também ser útil, por exemplo, para fazer uma classe
 O design pattern Adaptador resolve o mesmo problema através da implementação de uma nova classe inteira.
 
 É fácil usar monkey patching em código Python, mas há limitações.
-mAo contrário de Ruby e Javascript, o Python não permite modificações de tipos embutidos durante a execução. Eu na verdade considero isso uma vantagem, pois dá a certeza que um objeto `str` vai sempre ter os mesmos métodos.
+Ao contrário de Ruby e Javascript, o Python não permite modificações de tipos embutidos durante a execução. Eu na verdade considero isso uma vantagem, pois dá a certeza que um objeto `str` vai sempre ter os mesmos métodos.
 Essa limitação reduz a chance de bibliotecas externas aplicarem correções conflitantes.
 
 [role="soapbox-title"]
