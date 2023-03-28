@@ -1,5 +1,5 @@
 [[type_hints_in_def_ch]]
-== Dicas de Tipo em Funções
+== Dicas de tipo em funções
 :xrefstyle: short
 :figure-caption: Figura
 :example-caption: Exemplo
@@ -10,7 +10,7 @@
 
 ++++
 <blockquote>
-<p>É preciso enfatizar que o <strong>Python continuará sendo uma linguagem de tipagem dinâmica, e os autores não tem qualquer intenção de algum dia tornar dicas de tipo obrigatórias, mesmo que por <span class="keep-together">mera convenção</span>.</strong></p>
+<p>É preciso enfatizar que <strong>Python continuará sendo uma linguagem de tipagem dinâmica, e os autores não tem qualquer intenção de algum dia tornar dicas de tipo obrigatórias, mesmo que por <span class="keep-together">mera convenção</span>.</strong></p>
 <p data-type="attribution">Guido van Rossum&#44; Jukka Lehtosalo&#44; e Łukasz Langa, PEP 484—Type Hints<span data-type="footnote"><a href="https://fpy.li/8-1"> PEP 484—Type Hints</a> (EN), "Rationale and Goals"; negritos mantidos do original.</span></p>
 </blockquote>
 ++++
@@ -27,7 +27,7 @@ Por isso deverão ser sempre opcionais.
 A 
 https://fpy.li/pep484[PEP 484—Type Hints] introduziu a sintaxe e a semântica para declarações explícitas de tipo em argumentos de funções, valores de retorno e variáveis. O objetivo é ajudar ferramentas de desenvolvimento a encontrarem bugs nas bases de código em Python através de análise estática, isto é, sem precisar efetivamente executar o código através de testes.
 
-Os maiores beneficiários são engenheiros de software profissionais que usam IDEs (_Ambientes de Desenvolvimento Integrados_) e CI (_Integração Contínua_)
+Os maiores beneficiários são engenheiros de software profissionais que usam IDEs (_Ambientes de Desenvolvimento Integrados_) e CI (_Integração Contínua_).
 A análise de custo-benefício que torna as dicas de tipo atrativas para esse grupo não se aplica a todos os usuários de Python.
 
 A base de usuários de Python vai muito além dessa classe de profissionais. Ela inclui cientistas, comerciantes, jornalistas, artistas, inventores, analistas e estudantes de inúmeras áreas -- entre outros. 
@@ -58,20 +58,35 @@ Dadas as limitações de um sistema de tipagem estática, a melhor ideia da PEP 
 A PEP 484((("functions, type hints in", "gr adual typing", id="FTHgrad08")))((("type hints (type  annotations)", "gradual typing", id="THgrad0 8")))((("gradual type system", "basics of"))) introduziu no Python um _sistema de tipagem gradual_.
 Outras linguagens com sistemas de tipagem gradual são o Typescript da Microsoft, Dart (a linguagem do SDK Flutter, criado pelo Google), e o Hack (um dialeto de PHP criado para uso na máquina virtual HHVM do Facebook). O próprio verificador de tipo MyPy começou como uma linguagem: um dialeto de Python de tipagem gradual  com seu próprio interpretador. Guido van Rossum convenceu o criador do MyPy, Jukka Lehtosalo, a transformá-lo em uma ferramenta para checar código Python anotado.
 
+Eis uma função com anotações de tipos:
 
-Um sistema gradual de tipagem:
+[source, py]
+----
+def tokenize(s: str) -> list[str]:
+    "Convert a string into a list of tokens."
+    return s.replace('(', ' ( ').replace(')', ' ) ').split()
+----
+
+A assinatura informa que a função `tokenize` recebe uma `str`
+e devolve `list[str]`: uma lista de strings.
+A utilidade dessa função será explicada no <<lis_parser_ex>>.
+
+Um sistema de tipagem gradual:
 
 É opcional::
 Por default, o verificador de tipo não deve emitir avisos para código que não tenha dicas de tipo. Em vez disso, o verificador supõe o tipo `Any` quando não consegue determinar o tipo de um objeto. O tipo `Any` é considerado compatível com todos os outros tipos.
 Não captura erros de tipagem durante a execução do código::
-Dicas de tipo são usadas por verificadores de tipo, analisadores de código-fonte (_linters_) e IDEs para emitir avisos. Eles não evitam que valores inconsistentes sejam passados para funções ou atribuídos a variáveis durante a execução.
+Dicas de tipo são usadas por verificadores de tipo, analisadores de código-fonte (_linters_) e IDEs para emitir avisos. Eles não evitam que valores inconsistentes sejam passados para funções ou atribuídos a variáveis durante a execução. Por exemplo, nada impede que alguém chame
+`tokenie(42)`, apesar da anotação de tipo do argumento `s: str`).
+A chamada ocorrerá, e teremos um erro de execução no corpo da função.
 Não melhora a performance::
-Anotações de tipo fornecem dados que poderiam, em teoria, permitir otimizações do bytecode gerado mas, em julho de 2021, essas otimizações não estão implementadas em nenhum ambiente Python que eu conheça.footnote:[Um compilador JIT ("just-in-time", compiladores que transformam o bytecode gerado pelo interpretador em código da máquina-alvo no momento da execução) como o do PyPy tem informações muito melhores que as dicas de tipo: ele monitora o programa Python durante a execução, detecta os tipo concretos em uso e gera código de máquina otimizado para aqueles tipos [.keep-together]#concretos#.]
+Anotações de tipo fornecem dados que poderiam, em tese, permitir otimizações do bytecode gerado. 
+Mas, até julho de 2021, tais otimizações não ocorrem em nenhum ambiente Python que eu conheça.footnote:[Um compilador JIT ("just-in-time", compiladores que transformam o bytecode gerado pelo interpretador em código da máquina-alvo no momento da execução) como o do PyPy tem informações muito melhores que as dicas de tipo: ele monitora o programa Python durante a execução, detecta os tipos concretos em uso, e gera código de máquina otimizado para aqueles tipos concretos.]
 
 O melhor aspecto de usabilidade da tipagem gradual é que as anotações são sempre opcionais.
 
 Nos sistemas de tipagem estáticos, a maioria das restrições de tipo são fáceis de expressar, muitas são desajeitadas, muitas são difíceis e algumas são impossíveis: Por exemplo, em julho de 2021,
-tipos recursivos não tinham suporte -- veja as questões https://fpy.li/8-2[#182, Define a JSON type](EN) sobre o JSON e https://fpy.li/8-3[#731, Support recursive types](EN) do MyPy.
+tipos recursivos não tinham suporte -- veja as questões https://fpy.li/8-2[#182, Define a JSON type] (EN) sobre o JSON e https://fpy.li/8-3[#731, Support recursive types] (EN) do MyPy.
 
 É perfeitamente possível que você escreva um ótimo programa Python, que consiga passar por uma boa cobertura de testes, mas ainda assim não consiga acrescentar dicas de tipo que satisfaçam um verificador de tipagem. Não tem problema; esqueça as dicas de tipo problemáticas e entregue o programa!
 
@@ -1811,15 +1826,17 @@ O objetivo de uma estrutura de produção de integração de código é reduzir 
 [NOTE]
 ====
 O título e a conclusão dessa seção foram inspirados pelo artigo 
-https://fpy.li/8-37["Strong Typing vs. Strong Testing"](EN) de Bruce Eckel, também publicado na antologia https://fpy.li/8-38[_The Best Software Writing I_](EN), editada por Joel Spolsky (Apress). Bruce é um fã de Python, e autor de livros sobre C&#x2b;&#x2b;, Java, Scala, e
+https://fpy.li/8-37["Strong Typing vs. Strong Testing"] (EN) de Bruce Eckel, também publicado na antologia https://fpy.li/8-38[_The Best Software Writing I_] (EN), editada por Joel Spolsky (Apress).
+Bruce é um fã de Python, e autor de livros sobre C&#x2b;&#x2b;, Java, Scala, e
 Kotlin. Naquele texto, ele conta como foi um defensor da tipagem estática até aprender Python, e conclui:
 "Se um programa em Python tem testes de unidade adequados, ele poderá ser tão robusto quanto um programa em C&#x2b;&#x2b;, Java, ou C# com testes de unidade adequados (mas será mais rápido escrever os testes em Python).
 ====
 
 // [role="pagebreak-before less_space"]
 Isso encerra nossa cobertura das dicas de tipo em Python por agora. 
-Elas serão também o ponto central do <<more_types_ch>>, que trata de classes genéricas, variância, assinaturas de sobrecarga, coerção de tipos (_type casting_), entre outros tópicos.
-Até lá, as dicas de tipo ainda vão ter participações especiais em vários exemplos ao longo do livro.
+Elas serão também o ponto central do <<more_types_ch>>, que trata de classes genéricas,
+variância, assinaturas sobrecarregadas, coerção de tipos (_type casting_), entre outros tópicos.
+Até lá, as dicas de tipo aparecerção em várias funções ao longo do livro.
 
 
 === Resumo do Capítulo
