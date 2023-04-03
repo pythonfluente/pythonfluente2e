@@ -71,7 +71,7 @@ Quando((("asynchronous programming", "significant changes to"))) escrevi a prime
 Assim, todos os exemplos desse capítulo precisaram ser atualizados.
 Também criei novos exemplos: scripts de sondagem de domínios, um serviço web com _FastAPI_, e experimentos com o novo modo assíncrono do console do Python.
 
-Novas seções tratam de recursos da linguagem inexistentes naquele momento, como corrotinas nativas, `async with`, `async for`, e os objetos que suportam esses artefatos.
+Novas seções tratam de recursos da linguagem inexistentes naquele momento, como corrotinas nativas, `async with`, `async for`, e os objetos que suportam essas instruções.
 
 As ideias na seção <<how_async_works_and_does_not_sec>> refletem lições importantes tiradas da experiência prática, e a considero uma leitura essencial para qualquer um trabalhando com programação assíncrona. Elas podem ajudar você a evitar muitos problemas—seja no Pyhon, seja no Node.js.
 
@@ -1275,7 +1275,8 @@ Aqui((("native coroutines", "versus asynchronous generators", secondary-sortas="
 
 A https://fpy.li/pep530[PEP 530—Asynchronous Comprehensions] (EN) introduziu((("generator expressions (genexps)", id="genexp21")))((("list comprehensions (listcomps)", "asynchronous", id="LCasync21"))) o uso de `async for` e `await` na sintaxe de compreensões e expressões geradoras, a partir do Python 3.6.
 
-O único artefato definido na PEP 530 que pode aparecer fora do corpo de uma `async def` é uma expressão geradora assíncrona.
+A única construção sintática definida na PEP 530 que pode aparecer fora do corpo
+de uma `async def` é uma expressão geradora assíncrona.
 
 ===== Definindo e usando uma expressão geradora asséncrona
 
@@ -1587,14 +1588,29 @@ Então, em um universo alternativo, se uma leitura do cache L1 demorasse 3 segun
 
 A <<latency_tbl>> explica porque uma abordagem disciplinada da programação assíncrona pode levar a servidores de alto desempenho.
 O desafio é conseguir essa disciplina.
-O primeiro passo é reconhecer que um "sistema voltado para E/S" é uma fantasia.
+O primeiro passo é reconhecer que um sistema limitado apenas por E/S é uma fantasia.
 
 [[myth_iobound_sec]]
-==== O mito dos sistemas voltados para E/S
+==== O mito dos sistemas limitados por E/S
 
-Um((("asynchronous programming", "myth of I/O-bound systems")))((("network I/O", "myth of I/O-bound systems"))) meme exaustivamente repetido é que programação assíncrona é boa para "sistemas voltados para E/S." Aprendi da forma mais difícil que não existem "sistemas voltados para E/S." Você pode ter _funções_ voltadas para E/S. Talvez a maioria das funções no seu sistema sejam voltadas para E/S; isto é, elas passam mais tempo esperando pela E/S que processando dados. Enquanto esperam, cedem o controle para o loop de eventos, que pode então acionar outras tarefas pendentes. Mas, inevitavelmente, qualquer sistema não-trivial terá partes voltadas para a CPU. Mesmo sistemas triviaiis revelam isso, sob esforço. No <<async_soapbox>>, conto a história de dois programas assíncronos que se debatem com funções voltadas para uso da CPU que desaceleram o loop de eventos, com severos impactos no desempenho.
+Um((("asynchronous programming", "myth of I/O-bound systems")))((("network I/O", "myth of I/O-bound systems")))
+meme exaustivamente repetido é que programação assíncrona é boa para
+"sistemas limitados por E/S"—_I/O bound systems_, ou seja,
+sistemas onde o gargalo é E/S, e não processamento de dados na CPU.
+Aprendi da forma mais difícil que não existem "sistemas limitados por E/S."
+Você pode ter _funções_ limitadas por E/S.
+Talvez a maioria das funções no seu sistema sejam limitadas por E/S;
+isto é, elas passam mais tempo esperando por E/S que realizando na memória.
+Enquanto esperam, cedem o controle para o loop de eventos,
+que pode então acionar outras tarefas pendentes.
+Mas, inevitavelmente, qualquer sistema não-trivial terá partes limitadas pela CPU.
+Mesmo sistemas triviaiis revelam isso, sob stress.
+No <<async_soapbox>>, conto a história de dois programas assíncronos sofrendo com
+funções limitadas pela CPU que freiam o loop de eventos,
+com severos impactos no desempenho do sistema como um todo.
 
-Dado que qualquer sistema não-trivial terá funções voltadas para uso da CPU, lidar com elas é a chave do sucesso na programação assíncrona.
+Dado que qualquer sistema não-trivial terá funções limitadas pela CPU,
+lidar com elas é a chave do sucesso na programação assíncrona.
 
 [[avoid_cpu_trap_sec]]
 ==== Evitando as armadilhas do uso da CPU
@@ -1643,7 +1659,10 @@ A seguir, iteração assíncrona e iteráveis assíncronos foram o principal tó
 O último exemplo do capítulo foi o _blogdom.py_ reescrito com a framework _Curio_, demonstrando como os recursos de programação assíncrona do Python não estão presos ao pacote `asyncio`.
 O _Curio_ também demonstra o conceito de _concorrência estruturada_, que pode vir a ter um grande impacto em toda a indústria de tecnologia, trazendo mais clareza para o código concorrente.
 
-Por fim, as seções sob o título <<how_async_works_and_does_not_sec>> discutiram o principal atrativo da programação assíncrona, o equívoco de "sistemas voltados para E/S" e como lidar com as inevitáveis partes de uso intesivo de CPU em seu programa.
+Por fim, as seções sob o título <<how_async_works_and_does_not_sec>>
+discutiram o principal atrativo da programação assíncrona,
+a falácia dos "sistemas limitados por E/S"
+e como lidar com as inevitáveis partes de uso intensivo de CPU em seu programa.
 
 
 === Leitura Complementar
