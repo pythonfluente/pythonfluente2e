@@ -562,17 +562,27 @@ O cientista da computação Edsger W. Dijkstra inventou o https://pt.wikipedia.o
 É uma ideia simples, mas tão flexível que a maioria dos outros objetos de sincronização—tais como as travas e as barreiras—podem ser construídas a partir de semáforos.
 Há três classes `Semaphore` na biblioteca padrão do Python:
 uma em `threading`, outra em `multiprocessing`, e uma terceira em `asyncio`.
-Aqui vamos descrever esta última.
+Essas classes são parecidas, mas têm implementações bem diferentes.
+Aqui vamos descrever a versão de `asyncio`.
 
-Um `asyncio.Semaphore` tem um contador interno que é decrementado toda vez que usamos `await` no método corrotina  `.acquire()`, e incrementado quando chamamos o método `.release()`—que não é uma corrotina porque nunca bloqueia. O valor inicial do contador é estabelecido quando o `Semaphore` é instanciado:
+Um `asyncio.Semaphore` tem um contador interno que é decrementado toda vez que
+usamos `await` no método corrotina `.acquire()`,
+e incrementado quando chamamos o método `.release()`—que não é uma corrotina porque nunca bloqueia. O valor inicial do contador é definido quando o `Semaphore` é instanciado:
 
 [source, python3]
 ----
     semaphore = asyncio.Semaphore(concur_req)
 ----
 
-Invocar `await` em `.acquire()` não causa qualquer atraso se o contador for maior que zero. Se o contador for 0, entretanto, `.acquire()` suspende a a corrotina que chamou `await` até que alguma outra corrotina chame `.release()` no mesmo `Semaphore`, incrementando assim o contador.
-Em vez de usar esses métodos diretamente, é mais seguro usar o `semaphore` como um gerenciador de contexto assíncrono, como fiz na função `download_one` em <<flags2_asyncio_top>>:
+Invocar `await` em `.acquire()` não causa qualquer atraso quando o contador interno
+é maior que zero.
+Se o contador for 0, entretanto,
+`.acquire()` suspende a a corrotina que chamou `await` até que alguma outra corrotina chame
+`.release()` no mesmo `Semaphore`, incrementando assim o contador.
+
+Em vez de usar esses métodos diretamente,
+é mais seguro usar o `semaphore` como um gerenciador de contexto assíncrono,
+como fiz na função `download_one` em <<flags2_asyncio_top>>:
 
 [source, python3]
 ----
@@ -580,10 +590,13 @@ Em vez de usar esses métodos diretamente, é mais seguro usar o `semaphore` com
             image = await get_flag(client, base_url, cc)
 ----
 
-O método corrotina `Semaphore.__aenter__` espera por `.acquire()`,
-e seu método corrotina `+__aexit__+` chama `.release()`. Aquele trecho garante que não mais que `concur_req` instâncias de corrotinas `get_flags` estarão ativas a qualquer dado momento.
+O método corrotina `+Semaphore.__aenter__+` espera por `.acquire()`
+(usando `await` internamente),
+e seu método corrotina `+__aexit__+` chama `.release()`.
+Este `async with` garante que não mais que `concur_req`
+instâncias de corrotinas `get_flags` estarão ativas a qualquer dado momento.
 
-Cada uma das classe `Semaphore` na biblioteca padrão tem uma subclasse `BoundedSemaphore`, que impõe uma restrição adicional: o contador interno não pode nunca ficar maior que o valor inicial, quando ocorrerem mais operações `.release()` que `.acquire()`.footnote:[Agradeço a Guto Maia, que notou que conceito de um semáforo não era explicado, quando leu o primeiro rascunho deste capítulo.]
+Cada uma das classes `Semaphore` na biblioteca padrão tem uma subclasse `BoundedSemaphore`, que impõe uma restrição adicional: o contador interno não pode nunca ficar maior que o valor inicial, quando ocorrerem mais operações `.release()` que `.acquire()`.footnote:[Agradeço a Guto Maia, que notou que conceito de um semáforo não era explicado, quando leu o primeiro rascunho deste capítulo.]
 
 ****
 
