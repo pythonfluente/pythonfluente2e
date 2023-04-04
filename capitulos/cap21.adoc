@@ -785,11 +785,17 @@ A lógica de busca no Unicode nesses exemplos é a classe `InvertedIndex` no mó
 .Conhecendo o índice invertido
 ****
 
-Um((("inverted indexes"))) índice invertido normalmente mapeia palavras a documentos onde elas ocorrem. Nos exemplos _mojifinder_, cada "documento" é um caractere Unicode.
-A classe `charindex.InvertedIndex` indexa cada palavra que aparece no nome de cada caractere no banco de daos Unicode, e cria um índice invertido em um `defaultdict`.
-Por exemplo, para indexar o caractere U+0037—DIGIT SEVEN—o inicializador de `InvertedIndex` anexa o caractere `'7'` aos registros sob as chaves `'DIGIT'` e `'SEVEN'`.
-Após indexar os dados do Unicode 13.0.0 incluídos no Python 3.9.1, `'DIGIT'` está mapeado para to 868 caracteres, e `'SEVEN'` para  143, incluindo U+1F556—CLOCK FACE SEVEN OCLOCK e
-U+2790—DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT SEVEN (que aparece em muitas listagens de código neste livro).
+Um((("inverted indexes"))) índice invertido normalmente mapeia palavras a
+documentos onde elas ocorrem.
+Nos exemplos _mojifinder_, cada "documento" é o nome de um caractere Unicode.
+A classe `charindex.InvertedIndex` indexa cada palavra que aparece no nome de
+cada caractere no banco de dados Unicode, e cria um índice invertido em um `defaultdict`.
+Por exemplo, para indexar o caractere U+0037—DIGIT SEVEN—o inicializador
+de `InvertedIndex` anexa o caractere `'7'` aos registros sob as chaves `'DIGIT'` e `'SEVEN'`.
+Após indexar os dados do Unicode 13.0.0 incluídos no Python 3.9.1, `'DIGIT'` será mapeado para
+868 caracteres que tem essa palavra em seus nomes;
+e `'SEVEN'` para  143, incluindo U+1F556—CLOCK FACE SEVEN OCLOCK e
+U+2790—DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT SEVEN.
 
 Veja a <<inverted_index_fig>> para uma demonstração usando os registro para `'CAT'` e `'FACE'`.footnote:[O ponto de interrogação encaixotado na captura de tela não é um defeito do livro ou do ebook que você está lendo. É o caractere U+101EC—PHAISTOS DISC SIGN CAT, que não existe na fonte do terminal que usei. O https://pt.wikipedia.org/wiki/Disco_de_Festo[Disco de Festo] é um artefato antigo inscrito com pictogramas, descoberto na ilha de Creta.]
 
@@ -914,11 +920,11 @@ O início de _tcp_mojifinder.py_—incluindo os comandos `import`—está no <<t
 include::code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_MAIN]
 ----
 ====
-<1> Este `await` rapidamente recebe um instância de `asyncio.Server`, um servidor TCP baseado em soquetes. Por default, `start_server` cria e inicia o servidor, então ele está pronto para receber conexões.
+<1> Este `await` rapidamente recebe um instância de `asyncio.Server`, um servidor TCP baseado em _sockets_. Por default, `start_server` cria e inicia o servidor, então ele está pronto para receber conexões.
 <2> O primeiro argumento para `start_server` é `client_connected_cb`, um callback para ser executado quando a conexão com um novo cliente se inicia. O callback pode ser uma função ou uma corrotina, mas precisa aceitar exatamente dois argumentos: um `asyncio.StreamReader` e um `asyncio.StreamWriter`. Entretanto, minha corrotina `finder` também precisa receber um `index`, então usei `functools.partial` para vincular aquele parâmetro e obter um chamável que receber o leitor (`asyncio.StreamReader`) e o escritor (`asyncio.StreamWriter`). Adaptar funções do usuário a APIs de callback é o caso de uso mais comum de `functools.partial`.
 <3> `host` e `port` são o segundo e o terceiro argumentos de `start_server`. Veja a assinatura completa na https://docs.python.org/pt-br/3/library/asyncio-stream.html#asyncio.start_server[documentação do `asyncio`].
 <4> Este `cast` é necessário porque o _typeshed_ tem uma dica de tipo desatualizada para a propriedade `sockets` da classe `Server`—isso em maio de 2021. Veja https://fpy.li/21-36[Issue #5535 no _typeshed_].footnote:[O issue #5535 está fechado desde outubro de 2021, mas o Mypy não lançou uma nova versão desde então, daí o erro permanece.]
-<5> Mostra o endereço e a porta do primeiro soquete do servidor.
+<5> Mostra o endereço e a porta do primeiro _socket_ do servidor.
 <6> Apesar de `start_server` já ter iniciado o servidor como uma tarefa concorrente, preciso usar o `await` no método `server_forever`, para que meu `supervisor` seja suspenso aqui.
 Sem essa linha, o `supervisor` retornaria imediatamente, encerrando o loop iniciado com `asyncio.run(supervisor(…))`, e fechando o programa. A
 https://docs.python.org/pt-br/3/library/asyncio-eventloop.html#asyncio.Server.serve_forever[documentação de `Server.serve_forever`] diz: "Este método pode ser chamado se o servidor já estiver aceitando conexões."
@@ -973,7 +979,7 @@ include::code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_TOP]
 [role="pagebreak-before less_space"]
 <1> `format_results` é útil para mostrar os resultado de `InvertedIndex.search` em uma interface de usuário baseada em texto, como a linha de comando ou uma sessão Telnet.
 <2> Para passar `finder` para `asyncio.start_server`, a envolvi com `functools.partial`, porque o servidor espera uma corrotina ou função que receba apenas os argumentos `reader` e `writer`.
-<3> Obtém o endereço do cliente remoto ao qual o soquete está conectado.
+<3> Obtém o endereço do cliente remoto ao qual o socket está conectado.
 <4> Esse loop controla um diálogo que persiste até um caractere de controle ser recebido do cliente.
 <5> O método `StreamWriter.write` não é uma corrotina, é apenas um função normal; essa linha envia o prompt `?>`.
 <6> O `StreamWriter.drain` esvazia o buffer de `writer`; ela é uma corrotina, então precisa ser acionada com `await`.
