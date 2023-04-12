@@ -1027,7 +1027,7 @@ verá que ele lista apenas as superclasses "reais" - `list` e `object`:
 (<class 'tombolist.TomboList'>, <class 'list'>, <class 'object'>)
 ----
 
-`Tombola` não está em `TomboList.__mro__`, então `TomboList` não herda nenhum método de `Tombola`.
+`Tombola` não está em `+TomboList.__mro__+`, então `TomboList` não herda nenhum método de `Tombola`.
 
 Isso conclui nosso estudo de caso da ABC `Tombola`.
 Na próxima seção, vamos falar sobre como a função `register` das ABCs é usada na vida real.((("", startref="GTvsub13")))((("", startref="ABCvirt13")))((("", startref="virtsub13")))((("", startref="IASvirtualabc13")))
@@ -1114,19 +1114,19 @@ class Sized(metaclass=ABCMeta):
         return NotImplemented  # <3>
 ----
 ====
-<1> Se há um atributo chamado `+__len__+` no `+__dict__+` de qualquer classe listada em `C.__mro__` (isto é, `C` e suas superclasses)...
+<1> Se há um atributo chamado `+__len__+` no `+__dict__+` de qualquer classe listada em `+C.__mro__+` (isto é, `C` e suas superclasses)...
 <2> ...retorna `True`, sinalizando que `C` é uma subclasse virtual de `Sized`.
 <3> Caso contrário retorna `NotImplemented`, para permitir que a verificação de subclasse continue.
 
 [NOTE]
 ====
 Se você tiver interesse nos detalhes da verificação de subclasse,
-estude o código-fonte do método `ABCMeta.__subclasscheck__` no Python 3.6:
+estude o código-fonte do método `+ABCMeta.__subclasscheck__+` no Python 3.6:
 https://fpy.li/13-26[_Lib/abc.py_].
 Cuidado: ele tem muitos ifs e duas chamadas recursivas.
-No Python 3.7, Ivan Levkivskyi and Inada Naoki reescreveram em C a maior parte da lógica do módulo `abc`, para melhorar a performance.
+No Python 3.7, Ivan Levkivskyi and Inada Naoki reescreveram em C a maior parte da lógica do módulo `abc`, para melhorar o desempenho.
 Veja https://fpy.li/13-27[Python issue #31333].
-A implementação atual de `ABCMeta.__subclasscheck__` simplesmente chama `_abc_subclasscheck`.
+A implementação atual de `+ABCMeta.__subclasscheck__+` simplesmente chama `_abc_subclasscheck`.
 O código-fonte em C relevante está em https://fpy.li/13-28[_cpython/Modules/&#x5f;abc.c#L605_].
 ====
 
@@ -1142,7 +1142,7 @@ Mas mesmo no reino dos métodos especiais e ABCs fundamentais,
 pode ser arriscado fazer tais suposições.
 Por exemplo, mapeamentos implementam `+__len__+`, `+__getitem__+`, e `+__iter__+`, mas corretamente não são considerados subtipos de `Sequence`,
 pois você não pode recuperar itens usando deslocamentos inteiros ou faixas.
-Por isso a classe https://fpy.li/13-29[`abc.Sequence`] não implementa [.keep-together]#`+__subclasshook__+`#.
+Por isso a classe https://fpy.li/13-29[`abc.Sequence`] não implementa `+__subclasshook__+`.
 
 Para ABCs que você ou eu podemos escrever, um `+__subclasshook__+` seria ainda menos confiável.
 Não estou preparado para acreditar que qualquer classe chamada `Spam` que implemente ou herde
@@ -1426,8 +1426,8 @@ mas ele existe apenas para gerar `TypeError` com uma mensagem de erro explícita
 Se aquele método `+__float__+` tivesse anotações,
 o tipo de retorno seria `NoReturn`— que vimos na <<noreturn_sec>>.
 
-Mas incluir dicas de tipo em `complex.__float__` no _typeshed_ não resolveria esse problema, porque o interpretador Python em geral ignora dicas de tipo - e, de qualquer forma, não tem acesso aos arquivos stub do _typeshed_.
-
+Mas incluir dicas de tipo em `+complex.__float__+` no _typeshed_ não resolveria esse problema,
+porque o interpretador Python em geral ignora dicas de tipo—e também não acessa os arquivos stub do _typeshed_.
 
 Continuando da sessão anterior de Python 3.9:
 
@@ -1447,12 +1447,12 @@ sugerem que você pode converter um `complex` para `float`, mas na verdade isso 
 
 [WARNING]
 ====
-O problema específico com o tipo `complex` foi resolvido no Python 3.10.0b4, com a remoção do método `complex.__float__`.
+O problema específico com o tipo `complex` foi resolvido no Python 3.10.0b4, com a remoção do método `+complex.__float__+`.
 
 Mas o problema geral persiste:
 Verificações com `isinstance`/`issubclass` só olham para a presença ou ausência de métodos,
 sem checar sequer suas assinaturas, muito menos suas anotações de tipo.
-E isso não vai mudar tão cedo, porque este tipo de verificação de tipo durante a execução traria um custo de performance inaceitável.footnote:[Agradeço a Ivan Levkivskyi,
+E isso não vai mudar tão cedo, porque este tipo de verificação de tipo durante a execução traria um custo de processamento inaceitável.footnote:[Agradeço a Ivan Levkivskyi,
 co-autor da https://fpy.li/pep544[PEP 544] (sobre Protocolos),
 por apontar que checagem de tipo não é apenas uma questão de verificar se o tipo de `x` é `T`: é sobre determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro. Não é de se espantar que o Mypy leve alguns segundos para fazer uma verificação de tipo, mesmo em scripts Python curtos.]
 ====
@@ -1707,7 +1707,7 @@ mas o método existe apenas para lançar uma `TypeError` com uma mensagem explí
 "can't convert complex to float." ("não é possível converter complex para float")
 Por alguma razão, ele também implementa `+__int__+`.
 A presença desses métodos faz `isinstance` produzir resultados enganosos no Python 3.9. No Python 3.10, os métodos de `complex` que geravam `TypeError` incondicionalmente foram removidos.footnote:[ver
-https://fpy.li/13-41[Issue #41974—Remove `complex.__float__`, `complex.__floordiv__`, etc].]
+https://fpy.li/13-41[Issue #41974—Remove `+complex.__float__+`, `+complex.__floordiv__+`, etc].]
 
 Por outro lado, os tipos complexos do NumPy implementam métodos `+__float__+` e `+__int__+` que funcionam,
 emitindo apenas um aviso quando cada um deles é usado pela primeira vez:
