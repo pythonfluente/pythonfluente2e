@@ -1157,38 +1157,45 @@ Agora vamos examinar outra forma de evitar a GIL para obter um melhor desempenho
 [[distributed_task_queues_sec]]
 ==== Filas de tarefas distribuídas
 
-Quando((("multicore processing", "distributed task queues")))((("distributed task queues")))((("queues", "distributed task queues"))) o servidor de aplicação entrega uma requisição a um dos processos Python rodando seu código,
+Quando((("multicore processing", "distributed task queues")))((("distributed task queues")))((("queues", "distributed task queues")))
+o servidor de aplicação entrega uma requisição a um dos processos Python rodando seu código,
 sua aplicação precisa responder rápido:
 você quer que o processo esteja disponível para processar a requisição seguinte assim que possível.
 Entretanto, algumas requisições exigem ações que podem demorar—por exemplo, enviar um email ou gerar um PDF.
-Este é o problema que filas de tarefas distribuídas foram projetadas para resolver.
+As filas de tarefas distribuídas foram projetadas para resolver este problema.
 
-A https://fpy.li/19-47[_Celery_] e a https://fpy.li/19-48[_RQ_] são as mais conhecidas filas de tarefas de código aberto com uma API Python.
+A https://fpy.li/19-47[_Celery_] e a https://fpy.li/19-48[_RQ_] são as mais conhecidas filas de tarefas _Open Source_ com uma API para o Python.
 Provedores de serviços na nuvem também oferecem suas filas de tarefas proprietárias.
 
-Esses produtos encapsulam uma fila de mensagens e oferecem uma API de alto nível para delegar tarefas a processos executores, possivelmente rodando em máquinas diferentes.
+Esses produtos encapsulam filas de mensagens e oferecem uma API de alto nível para delegar tarefas a processos executores, possivelmente rodando em máquinas diferentes.
 
 [NOTE]
 ====
-No contexto de filas de tarefas, as palavras _produtor_ e _consumidor_ são usado no lugar da terminologia tradicional de cliente/servidor. Por exemplo, um processador de views _Django_ _produz_ requisições de serviço, que são colocadas em uma fila para serem _consumidas_ por um ou mais processos renderizadores de PDFs.
+No contexto de filas de tarefas, as palavras _produtor_ e _consumidor_ são usado no lugar da terminologia tradicional de cliente/servidor.
+Por exemplo, para gerar documentos, um processador de views do Django _produz_ requisições de serviço,
+que são colocadas em uma fila para serem _consumidas_ por um ou mais processos renderizadores de PDFs.
 ====
 
-Citando diretamente o https://fpy.li/19-49[FAQ] do Celery, cá estão alguns casos de uso:
+Citando diretamente o https://fpy.li/19-49[FAQ] do Celery, eis alguns casos de uso:
 
 [quote]
 ____
-* Executar algo em segundo plano. Por exemplo, para encerrar uma requisição web o mais rápido possível, e então atualizar a página do usuário de forma incremental. Isso dá ao usuário a impressão de uma bom desempenho e de "vivacidade", ainda que o trabalho real possa na verdade demorar um pouco mais [para ser concluído].
+* Executar algo em segundo plano. Por exemplo, para encerrar uma requisição web o mais rápido possível, e então atualizar a página do usuário de forma incremental. Isso dá ao usuário a impressão de um bom desempenho e de "vivacidade", ainda que o trabalho real possa na verdade demorar um pouco mais.
 * Executar algo após a requisição web ter terminado.
 * Se assegurar que algo seja feito, através de uma execução assíncrona e usando tentativas repetidas.
 * Agendar tarefas periódicas.
 ____
 
-Além de resolver esses problemas imediatos, as filas de tarefas suportam escalabilidade horizontal. Produtores e consumidores são descasados: um produtor não precisa chamar um consumidor, ele coloca uma requisição em uma fila. Consumidores não precisam saber nada sobre os produtores (mas a requisição pode incluir informações sobre o produtor, se uma confirmação for necessária). E fundamentalmente, pode-se adicionar mais unidades de execução para consumir tarefas a medida que a demanda cresce. Por isso o _Celery_ e o _RQ_ são chamados de filas de tarefas distribuídas.
+Além de resolver esses problemas imediatos, as filas de tarefas suportam escalabilidade horizontal.
+Produtores e consumidores são desacoplados: um produtor não precisa chamar um consumidor, ele coloca uma requisição em uma fila.
+Consumidores não precisam saber nada sobre os produtores (mas a requisição pode incluir informações sobre o produtor, se uma confirmação for necessária).
+Pode-se adicionar mais unidades de execução para consumir tarefas a medida que a demanda cresce.
+Por isso o _Celery_ e o _RQ_ são chamados de filas de tarefas distribuídas.
 
 Lembre-se que nosso simples _procs.py_ (<<primes_procs_top_ex>>) usava duas filas:
 uma para requisições de tarefas, outra para coletar resultados.
 A arquitetura distribuída do _Celery_ e do _RQ_ usa um esquema similar.
-Ambos suportam o uso do banco de dados https://fpy.li/19-50[_Redis_] NoSQL como armazenamento para as filas de mensagens e resultados.
+Ambos suportam o uso do banco de dados NoSQL https://fpy.li/19-50[_Redis_] para armazenar as filas de mensagens e resultados.
 O _Celery_ também suporta outras filas de mensagens, como o _RabbitMQ_ ou o _Amazon SQS_, bem como outros bancos de dados para armazenamento de resultados.
 
 Isso encerra nossa introdução à concorrência em Python.
@@ -1288,12 +1295,14 @@ Também vale a pena ler os post de Guido van Rossum e Jesse Noller (contribuidor
 https://fpy.li/19-62["It isn't Easy to Remove the GIL"] (_Não é Fácil Remover a GIL_) e
 https://fpy.li/19-63["Python Threads and the Global Interpreter Lock"] (_As Threads do Python e a Trava Global do Interpretador_).
 
-https://fpy.li/19-64[_CPython Internals_], de Anthony Shaw (Real Python) explica a implementação do interpretador CPython 3 no nível da programação em C. O capítulo mais longo do livro é "Parallelism and Concurrency" (_Paralelismo e Concorrência_):
+https://fpy.li/19-64[_CPython Internals_], de Anthony Shaw (Real Python) explica a implementação do interpretador CPython 3 no nível da programação em C.
+O capítulo mais longo do livro é "Parallelism and Concurrency" (_Paralelismo e Concorrência_):
 um mergulho profundo no suporte nativo do Python a threads e processos,
 incluindo o gerenciamento da GIL por extensões usando a API C/Python.
 
-Por fim, David Beazley apresentou uma exploração detalhada em https://fpy.li/19-65["Understanding the Python GIL"] (_Entendendo a GIL do Python_).footnote:[Agradeço a Lucas Brunialti por me enviar um link para essa palestrak.]
-No slide #54 da https://fpy.li/19-66[apresentação],
+Por fim, David Beazley apresentou uma exploração detalhada em https://fpy.li/19-65["Understanding the Python GIL"]
+(_Entendendo a GIL do Python_).footnote:[Agradeço a Lucas Brunialti por me enviar um link para essa palestra.]
+No slide 54 da https://fpy.li/19-66[apresentação],
 Beazley relata um aumento no tempo de processamento de uma benchmark específica com o novo algoritmo da GIL, introduzido no Python 3.2.
 O problema não tem importância com cargas de trabalho reais, de acordo com um
 https://fpy.li/19-67[comentário] de Antoine Pitrou--que implementou o novo algoritmo da GIL--no relatório de bug submetido por Beazley:
