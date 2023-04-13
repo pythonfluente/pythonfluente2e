@@ -22,7 +22,7 @@ ____
 Este((("concurrency models", "benefits of concurrency"))) capítulo é sobre como
 fazer o Python "lidar com muitas coisas ao mesmo tempo."
 Isso pode envolver programação concorrente ou paralela—e mesmo os acadêmicos rigorosos com terminologia discordam sobre o uso dessas palavras.
-Vou adotar as definições informais de Rob Pike, na epígrafe desse capítulo, mas observe que encontrei artigos e livros que dizem ser sobre computação paralela mas são quase que inteiramente sobre concorrência.footnote:[Estudei e trabalhei com o Prof. Imre Simon, que gostava de dizer que há dois grandes pecados na ciência: usar palavras diferentes para significar a mesma coisa e usar uma palavra para significar coisas diferentes. Imre Simon (1942-2009) foi um pioneiro da ciência da computação no Brasil, com contribuições seminais para a Teoria dos Autômatos. Ele fundou o campo da Matemática Tropical e foi também um defensor do software livre, da cultura livre, e da Wikipédia.]
+Vou adotar as definições informais de Rob Pike, na epígrafe desse capítulo, mas saiba que encontrei artigos e livros que dizem ser sobre computação paralela mas são quase que inteiramente sobre concorrência.footnote:[Estudei e trabalhei com o Prof. Imre Simon, que gostava de dizer que há dois grandes pecados na ciência: usar palavras diferentes para significar a mesma coisa e usar uma palavra para significar coisas diferentes. Imre Simon (1942-2009) foi um pioneiro da ciência da computação no Brasil, com contribuições seminais para a Teoria dos Autômatos. Ele fundou o campo da Matemática Tropical e foi também um defensor do software livre, da cultura livre, e da Wikipédia.]
 
 O paralelismo((("parallelism"))) é, na perspectiva de Pike, um caso especial de concorrência.
 Todos sistema paralelo é concorrente, mas nem todo sistema concorrente é paralelo.
@@ -30,19 +30,21 @@ No início dos anos 2000, usávamos máquinas GNU Linux de um único núcleo, qu
 Um laptop moderno com quatro núcleos de CPU rotineiramente está executando mais de 200 processos a qualquer momento, sob uso normal, casual.
 Para executar 200 tarefas em paralelo, você precisaria de 200 núcleos.
 Assim, na prática, a maior parte da computação é concorrente e não paralela.
-O SO administra centenas de processos, se assegurando que cada um tenha a oportunidade de progredir, mesmo se a CPU em si não possa fazer mais que quatro coisas ao mesmo tempo.
+O SO administra centenas de processos, assegurando que cada um tenha a oportunidade de progredir,
+mesmo se a CPU em si não possa fazer mais que quatro coisas ao mesmo tempo.
 
-Este((("concurrency models", "topics covered"))) capítulo assume que o leitor não tem qualquer conhecimento prévio de programação concorrente ou paralela.
-Após uma pequena introdução conceitual, vamos estudar exemplos simples, para apresentar e comparar os principais pacotes do Python dedicados a programação concorrente: `threading`, `multiprocessing`, e `asyncio`.
+Este((("concurrency models", "topics covered"))) capítulo não assume que você tenha qualquer conhecimento prévio de programação concorrente ou paralela.
+Após uma breve introdução conceitual, vamos estudar exemplos simples,
+para apresentar e comparar os principais pacotes da biblioteca padrão de Python dedicados a programação concorrente:
+`threading`, `multiprocessing`, e `asyncio`.
 
 O último terço do capítulo é uma revisão geral de ferramentas, servidores de aplicação e filas de tarefas distribuídas
-(_distributed task queues_) de vários desenvolvedores—todos capazes de melhorar o desempenho e a escalabilidade de aplicações Python.
+(_distributed task queues_) de vários desenvolvedores, capazes de melhorar o desempenho e a escalabilidade de aplicações Python.
 Todos esses são tópicos importantes, mas fogem do escopo de um livro focado nos recursos fundamentais da linguagem Python.
 Mesmo assim, achei importante mencionar esses temas nessa segunda edição do _Python Fluente_,
 porque a aptidão do Python para computação concorrente e paralela não está limitada ao que a biblioteca padrão oferece.
-Por isso o YouTube, o DropBox, o Instagram, o Reddit e outros foram capazes de atingir alta escalabilidade quando começaram,
+Por isso YouTube, DropBox, Instagram, Reddit e outros foram capazes de atingir alta escalabilidade quando começaram,
 usando Python como sua linguagem primária—apesar das persistentes alegações de que "O Python não escala."
-
 
 === Novidades nesse capítulo
 
@@ -59,21 +61,23 @@ para além do que é possível com a biblioteca padrão do Python.
 
 === A visão geral
 
-Há((("concurrency models", "basics of concurrency"))) muitos fatores que tornam a programação concorrente difícil, mas quero tocar no mais básico deles: iniciar threads ou processos é bastante simples, mas como acompanhá-los?footnote:[Essa seção foi sugerida por meu amigo Bruce Eckel—autor de livros sobre Kotlin, Scala, Java, e C&#x2b;&#x2b;.]
+Há((("concurrency models", "basics of concurrency"))) muitos fatores que tornam a programação concorrente difícil,
+mas quero tocar no mais básico deles: iniciar threads ou processos é fácil, mas como administrá-los?footnote:[Essa seção foi sugerida por meu amigo Bruce Eckel—autor de livros sobre Kotlin, Scala, Java, e C&#x2b;&#x2b;.]
 
 Quando você chama uma função, o código que origina a chamada fica bloqueado até que função retorne.
 Então você sabe que a função terminou, e pode facilmente acessar o valor devolvido por ela.
 Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para tratar o erro.
 
-Essas opções familiares não estão disponíveis quando você inicia uma thread ou um processo:
+Essas opções não existem quando você inicia threads ou um processos:
 você não sabe automaticamente quando eles terminaram,
 e obter os resultados ou os erros requer criar algum canal de comunicação, tal como uma fila de mensagens.
 
-Além disso, criar uma thread ou um processo não é barato, você não quer iniciar uma delas apenas para executar uma única computação e desaparecer.
+Além disso, criar uma thread ou um processo não é barato,
+você não quer iniciar uma delas apenas para executar uma única computação e desaparecer.
 Muitas vezes queremos amortizar o custo de inicialização transformando cada thread ou processo em um "worker" ou "unidade de trabalho",
 que entra em um loop e espera por dados para processar.
 Isso complica ainda mais a comunicação e introduz mais perguntas.
-Como fazer terminar um "worker" quando ele não é mais necessário?
+Como terminar um "worker" quando ele não é mais necessário?
 E como fazer para encerrá-lo sem interromper uma tarefa inacabada,
 deixando dados inconsistentes e recursos não liberados—tal como arquivos abertos?
 A resposta envolve novamente mensagens e filas.
