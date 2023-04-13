@@ -20,54 +20,73 @@ A concorrência fornece uma maneira de estruturar uma solução para resolver um
 ____
 
 Este((("concurrency models", "benefits of concurrency"))) capítulo é sobre como
-fazer o Python lidar com "muitas coisas ao mesmo tempo."
+fazer o Python "lidar com muitas coisas ao mesmo tempo."
 Isso pode envolver programação concorrente ou paralela—e mesmo os acadêmicos rigorosos com terminologia discordam sobre o uso dessas palavras.
-Vou adotar as definições informais de Rob Pike, na epígrafe desse capítulo, mas observe que encontrei artigos e livros que dizem ser sobre computação paralela mas são quase que inteiramente sobre concorrência.footnote:[Estudei e trabalhei com o Prof. Imre Simon, que gostava de dizer que há dois grandes pecados na ciência: usar palavras diferentes para significar a mesma coisa e usar uma palavra para significar coisas diferentes. Imre Simon (1942-2009) foi um pioneiro da ciência da computação no Brasil, com contribuições seminais para a Teoria dos Autômatos. Ele fundou o campo da Matemática Tropical e era também um defensor do software e da cultua livres.]
+Vou adotar as definições informais de Rob Pike, na epígrafe desse capítulo, mas observe que encontrei artigos e livros que dizem ser sobre computação paralela mas são quase que inteiramente sobre concorrência.footnote:[Estudei e trabalhei com o Prof. Imre Simon, que gostava de dizer que há dois grandes pecados na ciência: usar palavras diferentes para significar a mesma coisa e usar uma palavra para significar coisas diferentes. Imre Simon (1942-2009) foi um pioneiro da ciência da computação no Brasil, com contribuições seminais para a Teoria dos Autômatos. Ele fundou o campo da Matemática Tropical e foi também um defensor do software livre, da cultura livre, e da Wikipédia.]
 
-O paralelismo((("parallelism"))) é, na perspectiva de Pike, um caso especial de concorrência. Todos os sistemas paralelos são concorrentes, mas nem todos os sistemas concorrentes são paralelos. No início dos anos 2000, usávamos máquinas GNU Linux de um único núcleo, que rodavam 100 processos ao mesmo tempo.
+O paralelismo((("parallelism"))) é, na perspectiva de Pike, um caso especial de concorrência.
+Todos sistema paralelo é concorrente, mas nem todo sistema concorrente é paralelo.
+No início dos anos 2000, usávamos máquinas GNU Linux de um único núcleo, que rodavam 100 processos ao mesmo tempo.
 Um laptop moderno com quatro núcleos de CPU rotineiramente está executando mais de 200 processos a qualquer momento, sob uso normal, casual.
-Para executar 200 tarefas em paralelo, você precisaria de [.keep-together]#200 núcleos.#
+Para executar 200 tarefas em paralelo, você precisaria de 200 núcleos.
 Assim, na prática, a maior parte da computação é concorrente e não paralela.
-O SO [.keep-together]#administra# centenas de processos, se assegurando que cada um tenha a oportunidade de progredir, mesmo se a CPU em si não possa fazer mais que quatro coisas ao mesmo tempo.
+O SO administra centenas de processos, se assegurando que cada um tenha a oportunidade de progredir, mesmo se a CPU em si não possa fazer mais que quatro coisas ao mesmo tempo.
 
 Este((("concurrency models", "topics covered"))) capítulo assume que o leitor não tem qualquer conhecimento prévio de programação concorrente ou paralela.
 Após uma pequena introdução conceitual, vamos estudar exemplos simples, para apresentar e comparar os principais pacotes do Python dedicados a programação concorrente: `threading`, `multiprocessing`, e `asyncio`.
 
-O último terço do capítulo é uma revisão geral de ferramentas, servidores de aplicação e filas de tarefa distribuídas (_distributed task queues_) de vários desenvolvedores—todos capazes de melhorar o desempenho e escalabilidade de aplicações Python.
+O último terço do capítulo é uma revisão geral de ferramentas, servidores de aplicação e filas de tarefas distribuídas
+(_distributed task queues_) de vários desenvolvedores—todos capazes de melhorar o desempenho e a escalabilidade de aplicações Python.
 Todos esses são tópicos importantes, mas fogem do escopo de um livro focado nos recursos fundamentais da linguagem Python.
-Mesmo assim, achei importante mencionar esses temas nessa segunda edição do _Python Fluente_, porque a aptidão do Python para computação concorrente e paralela não está limitada ao que a biblioteca padrão oferece.
-Por isso o YouTube, o DropBox, o Instagram, o Reddit e outros foram capazes de obter escalabilidade quando começaram, usando Python como sua linguagem primária—apesar de alegações persistentes dizendo que "O Python não escala."
+Mesmo assim, achei importante mencionar esses temas nessa segunda edição do _Python Fluente_,
+porque a aptidão do Python para computação concorrente e paralela não está limitada ao que a biblioteca padrão oferece.
+Por isso o YouTube, o DropBox, o Instagram, o Reddit e outros foram capazes de atingir alta escalabilidade quando começaram,
+usando Python como sua linguagem primária—apesar das persistentes alegações de que "O Python não escala."
 
 
 === Novidades nesse capítulo
 
-Este((("concurrency models", "significant changes to"))) capítulo é novo, escrito para a segunda edição do _Python Fluente_. Os exemplos com os caracteres giratórios no <<concurrent_hello_world>> antes estavam no capítulo sobre _asyncio_.
+Este((("concurrency models", "significant changes to"))) capítulo é novo, escrito para a segunda edição do _Python Fluente_.
+Os exemplos com os caracteres giratórios no <<concurrent_hello_world>> antes estavam no capítulo sobre _asyncio_.
 Aqui eles foram revisados, e apresentam uma primeira ilustração das três abordagens do Python à concorrência: threads, processos e corrotinas nativas.
 
 O restante do conteúdo é novo, exceto por alguns parágrafos, que apareciam originalmente nos capítulos sobre `concurrent.futures` e _asyncio_.
 
-A <<py_in_multicore_world_sec>> é diferente do resto do livro: não há código exemplo. O objetivo ali é apresentar brevemente ferramentas importantes, que você pode querer estudar para conseguir concorrência e paralelismo de alto desempenho, para além do que é possível com a biblioteca padrão do Python.
+A <<py_in_multicore_world_sec>> é diferente do resto do livro: não há código exemplo.
+O objetivo ali é apresentar brevemente ferramentas importantes,
+que você pode querer estudar para conseguir concorrência e paralelismo de alto desempenho,
+para além do que é possível com a biblioteca padrão do Python.
 
 === A visão geral
 
-Há((("concurrency models", "basics of concurrency"))) muitos fatores que tornam a programação concorrente difícil, mas quero tocar no mais básico deles: iniciar threads ou processos é bastante simples, mas como acompanhá-los?footnote:[Essa seção foi sugerida por meu amigo Bruce Eckel — autor de livros sobre Kotlin, Scala, Java, e C&#x2b;&#x2b;.]
+Há((("concurrency models", "basics of concurrency"))) muitos fatores que tornam a programação concorrente difícil, mas quero tocar no mais básico deles: iniciar threads ou processos é bastante simples, mas como acompanhá-los?footnote:[Essa seção foi sugerida por meu amigo Bruce Eckel—autor de livros sobre Kotlin, Scala, Java, e C&#x2b;&#x2b;.]
 
-Quando você chama uma função, o código que origina a chamada fica bloqueado até que função retorne. Então você sabe que a função terminou, e pode facilmente acessar o valor retornado. Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para capturar o erro.
+Quando você chama uma função, o código que origina a chamada fica bloqueado até que função retorne.
+Então você sabe que a função terminou, e pode facilmente acessar o valor devolvido por ela.
+Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para tratar o erro.
 
-Essas opções familiares não estão disponíveis quando você inicia uma thread ou um processo: você não sabe automaticamente quando eles terminaram, e obter os resultados ou os erros requer criar algum canal de comunicação, tal como uma fila de mensagens.
+Essas opções familiares não estão disponíveis quando você inicia uma thread ou um processo:
+você não sabe automaticamente quando eles terminaram,
+e obter os resultados ou os erros requer criar algum canal de comunicação, tal como uma fila de mensagens.
 
-Além disso, criar uma thread ou um processo não é barato, você não quer iniciar uma delas apenas para executar uma única computação e desaparecer. Muitas vezes queremos amortizar o custo de inicialização transformando cada thread ou processo em um "worker" ou "unidade de trabalho", que entra em um loop e espera por dados para processar. Isso complica ainda mais a comunicação e introduz mais perguntas. Como fazer terminar um "worker" quando ele não é mais necessário? E como fazer para encerrá-lo sem interromper uma tarefa inacabada, deixando dados mal processados e recursos não liberados—tal como arquivos abertos?
+Além disso, criar uma thread ou um processo não é barato, você não quer iniciar uma delas apenas para executar uma única computação e desaparecer.
+Muitas vezes queremos amortizar o custo de inicialização transformando cada thread ou processo em um "worker" ou "unidade de trabalho",
+que entra em um loop e espera por dados para processar.
+Isso complica ainda mais a comunicação e introduz mais perguntas.
+Como fazer terminar um "worker" quando ele não é mais necessário?
+E como fazer para encerrá-lo sem interromper uma tarefa inacabada,
+deixando dados inconsistentes e recursos não liberados—tal como arquivos abertos?
 A resposta envolve novamente mensagens e filas.
 
 Uma corrotina é fácil de iniciar.
 Se você inicia uma corrotina usando a palavra-chave `await`,
-é fácil obter o valor de retorno, ela pode ser facilmente cancelada e há um local óbvio para interceptar exceções.
+é fácil obter o valor de retorno e há um local óbvio para interceptar exceções.
 Mas corrotinas muitas vezes são iniciadas pela framework assíncrona,
 e isso pode torná-las tão difíceis de monitorar quanto threads ou processos.
 
 Por fim, as corrotinas e threads do Python não são adequadas para tarefas de uso intensivo da CPU, como veremos.
 
-É por isso tudo que programação concorrente exige o aprendizado de novos conceitos e novos modelos de programação.
+É por isso tudo que programação concorrente exige aprender novos conceitos e novos modelos de programação.
 Então vamos primeiro garantir que estamos na mesma página em relação a alguns conceitos centrais.
 
 === Um pouco de jargão
@@ -75,12 +94,14 @@ Então vamos primeiro garantir que estamos na mesma página em relação a algun
 Aqui((("concurrency models", "relevant terminology", id="CBterm19"))) estão alguns termos que vou usar pelo restante desse capítulo e nos dois seguintes:
 
 Concorrência::
-    A habilidade de lidar com múltiplas tarefas pendentes, fazendo progredir uma por vez ou várias em paralelo (se possível), de forma que cada uma delas tenha êxito ou falhe. Uma CPU de núcleo único é capaz de concorrência se rodar um "agendador" (_scheduler_) do sistema operacional, que intercale a execução das tarefas pendentes.
+    A habilidade de lidar com múltiplas tarefas pendentes, fazendo progredir uma por vez ou várias em paralelo (se possível),
+    de forma que cada uma delas avance até terminar com sucesso ou falha.
+    Uma CPU de núcleo único é capaz de concorrência se rodar um "agendador" (_scheduler_) do sistema operacional, que intercale a execução das tarefas pendentes.
     Também conhecida como multitarefa (_multitasking_).
 
 Paralelismo::
     A((("parallelism"))) habilidade de executar múltiplas operações computacionais ao mesmo tempo. Isso requer uma CPU com múltiplos núcleos, múltiplas CPUs, uma
-    https://fpy.li/19-2[GPU], ou múltiplos computadores em um agrupamento (_cluster_).
+    https://fpy.li/19-2[GPU], ou múltiplos computadores em um _cluster_ (agrupamento)).
 
 Unidades de execução::
     Termo genérico((("execution units"))) para objetos que executam código de forma concorrente, cada um com um estado e uma pilha de chamada independentes.
@@ -1011,7 +1032,7 @@ https://fpy.li/19-36[TensorFlow] e https://fpy.li/19-37[PyTorch]::
     O TensorFlow foi criado e é usado internamente pelo Google; O Pythorch pelo Facebook.
 
 https://fpy.li/dask[Dask]::
-    Uma((("Dask"))) biblioteca de computação paralela que consegue delegar para processos locais ou cluster de máquinas,
+    Uma((("Dask"))) biblioteca de computação paralela que consegue delegar para processos locais ou um cluster de máquinas,
     "testado em alguns dos maiores supercomputadores do mundo"—como seu https://fpy.li/dask[site] (EN) afirma.
     O Dask oferece APIs que emulam muito bem o NumPy, o pandas, e o scikit-learn—hoje as mais populares bibliotecas em ciência de dados e aprendizagem de máquina.
     O Dask pode ser usado a partir do JupyterLab ou do Jupyter Notebook, e usa o Bokeh
