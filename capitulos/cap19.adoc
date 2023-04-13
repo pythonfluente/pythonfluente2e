@@ -807,11 +807,11 @@ Temos que chamar essa `SimpleQueue` para criar uma fila. Por outro lado, não po
 <5> Apelido de tipo para uma segunda `SimpleQueue` que vai coletar os resultados em `main`. Os valores na fila serão tuplas contendo o número a ser testado e uma tupla `Result`.
 <6> Isso é similar a _sequential.py_.
 <7> `worker` recebe uma fila com os números a serem verificados, e outra para colocar os resultados.
-<8> Nesse código, usei o número `0` como uma _pílula venenosa_: um sinal para que o processo encerre. Se `n` não é `0`, continue com o loop.footnote:[Nesse exemplo, `0` é uma sentinela conveniente. `None` também é comumente usado nessa função. Usar `0` simplifica a dica de tipo para `PrimeResult` e o código de `worker`.]
+<8> Nesse código, usei o número `0` como uma _pílula venenosa_: um sinal para que o processo encerre. Se `n` não é `0`, continue com o loop.footnote:[Nesse exemplo, `0` é uma sentinela conveniente. `None` também é comumente usado para essa finalidade, mas usar `0` simplifica a dica de tipo para `PrimeResult` e a implementação de `worker`.]
 <9> Invoca a verificação de número primo e coloca o `PrimeResult` na fila.
 <10> Devolve um `PrimeResult(0, False, 0.0)`, para informar ao loop principal que esse processo terminou seu trabalho.
-<11> `procs` é o número de processos que executarão a verificação de números primos em paralelo..
-<12> Coloca na fila os números a serem verificados em `jobs`.
+<11> `procs` é o número de processos que executarão a verificação de números primos em paralelo.
+<12> Coloca na fila `jobs` os números a serem verificados.
 <13> Cria um processo filho para cada `worker`. Cada um desses processos executará o loop dentro de sua própria instância da função `worker`, até encontrar um `0` na fila `jobs`.
 <14> Inicia cada processo filho.
 <15> Coloca um `0` na fila de cada processo, para encerrá-los.
@@ -819,7 +819,8 @@ Temos que chamar essa `SimpleQueue` para criar uma fila. Por outro lado, não po
 [[good_poison_pill_tip]]
 .Loops, sentinelas e pílulas venenosas
 ****
-A((("concurrency models", "indefinite loops and sentinels")))((("indefinite loops")))((("sentinels"))) função `worker` no <<primes_procs_top_ex>> segue um modelo comum em programação concorrente:
+A((("concurrency models", "indefinite loops and sentinels")))((("indefinite loops")))((("sentinels")))
+função `worker` no <<primes_procs_top_ex>> segue um modelo comum em programação concorrente:
 percorrer indefinidamente um loop, pegando itens em um fila e processando cada um deles com uma função que realiza o trabalho real.
 O loop termina quando a fila produz um valor sentinela.
 Nesse modelo, a sentinela que encerra o processo é muitas vezes chamada de "pílula venenosa.
@@ -829,13 +830,14 @@ Chamar `object()` é uma maneira comum de obter um valor único para usar como s
 Entretanto, isso não funciona entre processos, pois os objetos Python precisam ser serializados para comunicação entre processos.
 Quando você `pickle.dump` e `pickle.load`
 uma instância de `object`, a instância recuperada em `pickle.load` é diferentes da original: elas não serão iguais se comparadas.
-Uma boa alternativa a `None` é o objeto embutido `Ellipsis` (também conhecido como `...`), que sobrevive à serialização sem perder sua identidade.footnote:[Sobreviver à serialização ser perder nossa identidade é um grande objetivo de vida.]
+Uma boa alternativa a `None` é o objeto embutido `Ellipsis` (também conhecido como `...`),
+que sobrevive à serialização sem perder sua identidade.footnote:[Sobreviver à serialização sem perder nossa identidade é um ótimo objetivo de vida.]
 
 A biblioteca padrão do Python usa
 https://fpy.li/19-22[muitos valores diferentes] (EN) como sentinelas.
 A https://fpy.li/pep661[PEP 661—Sentinel Values] (EN)
 propõe um tipo sentinela padrão.
-Em março de 2023, é apenas um draft.
+Em março de 2023, é apenas um rascunho.
 ****
 
 Agora vamos estudar a função `main` de _procs.py_ no <<primes_procs_main_ex>>.
@@ -900,17 +902,22 @@ Rodei _procs.py_ 12 vezes, usando de 1 a 20 subprocessos, totalizando 240 execu�
 .Mediana dos tempos de execução para cada número de subprocessos de 1 a 20. O maior tempo mediano foi 40,81s, com 1 processo. O tempo mediano mais baixo foi 10,39s, com 6 processos, indicado pela linha pontilhada.
 image::images/flpy_1902.png[Mediana dos tempos de execução para cada número de processos, de 1 a 20.]
 
-Neste laptop de 6 núcleos, o menor tempo mediano ocorreu com 6 processos:10.39s—marcado pela linha pontilhada na <<procs_x_time_fig>>. Seria de se esperar que o tempo de execução aumentasse após 6 processos, devido à disputa pela CPU, e ele atingiu um  máximo local de 12.51s,  com 10 processes. Eu não esperava e não sei explicar porque o desempenho melhorou com 11 processos e permaneceu praticamente igual com 13 a 20 processos, com tempos medianos apenas marginalmente maiores que o menor tempo mediano com 6 processos.
+Neste laptop de 6 núcleos, o menor tempo mediano ocorreu com 6 processos:10.39s—marcado pela linha pontilhada na <<procs_x_time_fig>>.
+Seria de se esperar que o tempo de execução aumentasse após 6 processos, devido à disputa pela CPU,
+e ele atingiu um máximo local de 12.51s, com 10 processes.
+Eu não esperava e não sei explicar porque o desempenho melhorou com 11 processos e permaneceu praticamente igual com 13 a 20 processos,
+com tempos medianos apenas ligeiramente maiores que o menor tempo mediano com 6 processos.
 
 [[thread_non_solution_sec]]
 ==== Não-solução baseada em threads
 
-Também((("process pools", "thread-based nonsolution")))((("threads", "thread-based process pools"))) escrevi _threads.py_, uma versão de _procs.py_ usando `threading` em vez de `multiprocessing`. O código é muito similar quando convertemos exemplo simples entre as duas APIs.footnote:[See https://fpy.li/19-27[_19-concurrency/primes/threads.py_] no  https://fpy.li/code[_Fluent Python_ code repository].] Devido à GIL e à natureza de processamento intensivo de `is_prime`, a versão com threads é mais lenta que a versão sequencial do <<primes_sequential_ex>>, e fica mais lenta conforme aumenta o número de threads, por causa da disputa pela CPU e o custo da mudança de contexto. Para mudar a thread em execução, o SO precisa salvar os registradores da CPU e atualizar o contador de programas e o ponteiro do stack, disparando efeitos colaterais dispendiosos, como invalidar os caches da CPU e talvez até trocar páginas de memória.
+Também((("process pools", "thread-based nonsolution")))((("threads", "thread-based process pools"))) escrevi _threads.py_, uma versão de _procs.py_ usando `threading` em vez de `multiprocessing`. O código é muito similar quando convertemos exemplo simples entre as duas APIs.footnote:[See https://fpy.li/19-27[_19-concurrency/primes/threads.py_] no https://fpy.li/code[repositório de código do _Fluent Python_].] Devido à GIL e à natureza de processamento intensivo de `is_prime`, a versão com threads é mais lenta que a versão sequencial do <<primes_sequential_ex>>, e fica mais lenta conforme aumenta o número de threads, por causa da disputa pela CPU e o custo da mudança de contexto. Para passar de uma thread para outra, o SO precisa salvar os registradores da CPU e atualizar o contador de programas e o ponteiro do stack, disparando efeitos colaterais custosos,
+como invalidar os caches da CPU e talvez até trocar páginas de memória.
 footnote:[Para saber mais, consulte https://pt.wikipedia.org/wiki/Troca_de_contexto["Troca de contexto"] na Wikipedia.]
 
 Os dois próximos capítulos tratam de mais temas ligados à programação concorrente em Python, usando o biblioteca de alto nível _concurrent.futures_ para gerenciar threads e processos (<<futures_ch>>) e a biblioteca _asyncio_ para programação assíncrona (<<async_ch>>).
 
-O((("", startref="CMprocess19"))) restante das seções nesse capítulo tentam responder à questão:
+As((("", startref="CMprocess19"))) demais seções nesse capítulo procuram responder à questão:
 
 [quote]
 ____
@@ -926,17 +933,21 @@ Considere((("Python", "functioning with multicore processors", id="Pmulti19")))(
 [quote]
 ____
 Os mais importantes fabricantes e arquiteturas de processadores, da Intel e da AMD até a Sparc e o PowerPC, esgotaram o potencial da maioria das abordagens tradicionais de aumento do desempenho das CPUs.
-Ao invés de elevar a frequência do relógio [dos processadores] e a taxa de transferência das instruções encadeadas a níveis cada vez maiores, eles estão se voltando em massa para o hyper-threading (hiperprocessamento) e para arquiteturas multi-núcleo.
+Ao invés de elevar a frequência do _clock_ [dos processadores] e a taxa de transferência das instruções encadeadas a níveis cada vez maiores, eles estão se voltando em massa para o hyper-threading (hiperprocessamento) e para arquiteturas multi-núcleo.
 Março de 2005. [Disponível online].
 ____
-// footnote:[" The Free Lunch Is Over: A Fundamental Turn Toward Concurrency in Software" —_Dr. Dobb's Journal_,
 
-O quê Sutter chama de "almoço grátis" era a tendência do software ficar mais rápido sem qualquer esforço adicional por parte dos desenvolvedores, porque as CPUs estavam executando código sequencial cada vez mais rápido, ano após ano.
+O que Sutter chama de "almoço grátis" era a tendência do software ficar mais rápido sem
+qualquer esforço adicional por parte dos desenvolvedores,
+porque as CPUs estavam executando código sequencial cada vez mais rápido, ano após ano.
 Desde 2004 isso não é mais verdade:
-a frequência dos relógios das CPUs e as otimizações de execução atingiram um platô,
-e agora qualquer melhoria significativa no desempenho precisa vir do aproveitamento de múltiplos núcleos ou do _hyperthreading_, avanços que só beneficiam código escrito para execução concorrente.
+a frequência dos _clocks_ das CPUs e as otimizações de execução atingiram um platô,
+e agora qualquer melhoria significativa no desempenho precisa vir
+do aproveitamento de múltiplos núcleos ou do _hyperthreading_,
+avanços que só beneficiam código escrito para execução concorrente.
 
-A história do Python começa no início dos anos 1990, quando as CPUs ainda estavam ficando exponencialmente mais rápidas na execução de código sequencial.
+A história do Python começa no início dos anos 1990,
+quando as CPUs ainda estavam ficando exponencialmente mais rápidas na execução de código sequencial.
 Naquele tempo não se falava de CPUs com múltiplos núcleos, exceto para supercomputadores.
 Assim, a decisão de ter uma ((("Global Interpreter Lock (GIL)"))) GIL era óbvia.
 A GIL torna o interpretador rodando em um único núcleo mais rápido, e simplifica sua implementação.footnote:[Provavelmente foram essas mesmas razões que levaram o criador do Ruby, Yukihiro Matsumoto, a também usar uma GIL no seu interpretador.]
@@ -944,23 +955,25 @@ A GIL também torna mais fácil escrever extensões simples com a API Python/C.
 
 [NOTE]
 ====
-Escrevi "extensões simples"  porque uma extensão não precisa de forma alguma lidar com a GIL.
+Escrevi "extensões simples" porque uma extensão não é obrigada a lidar com a GIL.
 Uma função escrita em C ou Fortran pode ser centenas de vezes mais rápida que sua equivalente em Python.footnote:[Na faculdade, como exercício, tive que implementar o algorítimo de compressão LZW em C. Mas antes escrevi o código em Python, para verificar meu entendimento da especificação. A versão C foi cerca de 900 vezes mais rápida.]
 Assim, a complexidade adicional de liberar a GIL para tirar proveito de CPUs multi-núcleo pode, em muitos casos, não ser necessária.
-Então podemos agradecer à GIL por muitas das extensões disponíveis em Python—e isso é certamente uma das razões fundamentais da popularidade que linguagem goza hoje.
+Então podemos agradecer à GIL por muitas das extensões disponíveis em Python—e isso é certamente uma das razões fundamentais da popularidade da linguagem hoje.
 ====
 
-Apesar da GIL, o Python está cada vez mais popular entre aplicações que exigem execução concorrente ou paralela, graças a bibliotecas e arquiteturas de software que contornam as limitações do CPython.
+Apesar da GIL, o Python está cada vez mais popular entre aplicações que exigem execução concorrente ou paralela,
+graças a bibliotecas e arquiteturas de software que contornam as limitações do CPython.
 
-Agora vamos discutir como o Python é usado em administração de sistemas, ciência de dados, e desenvolvimento de aplicações para servidores no mundo do processamento distribuído e dos multi-núcleos de 2023.
+Agora vamos discutir como o Python é usado em administração de sistemas, ciência de dados,
+e desenvolvimento de aplicações para servidores no mundo do processamento distribuído e dos multi-núcleos de 2023.
 
 ==== Administração de sistemas
 
-O ((("multicore processing", "system administration")))((("system administration"))) Python é largamente utilizado para gerenciar grandes fazendas de servidores, roteadores, balanceadores de carga e armazenamento conectado à rede (NAS, sigla em inglês de _network-attached storage_).
+O ((("multicore processing", "system administration")))((("system administration"))) Python é largamente utilizado para gerenciar grandes frotas de servidores, roteadores, balanceadores de carga e armazenamento conectado à rede (_network-attached storage_ ou NAS).
 Ele é também a opção preferencial para redes definidas por software (SND, _software-defined networking_) e hacking ético.
 Os maiores provedores de serviços na nuvem suportam Python através de bibliotecas e tutoriais de sua própria autoria ou da autoria de suas grande comunidades de usuários da linguagem.
 
-Nesse campo, scripts Python automatizam tarefas de configuração, emitindo comandos a serem executados pelas máquinas remotas, então raramente há operações vinculadas à CPU.
+Nesse campo, scripts Python automatizam tarefas de configuração, emitindo comandos a serem executados pelas máquinas remotas, então raramente há operações limitadas pela CPU.
 Threads ou corrotinas são bastante adequadas para tais atividades.
 Em particular, o pacote `concurrent.futures`, que veremos no <<futures_ch>>, pode ser usado para realizar as mesmas operações em muitas máquinas remotas ao mesmo tempo, sem grande complexidade.
 
@@ -1265,12 +1278,13 @@ https://fpy.li/19-68[Python issue #7946].
 
 O _Python Fluente_ se concentra nos recursos fundamentais da linguagem e nas partes centrais da biblioteca padrão. https://fpy.li/19-69[_Full Stack Python_] é um ótimo complemento para esse livro: é sobre o ecossistema do Python, com seções chamadas "Development Environments (_Ambientes de Desenvolvimento_)," "Data (_Dados_)," "Web Development (_Desenvolvimento Web_)," e "DevOps," entre outros.
 
-Eu já mencionei dois livros que abordam a concorrência usando a biblioteca padrão do Python e também incluem conteúdo significativo sobre bibliotecas de terceiros e ferramentas:
+Já mencionei dois livros que abordam a concorrência usando a biblioteca padrão do Python e também incluem conteúdo significativo sobre bibliotecas de terceiros e ferramentas:
 
 pass:[<a href="https://fpy.li/19-56" class="orm:hideurl"><em><span class="keep-together">High Performance</span> Python</em>, 2nd ed.</a>]
 e pass:[<a href="https://fpy.li/19-58" class="orm:hideurl"><em>Parallel Programming with Python</em></a>].
 O pass:[<a href="https://fpy.li/19-72" class=""><em>Distributed Computing with Python</em></a>] de Francesco Pierfederici
-(Packt) cobre a biblioteca padrão e também o uso de provedores de armazenamento na nuvem e clusters HPC (High-Performance Computing, _Computação de Alta Performance_).
+(Packt) cobre a biblioteca padrão e também provedores de infraestrutura de nuvem
+e clusters HPC (_High-Performance Computing_, computação de alto desempenho).
 
 O https://fpy.li/19-73["Python, Performance, and GPUs"] (EN) de Matthew Rocklin é uma atualização do status do uso de aceleradores GPU com Python, publicado em junho de 2019.
 
@@ -1380,7 +1394,7 @@ ____
 [role="soapbox-title"]
 Para gerenciar a complexidade, precisamos de restrições
 
-Eu((("concurrency models", "Soapbox discussion", id="CMsoap19")))((("Soapbox sidebars", "threads-and-locks versus actor-style programming", id="SSthread19"))) aprendi a programar em uma calculadora TI-58. Sua "linguagem" era similar ao assembler. Naquele nível, todas as "variáveis" eram globais, e não havia o conforto dos comandos estruturados de controle de fluxo.
+Aprendi((("concurrency models", "Soapbox discussion", id="CMsoap19")))((("Soapbox sidebars", "threads-and-locks versus actor-style programming", id="SSthread19"))) a programar em uma calculadora TI-58. Sua "linguagem" era similar ao assembler. Naquele nível, todas as "variáveis" eram globais, e não havia o conforto dos comandos estruturados de controle de fluxo.
 Existiam saltos condicionais: instruções que transferiam a execução diretamente para uma localização arbitrária—à frente ou atrás do local atual—dependendo do valor de um registrador ou de uma flag na CPU.
 
 É possível fazer basicamente qualquer coisa em assembler, e esse é o desafio:
@@ -1442,7 +1456,8 @@ Gerenciar travas é desnecessário no modelo de atores,
 como implementado em Erlang e Elixir, onde todos os tipos de dados são imutáveis.
 
 Threads-e-travas não vão desaparecer.
-Eu só não acho que lidar com esse tipo de entidade básica é um bom uso de meu tempo quando escrevo aplicações—ao contrário de módulos do kernel ou bancos de dados.
+Eu só não acho que lidar com esse tipo de entidade básica seja um bom uso de meu tempo
+quando escrevo aplicações—e não módulos do kernel, drivers de hardware, ou bancos de dados.
 
 Sempre me reservo o direito de mudar de opinião.
 Mas neste momento, estou convencido que o modelo de atores é o modelo de programação concorrente mais sensato que existe.
