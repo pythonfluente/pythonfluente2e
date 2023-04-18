@@ -129,8 +129,8 @@ Primeiro, como qualquer coleção padrão do Python, uma instância de `FrenchDe
 52
 ----
 
-Ler cartas específicas do baralho—por exemplo, a primeira ou a última—é fácil, 
-graças ao método `+__getitem__+`:
+Ler cartas específicas do baralho é fácil, graças ao método `+__getitem__+`.
+Por exemplo, a primeira e a última carta: 
 
 [source, pycon]
 ----
@@ -163,7 +163,8 @@ Acabamos((("special methods", "advantages of using"))) de ver duas vantagens de 
 
 Mas fica melhor.
 
-Como nosso `+__getitem__+` delega para o((("square brackets ([])")))((("[] (square brackets)"))) operador `[]` de `self._cards`,
+Como nosso `+__getitem__+` usa o((("square brackets ([])")))((("[] (square brackets)")))
+operador `[]` de `self._cards`,
 nosso baralho suporta fatiamento automaticamente.
 Podemos olhar as três primeiras cartas no topo de um novo baralho,
 e depois pegar apenas os ases, iniciando com o índice 12 e pulando 13 cartas por vez:
@@ -269,11 +270,11 @@ as implementações de `+__len__+` e `+__getitem__+` podem delegar todo o trabal
 .E como embaralhar as cartas?
 [NOTE]
 =====================================================================
-Como foi implementado até aqui, um `FrenchDeck` não pode ser embaralhado, porque ele 
-é _imutável_:
-as cartas e suas posições não podem ser modificadas,
+Como foi implementado até aqui, um `FrenchDeck` não pode ser embaralhado,
+porque as cartas e suas posições não podem ser alteradas,
 exceto violando o encapsulamento e manipulando o atributo `_cards` diretamente.
-Em <<ifaces_prot_abc>> vamos corrigir isso acrescentando um método `+__setitem__+` de uma linha.
+Em <<ifaces_prot_abc>> vamos corrigir isso acrescentando um método `+__setitem__+`
+de uma linha. Você consegue imaginar como ele seria implementado?
 =====================================================================
 
 
@@ -340,7 +341,7 @@ O trecho a seguir testa a adição de vetores ilustrada na <<vectors_fig>>:
 Vector(4, 5)
 ----
 
-Observe((("&#x002B; operator"))) como o [uso do] operador `+` resulta em um novo vetor, mostrado no console em um formato amigável.
+Observe((("&#x002B; operator"))) como o operador `+` produz um novo objeto `Vector(4, 5)`.
 
 A((("abs built-in function")))((("functions", "abs built-in function"))) função embutida `abs` devolve o valor absoluto de números inteiros e de ponto flutuante, e a magnitude de números `complex`. Então, por consistência, nossa API também usa `abs` pra calcular a magnitude de um vetor:
 
@@ -373,12 +374,13 @@ include::code/01-data-model/vector2d.py[]
 ====
 
 Implementamos cinco métodos especiais, além do costumeiro `+__init__+`.
-Veja que nenhum deles é chamado diretamente dentro da classe ou durante seu uso típico, ilustrado pelos doctests.
+Veja que nenhum deles é chamado diretamente dentro da classe ou durante seu uso normal, ilustrado pelos doctests.
 Como mencionado antes, o interpretador Python é o único usuário frequente da maioria dos métodos especiais.
 
-O <<ex_vector2d>> implementa dois operadores: `+` e `*`, para demonstrar o uso básico de `+__add__+` e `+__mul__+`.
+O <<ex_vector2d>> implementa dois operadores: `+` e `*`,
+para demonstrar o uso básico de `+__add__+` e `+__mul__+`.
 No dois casos, os métodos criam e devolvem uma nova instância de `Vector`,
-e não modificam nenhum dos operandos—`++self++`` e `other` são apenas lidos.
+e não modificam nenhum dos operandos: `+self+` e `other` são apenas lidos.
 Esse é o comportamento esperado de operadores infixos: criar novos objetos e não tocar em seus operandos. 
 Vou falar muito mais sobre esse tópico no capítulo <<operator_overloading>>.
 
@@ -397,20 +399,20 @@ Nas seções seguintes vamos discutir os outros métodos especiais em `Vector`.(
 
 O((("special methods", "string representation")))((("strings", "representation using special methods"))) método especial `+__repr__+` é chamado pelo `repr` embutido para obter a representação do objeto como string, para inspeção. Sem um `+__repr__+` personalizado, o console do Python mostraria uma instância de `Vector` como `<Vector object at 0x10e100070>`.
 
-//LR
+O console iterativo e o depurador chamam `repr` para exibir o resultado das expressões.
+O `repr` também é usado:
 
-//"The interactive console and debugger call repr on the results of the expressions eval‐ uated, as does the %r placeholder in classic formatting with the % operator, and the !r conversion field in the new format string syntax used in f-strings the str.format method."
-
-O console iterativo e o depurador chamam `repr` com o resultado das expressões analisadas, como também faz o marcador posicional `%r` na formatação clássica, com o operador `%`, e o campo de conversão `!r` na nova https://docs.python.org/pt-br/3.10/library/string.html#format-string-syntax[sintaxe de strings de formato] usado nas((("f-string syntax", "string representation using special methods"))) _f-strings_ pelo método `str.format`.
-//\LR
+* Pelo marcador posicional `%r` na formatação clássica com o operador `%`. Ex.: `'%r' % my_obj`
+* Pelo sinalizador de conversão `!r` na nova https://docs.python.org/pt-br/3.10/library/string.html#format-string-syntax[sintaxe de strings de formato] usada nas((("f-string syntax", "string representation using special methods"))) _f-strings_ e no método `str.format`.
+Ex: `f'{myobj!r}'`
 
 Note que a _f-string_ no nosso `+__repr__+` usa `!r` para obter a representação padrão dos atributos a serem exibidos.
-Isso é uma boa prática, pois mostra a diferença fundamental entre `Vector(1, 2)` e ++$$Vector('1', '2')$$++&#x2014;esta última não funcionaria no contexto desse exemplo, porque os argumentos do construtor devem ser números, não `str`.
+Isso é uma boa prática, pois durante uma seção de depuração podemos ver a diferença entre `Vector(1, 2)` e `Vector('1', '2')`. Este objeto não funcionaria no contexto desse exemplo, porque nosso código espera que os argumentos do construtor sejam números, não `str`.
 
-A string devolvida por `+__repr__+` não deve ser ambígua e, se possível, deve corresponder ao código-fonte necessário para recriar o objeto representado. É por isso que nossa representação de `Vector` se parece com uma chamada ao construtor da classe (por exemplo, `Vector(3, 4)`).
+A string devolvida por `+__repr__+` não deve ser ambígua e, se possível, deve corresponder ao código-fonte necessário para recriar o objeto representado. É por isso que nossa representação de `Vector` se parece com uma chamada ao construtor da classe, por exemplo `Vector(3, 4)`.
 
 Por((("&#x005F;&#x005F;str&#x005F;&#x005F;")))((("str() function")))((("functions", "str() function"))) outro lado, `+__str__+` é chamado pelo método embutido `str()` e usado implicitamente pela função `print`.
-Ele deve devolver uma string adequada para ser exibida aos usuários finais.
+Ele deve devolver uma string apropriada para ser exibida aos usuários finais.
 
 Algumas vezes a própria string devolvida por `+__repr__+` é adequada para exibir ao usuário,
 e você não precisa programar `+__str__+`, porque a implementação herdada da classe `object` chama 
