@@ -6,7 +6,6 @@ from keyword import kwlist, softkwlist
 MAX_KEYWORD_LEN = 4  # <1>
 KEYWORDS = sorted(kwlist + softkwlist)
 
-
 async def probe(domain: str) -> tuple[str, bool]:  # <2>
     loop = asyncio.get_running_loop()  # <3>
     try:
