@@ -33,8 +33,9 @@ O Python herdou da ABC o tratamento uniforme de sequências. Strings, listas, se
 
 Entender a variedade de sequências disponíveis no Python evita que reinventemos a roda, e sua interface comum nos inspira a criar APIs que suportem e se aproveitem de forma apropriada dos tipos de sequências existentes e futuras.
 
-A maior parte da discussão deste capítulo se aplica às sequências em geral, desde a conhecida `list` até os tipos `str` e `bytes`, adicionados no Pyhton 3. Tópicos específicos sobre listas, tuplas, arrays e filas também foram incluídos, mas os detalhes sobre strings Unicode e sequências de bytes são tratados no <<strings_bytes_files>>.
-Além disso, a ideia aqui é falar sobre os tipos de sequências prontas para usar. A criação de nossos próprios tipos de sequência é o assunto do <<user_defined_sequences>>.
+A maior parte da discussão deste capítulo se aplica às sequências em geral, desde a conhecida `list` até os tipos `str` e `bytes`, adicionados no Python 3. Tópicos específicos sobre listas, tuplas, arrays e filas também foram incluídos, mas os detalhes sobre strings Unicode e sequências de bytes são tratados no <<strings_bytes_files>>.
+Além disso, a ideia aqui é falar sobre os tipos de sequências prontas para usar.
+A criação de novos tipos de sequência é o tema do <<user_defined_sequences>>.
 
 Os((("sequences", "topics covered"))) principais tópicos cobertos nesse capítulo são:
 
@@ -50,37 +51,38 @@ A((("sequences", "significant changes to"))) atualização mais importante desse
 
 As outras mudanças não são atualizações e sim aperfeiçoamentos da primeira edição:
 
-* Um novo diagrama e uma nova descrição do funcionamento interno das sequências, contrastando contêiners e sequências planas.
+* Um novo diagrama e uma nova descrição do funcionamento interno das sequências, contrastando contêineres e sequências planas.
 
-* Uma comparação entre  `list` e `tuple` quanto ao desempenho e ao armazenamento 
+* Uma comparação entre  `list` e `tuple` quanto ao desempenho e ao armazenamento.
 
-* Ressalvas sobre tuplas com elementos mutáveis, e como detectá-los se necessário
+* Ressalvas sobre tuplas com elementos mutáveis, e como detectá-los se necessário.
 
-Movi a discussão sobre tuplas nomeadas para a seção <<classic_named_tuples_sec>> no capítulo <<data_class_ch>>,
+Movi a discussão sobre tuplas nomeadas para a seção <<classic_named_tuples_sec>> no <<data_class_ch>>,
 onde elas são comparadas com `typing.NamedTuple` e `@dataclass`.
 
 [NOTE]
 ====
 Para abrir espaço para conteúdo novo mantendo o número de páginas dentro do razoável, a seção 
-"Managing Ordered Sequences with Bisect" ("_Gerenciando sequências ordenadas com bisect_") da primeira edição se tornou um
-https://fpy.li/bisect[post] (EN)
+"Managing Ordered Sequences with Bisect" ("_Gerenciando sequências ordenadas com bisect_") da primeira edição
+agora é um https://fpy.li/bisect[artigo] (EN)
 no site que complementa o livro, 
 pass:[<span class="keep-together"><a href="http://fluentpython.com" class="orm:hideurl"><em>fluentpython.com</em></a></span>].
 ====
 
 === Uma visão geral das sequências embutidas
 
-A((("sequences", "overview of built-in", id="Soverv02"))) biblioteca padrão dispõe de uma ótima seleção de tipos de sequências, implementadas em C:
+A((("sequences", "overview of built-in", id="Soverv02"))) biblioteca padrão oferece uma boa seleção de tipos de sequências,
+implementadas em C:
 
 Sequências contêiner::
-  Podem((("container sequences"))) manter itens de tipos diferentes, incluindo contêineres aninhados. Alguns exemplos: `list`, `tuple`, e `collections.deque`.
+  Podem((("container sequences"))) armazenar itens de tipos diferentes, incluindo contêineres aninhados e objetos de qualquer tipo. Alguns exemplos: `list`, `tuple`, e `collections.deque`.
 Sequências planas::
-  Mantém((("flat sequences"))) itens de um tipo simples. Alguns exemplos: `str`, `bytes`, e `array.array`.
+  Armazenam((("flat sequences"))) itens de algum tipo simples, mas não outras coleções ou referências a objetos. Alguns exemplos: `str`, `bytes`, e `array.array`.
 
 Uma((("tuples", "simplified memory diagram for")))((("arrays"))) _sequência contêiner_ mantém referências para os objetos que contém, que podem ser de qualquer tipo, enquanto uma  _sequência plana_ armazena o valor de seu conteúdo em seu próprio espaço de memória, e não como objetos Python distintos. Veja a <<container_v_flat_img>>.
 
 [[container_v_flat_img]]
-.Diagramas de memória simplificados para uma `tuple` e uma `array`, cada uma com três itens. As células em cinza representam representam o cabeçalho de cada objeto Python na memória—sem proporção. A `tuple` tem uma array de referências para seus itens. Cada item é um objeto Python separado, possivelmente mantendo eles também referências a outros objetos Python, como aquele lista de dois itens. Por outro lado, a `array` Python é um único objeto, mantendo uma array da linguagem C contendo três números de ponto flutuante`. 
+.Diagramas de memória simplificados mostrando uma `tuple` e um `array`, cada uma com três itens. As células em cinza representam o cabeçalho de cada objeto Python na memória. A `tuple` tem uma array de referências para seus itens. Cada item é um objeto Python separado, possivelmente contendo também referências aninhadas a outros objetos Python, como aquele lista de dois itens. Por outro lado, um `array` Python é um único objeto, contendo um array da linguagem C com três números de ponto flutuante`. 
 image::images/flpy_0201.png[Diagram de memória simplificado de uma `areay` e de uma `tuple`]
 
 Dessa forma, sequências planas são mais compactas, mas estão limitadas a manter valores primitivos como bytes e números inteiros e de ponto flutuante.
@@ -128,7 +130,7 @@ Elas ajudam a extrapolar o que se sabe sobre um tipo de sequência para outros t
 O tipo mais fundamental de sequência é a lista: um contêiner mutável.
 Espero que você já esteja muito familizarizada com listas, então vamos passar diretamente para a compreensão de listas, uma forma potente de criar listas que algumas vezes é subutilizada por sua sintaxe parecer, a princípio, estranha.
 Dominar as compreensões de listas abre as portas para expressões geradoras que—entre outros usos—podem produzir elementos para preencher sequências de qualquer tipo.
-Ambas são o assunto da próxima seção.((("", startref="Soverv02")))
+Ambas são temas da próxima seção.((("", startref="Soverv02")))
 
 
 === Compreensões de listas e expressões geradoras
@@ -342,9 +344,14 @@ array('I', [36, 162, 163, 165, 8364, 164])
 <2> O construtor de `array` espera dois argumentos, então os parênteses em torno da expressão geradora são obrigatórios.
 O primeiro argumento do construtor de `array` define o tipo de armazenamento usado para os números na array, como veremos na seção <<arrays_sec>>.
 
-O <<ex_genexp_cartesian>> usa uma genexp com um produto cartesiano para devolver um rol de camisetas de duas cores em três tamanhos.
-Diferente do <<ex_listcomp_cartesian>>, aquela lista de camisetas com seis itens nunca é criada na memória: a expressão geradora alimenta o loop `for` produzindo um item por vez.
-Se as duas listas usadas no produto cartesiano tivessem mil itens cada uma, usar uma função geradora economizaria o custo de construir uma lista com um milhão de itens apenas para passar ao loop `for`.
+O <<ex_genexp_cartesian>> usa uma genexp com um produto cartesiano para
+gerar uma relação de camisetas de duas cores em três tamanhos.
+Diferente do <<ex_listcomp_cartesian>>,
+aquela lista de camisetas com seis itens nunca é criada na memória:
+a expressão geradora alimenta o loop `for` produzindo um item por vez.
+Se as duas listas usadas no produto cartesiano tivessem mil itens cada uma,
+usar uma função geradora evitaria o custo de construir uma lista
+com um milhão de itens apenas para passar ao loop `for`.
 
 [[ex_genexp_cartesian]]
 .Produto cartesiano em uma expressão geradora
@@ -419,11 +426,13 @@ ESP
 <3> Uma lista de tuplas no formato +(código_de_país, número_do_passaporte)+.
 <4> Iterando sobre a lista, `passport` é vinculado a cada tupla.
 <5> O operador de formatação `%` entende as tuplas e trata cada item como um campo separado.
-<6> O loop `for` sabe como recuperar separadamente os itens de uma tupla—isso é chamado "desempacotamento" ("_unpacking_"). Aqui não estamos interessados no segundo item, então o atribuímos a `_`, uma variável "falsa", usada apenas para manter valores que não serão usados.
+<6> O loop `for` sabe como recuperar separadamente os itens de uma tupla—isso é chamado "desempacotamento" ("_unpacking_").
+Aqui não estamos interessados no segundo item, então o atribuímos a `_`,
+uma variável descartável, usada apenas para coletar valores que não serão usados.
 
 [TIP]
 ====
-Em geral, usar `+_+` como variável "falsa" é só uma convenção.
+Em geral, usar `+_+` como variável descartável (_dummy variable_) é só uma convenção.
 É apenas um nome de variável estranho mas válido.
 Entretanto, em uma instrução `match/case`, o `+_+` é um coringa que corresponde a qualquer valor, mas não está vinculado a um valor. Veja a seção <<sequence_patterns_sec>>.
 E no console do Python, o resultado do comando anterior é atribuído a `+_+`—a menos que o resultado seja `None`.
@@ -442,7 +451,10 @@ Esses foram dois exemplos de _desempacotamento de tuplas_.
 
 [NOTE]
 ====
-O((("tuples", "tuple unpacking"))) termo _desempacotamento de tuplas_ é muito usado entre os pythonistas, mas _desempacotamento de iteráveis_ está ganhando popularidade, como no título da https://fpy.li/2-2[PEP 3132 -- Extended Iterable Unpacking (_Desempacotamento de Iteráveis Estendido_)].
+O((("tuples", "tuple unpacking"))) termo "desempacotamento de tuplas" (_tuple unpacking_)
+é muito usado entre os pythonistas, mas _desempacotamento de iteráveis_ é mais preciso
+e está ganhando popularidade, como no título da 
+https://fpy.li/2-2[PEP 3132 -- Extended Iterable Unpacking (_Desempacotamento Estendido de Iteráveis_)].
 
 A seção <<iterable_unpacking_sec>> fala muito mais sobre desempacotamento, 
 não apenas de tuplas, mas também de sequências e iteráveis em geral.
@@ -454,8 +466,8 @@ PROD: The note above is one more example that runs over the next paragraph in th
 
 Agora vamos considerar o uso da classe `tuple` como uma variante imutável da classe `list`.((("", startref="tuple02")))
 
-
 ==== Tuplas como listas imutáveis
+
 O((("tuples", "as immutable lists", secondary-sortas="immutable lists", id="Timlist02")))((("lists", "using tuples as immutable", id="Ltupple02"))) interpretador Python e a biblioteca padrão fazem uso extensivo das tuplas como listas imutáveis, e você deveria seguir o exemplo. Isso traz dois benefícios importantes:
 
 Clareza:: Quando você vê uma `tuple` no código, sabe que seu tamanho nunca mudará.
@@ -487,8 +499,8 @@ False
 ----
 
 Tuplas com itens mutáveis podem ser uma fonte de bugs.
-Como veremos na seção <<what_is_hashable>>, um objeto só é "hashable" se seu valor não puder nunca mudar.
-Uma tupla não-hashable não pode ser inserida como chave de um `dict` ou como elemento de um `set`.
+Se uma tupla contém qualquer item mutável, ela não pode ser usada como chave em um `dict` ou como elemento em um `set`.
+O motivo será explicado em <<what_is_hashable>>.
 
 Se você quiser determinar explicitamente se uma tupla (ou qualquer outro objeto) tem um valor fixo, pode usar a função embutida `hash` para criar uma função `fixed`, assim:
 
@@ -509,14 +521,14 @@ True
 False
 ----
 
-Exploraremos melhor essa questão em <<tuple-relative-immutable>>.
+Vamos aprofundar essa questão em <<tuple-relative-immutable>>.
 
-Apesar dessa ressalva, as tuplas são largamente utilizadas como listas imutáveis.
-Elas oferecem algumas vantagens de desempenho, explicadas por uma dos desenvolvedores principais do Python, Raymond Hettinger, em uma resposta à questão 
-https://fpy.li/2-3["Are tuples more efficient than lists in Python?" (_As tuplas são mais eficientes que as listas no Pyhton?_)] no StackOverflow.
-Em resumo, Hettinger escreveu:
+Apesar dessa ressalva, as tuplas são frequentemente usadas como listas imutáveis.
+Elas oferecem algumas vantagens de desempenho, explicadas por uma dos desenvolvedores principais do Python,
+Raymond Hettinger, em uma resposta à questão 
+https://fpy.li/2-3["Are tuples more efficient than lists in Python?" (_As tuplas são mais eficientes que as listas no Python?_)] no StackOverflow. Em resumo, Hettinger escreveu:
 
-* Para avaliar um literal tupla, o compilador Pyhton gera bytecode para uma constante tupla em uma operação; mas para um literal lista, o bytecode gerado insere cada elemento como uma constante separada no stack de dados, e então cria a lista.
+* Para avaliar uma tupla literal, o compilador Python gera bytecode para uma constante tupla em uma operação; mas para um literal lista, o bytecode gerado insere cada elemento como uma constante separada no stack de dados, e então cria a lista.
 * Dada a tupla `t`, `tuple(t)` simplesmente devolve uma referência para a mesma `t`. Não há necessidade de cópia. Por outro lado, dada uma lista `l`, o construtor `list(l)` precisa criar uma nova cópia de `l`.
 * Devido a seu tamanho fixo, uma instância de `tuple` tem alocado para si o espaço exato de memória que precisa. Em contrapartida, instâncias de `list` tem alocadas para si memória adicional, para amortizar o custo de acréscimos futuros.
 * As referências para os itens em uma tupla são armazenadas em uma array na struct da tupla, enquanto uma lista mantém um ponteiro para uma array de referências armazenada em outro lugar. Essa indireção é necessária porque, quando a lista cresce além do espaço alocado naquele momento, o Python precisa realocar a array de referências para criar espaço. A indireção adicional torna o cache da CPU menos eficiente.((("", startref="Timlist02")))((("", startref="Ltupple02")))
@@ -687,8 +699,9 @@ Por fim, outro importante aspecto do desempacotamento de tuplas: ele funciona co
 
 ==== Desempacotamento aninhado
 
-O((("unpacking", "nested"))) alvo de um desempacotamento pode usar aninhamento, por exemplo `(a, b, (c, d))`.
-O Python fará a coisa certa se o valor possuir a mesma estrutura aninhada.
+O((("unpacking", "nested"))) alvo de um desempacotamento pode usar aninhamento,
+por exemplo `(a, b, (c, d))`.
+O Python fará a coisa certa se o valor tiver a mesma estrutura aninhada.
 O <<ex_nested_tuple>> mostra o desempacotamento aninhado em ação.
 [[ex_nested_tuple]]
 .Desempacotando tuplas aninhadas para acessar a longitude
@@ -738,22 +751,25 @@ Agora vamos estudar casamento de padrões, que suporta maneiras ainda mais poder
 [[sequence_patterns_sec]]
 === Casamento de padrões com sequências
 
-O((("match/case statement")))((("sequences", "pattern matching with", id="Spattern02")))((("pattern matching", "match/case statement"))) novo recurso mais visível do Python 3.10 é o casamento de padrões com a instrução `match/case`, proposta na https://fpy.li/pep634[PEP 634—Structural Pattern Matching: Specification (_Casamento Estrutural de Padrões: Especificação_)] (EN).
+O((("match/case statement")))((("sequences", "pattern matching with", id="Spattern02")))((("pattern matching", "match/case statement"))) novo recurso mais visível do Python 3.10 é o casamento de padrões (_pattern matching_) com a instrução `match/case`, proposta na https://fpy.li/pep634[PEP 634—Structural Pattern Matching: Specification (_Casamento Estrutural de Padrões: Especificação_)] (EN).
 
 [role="man-height2"]
 [NOTE]
 ====
-Carol Willing, uma das desenvolvedoras principais do Python, escreveu uma excelente introdução ao casamento de padrões na seção https://docs.python.org/pt-br/3.10/whatsnew/3.10.html#pep-634-structural-pattern-matching["Correspondência de padrão estrutural"]footnote:[(A tradução em português da documentação do Python optou pela expressão "correspondência de padrões" para "pattern matching". O autor e o tradutor deste livro optaram por usar "casamento de padrões", uma expressão também comum na bibliografia em português e, em nossa opinião, mais clara. Naturalmente mantivemos os textos originais nos nomes dos links externos (NT)] em 
-https://docs.python.org/pt-br/3.10/whatsnew/3.10.html["O que há de novo no Python 3.10"]. Você pode querer ler essa revisão rápida.
-Neste livro, optei por dividir o tratamento da correspondência de padrões em diferentes capítulos, dependendo dos tipos de padrão:
+Carol Willing, uma das desenvolvedoras principais do Python, escreveu uma excelente introdução ao casamento de padrões na seção https://docs.python.org/pt-br/3.10/whatsnew/3.10.html#pep-634-structural-pattern-matching["Correspondência de padrão estrutural"]footnote:[A tradução em português da documentação do Python optou pela expressão "correspondência de padrões" para "pattern matching". Escolhemos "casamento de padrões", uma expressão que nos pareceu mais clara, e também usada na bibliografia em português brasileiro. Naturalmente mantivemos os textos originais nos nomes dos links externos (NT)] em 
+https://docs.python.org/pt-br/3.10/whatsnew/3.10.html["O que há de novo no Python 3.10"].
+Você pode querer ler aquela revisão rápida.
+Neste livro, optei por dividir o tratamento da correspondência de padrões em diferentes capítulos,
+dependendo dos tipos de padrão:
 Na seção <<pattern_matching_mappings_sec>> e na <<pattern_instances_sec>>.
 E há um exemplo mais longo na seção <<pattern_matching_case_study_sec>>.
 ====
 
-Aqui está um primeiro exemplo do tratamento de sequências com `match/case`.
+Vamos ao primeiro exemplo do tratamento de sequências com `match/case`.
 
-Imagine que você está projetando um robô que aceita comandos, enviados como sequências de palavras e números, como `BEEPER 440 3`.
-Após separar o comando em partes e analisar os números, você teria uma mensagem como `['BEEPER', 440, 3]`. E poderia usar um método como esse para tratar tais mensagens:
+Imagine que você está construindo um robô que aceita comandos, enviados como sequências de palavras e números, como `BEEPER 440 3`.
+Após separar o comando em partes e analisar os números, você teria uma mensagem como `['BEEPER', 440, 3]`.
+Então, você poderia usar um método assim para interpretar mensagens naquele formato:
 
 [[ex_robot]]
 .Método de uma classe `Robot` imaginária
@@ -774,20 +790,21 @@ Após separar o comando em partes e analisar os números, você teria uma mensag
                 raise InvalidCommand(message)
 ----
 ====
-<1> A expressão após a palavra-chave `match` é o _assunto_.
-O assunto são os dados que o Python tentará equiparar aos padrões em cada instrução `case`.
-<2> Esse padrão casa com qualquer assunto que seja uma sequência de três itens. O primeiro item deve ser a string `BEEPER`.
+<1> A expressão após a palavra-chave `match` é o sujeito (_subject_).
+O sujeito contém os dados que o Python vai comparar aos padrões em cada instrução `case`.
+<2> Esse padrão casa com qualquer sujeito que seja uma sequência de três itens. O primeiro item deve ser a string `BEEPER`.
 O segundo e o terceiro itens podem ser qualquer coisa, e serão vinculados às variáveis `frequency` e `times`, nessa ordem.
-<3> Isso casa com qualquer assunto com dois itens, o primeiro deles sendo `'NECK'`.
-<4> Isso vai casar com uma assunto de três itens começando com `LED`. Se o número de itens não for correspondente, o Python segue para o próximo `case`.
-<5> Outro padrão de sequência começando com `'LED'`, agora com cinco itens—incluindo a constante `LED`.
-<6> Esse é o `case` default. Vai casar com qualquer assunto que não tenha sido capturado por um dos padrões precedentes. A variável `_` é especial, como logo veremos.
+<3> Isso casa com qualquer sujeito com dois itens, se o primeiro for `'NECK'`.
+<4> Isso vai casar com uma sujeito de três itens começando com `LED`. Se o número de itens não for correspondente, o Python segue para o próximo `case`.
+<5> Outro padrão de sequência começando com `'LED'`, agora com cinco itens—incluindo a constante `'LED'`.
+<6> Esse é o `case` default. Vai casar com qualquer sujeito que não tenha sido capturado por um dos padrões precedentes. A variável `_` é especial, como logo veremos.
 
-Olhando((("pattern matching", "destructuring"))) superficialmente, `match/case` pode parecer similar à instrução `switch/case` da linguagem C—mas isso é só metade da história.footnote:[Na minha opinião, uma sucessão de blocos `if/elif/elif/.../else` é uma boa substituta para `switch/case`. E ela não sofre dos problemas de https://fpy.li/2-8[fallthrough (_cascateamento_)] (EN) e de
-https://fpy.li/2-9[dangling else (_o `else` errante_)] (EN), que alguns projetistas de linguagens copiaram irracionalmente do C—décadas após se saber que tais problemas são a causa de inúmeros bugs.]
+Olhando((("pattern matching", "destructuring"))) superficialmente, `match/case` se parece instrução `switch/case` da linguagem C—mas isso é só uma pequena parte da sua funcionalidade.footnote:[Na minha opinião, uma sucessão `if/elif/elif/.../else` funciona muito bem como no lugar de `switch/case`. E ela não sofre dos problemas de https://fpy.li/2-8[fallthrough (_cascateamento_)] (EN) e de
+https://fpy.li/2-9[dangling else (_o `else` errante_)] (EN), que alguns projetistas de linguagens copiaram irracionalmente do C—décadas após sabermos que tais problemas são a causa de inúmeros bugs.]
 Uma melhoria fundamental do `match` sobre o `switch` é((("destructuring"))) a _desestruturação_—uma forma mais avançada de desempacotamento.
 Desestruturação é uma palavra nova no vocabulário do Python,
-mas é usada com frequência na documentação de linguagens que suportam o casamento de padrões—como Scala e Elixir.
+mas é usada com frequência na documentação de linguagens
+que suportam o casamento de padrões—como Scala e Elixir.
 
 Como um primeiro exemplo de desestruturação, o <<ex_nested_tuple_match>> mostra parte do <<ex_nested_tuple>> reescrito com `match/case`.
 
@@ -799,13 +816,13 @@ Como um primeiro exemplo de desestruturação, o <<ex_nested_tuple_match>> mostr
 include::code/02-array-seq/match_lat_lon.py[tags=MAIN]
 ----
 ====
-<1> O assunto desse `match` é `record`—isto é, cada uma das tuplas em `metro_areas`.
-<2> Uma instrução `case` tem duas partes: um padrão e um guarda opcional, com a palavra-chave `if`.
+<1> O sujeito desse `match` é `record`—isto é, cada uma das tuplas em `metro_areas`.
+<2> Uma instrução `case` tem duas partes: um padrão e uma guarda opcional, com a palavra-chave `if`.
 
-Em geral, um padrão de sequência casa com o assunto se:
+Em geral, um padrão de sequência casa com o sujeito se estas três condições forem verdeiras:
 
-. O assunto é uma sequência, _e_
-. O assunto e o padrão tem o mesmo número de itens, _e_
+. O sujeito é uma sequência, _e_
+. O sujeito e o padrão tem o mesmo número de itens, _e_
 . Cada item correspondente casa, incluindo os itens aninhados.
 
 Por exemplo, o padrão `[name, _, _, (lat, lon)]` no <<ex_nested_tuple_match>>
@@ -821,9 +838,9 @@ Um padrão de sequência pode casar com instâncias da maioria das subclasses re
 [WARNING]
 ====
 Instâncias de `str`, `bytes`, e `bytearray` não são tratadas como sequências no contexto de um `match/case`.
-Um assunto de `match` de um desses tipos é tratado como um valor "atômico"—como o inteiro 987 é tratado como um valor, não como uma sequência de dígitos.
+Um sujeito de `match` de um desses tipos é tratado como um valor "atômico"—assim como o inteiro 987 é tratado como um único valor, e não como uma sequência de dígitos.
 Tratar aqueles três tipos como sequências poderia causar bugs devido a casamentos não intencionais.
-Se você quer usar um objeto daqueles tipos como um assunto sequência, converta-o na instrução `match`. Por exemplo, veja `tuple(phone)` no trecho abaixo:
+Se você quer usar um objeto daqueles tipos como um sujeito sequência, converta-o na instrução `match`. Por exemplo, veja `tuple(phone)` no trecho abaixo, que poderia ser usado para separar números de telefone por regiões do mundo com base no prefixo DDI:
 
 [source, py]
 ----
@@ -848,7 +865,7 @@ tuple    range         collections.deque
 
 Ao contrário do desempacotamento, padrões não desestruturam iteráveis que não sejam sequências (tal como os iteradores).
 
-O((("pattern matching", "&#x005F; symbol")))((("&#x005F; symbol"))) símbolo `+_+` é especial nos padrões: ele casa com qualquer item único naquela posição, mas nunca é vinculado ao valor daquele item.
+O((("pattern matching", "&#x005F; symbol")))((("&#x005F; symbol"))) símbolo `+_+` é especial nos padrões: ele casa com qualquer item naquela posição, mas nunca é vinculado ao valor daquele item. O valor é descartado.
 Além disso, o `+_+` é a única variável que pode aparecer mais de uma vez em um padrão.
 
 Você pode vincular qualquer parte de um padrão a uma variável usando a((("keywords", "as keyword")))((("as keyword"))) palavra-chave `as`:
@@ -858,7 +875,7 @@ Você pode vincular qualquer parte de um padrão a uma variável usando a((("key
         case [name, _, _, (lat, lon) as coord]:
 ----
 
-Dado o assunto `['Shanghai', 'CN', 24.9, (31.1, 121.3)]`,
+Dado o sujeito `['Shanghai', 'CN', 24.9, (31.1, 121.3)]`,
 o padrão anterior vai casar e atribuir valores às seguintes variáveis:
 
 // .Pattern matching 
@@ -885,14 +902,17 @@ e ambos os itens da tupla devem ser instâncias de `float`:
 ====
 As expressões `str(name)` e `float(lat)` se parecem com chamadas a construtores,
 que usaríamos para converter `name` e `lat` para `str` e `float`. 
-Mas no contexto de um padrão, aquela sintaxe executa uma verificação de tipo durante a execução do programa:
-o padrão acima vai casar com uma sequência de quatro itens, na qual o item 0 deve ser uma `str` e o item 3 deve ser uma par de números de ponto flutuante.
-Adicionalmente, a `str` no item 0 será vinculada à variável `name` e os números no item 3 serão vinculados a `lat` e `lon`, respectivamente.
-Assim, apesar de `str(name)` pegar emprestada a sintaxe de uma chamada de construtor, a semântica é totalmente outra no contexto de um padrão.
-O uso de classes arbitrárias em padrões é tratado na seção <<pattern_instances_sec>>.
+Mas no contexto de um padrão, aquela sintaxe faz uma verificação de tipo durante a execução do programa:
+o padrão acima vai casar com uma sequência de quatro itens,
+na qual o item 0 deve ser uma `str` e o item 3 deve ser uma par de números de ponto flutuante.
+Além disso, a `str` no item 0 será vinculada à variável `name`
+e os números no item 3 serão vinculados a `lat` e `lon`, respectivamente.
+Assim, apesar de imitar a sintaxe de uma chamada de construtor,
+o significado de `str(name)` é totalmente diferente contexto de um padrão.
+O uso de classes arbitrárias em padrões será tratado na seção <<pattern_instances_sec>>.
 ====
 
-Por outro lado, se queremos casar qualquer assunto sequência começando com uma `str` e terminando com uma sequência aninhada com dois números de ponto flutuante, podemos escrever:
+Por outro lado, se queremos casar qualquer sujeito sequência começando com uma `str` e terminando com uma sequência aninhada com dois números de ponto flutuante, podemos escrever:
 
 [source, python3]
 ----
@@ -931,12 +951,12 @@ O próximo exemplo mostra como o casamento de padrões contribui para a criaçã
 
 Peter Norvig((("lis.py interpreter", "pattern matching in", id="lispypattern02")))((("pattern matching", "in lis.py interpreter", secondary-sortas="lis.py", id="PMinterp02")))((("Scheme language", id="scheme02"))), da Universidade de Stanford, escreveu o 
 https://fpy.li/2-11[_lis.py_]:
-um interpretador para um subconjunto do dialeto Scheme da linguagem de programação Lisp, em 132 belas linhas de código Python legível.
-Peguei o código fonte de Norvig (publicado sob a licença MIT) e o atualizei para o Pyhton 3.10, para exemplificar o casamento de padrões.
+um interpretador de um subconjunto do dialeto Scheme da linguagem de programação Lisp, em 132 belas linhas de código Python legível.
+Peguei o código fonte de Norvig (publicado sob a licença MIT) e o atualizei para o Python 3.10, para exemplificar o casamento de padrões.
 Nessa seção, vamos comparar uma parte fundamental do código de Norvig—que usa `if/elif` e desempacotamento—com uma nova versão usando `match/case`.
 
 As duas funções principas do _lis.py_ são `parse` e `evaluate`.footnote:[A última é chamada `eval` no código original; a renomeei para evitar que fosse confundida com a função embutida `eval` do Python.]
-O parser (_analisador sintático_) recebe as expressões entre parênteses do Scheme e devolve listas Pyhton. Aqui estão dois exemplos:
+O parser (_analisador sintático_) recebe as expressões entre parênteses do Scheme e devolve listas Python. Aqui estão dois exemplos:
 
 [source, python]
 ----
@@ -993,14 +1013,14 @@ include::code/02-array-seq/lispy/py3.10/lis.py[tags=EVAL_MATCH_MIDDLE]
 include::code/02-array-seq/lispy/py3.10/lis.py[tags=EVAL_MATCH_BOTTOM]
 ----
 ====
-<1> Casa se o assunto for uma sequência de dois itens começando com `'quote'`.
-<2> Casa se o assunto for uma sequência de quatro itens começando com `'if'`.
-<3> Casa se o assunto for uma sequência com três ou mais itens começando com `'lambda'`. A guarda assegura que `body` não esteja vazio.
-<4> Casa de o assunto for uma sequência de três itens começando com `'define'`, seguido de uma instância de `Symbol`.
+<1> Casa se o sujeito for uma sequência de dois itens começando com `'quote'`.
+<2> Casa se o sujeito for uma sequência de quatro itens começando com `'if'`.
+<3> Casa se o sujeito for uma sequência com três ou mais itens começando com `'lambda'`. A guarda assegura que `body` não esteja vazio.
+<4> Casa de o sujeito for uma sequência de três itens começando com `'define'`, seguido de uma instância de `Symbol`.
 <5> é uma boa prática ter um `case` para capturar todo o resto.
 Neste exemplo, se `exp` não casar com nenhum dos padrões, a expressão está mal-formada, então gero um `SyntaxError`.
 
-Sem o último `case`, para pegar tudo que tiver passado pelos anteriores, todo o bloco `match` não faz nada quando o assunto não casa com algum `case`—e isso pode ser uma falha silenciosa.
+Sem o último `case`, para pegar tudo que tiver passado pelos anteriores, todo o bloco `match` não faz nada quando o sujeito não casa com algum `case`—e isso pode ser uma falha silenciosa.
 
 Norvig deliberadamente evitou a checagem e o tratamento de erros em _lis.py_, para manter o código fácil de entender.
 Com casamento de padrões, podemos acrescentar mais verificações e ainda manter o programa legível.
@@ -1027,7 +1047,7 @@ Um padrão simples para o `case` de `'lambda'` seria esse:
 ----
 
 Entretanto, isso casa com qualquer valor na posição `parms`,
-incluindo o primeiro `x` nesse assunto inválido:
+incluindo o primeiro `x` nesse sujeito inválido:
 
 [source, python3]
 ----
@@ -1075,7 +1095,7 @@ Acrescentar essas duas linhas ao `match` cuida da implementação:
 ----
 
 Eu colocaria esse `case` após o `case` da outra forma de `define` no  <<ex_match_eval>>.
-A ordem desses _cases_ de `define`  é irrelevante nesse exemplo, pois nenhum assunto pode casar com esses dois padrões:
+A ordem desses _cases_ de `define` é irrelevante nesse exemplo, pois nenhum sujeito pode casar com esses dois padrões:
 o segundo elemento deve ser um `Symbol` na forma original de `define`,
 mas deve ser uma sequência começando com um `Symbol` no atalho de `define` para definição de função.
 
@@ -1485,7 +1505,7 @@ TypeError: 'tuple' object does not support item assignment
 ----
 ====
 
-O https://fpy.li/2-14[Online Python Tutor] (EN) é uma ferramenta online fantástica para visualizar em detalhes o funcionamento do Pyhton. A <<aug_item_assign_tutor>> é uma composição de duas capturas de tela, mostrando os estados inicial e final da tupla `t` do <<ex_aug_item_assign_solution>>.
+O https://fpy.li/2-14[Online Python Tutor] (EN) é uma ferramenta online fantástica para visualizar em detalhes o funcionamento do Python. A <<aug_item_assign_tutor>> é uma composição de duas capturas de tela, mostrando os estados inicial e final da tupla `t` do <<ex_aug_item_assign_solution>>.
 
 [[aug_item_assign_tutor]]
 .Estados inicial e final do enigma da atribuição de tuplas (diagrama gerado pelo Online Python Tutor).
@@ -1511,12 +1531,12 @@ Se olharmos o bytecode gerado pelo Python para a expressão `s[a] += b` (<<ex_au
              17 RETURN_VALUE
 ----
 ====
-<1> Coloca o valor de `s[a]` no `TOS` (Top Of Stack, _Topo do Stack ou da Pilha de Execução_).
+<1> Coloca o valor de `s[a]` no `TOS` (_Top Of Stack_, topo da pilha de execução_).
 <2> Executa `TOS += b`. Isso é bem sucedido se `TOS` se refere a um objeto mutável (no <<ex_aug_item_assign_solution>> é uma lista).
 <3> Atribui `s[a] = TOS`.
 Isso falha se `s` é imutável  (a tupla `t` no <<ex_aug_item_assign_solution>>).
 
-Esse exemplo é um caso bastante lateral—em meus 20 anos usando Pyhton, nunca vi esse comportamento estranho realmente estragar o dia de alguém.
+Esse exemplo é um caso raro—em meus 20 anos usando Python, nunca vi esse comportamento estranho estragar o dia de alguém.
 
 Há três lições para tirar daqui:
 
@@ -1689,7 +1709,7 @@ algo que também exige passar cada linha para a função embutida `float`.
 Salvar o arquivo com `array.tofile` é umas sete vezes mais rápido que escrever um número de ponto flutuante por vez em um arquivo de texto.
 Além disso, o tamanho do arquivo binário com 10 milhões de números de dupla precisão é de 80.000.000 bytes (8 bytes por número, zero excesso), enquanto o arquivo de texto ocupa 181.515.739 bytes para os mesmos dados.
 
-Para o caso específico de arrays numéricas representando dados binários, tal como bitmaps de imagens, o Pyhton tem os tipos `bytes` e `bytearray`, discutidos na seção <<strings_bytes_files>>.
+Para o caso específico de arrays numéricas representando dados binários, tal como bitmaps de imagens, o Python tem os tipos `bytes` e `bytearray`, discutidos na seção <<strings_bytes_files>>.
 
 Vamos encerrar essa seção sobre arrays com a <<list_x_array_attrs_tbl>>,
 comparando as características de `list` e `array.array`.
@@ -2172,13 +2192,13 @@ Usei o termo "sequência contêiner" para ser específico, porque existem contê
 Sequências contêineres podem ser aninhadas porque elas podem conter objetos de qualquer tipo,
 incluindo seu próprio tipo.
 
-Por outro lado, _sequências planas_  são tipos de sequências que não podem ser aninhadas, pois só podem conter valores atômicos como inteiros, números de ponto flutuante ou caracteres.
+Por outro lado, _sequências planas_ são tipos de sequências que não podem ser aninhadas, pois só podem conter valores atômicos como inteiros, números de ponto flutuante ou caracteres.
 
 Adotei o termo _sequência plana_  porque precisava de algo para contrastar com "sequência contêiner."
 
 Apesar dos uso anterior da palavra "conteinêres" na documentação oficial, há uma classe abstrata em `collections.abc` chamada `Container`.
 Aquela ABC tem apenas um método, `+__contains__+`—o método especial por trás do operador `in`.
-Isso significa que arrays e strings, que não são contêiners no sentido tradicional, são subclasses virtuais de `Container`, porque implementam `+__contains__+`.
+Isso significa que arrays e strings, que não são contêineres no sentido tradicional, são subclasses virtuais de `Container`, porque implementam `+__contains__+`.
 Isso é só mais um exemplo de humanos usando uma mesma palavra para significar coisas diferentes.
 Nesse livro, vou escrever "contêiner" com minúscula e em português para 
 "um objeto que contém referências para outros objetos" e 
@@ -2212,7 +2232,7 @@ Usar `key` é mais simples e mais eficiente.
 É mais simples porque basta definir uma função de um único argumento que recupera ou calcula o critério a ser usado para ordenar seus objetos; isso é mais fácil que escrever uma função de dois argumentos para devolver –1, 0, 1.
 Também é mais eficiente, porque a função `key` é invocada apenas uma vez por item,
 enquanto a comparação de dois argumentos é chamada a cada vez que o algoritmo de ordenação precisa comparar dois itens.
-Claro, o Pyhton também precisa comparar as chaves ao ordenar,
+Claro, o Python também precisa comparar as chaves ao ordenar,
 mas aquela comparação é feita em código C otimizado, não em uma funcão Python escrita por você.
 
 Por sinal, usando `key` podemos ordenar uma lista bagunçada de números e strings "parecidas com números". Só precisamos decidir se queremos tratar todos os itens como inteiros ou como strings:
@@ -2235,7 +2255,7 @@ um algoritmo adaptativo que troca de estratégia de ordenação ( entre _merge s
 Isso é eficiente porque dados reais tendem a ter séries de itens ordenados.
 Há um https://pt.wikipedia.org/wiki/Timsort[artigo da Wikipedia] sobre ele.
 
-O Timsort foi usado no CPyhton pela primeira vez em 2002.
+O Timsort foi usado no CPython pela primeira vez em 2002.
 Desde 2009, o Timsort também é usado para ordenar arrays tanto no Java padrão quanto no Android, um fato que ficou muito conhecido quando a Oracle usou parte do código relacionado ao Timsort como evidência da violação da propriedade intelectual da Sun pelo Google. 
 Por exemplo, veja essa https://fpy.li/2-36[ordem do Juiz William Alsup] (EN) de 2012.
 Em 2021, a Suprema Corte dos Estados Unidos decidiu que o uso do código do Java pelo Google é "fair use"footnote:[Conceito da lei de copyright norte-americana que permite, em determinadas circunstâncias, o uso sem custo de partes da propriedade intelectual de outros. Em geral traduzido como "uso razoável" ou "uso aceitável". Essa doutrina não faz parte da lei brasileira.(NT)]
