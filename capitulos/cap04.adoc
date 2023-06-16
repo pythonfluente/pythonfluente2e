@@ -9,7 +9,7 @@
 :part-caption: Parte
 
 [[strings_bytes_files]]
-== Texto em Unicode Versus Bytes
+== Texto em Unicode versus Bytes
 
 [quote, Esther Nam e Travis Fischer]
 ____
@@ -17,12 +17,13 @@ Humanos usam texto. Computadores falam em bytes.footnote:[Slide 12 da palestra "
 ____
 
 
-O Python 3 introduziu uma forte distinção entre strings de texto humano e sequências de bytes puros. A conversão implícita((("implicit conversion"))) de sequências de bytes para texto Unicode é uma coisa do passado. Este capítulo trata de strings Unicode, sequências binárias, e da codificação usada para converter umas nas outras.
+O Python 3 introduziu uma forte distinção entre strings de texto humano e sequências de bytes puros. A conversão automática((("implicit conversion"))) de sequências de bytes para texto Unicode ficou para trás no Python 2. Este capítulo trata de strings Unicode, sequências de bytes, e das codificações usadas para converter umas nas outras.
 
-Dependendo do tipo do seu trabalho com o Python,
-você pode pensar que entender o Unicode não é importante.
-Isso é improvável, mas mesmo que seja o caso, não há como escapar da cisão entre `str` e `byte`.
-Como um bônus, você vai descobrir que os tipos especializados de sequências binárias oferecem recursos que o  "pau para toda obra" `str` do Python 2 não possuia.
+Dependendo do que você faz com o Python, pode achar que entender o Unicode não é importante.
+Isso é improvável, mas mesmo que seja o caso, não há como escapar da separação entre `str` e `bytes`,
+que agora exige conversões explícitas.
+Como um bônus, você descobrirá que os tipos especializados de sequências binárias `bytes` e `bytearray`
+oferecem recursos que a classe `str` "pau para toda obra" do Python 2 não oferecia.
 
 Nesse((("Unicode text versus bytes", "topics covered"))) capítulo, veremos os seguintes tópicos:
 
@@ -42,9 +43,9 @@ Nesse((("Unicode text versus bytes", "topics covered"))) capítulo, veremos os s
 === Novidades nesse capítulo
 
 O suporte((("Unicode text versus bytes", "significant changes to"))) ao Unicode no Python 3 sempre foi muito completo e estável, então o acréscimo mais notável é a seção <<finding_chars_sec>>,
-descrevendo um utilitário para busca no banco de dados Unicode—uma forma ótima de encontrar dígitos rodeados por um círculo e gatos sorridentes a partir da linha de comando.
+descrevendo um utilitário para busca no banco de dados Unicode—uma forma ótima de encontrar gatinhos sorridentes ou dígitos rodeados por um círculo, na linha de comando.
 
-Uma pequena mudança que vale à pena mencionar é o suporte a Unicode no Windows,
+Uma pequena mudança que vale a pena mencionar é o suporte a Unicode no Windows,
 que ficou melhor e mais simples desde o Python 3.6, como veremos na seção <<encoding_defaults>>.
 
 Vamos começar então com os conceitos não-tão-novos mas fundamentais de caracteres, pontos de código e bytes.
@@ -65,21 +66,20 @@ descrevendo como combinar caracteres Unicode para criar bandeiras de países, ba
 O((("Unicode text versus bytes", "characters and Unicode standard", id="UTVchar04"))) conceito de "string" é bem simples: uma string é uma sequência de caracteres.
 O problema está na definição de "caractere".
 
-Em 2023, a melhor definição de "caractere" que temos é um caractere Unicode. Consequentemente, os itens que compõe um `str` do Python 3 são caracteres Unicode, igual aos itens de um objeto `unicode` no Python 2—e não os bytes brutos de uma `str` do Python 2.
+Em 2023, a melhor definição de "caractere" que temos é um caractere Unicode. Consequentemente, os itens que compõe um `str` do Python 3 são caracteres Unicode, como os itens de um objeto `unicode` no Python 2. Em contraste, os itens de uma `str` no Python 2 são bytes, assim como os itens num objeto `bytes` do Python 3.
 
 O padrão Unicode separa explicitamente a identidade dos caracteres de representações binárias específicas:
 
-[role="pagebreak-before less_space"]
-* A identidade de um caractere—((("code points")))seu __ponto de código__&#x2014;é um número de 0 a 1.114.111 (na base 10),
+* A identidade de um caractere é chamada de ((("code points")))ponto de código (__code point__). É um número de 0 a 1.114.111 (na base 10),
 representado no padrão Unicode na forma de 4 a 6 dígitos hexadecimais precedidos pelo prefixo "U+", de U+0000 a U+10FFFF.
-Por exemplo, o ponto de código para a letra A é U+0041, o símbolo do Euro é U+20AC, e o símbolo musical da clave de sol corresponde ao ponto de código U+1D11E.
+Por exemplo, o ponto de código da letra A é U+0041, o símbolo do Euro é U+20AC, e o símbolo musical da clave de sol corresponde ao ponto de código U+1D11E.
 Cerca de 13% dos pontos de código válidos tem caracteres atribuídos a si no Unicode 13.0.0, a versão do padrão usada no Python 3.10.
 * Os bytes específicos que representam um caractere dependem da((("encoding", "definition of"))) codificação (_encoding_) usada.
 Uma codificação, nesse contexto, é um algoritmo que converte pontos de código para sequências de bytes, e vice-versa.
 O ponto de código para a letra A (U+0041) é codificado como um único byte, `\x41`, na codificação UTF-8,
 ou como os bytes `\x41\x00` na codificação UTF-16LE.
-Em um outro exemplo, o UTF-8 exige três bytes&#x2014;`\xe2\x82\xac`&#x2014;para codificar o símbolo do Euro (U+20AC),
-mas no UTF-16LE o mesmo ponto de código é codificado com dois bytes: `\xac\x20`.
+Em um outro exemplo, o UTF-8 exige três bytes para codificar o símbolo do Euro (U+20AC): `\xe2\x82\xac`.
+Mas no UTF-16LE o mesmo ponto de código é U+20AC representado com dois bytes: `\xac\x20`.
 
 Converter pontos de código para bytes é _codificar_;
 converter bytes para pontos de código é((("decoding", "definition of"))) _decodificar_. Veja o <<ex_encode_decode>>.
@@ -123,11 +123,10 @@ Então vale a pena examinar os tipos de sequências binárias antes de avançar 
 
 === Os fundamentos do byte
 
-Os((("Unicode text versus bytes", "byte essentials", id="UTVbytes04"))) novos tipos de sequências binárias são diferentes do `str` do Python 2 de inúmeras formas.
+Os((("Unicode text versus bytes", "byte essentials", id="UTVbytes04"))) novos tipos de sequências binárias são diferentes do `str` do Python 2 em vários aspectos.
 A primeira coisa importante é que existem dois tipos embutidos básicos de((("binary sequences"))) sequências binárias:
 o tipo imutável `bytes`, introduzido no Python 3, e o tipo mutável `bytearray`,
-introduzido há tempos, no Python 2.6footnote:[O Python 2.6 e o 2.7 também tinham um `bytes`, mas ele era só um apelido para o tipo `str`.]. A documentação do Python algumas vezes usa o termo genérico "byte string" (_string de bytes_, na documentação em português) para se referir a `bytes` e `bytearray`.
-Vou evitar essa expressão confusa.
+introduzido há tempos, no Python 2.6footnote:[O Python 2.6 e o 2.7 também tinham um `bytes`, mas ele era só um apelido (_alias_) para o tipo `str`.]. A documentação do Python algumas vezes usa o termo genérico "byte string" (_string de bytes_, na documentação em português) para se referir a `bytes` e `bytearray`.
 
 Cada item em `bytes` ou `bytearray` é um inteiro entre 0 e 255,
 e não uma string de um caractere, como no `str` do Python 2.
@@ -155,13 +154,13 @@ bytearray(b'\xa9')
 <1> `bytes` pode ser criado a partir de uma `str`, dada uma codificação.
 <2> Cada item é um inteiro em `range(256)`.
 <3> Fatias de `bytes` também são `bytes`&#x2014;mesmo fatias de um único byte.
-<4> Não há uma sintaxe literal para `bytearray`: elas aparecem como `bytearray()` com um `bytes` literal como argumento.
+<4> Não há uma sintaxe literal para `bytearray`: elas aparecem como `bytearray()` com um literal `bytes` como argumento.
 <5> Uma fatia de `bytearray` também é uma `bytearray`.
 
 [WARNING]
 ====
-O fato de  `my_bytes[0]` obter um `int` mas `my_bytes[:1]` devolver uma sequência de `bytes` de tamanho 1 só é surpreeendente porque estamos acostumados com o tipo `str` do Python, onde `s[0] == s[:1]`.
-Para todos os outros tipos de sequência no Python, 1 item não é o mesmo que uma fatia de tamanho 1.
+O fato de `my_bytes[0]` obter um `int` mas `my_bytes[:1]` devolver uma sequência de `bytes` de tamanho 1 só é surpreeendente porque estamos acostumados com o tipo `str` do Python, onde `s[0] == s[:1]`.
+Para todos os outros tipos de sequência no Python, um item não é o mesmo que uma fatia de tamanho 1.
 ====
 
 Apesar de sequências binárias serem na verdade sequências de inteiros,
@@ -271,9 +270,10 @@ As codificações apresentadas na <<encodings_demo_fig>> foram escolhidas para m
 
 `utf-8`:: De longe a codificação de 8 bits mais comum na web. Em julho de 2021, o
 pass:[<a href="https://fpy.li/4-5">"W<sup>3</sup>Techs: Usage statistics of character encodings for websites"</a>]
-afirma que 97% dos sites usam UTF-8, um grande avanço sobre os 81,4% de setembro de 2014, quando escrevi a primeira edição desse livro.
+afirma que 97% dos sites usam UTF-8, um grande avanço sobre os 81,4% de setembro de 2014, quando escrevi este capítulo na primeira edição.
 
 `utf-16le`:: Uma forma do esquema de codificação UTF de 16 bits; todas as codificações UTF-16 suportam pontos de código acima de U+FFFF, através de sequências de escape chamadas "pares substitutos".
+
 
 [WARNING]
 ====
@@ -552,7 +552,7 @@ https://docs.python.org/pt-br/3/library/codecs.html#encodings-and-unicode[docume
 Vamos agora ver como tratar arquivos de texto no Python 3.((("", startref="UTVunder04")))((("", startref="Eunderst04")))((("", startref="Dunder04")))
 
 
-=== Porcessando arquivos de texto
+=== Processando arquivos de texto
 
 A((("Unicode text versus bytes", "handling text files", id="UTVtext04")))((("text files, handling", id="Tfile04"))) melhor prática para lidar com E/S de texto é o((("Unicode sandwich"))) "Sanduíche de Unicode" (_Unicode  sandwich_)
 (<<unicode_sandwich_fig>>).footnote:[A primeira vez que vi o termo "Unicode sandwich" (_sanduíche de Unicode_) foi na excelente apresentação de Ned Batchelder, https://fpy.li/4-10["Pragmatic Unicode" (_Unicode pragmático_) (EN)] na US PyCon 2012.]
