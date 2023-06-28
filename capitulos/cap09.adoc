@@ -18,7 +18,7 @@ Houve uma certa quantidade de reclamações sobre a escolha do nome "decorador" 
 ____
 
 Decoradores de função((("decorators and closures", "purpose of"))) nos permitem "marcar" funções no código-fonte, para aprimorar de alguma forma seu comportamento.
-É um mecanismo muito poderoso. Por exemplo, o decorador `@functools.cache` 
+É um mecanismo muito poderoso. Por exemplo, o decorador `@functools.cache`
 armazena um mapeamento de argumentos para resultados,
 e depois usa esse mapeamento para evitar computar novamente o resultado quando a função é chamada com argumentos já vistos. Isso pode acelerar muito uma aplicação.
 
@@ -163,10 +163,10 @@ running f3()
 ----
 
 Observe que `register` roda (duas vezes) antes de qualquer outra função no módulo.
-Quando `register` é chamada, ela recebe o objeto função a ser decorado como argumento—por exemplo,  
+Quando `register` é chamada, ela recebe o objeto função a ser decorado como argumento—por exemplo,
 `<function f1 at 0x100631bf8>`.
 
-Após o carregamento do módulo, a lista `registry` contém 
+Após o carregamento do módulo, a lista `registry` contém
 referências para as duas funções decoradas:
 `f1` e `f2`. Essa funções, bem como `f3`, são executadas apenas quando chamadas explicitamente por `main`.
 
@@ -206,7 +206,7 @@ Eles normalmente fazem isso definindo e devolvendo uma função interna para sub
 E código que usa funções internas quase sempre depende de clausuras para operar corretamente.
 Para entender as clausuras, precisamos dar um passo atrás e revisar como o escopo de variáveis funciona no Python.
 
-=== Regras de escopo de variáveis 
+=== Regras de escopo de variáveis
 
 No((("decorators and closures", "variable scope rules", id="DACvars09")))((("variable scope rules", id="vsr09")))((("scope", "variable scope rules", id="Svsr09"))) <<ex_global_undef>>, definimos e testamos uma função que lê duas variáveis:
 uma variável local `a`—definida como parâmetro de função—e a variável `b`, que não é definida em lugar algum na função.
@@ -265,7 +265,7 @@ UnboundLocalError: local variable 'b' referenced before assignment
 
 Observe que o a saída começa com `3`, provando que o comando `print(a)` foi executado. Mas o segundo, `print(b)`, nunca roda. Quando vi isso pela primeira vez me espantei, pensava que o `6` deveria ser exibido, pois há uma variável global `b`, e a atribuição para a `b` local ocorre após `print(b)`.
 
-Mas o fato é que, quando o Pyhton compila o corpo da função, ele decide que `b` é uma variável local, por ser atribuída dentro da função. O bytecode gerado reflete essa decisão, e tentará obter `b` no escopo local. Mais tarde, quando a chamada `f2(3)` é realizada, o corpo de `f2` obtém e exibe o valor da vairável local `a`, mas ao tentar obter o valor da variável local `b`, descobre que `b` não está vinculado a nada.
+Mas o fato é que, quando o Python compila o corpo da função, ele decide que `b` é uma variável local, por ser atribuída dentro da função. O bytecode gerado reflete essa decisão, e tentará obter `b` no escopo local. Mais tarde, quando a chamada `f2(3)` é realizada, o corpo de `f2` obtém e exibe o valor da vairável local `a`, mas ao tentar obter o valor da variável local `b`, descobre que `b` não está vinculado a nada.
 
 Isso não é um bug, mas uma escolha de projeto: o Python não exige que você declare variáveis, mas assume que uma variável atribuída no corpo de uma função é local. Isso é muito melhor que o comportamento do Javascript, que também não requer declarações de variáveis, mas se você esquecer de declarar uma variável como local (com `var`), pode acabar alterando uma variável global sem nem saber.
 
@@ -333,7 +333,7 @@ A máquina virtual (VM) do CPython que executa o bytecode é uma máquina de _st
 [[closures_sec]]
 === Clausuras
 
-Na((("decorators and closures", "closure basics", id="DACclos09")))((("anonymous functions"))) blogosfera, as clausuras são algumas vezes confundidas com funções anônimas. 
+Na((("decorators and closures", "closure basics", id="DACclos09")))((("anonymous functions"))) blogosfera, as clausuras são algumas vezes confundidas com funções anônimas.
 Muita gente confunde os dois conceitos por causa da história paralela dos dois recursos:
 definir funções dentro de outras funções não é tão comum ou conveniente, até existirem funções anônimas.
 E clausuras só importam a partir do momento em que você tem funções aninhadas.
@@ -476,7 +476,7 @@ Resumindo: uma clausura é uma função que retém os vínculos das variáveis l
 Note que a única situação na qual uma função pode ter de lidar com variáveis externas não-globais é quando ela estiver aninhada dentro de outra função, e aquelas variáveis sejam parte do escopo local da função externa.((("", startref="DACclos09")))
 
 [[nonlocal_sec]]
-=== A declaração nonlocal 
+=== A declaração nonlocal
 
 Nossa((("decorators and closures", "nonlocal declarations", id="DACnonlocal09")))((("nonlocal keyword", id="nonlocal09")))((("keywords", "nonlocal keyword", id="Knon09"))) implementação anterior de `make_averager` não era eficiente. No <<ex_average_fn>>, armazenamos todos os valores na série histórica e calculamos sua `sum` cada vez que `averager` é invocada. Uma implementação melhor armazenaria apenas o total e número de itens até aquele momento, e calcularia a média com esses dois números.
 
@@ -821,7 +821,7 @@ def costly_function(a, b):
     ...
 ----
 
-A outra forma—disponível desde o Python 3.2—é invocá-lo como uma função, 
+A outra forma—disponível desde o Python 3.2—é invocá-lo como uma função,
 com `()`:
 
 [source, python3]
@@ -842,7 +842,7 @@ São eles:
     É assim que o `@functools.cache` funciona.
 
 `typed=False`::
-    Determina se os resultados de diferentes tipos de argumentos devem ser armazenados separadamente, Por exemplo, na configuração default, argumentos inteiros e de ponto flutuante considerados iguais são armazenados apenas uma vez. Assim, haverá apenas uma entrada para as chamadas `f(1)` e `f(1.0)`. 
+    Determina se os resultados de diferentes tipos de argumentos devem ser armazenados separadamente, Por exemplo, na configuração default, argumentos inteiros e de ponto flutuante considerados iguais são armazenados apenas uma vez. Assim, haverá apenas uma entrada para as chamadas `f(1)` e `f(1.0)`.
     Se `typed=True`, aqueles argumentos produziriam registros diferentes, possivelmente armazenando resultados distintos.
 
 Eis um exemplo de invocação de `@lru_cache` com parâmetros diferentes dos defaults:
@@ -917,7 +917,7 @@ O <<singledispatch_ex>> mostra como funciona.
 [WARNING]
 ====
 `functools.singledispatch` existe desde o python 3.4, mas só passou a suportar dicas de tipo no Python 3.7.
-As últimas duas funções no <<singledispatch_ex>> ilustram a sintaxe que funciona em todas as versões do Pyhton desde a 3.4.
+As últimas duas funções no <<singledispatch_ex>> ilustram a sintaxe que funciona em todas as versões do Python desde a 3.4.
 ====
 
 
@@ -938,7 +938,7 @@ include::code/09-closure-deco/htmlizer.py[tags=HTMLIZE]
 <7> Se você não quiser ou não puder adicionar dicas de tipo à função decorada, você pode passar o tipo para o decorador `@«base».register`. Essa sintaxe funciona em Python 3.4 ou posterior.
 <8> O decorador `@«base».register` devolve a função sem decoração, então é possível empilhá-los para registrar dois ou mais tipos na mesma implementação.footnote:[Talvez algum dia seja possível expressar isso com um único `@htmlize.register` sem parâmetros, e uma dica de tipo usando `Union`. Mas quando tentei, o Python gerou um `TypeError` com uma mensagem dizendo que `Union` não é uma classe. Então, apesar da _sintaxe_ da PEP 484 ser suportada, a _semântica_ ainda não chegou lá.]
 
-//// 
+////
 ++++
 
 <div id="singledispatch_ex" data-type="example">
@@ -1010,7 +1010,7 @@ register a new function with a matching type hint in the first parameter.</p></d
 
 Sempre que possível, registre as funções especializadas para tratar ABCs (classes abstratas), tais como `numbers.Integral` e `abc.MutableSequence`, ao invés das implementações concretas como `int` e `list`.
 Isso permite ao seu código suportar uma variedade maior de tipos compatíveis.
-Por exemplo, uma extensão do Python pode fornecer alternativas para o tipo `int` com número fixo de bits como subclasses de `numbers.Integral`.footnote:[NumPy, por exemplo, implementa vários tipos de 
+Por exemplo, uma extensão do Python pode fornecer alternativas para o tipo `int` com número fixo de bits como subclasses de `numbers.Integral`.footnote:[NumPy, por exemplo, implementa vários tipos de
 https://fpy.li/9-3[números inteiros e de ponto flutuante] (EN) em formatos voltados para a arquitetura da máquina.]
 
 [TIP]
@@ -1204,7 +1204,7 @@ A próxima seção traz um exemplo no estilo recomendado por Regebro e Dumpleton
 
 ==== Um decorador de cronometragem em forma de classe
 
-Como((("clock decorators", "class-based"))) um último exemplo, o <<clockdeco_param_cls_ex>> mostra a implementação de um decorador parametrizado `clock`, programado como uma classe com `+__call__+`. 
+Como((("clock decorators", "class-based"))) um último exemplo, o <<clockdeco_param_cls_ex>> mostra a implementação de um decorador parametrizado `clock`, programado como uma classe com `+__call__+`.
 Compare o <<clockdeco_param_ex>> com o <<clockdeco_param_cls_ex>>.
 Qual você prefere?
 
