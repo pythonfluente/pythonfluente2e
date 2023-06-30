@@ -68,7 +68,7 @@ Quando você chama uma função, o código que origina a chamada fica bloqueado 
 Então você sabe que a função terminou, e pode facilmente acessar o valor devolvido por ela.
 Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para tratar o erro.
 
-Essas opções não existem quando você inicia threads ou um processos:
+Essas opções não existem quando você inicia threads ou um processo:
 você não sabe automaticamente quando eles terminaram,
 e obter os resultados ou os erros requer criar algum canal de comunicação, tal como uma fila de mensagens.
 
@@ -172,7 +172,7 @@ Veja((("concurrency models", "Python programming concepts", id="CMconcepts19")))
 
 . Cada instância do interpretador Python é um processo. Você pode iniciar processos Python adicionais usando as bibliotecas _multiprocessing_ ou _concurrent.futures_. A biblioteca _subprocess_ do Python foi projetada para rodar programas externos, independente das linguagens usadas para escrever tais programas.
 
-. O interpretador Python usa um única thread para rodar o programa do usuário e o coletor de lixo da memória. Você pode iniciar threads Python adicionais usando as bibliotecas _threading_ ou _concurrent.futures_.
+. O interpretador Python usa uma única thread para rodar o programa do usuário e o coletor de lixo da memória. Você pode iniciar threads Python adicionais usando as bibliotecas _threading_ ou _concurrent.futures_.
 
 . O acesso à contagem de referências a objetos e outros estados internos do interpretador é controlado por uma trava,
 a((("Global Interpreter Lock (GIL)"))) Global Interpreter Lock (GIL) ou _Trava Global do Interpretador_.
@@ -182,7 +182,7 @@ Isso significa que apenas uma thread pode executar código Python a cada momento
 . Para evitar que uma thread do Python segure a GIL indefinidamente, o interpretador de bytecode do Python pausa a thread Python corrente a cada 5ms por default,footnote:[Chame https://docs.python.org/pt-br/3/library/sys.html#sys.getswitchinterval[`sys.getswitchinterval()`] para obter o intervalo; ele pode ser modificado com https://docs.python.org/pt-br/3/library/sys.html#sys.setswitchinterval[`sys.setswitchinterval(s)`].] liberando a GIL.
 A thread pode então tentar readquirir a GIL, mas se existirem outras threads esperando, o agendador do SO pode escolher uma delas para continuar.
 
-. Quando escrevemos código Python, não temos controle sobre a GIL. Mas uma função embutida ou um extensão escrita em C—ou qualquer linguagem que trabalhe no nível da API Python/C—pode liberar a GIL enquanto estiver rodando alguma tarefa longa.
+. Quando escrevemos código Python, não temos controle sobre a GIL. Mas uma função embutida ou uma extensão escrita em C—ou qualquer linguagem que trabalhe no nível da API Python/C—pode liberar a GIL enquanto estiver rodando alguma tarefa longa.
 
 . Toda função na biblioteca padrão do Python que executa uma syscallfootnote:[Uma syscall é uma chamada a partir do código do usuário para uma função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para aprender mais sobre esse tópico, leia o artigo https://pt.wikipedia.org/wiki/Chamada_de_sistema["Chamada de sistema"] na Wikipedia.] libera a GIL. Isso inclui todas as funções que executam operações de escrita e leitura em disco, escrita e leitura na rede, e `time.sleep()`. Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as funções de compressão e descompressão dos módulos `zlib` and `bz2`, também liberam a GIL.footnote:[Os módulos `zlib` e `bz2` são mencionados nominalmente em uma https://fpy.li/19-6[mensagem de Antoine Pitrou na python-dev] (EN). Pitrou contribuiu para a lógica da divisão de tempo da GIL no Python 3.2.]
 
@@ -208,7 +208,7 @@ O parágrafo anterior começa com "Detalhe de implementação do CPython" porque
 
 [NOTE]
 ====
-Essa seção não mencionou corrotinas, pois por default elas compartilham a mesma thread Python entre si e com o loop de evento supervisor fornecido por uma framework assíncrona. Assim, a GIL não as afeta.
+Essa seção não mencionou corrotinas, pois por default elas compartilham a mesma thread Python entre si e com o loop de eventos supervisor fornecido por uma framework assíncrona. Assim, a GIL não as afeta.
 É possível usar múltiplas threads em um programa assíncrono, mas a melhor prática é ter uma thread rodando o loop de eventos e todas as corrotinas, enquanto as threads adicionais executam tarefas específicas.
 Isso será explicado na <<delegating_to_executors_sec>>.
 ====
@@ -696,7 +696,7 @@ O <<futures_ch>> apresenta uma forma mais simples de distribuir tarefas para pro
 um `ProcessPoolExecutor` do pacote `concurrent.futures`, que internamente usa filas.
 ====
 
-Nessa seção vamos escrever programas para verificar se os números dentro de uma amostra de 20 inteiros são primos. O números variam de 2 até 9.999.999.999.999.999—isto é, 10^16^ &ndash; 1, ou mais de 2^53^.
+Nessa seção vamos escrever programas para verificar se os números dentro de uma amostra de 20 inteiros são primos. Os números variam de 2 até 9.999.999.999.999.999—isto é, 10^16^ &ndash; 1, ou mais de 2^53^.
 A amostra inclui números primos pequenos e grandes, bem como números compostos com fatores primos grandes e pequenos.
 
 O((("sequential.py program"))) programa _sequential.py_ fornece a linha base de desempenho.
@@ -940,13 +940,13 @@ Também((("process pools", "thread-based nonsolution")))((("threads", "thread-ba
 como invalidar os caches da CPU e talvez até trocar páginas de memória.
 footnote:[Para saber mais, consulte https://pt.wikipedia.org/wiki/Troca_de_contexto["Troca de contexto"] na Wikipedia.]
 
-Os dois próximos capítulos tratam de mais temas ligados à programação concorrente em Python, usando o biblioteca de alto nível _concurrent.futures_ para gerenciar threads e processos (<<futures_ch>>) e a biblioteca _asyncio_ para programação assíncrona (<<async_ch>>).
+Os dois próximos capítulos tratam de mais temas ligados à programação concorrente em Python, usando a biblioteca de alto nível _concurrent.futures_ para gerenciar threads e processos (<<futures_ch>>) e a biblioteca _asyncio_ para programação assíncrona (<<async_ch>>).
 
 As((("", startref="CMprocess19"))) demais seções nesse capítulo procuram responder à questão:
 
 [quote]
 ____
-Dadas as limitações discutidas até aqui, como é possível que o Python seja tão bem sucedido em um mundo de CPUs com múltiplos núcleos?
+Dadas as limitações discutidas até aqui, como é possível que o Python seja tão bem-sucedido em um mundo de CPUs com múltiplos núcleos?
 ____
 
 
@@ -1049,14 +1049,14 @@ Estes são apenas alguns exemplos para ilustrar como a comunidade de ciência de
 ==== Desenvolvimento de aplicações server-side para Web/Computação Móvel
 
 O((("multicore processing", "server-side web/mobile development")))((("server-side web/mobile development")))((("web/mobile development"))) Python é largamente utilizado em aplicações Web e em APIs de apoio a aplicações para computação móvel no servidor.
-Como o Google, o YouTube, o Dropbox, o Instagram, o Quora, e o Reddit—entre outros—conseguiram desenvolver aplicações de servidor em Python que atendem centenas de milhões de usuários 24X7? Novamente a resposta vai bem além do que o Python fornece "de fábrica."
+Como o Google, o YouTube, o Dropbox, o Instagram, o Quora, e o Reddit—entre outros—conseguiram desenvolver aplicações de servidor em Python que atendem centenas de milhões de usuários 24X7? Novamente a resposta vai bem além do que o Python fornece "de fábrica".
 Antes de discutir as ferramentas necessárias para usar o Python larga escala, preciso citar uma advertência da _Technology Radar_ da Thoughtworks:
 
 [quote]
 ____
 *Inveja de alto desempenho/inveja de escala da web*
 
-Vemos muitas equipes se metendo em apuros por escolher ferramentas, frameworks ou arquiteturas complexas, porque eles "talvez precisem de escalabilidade."
+Vemos muitas equipes se metendo em apuros por escolher ferramentas, frameworks ou arquiteturas complexas, porque eles "talvez precisem de escalabilidade".
 Empresas como o Twitter e a Netflix precisam aguentar cargas extremas, então precisam dessas arquiteturas, mas elas também tem equipes de desenvolvimento extremamente habilitadas, capazes de lidar com a complexidade.
 A maioria das situações não exige essas façanhas de engenharia; as equipes devem manter sua _inveja da escalabilidade na web_ sob controle, e preferir soluções simples que ainda assim fazem o que precisa ser feito.footnote:[Fonte: Thoughtworks Technology Advisory Board, https://fpy.li/19-40[_Technology Radar_&mdash;November 2015] (EN).]
 ____
@@ -1289,9 +1289,9 @@ mas mesmo os fáceis são desafiadores.
 
 Se((("Global Interpreter Lock (GIL)"))) você ficou curioso sobre a GIL, lembre-se que não temos qualquer controle sobre ela a partir do código em Python, então a referência canônica é a documentação da C-API:
 https://fpy.li/19-60[_Thread State and the Global Interpreter Lock_] (EN) (_O Estado das Threads e a Trava Global do Interpretador_).
-As resposta no FAQ _Python Library and Extension_ (_A Biblioteca e as Extensões do Python_):
+A resposta no FAQ _Python Library and Extension_ (_A Biblioteca e as Extensões do Python_):
 https://docs.python.org/pt-br/3/faq/library.html#can-t-we-get-rid-of-the-global-interpreter-lock[_"Can’t we get rid of the Global Interpreter Lock?"_] (_Não podemos remover o Bloqueio Global do interpretador?_).
-Também vale a pena ler os post de Guido van Rossum e Jesse Noller (contribuidor do pacote `multiprocessing`), respectivamente:
+Também vale a pena ler os posts de Guido van Rossum e Jesse Noller (contribuidor do pacote `multiprocessing`), respectivamente:
 https://fpy.li/19-62["It isn't Easy to Remove the GIL"] (_Não é Fácil Remover a GIL_) e
 https://fpy.li/19-63["Python Threads and the Global Interpreter Lock"] (_As Threads do Python e a Trava Global do Interpretador_).
 
@@ -1401,7 +1401,7 @@ Resta o fato de que o Erlang remove muitas dificuldades acidentais no desenvolvi
 Então será mais fácil se vocês usarem Erlang ou uma linguagem rodando na máquina virtual Erlang.
 ____
 
-Aquele workshop foi baseado nos últimas quatro capítulos do
+Aquele workshop foi baseado nos últimos quatro capítulos do
 https://fpy.li/19-100[_Designing for Scalability with Erlang/OTP_]
 de Francesco Cesarini e Steve Vinoski (O'Reilly).
 
