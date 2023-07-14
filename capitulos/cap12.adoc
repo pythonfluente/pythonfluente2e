@@ -41,7 +41,7 @@ Vamos começar.
 
 === Vector: Um tipo sequência definido pelo usuário
 
-Nossa((("sequences, special methods for", "Vector implementation strategy")))((("Vector class, multidimensional", "implementation strategy"))) estratégia na implementação de `Vector` será usar composição, não herança. Vamos armazenar os componentes em uma array de números de ponto flutuante, e implementar os métodos necessários para que nossa classe `Vector` se comporte como uma sequência plana imutável.
+Nossa((("sequences, special methods for", "Vector implementation strategy")))((("Vector class, multidimensional", "implementation strategy"))) estratégia na implementação de `Vector` será usar composição, não herança. Vamos armazenar os componentes em um array de números de ponto flutuante, e implementar os métodos necessários para que nossa classe `Vector` se comporte como uma sequência plana imutável.
 
 Mas antes de implementar os métodos de sequência, vamos desenvolver uma implementação básica de `Vector` compatível com nossa classe `Vector2d`, vista anteriormente--exceto onde tal compatibilidade não fizer sentido.
 
@@ -103,7 +103,7 @@ include::code/12-seq-hacking/vector_v1.py[tags=VECTOR_V1]
 
 O modo como usei `reprlib.repr` pede alguma elaboração. Essa função produz representações seguras de estruturas grandes ou recursivas, limitando a tamanho da string devolvida e marcando o corte com `'...'`. Eu queria que o `repr` de um `Vector` se parecesse com `Vector([3.0, 4.0, 5.0])` e não com `Vector(array('d', [3.0, 4.0, 5.0]))`, porque a existência de uma `array` dentro de um `Vector` é um detalhe de implementação. Como essas chamadas ao construtor criam objetos `Vector` idênticos, preferi a sintaxe mais simples, usando um argumento `list`.
 
-Ao escrever o `+__repr__+`, poderia ter produzido uma versão para exibição simplificada de `components` com essa expressão: `reprlib.repr(list(self._components))`. Isso, entretanto, geraria algum desperdício, pois eu estaria copiando cada item de `self._components` para uma `list` apenas para usar a `list` no `repr`. Em vez disso, decidi aplicar `reprlib.repr` diretamente na array `self._components`, e então remover os caracteres fora dos `[]`. É isso o que faz a segunda linha do
+Ao escrever o `+__repr__+`, poderia ter produzido uma versão para exibição simplificada de `components` com essa expressão: `reprlib.repr(list(self._components))`. Isso, entretanto, geraria algum desperdício, pois eu estaria copiando cada item de `self._components` para uma `list` apenas para usar a `list` no `repr`. Em vez disso, decidi aplicar `reprlib.repr` diretamente no array `self._components`, e então remover os caracteres fora dos `[]`. É isso o que faz a segunda linha do
 `+__repr__+` no <<ex_vector_v1>>.
 
 [TIP]
@@ -161,7 +161,7 @@ Vamos agora implementar o protocolo sequência em `Vector`, primeiro sem suporte
 [[sliceable_sequence]]
 === Vector versão #2: Uma sequência fatiável
 
-Como((("Vector class, multidimensional", "sliceable sequences", id="VCMslice12")))((("sequences, special methods for", "sliceable sequences", id="SSMslice12")))((("slicing", "sliceable sequences", id="Sslseq12")))((("&#x005F;&#x005F;len&#x005F;&#x005F;", id="len12")))((("&#x005F;&#x005F;getitem&#x005F;&#x005F;", id="getitem12"))) vimos no exemplo da classe `FrenchDeck`, suportar o protocolo de sequência é muito fácil se você puder delegar para um atributo sequência em seu objeto, como nossa array `self._components`. Esses `+__len__+` e `+__getitem__+` de uma linha são um bom começo:
+Como((("Vector class, multidimensional", "sliceable sequences", id="VCMslice12")))((("sequences, special methods for", "sliceable sequences", id="SSMslice12")))((("slicing", "sliceable sequences", id="Sslseq12")))((("&#x005F;&#x005F;len&#x005F;&#x005F;", id="len12")))((("&#x005F;&#x005F;getitem&#x005F;&#x005F;", id="getitem12"))) vimos no exemplo da classe `FrenchDeck`, suportar o protocolo de sequência é muito fácil se você puder delegar para um atributo sequência em seu objeto, como nosso array `self._components`. Esses `+__len__+` e `+__getitem__+` de uma linha são um bom começo:
 
 [source, python3]
 ----
@@ -294,7 +294,7 @@ include::code/12-seq-hacking/vector_v2.py[tags=VECTOR_V2]
 ====
 <1> Se o argumento `key` é uma `slice`...
 <2> ...obtém a classe da instância (isto é, `Vector`) e...
-<3> ...invoca a classe para criar outra instância de `Vector` a partir de uma fatia da array `_components`.
+<3> ...invoca a classe para criar outra instância de `Vector` a partir de uma fatia do array `_components`.
 <4> Se podemos obter um `index` de `key`...
 <5> ...devolve o item específico de `_components`.
 
@@ -387,7 +387,7 @@ Vector([0.0, 1.0, 2.0, 3.0, 4.0])  # <4>
 <4> Entretanto, os componentes do vetor não mudam.
 
 Você consegue explicar o que está acontecendo?
-Em especial, por que `v.x` devolve `10` na segunda consulta (<3>), se aquele valor não está presente na array de componentes do vetor?
+Em especial, por que `v.x` devolve `10` na segunda consulta (<3>), se aquele valor não está presente no array de componentes do vetor?
 Se você não souber responder de imediato, estude a explicação de `+__getattr__+` que aparece logo antes do <<ex_vector_v3_getattr>>.
 A razão é um pouco sutil, mas é um alicerce fundamental para entender grande parte do que veremos mais tarde no livro.
 
@@ -707,7 +707,7 @@ Aqui estão algumas amostras do formato de coordenadas esféricas em 4D, retirad
 '<1.00000, 1.57080, 0.00000, 0.00000>'
 ----
 
-Antes de podermos implementar as pequenas mudanças necessárias em `+__format__+`, precisamos escrever um par de métodos de apoio: `angle(n)`, para computar uma das coordenadas angulares (por exemplo, Φ₁), e `angles()`, para devolver um iterável com todas as coordenadas angulares. Não vou descrever a matemática aqui; se você tiver curiosidade, a página https://fpy.li/nsphere[“_n_-sphere”] (EN: ver Nota 6) da Wikipedia contém as fórmulas que usei para calcular coordenadas esféricas a partir das coordendas cartesianas na array de componentes de `Vector`.
+Antes de podermos implementar as pequenas mudanças necessárias em `+__format__+`, precisamos escrever um par de métodos de apoio: `angle(n)`, para computar uma das coordenadas angulares (por exemplo, Φ₁), e `angles()`, para devolver um iterável com todas as coordenadas angulares. Não vou descrever a matemática aqui; se você tiver curiosidade, a página https://fpy.li/nsphere[“_n_-sphere”] (EN: ver Nota 6) da Wikipedia contém as fórmulas que usei para calcular coordenadas esféricas a partir das coordendas cartesianas no array de componentes de `Vector`.
 
 O <<ex_vector_v5>> é a listagem completa de _vector_v5.py_, consolidando tudo que implementamos desde a seção <<vector_take1_sec>>, e acrescentando a formatação personalizada
 
