@@ -22,7 +22,7 @@ Decoradores de função((("decorators and closures", "purpose of"))) nos permite
 armazena um mapeamento de argumentos para resultados,
 e depois usa esse mapeamento para evitar computar novamente o resultado quando a função é chamada com argumentos já vistos. Isso pode acelerar muito uma aplicação.
 
-Mas para dominar esse recurso é preciso antes entender clausuras (_closures_)—o nome dado à estrutura onde uma função captura variáveis presentes no escopo onde a função é definida, necessárias para a execução da função futuramente.footnote:[NT: Adotamos a tradução "clausura" para "closure". Alguns autores usam "fechamento". O termo em inglês é pronunciado "clôujure", e o nome da linguagem Clojure brinca com esse fato. Gosto da palavra clausura por uma analogia cultural. Em conventos, a clausura é um espaço fechado onde algumas freiras vivem isoladas. Suas memórias são seu único vínculo com o exterior, mas elas refletem o mundo do passado. Em programação, uma clausura é um espaço isolado onde a função tem acesso a variáves que existiam quando a própria função foi criada, variáveis de um escopo que não existe mais, preservadas apenas na memória clausura.]
+Mas para dominar esse recurso é preciso antes entender clausuras (_closures_)—o nome dado à estrutura onde uma função captura variáveis presentes no escopo onde a função é definida, necessárias para a execução da função futuramente.footnote:[NT: Adotamos a tradução "clausura" para "closure". Alguns autores usam "fechamento". O termo em inglês é pronunciado "clôujure", e o nome da linguagem Clojure brinca com esse fato. Gosto da palavra clausura por uma analogia cultural. Em conventos, a clausura é um espaço fechado onde algumas freiras vivem isoladas. Suas memórias são seu único vínculo com o exterior, mas elas refletem o mundo do passado. Em programação, uma clausura é um espaço isolado onde a função tem acesso a variáveis que existiam quando a própria função foi criada, variáveis de um escopo que não existe mais, preservadas apenas na memória clausura.]
 
 A palavra reservada mais obscura do Python é `nonlocal`, introduzida no Python 3.0.
 É perfeitamente possível ter uma vida produtiva e lucrativa programando em Python sem jamais usá-la,
@@ -124,7 +124,7 @@ Três fatos essenciais nos dão um bom resumo dos decoradores:
 * Um decorador pode substituir a função decorada por outra, diferente.
 * Decoradores são executados imediatamente quando um módulo é carregado.
 
-Vamos agora nos concentrar nesse terceito ponto.((("", startref="DACbasic09")))
+Vamos agora nos concentrar nesse terceiro ponto.((("", startref="DACbasic09")))
 
 
 === Quando o Python executa decoradores
@@ -212,7 +212,7 @@ No((("decorators and closures", "variable scope rules", id="DACvars09")))((("var
 uma variável local `a`—definida como parâmetro de função—e a variável `b`, que não é definida em lugar algum na função.
 
 [[ex_global_undef]]
-.Função lendo uma vairável local e uma variável global
+.Função lendo uma variável local e uma variável global
 ====
 [source, pycon]
 ----
@@ -265,7 +265,7 @@ UnboundLocalError: local variable 'b' referenced before assignment
 
 Observe que o a saída começa com `3`, provando que o comando `print(a)` foi executado. Mas o segundo, `print(b)`, nunca roda. Quando vi isso pela primeira vez me espantei, pensava que o `6` deveria ser exibido, pois há uma variável global `b`, e a atribuição para a `b` local ocorre após `print(b)`.
 
-Mas o fato é que, quando o Python compila o corpo da função, ele decide que `b` é uma variável local, por ser atribuída dentro da função. O bytecode gerado reflete essa decisão, e tentará obter `b` no escopo local. Mais tarde, quando a chamada `f2(3)` é realizada, o corpo de `f2` obtém e exibe o valor da vairável local `a`, mas ao tentar obter o valor da variável local `b`, descobre que `b` não está vinculado a nada.
+Mas o fato é que, quando o Python compila o corpo da função, ele decide que `b` é uma variável local, por ser atribuída dentro da função. O bytecode gerado reflete essa decisão, e tentará obter `b` no escopo local. Mais tarde, quando a chamada `f2(3)` é realizada, o corpo de `f2` obtém e exibe o valor da variável local `a`, mas ao tentar obter o valor da variável local `b`, descobre que `b` não está vinculado a nada.
 
 Isso não é um bug, mas uma escolha de projeto: o Python não exige que você declare variáveis, mas assume que uma variável atribuída no corpo de uma função é local. Isso é muito melhor que o comportamento do Javascript, que também não requer declarações de variáveis, mas se você esquecer de declarar uma variável como local (com `var`), pode acabar alterando uma variável global sem nem saber.
 
@@ -518,7 +518,7 @@ Não tivemos esse problema no <<ex_average_fn>>, porque nunca atribuimos nada ao
 
 Mas com tipos imutáveis, como números, strings, tuplas, etc., só é possível ler, nunca atualizar. Se você tentar revinculá-las, como em `count = count + 1`, estará criando implicitamente uma variável local `count`. Ela não será mais uma variável livre, e assim não será armazenada na clausura.
 
-A palavra reservada `nonlocal` foi introduzida no Python 3 para contornar esse problema. Ela permite declarar uma variável como variável livre, mesmo quando ela for atribuida dentro da função. Se um novo valor é atribuído a uma variável `nonlocal`, o vínculo armazenado na clausura é modificado. Uma implemetação correta da nossa última versão de `make_averager` se pareceria com o <<ex_average_fixed>>.
+A palavra reservada `nonlocal` foi introduzida no Python 3 para contornar esse problema. Ela permite declarar uma variável como variável livre, mesmo quando ela for atribuída dentro da função. Se um novo valor é atribuído a uma variável `nonlocal`, o vínculo armazenado na clausura é modificado. Uma implemetação correta da nossa última versão de `make_averager` se pareceria com o <<ex_average_fixed>>.
 
 [[ex_average_fixed]]
 .Calcula uma média contínua sem manter todo o histórico (corrigida com o uso de `nonlocal`)
@@ -548,7 +548,7 @@ Quando((("variables", "lookup logic"))) uma função é definida, o compilador d
 
 * Se há uma declaração `global x`, `x` vem de e é atribuída à variável global `x` do módulo.footnote:[O Python não tem um escopo global de programa, apenas escopos globais de módulos.]
 * Se há uma declaração `nonlocal x`, `x` vem de e atribuída à variável local `x` na função circundante mais próxima de onde `x` for definida.
-* Se `x` é um parâmetro ou tem um valor atribuido a si no corpo da função, então `x` é uma variável local.
+* Se `x` é um parâmetro ou tem um valor atribuído a si no corpo da função, então `x` é uma variável local.
 * Se `x` é referenciada mas não atribuída, e não é um parâmetro:
 ** `x` será procurada nos escopos locais do corpos das funções circundantes (os escopos _nonlocal_).
 ** Se `x` não for encontrada nos escopos circundantes, será lida do escopo global do módulo.
@@ -806,7 +806,7 @@ Para processos de longa duração, recomendo usar `functools.lru_cache` com um p
 
 O((("functools module", "functools.lru_cache function"))) decorador `functools.cache` é, na realidade, um mero invólucro em torno da antiga função `functools.lru_cache`, que é mais flexível e também compatível com o Python 3.8 e outras versões anteriores.
 
-A maior vantagem de `@lru_cache` é a possibilidadae de limitar seu uso de memória através do parâmetro `maxsize`, que tem um default bastante conservador de 128—significando que o cache pode manter no máximo 128 registros simultâneos.
+A maior vantagem de `@lru_cache` é a possibilidade de limitar seu uso de memória através do parâmetro `maxsize`, que tem um default bastante conservador de 128—significando que o cache pode manter no máximo 128 registros simultâneos.
 
 LRU((("Least Recently Used (LRU)"))) é a sigla de _Least Recently Used_ (NT: literalmente "Usado Menos Recentemente"),
 significando que registros mais antigos, que há algum tempo não são lidos, são descartados para dar lugar a novos itens.
@@ -1139,7 +1139,7 @@ include::code/09-closure-deco/clock/clockdeco_param.py[tags=CLOCKDECO_PARAM]
 <4> `_result` é o resultado efetivo da função decorada.
 <5> `_args` mantém os verdadeiros argumentos de `clocked`, enquanto `args` é a `str` usada para exibição.
 <6> `result` é a `str` que representa `_result`, para exibição.
-<7> Usar `**locals()` aqui permite que qualquer variável local de `clocked` seja referenciada em `fmt`.footnote:[O revisor técnico Miroslav Šedivý observou: "Isso também quer dizer que analisadores de código-fonte (_linters_) vão reclamar de váriáveis não utilizadas, pois eles tendem a ignorar o uso de `locals()`." Sim, esse é mais um exemplo de como ferramentas estáticas de verificação desencorajam o uso dos recursos dinâmicos do Python que primeiro me atraíram (e a incontáveis outros programadores) na linguagem. Para fazer o _linter_ feliz, eu poderia escrever cada variável local duas vezes na chamada: pass:[<code>fmt.format(elapsed=&#x200b;elapsed, name=name, args=args, result=result)</code>]. Prefiro não fazer isso. Se você usa ferramentas estáticas de verificação, é importante saber quando ignorá-las.]
+<7> Usar `**locals()` aqui permite que qualquer variável local de `clocked` seja referenciada em `fmt`.footnote:[O revisor técnico Miroslav Šedivý observou: "Isso também quer dizer que analisadores de código-fonte (_linters_) vão reclamar de variáveis não utilizadas, pois eles tendem a ignorar o uso de `locals()`." Sim, esse é mais um exemplo de como ferramentas estáticas de verificação desencorajam o uso dos recursos dinâmicos do Python que primeiro me atraíram (e a incontáveis outros programadores) na linguagem. Para fazer o _linter_ feliz, eu poderia escrever cada variável local duas vezes na chamada: pass:[<code>fmt.format(elapsed=&#x200b;elapsed, name=name, args=args, result=result)</code>]. Prefiro não fazer isso. Se você usa ferramentas estáticas de verificação, é importante saber quando ignorá-las.]
 <8> `clocked` vai substituir a função decorada, então ela deve devolver o mesmo que aquela função devolve.
 <9> `decorate` devolve `clocked`.
 <10> `clock` devolve `decorate`.

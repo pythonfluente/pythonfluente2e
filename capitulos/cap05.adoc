@@ -173,9 +173,9 @@ No método `+__init__+` gerado por `typing.NamedTuple`, os campos aparecem como 
 
 Assim como `typing.NamedTuple`, o decorador `dataclass` suporta a sintaxe da https://fpy.li/pep526[PEP 526] (EN) para declarar atributos de instância.
 O decorador lê as anotações das variáveis e gera métodos automaticamente para sua classe.
-Como comparação, veja a classe `Coordinate` equivante escrita com a ajuda do decorador `dataclass`, como mostra o <<coord_dataclas_ex>>.
+Como comparação, veja a classe `Coordinate` equivante escrita com a ajuda do decorador `dataclass`, como mostra o <<coord_dataclass_ex>>.
 
-[[coord_dataclas_ex]]
+[[coord_dataclass_ex]]
 ._dataclass/coordinates.py_
 ====
 [source, py]
@@ -184,9 +184,9 @@ include::code/05-data-classes/dataclass/coordinates.py[tags=COORDINATE]
 ----
 ====
 
-Observe que o corpo das classes no <<coord_tuple_ex>> e no <<coord_dataclas_ex>> são idênticos—a diferença está na própria declaração `class`.
+Observe que o corpo das classes no <<coord_tuple_ex>> e no <<coord_dataclass_ex>> são idênticos—a diferença está na própria declaração `class`.
 O decorador `@dataclass` não depende de herança ou de uma metaclasse, então não deve interferir no uso desses mecanismos pelo usuário.footnote:[Decoradores de classe são discutidos no <<class_metaprog>>, na seção "Metaprogramação de classes", junto com as metaclasses. Ambos são formas de personalizar o comportamento de uma classe além do que seria possível com herança.]
-A classe `Coordinate` no <<coord_dataclas_ex>> é uma subclasse de `object`.((("", startref="DCBover05")))
+A classe `Coordinate` no <<coord_dataclass_ex>> é uma subclasse de `object`.((("", startref="DCBover05")))
 
 [[dc_main_features_sec]]
 ==== Principais recursos
@@ -224,7 +224,7 @@ Vamos agora detalhar aqueles recursos principais.
 
 ===== Instâncias mutáveis
 
-A diferença fundamental entre essas três fábricas de classes é que `collections.namedtuple` e `typing.NamedTuple` criam subclasses de `tuple`, e portanto as instâncias são imutáveis. Por default, `@dataclass` produz classes mutáveis. Mas o decorador aceita o argumento nomeado `frozen`—que aparece no <<coord_dataclas_ex>>. Quando `frozen=True`, a classe vai gerar uma exceção se você tentar atribuir um valor a um campo após a instância ter sido inicializada.
+A diferença fundamental entre essas três fábricas de classes é que `collections.namedtuple` e `typing.NamedTuple` criam subclasses de `tuple`, e portanto as instâncias são imutáveis. Por default, `@dataclass` produz classes mutáveis. Mas o decorador aceita o argumento nomeado `frozen`—que aparece no <<coord_dataclass_ex>>. Quando `frozen=True`, a classe vai gerar uma exceção se você tentar atribuir um valor a um campo após a instância ter sido inicializada.
 
 
 [[class_syntax_feature]]
@@ -246,7 +246,7 @@ Você pode obter os mesmos metadados em uma classe decorada com `dataclass` usan
 
 ===== Obter os tipos dos campos
 
-Classses definidas com a ajuda de `typing.NamedTuple` e `@dataclass` contêm um mapeamento dos nomes dos campos para seus tipos, o atributo de classe `+__annotations__+`.
+Classes definidas com a ajuda de `typing.NamedTuple` e `@dataclass` contêm um mapeamento dos nomes dos campos para seus tipos, o atributo de classe `+__annotations__+`.
 Como já mencionado, use a função `typing.get_type_hints` em vez de ler diretamente de 
 `+__annotations__+`.
 
@@ -274,7 +274,7 @@ Classes criadas com `namedtuple` podem ser usadas onde quer que uma tupla seja n
 Cada instância de uma classe criada por `namedtuple` usa exatamente a mesma quantidade de memória usada por uma tupla, pois os nomes dos campos são armazenados na classe.
 ====
 
-O <<ex_named_tuple_1>> mostra como poderiámos definir uma tupla nomeada para manter informações sobre uma cidade.
+O <<ex_named_tuple_1>> mostra como Poderíamos definir uma tupla nomeada para manter informações sobre uma cidade.
 
 [[ex_named_tuple_1]]
 .Definindo e usando um tipo tupla nomeada
@@ -295,7 +295,7 @@ City(name='Tokyo', country='JP', population=36.933, coordinates=(35.689722,
 'JP'
 ----
 ====
-<1> São necessários dois parâmetros para criar uma tupla nomeada: um nome de classe e uma lista de nomes de campos, que podem ser passados como um iterável de strings ou como uma úníca string com os nomes delimitados por espaços.
+<1> São necessários dois parâmetros para criar uma tupla nomeada: um nome de classe e uma lista de nomes de campos, que podem ser passados como um iterável de strings ou como uma única string com os nomes delimitados por espaços.
 <2> Na inicializaçòa de uma instância, os valores dos campos devem ser passados como argumentos posicionais separados (uma `tuple`, por outro lado, é inicializada com um único iterável)
 <3> É possível acessar os campos por nome ou por posição.
 
@@ -719,7 +719,7 @@ Até((("data class builders", "@dataclass", id="DCBatdataclass05")))((("@datacla
               unsafe_hash=False, frozen=False)
 ----
 
-O `*` na primeira posição aignifica que os parâmetros restantes são todos parâmetros nomeados. A <<dataclass_options_tbl>> os descreve.
+O `*` na primeira posição significa que os parâmetros restantes são todos parâmetros nomeados. A <<dataclass_options_tbl>> os descreve.
 
 [[dataclass_options_tbl]]
 .Parâmetros nomeados aceitos pelo decorador `@dataclass`
@@ -777,7 +777,7 @@ O Python não permite parâmetros sem um default após parâmetros com defaults.
 Então, após declarar um campo com um valor default, cada um dos campos seguintes deve também ter um default.
 
 Valores default mutáveis são a fonte mais comum de bugs entre desenvolvedores Python iniciantes.
-Em definições de função, um valor default mutável é facilmente corrompido, quando uma invocação da função modifica o default, mudando o comportamente nas invocações posteriores—um tópico que vamos explorar na seção <<mutable_default_parameter_sec>> (no <<mutability_and_references>>).
+Em definições de função, um valor default mutável é facilmente corrompido, quando uma invocação da função modifica o default, mudando o comportamento nas invocações posteriores—um tópico que vamos explorar na seção <<mutable_default_parameter_sec>> (no <<mutability_and_references>>).
 Atributos de classe são frequentemente usados como valores default de atributos para instâncias, inclusive em classes de dados.
 E o `@dataclass` usa os valores default nas dicas de tipo para gerar parâmetros com defaults no 
 `+__init__+`.
@@ -818,7 +818,7 @@ include::code/05-data-classes/dataclass/club.py[]
 
 No campo `guests` do <<club_ex>>, em vez de uma lista literal, o valor default é definido chamando a função `dataclasses.field` com `default_factory=list`.
 
-O parâmtero `default_factory` permite que você forneça uma função, classe ou qualquer outro invocável, que será chamado com zero argumentos, para gerar um valor default a cada vez que uma instância da classe de dados for criada. Dessa forma, cada instância de `ClubMember` terá sua própria `list`—ao invés de todas as instâncias compartilharem a mesma `list` da classe, que raramente é o que queremos, e muitas vezes é um bug.
+O parâmetro `default_factory` permite que você forneça uma função, classe ou qualquer outro invocável, que será chamado com zero argumentos, para gerar um valor default a cada vez que uma instância da classe de dados for criada. Dessa forma, cada instância de `ClubMember` terá sua própria `list`—ao invés de todas as instâncias compartilharem a mesma `list` da classe, que raramente é o que queremos, e muitas vezes é um bug.
 
 [WARNING]
 ====
