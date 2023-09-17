@@ -115,7 +115,7 @@ include::code/23-descriptor/bulkfood/bulkfood_v3.py[tags=LINEITEM_QUANTITY_V3]
 ====
 <1> O descritor é um recurso baseado em protocolo: não é necessário criar uma subclasse para implementá-lo.
 <2> Cada instância de `Quantity` terá um atributo `storage_name`: é o nome do atributo de armazenamento que vai manter o valar nas instâncias gerenciadas.
-<3> O `+__set__+` é chamado quando ocorre uma tentativa de atribuir um valor a um atributo gerenciado. Aqui, `self` é a instância do descritor (isto é, `LineItem.weight` ou `LineItem.price`), `instance` é a instância gerenciada (uma instância de `LineItem`) e `value` é o valor que está sendo atribuido.
+<3> O `+__set__+` é chamado quando ocorre uma tentativa de atribuir um valor a um atributo gerenciado. Aqui, `self` é a instância do descritor (isto é, `LineItem.weight` ou `LineItem.price`), `instance` é a instância gerenciada (uma instância de `LineItem`) e `value` é o valor que está sendo atribuído.
 <4> Precisamos armazenar o valor do atributo diretamente no `+__dict__+`; chamar pass:[<code>set&#x200b;attr&#x200b;(instance, self.storage_name)</code>] dispararia novamente o método `+__set__+`, levando a uma recursão infinita.
 <5> Precisamos implementar `+__get__+`, pois o nome do atributo gerenciado pode não ser igual ao `storage_name`. O argumento `owner` será explicado a seguir.
 
@@ -135,7 +135,7 @@ Observe que `+__get__+` recebe três argumentos: `self`, `instance` e `owner`. O
 
 Se um atributo gerenciado, tal como `weight`, é acessado através da classe como pass:[<code>Line&#x200b;Item.weight</code>], o método `+__get__+` do descritor recebe `None` como valor do argumento `instance`.
 
-Para suportar introspecção e outras técnicas de metaprogramação pelo usuário, é uma boa prática fazer `+__get__+` devolver a instância do descritor quando o atributo gerenciado é acessado através da classe. Para fazer isso, escreveriámos `+__get__+` assim:
+Para suportar introspecção e outras técnicas de metaprogramação pelo usuário, é uma boa prática fazer `+__get__+` devolver a instância do descritor quando o atributo gerenciado é acessado através da classe. Para fazer isso, escreveríamos `+__get__+` assim:
 
 [source, py]
 ----
@@ -202,7 +202,7 @@ class LineItem:
     # o restante dos métodos permanece igual
 ----
 
-Da forma como está escrito, o <<lineitem_class_v3>> exige nomear explicitamente cada `Quantity`, algo não apenas inconveniente, mas também perigoso. Se um programador, ao copiar e colar código, se esquecer de editar os dois nomes, e teminar com uma linha como `price = Quantity('weight')`, o programa vai se comportar de forma muito errática, sobrescrevendo o valor de `weight` sempre que `price` for definido.
+Da forma como está escrito, o <<lineitem_class_v3>> exige nomear explicitamente cada `Quantity`, algo não apenas inconveniente, mas também perigoso. Se um programador, ao copiar e colar código, se esquecer de editar os dois nomes, e terminar com uma linha como `price = Quantity('weight')`, o programa vai se comportar de forma muito errática, sobrescrevendo o valor de `weight` sempre que `price` for definido.
 
 O problema é que—como vimos no <<mutability_and_references>>—o lado direito de uma atribuição é executado antes da variável existir. A expressão `Quantity()` é avaliada para criar uma instância do descritor, e não há como o código na classe `Quantity` adivinhar o nome da variável à qual o descritor será vinculado (por exemplo, `weight` ou `price`).
 
@@ -393,7 +393,7 @@ include::code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS_DEMO1]
 ==== Descritor dominante sem &#x5f;&#x5f;get&#x5f;&#x5f;
 
 Propriedades e outros descritores dominantes, tal como os campos de modelo do Django, implementam tanto `+__set__+` quanto `+__get__+`. Mas também é possível implementar apenas `+__set__+`, como vimos no <<lineitem_class_v3>>. Neste caso, apenas a escrita é controlada pelo descritor. Ler o descritor através de uma instância irá devolver o próprio objeto descritor, pois não há um 
-`+__get__+` para tratar daquele acesso. Se um atributo de instância de mesmo nome for criado com um novo valor, através de acesso direto ao `+__dict__+` da instância, o métoto `+__set__+` continuará interceptando tentativas posteriores de definir aquele atributo, mas a leitura do atributo vai simplesmente devolver o novo valor na instância, em vez de devolver o objeto descritor. Em outras palavras, o atributo de instância vai ocultar o descritor, mas apenas para leitura. Veja o <<descriptorkinds_demo2>>.
+`+__get__+` para tratar daquele acesso. Se um atributo de instância de mesmo nome for criado com um novo valor, através de acesso direto ao `+__dict__+` da instância, o método `+__set__+` continuará interceptando tentativas posteriores de definir aquele atributo, mas a leitura do atributo vai simplesmente devolver o novo valor na instância, em vez de devolver o objeto descritor. Em outras palavras, o atributo de instância vai ocultar o descritor, mas apenas para leitura. Veja o <<descriptorkinds_demo2>>.
 
 [[descriptorkinds_demo2]]
 .Descritor dominante sem `+__get__+`
@@ -517,7 +517,7 @@ include::code/23-descriptor/method_is_descriptor.py[tags=FUNC_DESCRIPTOR_DEMO]
 <9> O objeto método vinculado tem um atributo `+__self__+`, contendo uma referência à instância na qual o método foi invocado.
 <10> O atributo `+__func__+` do método vinculado é uma referência à função original, ligada à classe gerenciada.
 
-O objeto método vinculado contém um método `+__call__+`, que trata a invocação em si. Este método chama a função original, refereciada em `+__func__+`, passando o atributo `+__self__+` do método como primeiro argumento. É assim que funciona a vinculação implícita do argumento `self` convencional.
+O objeto método vinculado contém um método `+__call__+`, que trata a invocação em si. Este método chama a função original, referenciada em `+__func__+`, passando o atributo `+__self__+` do método como primeiro argumento. É assim que funciona a vinculação implícita do argumento `self` convencional.
 
 O modo como funções são transformadas em métodos vinculados é um exemplo perfeito de como descritores são usados como infraestrutura da linguagem.
 
@@ -538,7 +538,7 @@ Descritores somente para leitura exigem um `+__set__+`:: Se você usar uma class
 Descritores de validação podem funcionar apenas com `+__set__+`:: Em um descritor projetado apenas para validação, o método `+__set__+` deve verificar o argumento `value` recebido e, se ele for válido, atualizar o `+__dict__+` da instância diretamente, usando o nome da instância do descritor como chave. Dessa forma, ler o atributo de mesmo nome a partir da instância será tão rápido quanto possível, pois não vai precisar de um `+__get__+`. Veja o código no <<lineitem_class_v4>>.
 
 _Caching_ pode ser feito de forma eficiente apenas com `+__get__+`:: Se você escrever apenas o método `+__get__+`, cria um descritor não dominante.
-Eles são úteis para executar alguma computação custosa e então armazenar o resultado, definindo um atributo com o mesmo nome na instânciafootnote:[Entretanto, lembre-se que criar atributos de instância após o método `+__init__+` frustra a otimização de memória atráves de compartilhamento de chaves, como discutido na seção <<consequences_dict_internals>>.].
+Eles são úteis para executar alguma computação custosa e então armazenar o resultado, definindo um atributo com o mesmo nome na instânciafootnote:[Entretanto, lembre-se que criar atributos de instância após o método `+__init__+` frustra a otimização de memória através de compartilhamento de chaves, como discutido na seção <<consequences_dict_internals>>.].
 O atributo de mesmo nome na instância vai ocultar o descritor, daí acessos subsequentes a aquele atributo vão buscá-lo diretamente no `+__dict__+` da instância, sem acionar mais o `+__get__+` do descritor.
 O decorador `@functools.cached_property` na verdade produz um descritor não dominante.
 
@@ -657,7 +657,7 @@ TypeError: meth() missing 1 required positional argument: 'x'
 ("TypeError: 1 argumento posicional obrigatório faltando em meth(): 'x'")
 ----
 
-Além do uso de `self` como um argumento explícito, a exigência de qualificar cada acesso a atributos de instância com `self` também é criticada. Veja, por exemplo, o famoso post "Python Warts" (_As verrugas do Python_) de A. M. Kuchling (em https://fpy.li/23-9[archived] (EN)); o próprio Kuchling não se incomoda muito com o qualificador `self`, mas ele o menciona—provavelmente ecoando opinões do grupo comp.lang.python.
+Além do uso de `self` como um argumento explícito, a exigência de qualificar cada acesso a atributos de instância com `self` também é criticada. Veja, por exemplo, o famoso post "Python Warts" (_As verrugas do Python_) de A. M. Kuchling (em https://fpy.li/23-9[archived] (EN)); o próprio Kuchling não se incomoda muito com o qualificador `self`, mas ele o menciona—provavelmente ecoando opiniões do grupo comp.lang.python.
 Pessoalmente não me importo em digitar o qualificador `self`: é bom para distinguir variáveis locais de atributos. Minha questão é com o uso de `self` em comandos `def`.
 
 Quem estiver triste com o `self` explícito do Python pode se sentir bem melhor após considerar a 
