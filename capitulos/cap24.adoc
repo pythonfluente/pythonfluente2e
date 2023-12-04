@@ -55,13 +55,13 @@ Algumas das melhores refatorações envolvem a remoção de código tornado redu
 Isso se aplica tanto a código em produção quando a livros.
 ====
 
-Vamos começar revisando os atibutos e métodos definidos no Modelo de Dados do Python para todas as classes.
+Vamos começar revisando os atributos e métodos definidos no Modelo de Dados do Python para todas as classes.
 
 [[anatomy_of_classes]]
 === Classes como objetos
 
 Como((("class metaprogramming", "classes as objects"))) acontece com a maioria das entidades programáticas do Python, classes também são objetos.
-Toda classe tem alguns atributos definidos no Modelo de Dados do Python, documentados na seção https://docs.python.org/pt-br/3/library/stdtypes.html#special-attributes["4.13. Atributos Especiais"] do capítulo "Tipos Embutidos" da _Bibloteca Padrão do Python_.
+Toda classe tem alguns atributos definidos no Modelo de Dados do Python, documentados na seção https://docs.python.org/pt-br/3/library/stdtypes.html#special-attributes["4.13. Atributos Especiais"] do capítulo "Tipos Embutidos" da _Biblioteca Padrão do Python_.
 Três((("&#x005F;&#x005F;class&#x005F;&#x005F;")))((("&#x005F;&#x005F;name&#x005F;&#x005F;")))((("&#x005F;&#x005F;mro&#x005F;&#x005F;"))) destes atributos já apareceram várias vezes no livro:
 `+__class__+`, `+__name__+`, and `+__mro__+`.
 Outros atributos de classe padrão são:
@@ -129,7 +129,7 @@ Quando o Python lê uma instrução `class`, invoca `type` para construir um obj
 
 [NOTE]
 ====
-O construtor `type` aceita argumentos nomeados opcionais, que são ignorados por `type`, mas que são passados como recebidos para `+__init_subclass__+`, que deve consumí-los.
+O construtor `type` aceita argumentos nomeados opcionais, que são ignorados por `type`, mas que são passados como recebidos para `+__init_subclass__+`, que deve consumi-los.
 Vamos estudar esse método especial na seção <<enhancing_with_init_subclass>>, mas não vou tratar do uso de argumentos nomeados. Para saber mais sobre isso, por favor leia a https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma personalização mais simples da criação de classes_)] (EN).
 ====
 
@@ -857,7 +857,7 @@ include::code/24-class-metaprog/metabunch/from3.6/bunch.py[tags=METABUNCH]
 <4> Isso irá ser injetado na nova classe.
 <5> Lê `defaults` e define o atributo de instância correspondente, com o valor extraído de `kwargs`, ou um valor default.
 <6> Se ainda houver itens em `kwargs`, isso significa que não há posição restante onde possamos colocá-los.
-Acreditamos em _falhar rápido_ como melhor prática, então não queremos ignorar silenciosamente os itens em excesso. Uma solução rápida e eficiente é extrair um item de `kwargs` e tentar definí-lo na instância, gerando propositalmente um `AttributeError`.
+Acreditamos em _falhar rápido_ como melhor prática, então não queremos ignorar silenciosamente os itens em excesso. Uma solução rápida e eficiente é extrair um item de `kwargs` e tentar defini-lo na instância, gerando propositalmente um `AttributeError`.
 <7> `+__repr__+` devolve uma string que se parece com uma chamada ao construtor—por exemplo, `Point(x=3)`, omitindo os argumentos nomeados com valores default.
 <8> Inicializa o espaço de nomes para a nova classe.
 <9> Itera sobre o espaço de nomes da classe do usuário.
@@ -1156,7 +1156,7 @@ Metaclasses((("metaclasses", "considerations for use", id="MCconsider24")))((("c
 
 Ao longo do tempo, vários casos de uso comum de metaclasses se tornaram redundantes devido a novos recursos da linguagem:
 
-Decoradores de classes:: Mais simples de entender que metaclasses, e com menor probablidade de causar conflitos com classes base e metaclasses.
+Decoradores de classes:: Mais simples de entender que metaclasses, e com menor probabilidade de causar conflitos com classes base e metaclasses.
 
 `+__set_name__+`:: Elimina a necessidade de uma metaclasse com lógica personalizada para definir automaticamente o nome de um descritor.footnote:[Na primeira edição de _Python Fluente_, as versões mais avançadas da classe `LineItem` usavam uma metaclasse apenas para definir o nome do armazenamento dos atributos. Veja o código nas metaclasses do https://fpy.li/24-14[exemplo da comida a granel], no repositório de código da primeira edição.]
 
@@ -1320,7 +1320,7 @@ Metaclasses, bem((("class metaprogramming", "useful applications of metaclasses"
 - Aplicar decoradores a muitos métodos ao mesmo tempo
 - Serialização de objetos
 - Mapeamento objeto-relacional
-- Persistência baseda em objetos
+- Persistência baseada em objetos
 - Implementar métodos especiais a nível de classe
 - Implementar recursos de classes encontrados em outras linguagens, tal como https://fpy.li/24-17[traits (_traços_)] (EN) e https://pt.wikipedia.org/wiki/Programa%C3%A7%C3%A3o_orientada_a_aspecto[programação orientada a aspecto]
 
@@ -1450,7 +1450,7 @@ As descrições exageradas de Harvey e Wright versam sobre o ensino de ciência 
 
 A ideia de propriedade é um grande passo adiante, comparado com a abordagem "métodos de acesso desde o início", praticamente exigida em Java e suportada pela geração de _getters/setters_ através de atalhos do teclado por IDEs Java. A principal vantagem das propriedades é nos permitir começar a criar nossos programas simplesmente expondo atributos publicamente—no espírito do _KISS_—, sabendo que um atributo público pode se tornar uma propriedade a qualquer momento sem muita dificuldade. Mas a ideia de descritor vai muito além disso, fornecendo uma framework para abstrair lógica de acesso repetitiva. Essa framework é tão eficiente que mecanismos essenciais do Python a usam por baixo dos panos.
 
-Outra ideia poderosa são as funções como objetos de primeira classe, pavimentando o caminho para funções de ordem superior. E acontece que a combinação de descritores e funções de ordem superior permite a unificação de funções e métodos. O `+__get__+` de uma função produz um objeto método em tempo real, vinculando a instância ao argumento `self`. Isso é elegante.footnote:[__Machine Beauty: Elegance and the Heart of Technology__ ("Beleza de Máquina: A Elegância e o Coraçào da Tecnologia"), de David Gelernter (Basic Books), começa com uma discussão intrigante sobre elegância e estética em obras de engenharia, de pontes a software. Os capítulos posteriores não são tão bons, mas o início vale o preço.]
+Outra ideia poderosa são as funções como objetos de primeira classe, pavimentando o caminho para funções de ordem superior. E acontece que a combinação de descritores e funções de ordem superior permite a unificação de funções e métodos. O `+__get__+` de uma função produz um objeto método em tempo real, vinculando a instância ao argumento `self`. Isso é elegante.footnote:[__Machine Beauty: Elegance and the Heart of Technology__ ("Beleza de Máquina: A Elegância e o Coração da Tecnologia"), de David Gelernter (Basic Books), começa com uma discussão intrigante sobre elegância e estética em obras de engenharia, de pontes a software. Os capítulos posteriores não são tão bons, mas o início vale o preço.]
 
 Por fim, temos((("data structures", see="also data class builders; dictionaries and sets; object references; sequences; Unicode text versus bytes")))((("functions, as first-class objects", see="also decorators and closures")))((("control flow", see="also asynchronous programming; concurrent executors; concurrency models; iterators; generators; with, match, and else blocks")))((("metaprogramming", see="also attribute descriptors; class metaprogramming; dynamic attributes and properties")))((("sets", see="also dictionaries and sets")))((("frozenset", see="also dictionaries and sets")))((("byte sequences", see="also Unicode text versus bytes")))((("text files, handling", see="also Unicode text versus bytes")))((("encoding", see="also Unicode text versus bytes")))((("decoding", see="also Unicode text versus bytes")))((("NFC", see="Normalization Form C")))((("UCA", see="Unicode Collation Algorithm")))((("mutable objects", see="also object references")))((("first-class functions", see="functions, as first-class objects")))((("closures", see="decorators and closures")))((("function decorators", see="decorators and closures")))((("design patterns", see="functions, design patterns with first-class")))((("Pythonic objects", see="also objects")))((("patterns", see="functions, design patterns with first-class; pattern matching")))((("special methods", see="also sequences, special methods for")))((("protocols", see="also interfaces")))((("typing map", see="also type hints (type annotations)")))((("interfaces", see="also goose typing; protocols")))((("subclassing", see="inheritance and subclassing")))((("MRO", see="method resolution order")))((("multiple inheritance", see="also inheritance and subclassing")))((("gradual type system", see="also type hints (type annotations)")))((("type hints (type annotations)", "gradual typing", see="also gradual type system")))((("match blocks", see="with, match, and else blocks")))((("spinners (loading indicators)", see="also network I/O")))((("executors, delegating tasks to", see="also concurrent executors")))((("attributes", see="also attribute descriptors; dynamic attributes and properties")))((("attribute descriptors", see="also attributes; dynamic attributes and properties")))((("properties", see="computed properties; dynamic attributes and properties")))((("descriptors", see="also attribute descriptors")))((("PUG", see="Python Users Group")))((("PSF", see="Python Software Foundation")))((("I/O (input/output)", see="network I/O")))((("LRU", see="Least Recently Used")))((("classes", see="also protocols")))((("binary sequences", see="also Unicode text versus bytes")))((("data model", see="Python Data Model")))((("data attributes", see="attributes")))((("data descriptors", see="overriding descriptors")))((("recycling", see="garbage collection")))((("methods, as callable objects", see="also sequences, special methods for; special methods"))) a ideia de classes como objetos de primeira classe.
 É uma façanha marcante do projeto, que uma linguagem acessível para um iniciante forneça abstrações poderosas, tais como fábricas de classe, decoradores de classe, e metaclasses completas e definidas pelo usuário. 
