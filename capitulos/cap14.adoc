@@ -134,7 +134,7 @@ Independente desses argumentos serem fornecidos por você ou pelo compilador, a 
 em uma superclasse do parâmetro `type` e a vincula ao `object_or_type`,
 de modo que não precisamos passar explicitamente o receptor (`self`) quando invocamos o método.
 
-No Python 3, ainda é permitido passar explicitamente o primeiro e o segundo argumentos a `super()`.footnote:[Também é possível passar apenas o primeiro argumento, mas isso não é útil e pode logo ser descontinuado, com as bênçãos de Guido van Rossum, o próprio criador de `super()`. Veja a discussão em https://fpy.li/14-4["Is it time to deprecate unbound super methods?" (_É hora de descontinuar métodos "super" não vinculados?_)].] Mas eles são necessários apenas em casos especiais, tal como pular parte do MRO (sigla de Method Resolution Order—_ORM, Ordem de Resolução de Métodos_), para testes ou depuração, ou para contornar algum comportamento indesejado em uma superclasse.
+No Python 3, ainda é permitido passar explicitamente o primeiro e o segundo argumentos a `super()`.footnote:[Também é possível passar apenas o primeiro argumento, mas isso não é útil e pode logo ser descontinuado, com as bênçãos de Guido van Rossum, o próprio criador de `super()`. Veja a discussão em https://fpy.li/14-4["Is it time to deprecate unbound super methods?" (_É hora de descontinuar métodos "super" não vinculados?_)].] Mas eles são necessários apenas em casos especiais, tal como pular parte do MRO (sigla de Method Resolution Order—_Ordem de Resolução de Métodos_), para testes ou depuração, ou para contornar algum comportamento indesejado em uma superclasse.
 
 Vamos agora discutir as ressalvas à criação de subclasses de tipos embutidos.((("", startref="super14")))((("", startref="IACsuper14")))
 
@@ -326,25 +326,25 @@ include::code/14-inheritance/diamond.py[tags=LEAF_MRO]
 
 [NOTE]
 ====
-Olhando para a <<diamond_uml>>, pode parecer que a ORM descreve uma
+Olhando para a <<diamond_uml>>, pode parecer que a MRO descreve uma
 https://pt.wikipedia.org/wiki/Busca_em_largura[busca em largura (ou amplitude)],
 mas isso é apenas uma coincidência para essa hierarquia de classes em particular.
-A ORM é computada por um algoritmo conhecido, chamado C3.
+A MRO é computada por um algoritmo conhecido, chamado C3.
 Seu uso no Python está detalhado no artigo
 https://fpy.li/14-10["The Python 2.3 Method Resolution Order" (_A Ordem de Resolução de Métodos no Python 2.3_)], de Michele Simionato.
 É um texto difícil, mas Simionato escreve:
 "...a menos que você faça amplo uso de herança múltipla e mantenha hierarquias não-triviais, não é necessário entender o algoritmo C3, e você pode facilmente ignorar este artigo."
 ====
 
-A ORM determina apenas a ordem de ativação, mas se um método específico será ou não ativado em cada uma das classes vai depender de cada implementação chamar ou não `super()`.
+A MRO determina apenas a ordem de ativação, mas se um método específico será ou não ativado em cada uma das classes vai depender de cada implementação chamar ou não `super()`.
 
 Considere o experimento com o método `pong`.
 A classe `Leaf` não sobrepõe aquele método, então a chamada `leaf1.pong()` ativa a implementação na próxima classe listada em `+Leaf.__mro__+`: a classe `A`.
 O método `A.pong` chama `super().pong()`.
-A classe `B` class é e próxima na ORM, portanto `B.pong` é ativado.
+A classe `B` class é e próxima na MRO, portanto `B.pong` é ativado.
 Mas aquele método não chama `super().pong()`, então a sequência de ativação termina ali.
 
-Além do grafo de herança, a ORM também leva em consideração a ordem na qual as superclasses aparecem na declaração da uma subclasse.
+Além do grafo de herança, a MRO também leva em consideração a ordem na qual as superclasses aparecem na declaração da uma subclasse.
 Em outras palavras, se em _diamond.py_ (no <<ex_diamond>>) a classe `Leaf` fosse declarada como
 `Leaf(B, A)`, daí a classe `B` apareceria antes de `A` em `+Leaf.__mro__+`.
 Isso afetaria a ordem de ativação dos métodos `ping`, e também faria `leaf1.pong()` ativar `B.pong` através da herança, mas `A.pong` e `Root.pong` nunca seriam executados, porque `B.pong` não chama `super()`.
@@ -364,7 +364,7 @@ Por isso, é recomendado que todo método `m` de uma classe não-base chame `sup
 Métodos cooperativos devem ter assinaturas compatíveis, porque nunca se sabe se `A.ping` será chamado antes ou depois de `B.ping`.
 A sequência de ativação depende da ordem de `A` e `B` na declaração de cada subclasse que herda de ambos.
 
-O Python é uma linguagem dinâmica, então a interação de `super()` com a ORM também é dinâmica.
+O Python é uma linguagem dinâmica, então a interação de `super()` com a MRO também é dinâmica.
 O <<ex_diamond2>> mostra um resultado surpreendente desse comportamento dinâmico.
 
 [[ex_diamond2]]
@@ -392,7 +392,7 @@ PROD: I don't understand why the snippet above and the next snippet
 below are not colorized in the PDF output.
 ////
 
-O objeto `'super'` devolvido por `super()` não tem um atributo `'ping'`, porque o ORM de `U` tem duas classes:
+O objeto `'super'` devolvido por `super()` não tem um atributo `'ping'`, porque o MRO de `U` tem duas classes:
 `U` e `object`, e este último não tem um atributo chamado `'ping'`.
 
 Entretanto, o método `U.ping` não é inteiramente sem solução. Veja isso:
@@ -414,7 +414,7 @@ Em um programa real, uma classe como `U` poderia ser uma _classe mixin_:
 uma classe projetada para ser usada junto com outras classes em herança múltipla, fornecendo funcionalidade adicional.
 Vamos estudar isso em breve, na seção <<mixin_classes_sec>>.
 
-Para((("UML class diagrams", "Tkinter Text widget class and superclasses"))) concluir essa discussão sobre a ORM, a <<tkwidgets_mro_uml>> ilustra parte do complexo grafo de herança múltipla do toolkit de interface gráfica Tkinter, da biblioteca padrão do Python.
+Para((("UML class diagrams", "Tkinter Text widget class and superclasses"))) concluir essa discussão sobre a MRO, a <<tkwidgets_mro_uml>> ilustra parte do complexo grafo de herança múltipla do toolkit de interface gráfica Tkinter, da biblioteca padrão do Python.
 
 [[tkwidgets_mro_uml]]
 .Esquerda: diagrama UML da classe e das superclasses do componente `Text` do Tkinter. Direita: O longo e sinuoso caminho de `+Text.__mro__+`, desenhado com as setas pontilhadas.
@@ -424,7 +424,7 @@ Para estudar a figura, comece pela classe `Text`, na parte inferior.
 A classe `Text` implementa um componente de texto completo, editável e com múltiplas linhas.
 Ele sozinho fornece muita funcionalidade, mas também herda muitos métodos de outras classes.
 A imagem à esquerda mostra um diagrama de classe UML simples.
-À direita, a mesma imagem é decorada com setas mostrando a ORM, como listada no <<ex_tkinter_text_mro>> com a ajuda de uma função de conveniência `print_mro`.
+À direita, a mesma imagem é decorada com setas mostrando a MRO, como listada no <<ex_tkinter_text_mro>> com a ajuda de uma função de conveniência `print_mro`.
 
 [[ex_tkinter_text_mro]]
 .MRO de `tkinter.Text`
@@ -477,7 +477,7 @@ include::code/14-inheritance/uppermixin.py[tags=UPPERCASE_MIXIN]
 
 Como todos os métodos de `UpperCaseMixin` chamam `super()`,
 esta mixin depende de uma classe irmã que implemente ou herde métodos com a mesma assinatura.
-Para dar sua contribuição, uma mixin normalmente precisa aparecer antes de outras classes na ORM de uma subclasse que a use.
+Para dar sua contribuição, uma mixin normalmente precisa aparecer antes de outras classes na MRO de uma subclasse que a use.
 Na prática, isso significa que mixins devem aparecer primeiro na tupla de classes base em uma declaração de classe.
 O <<ex_upperdict>> apresenta dois exemplos.
 
@@ -649,7 +649,7 @@ Demora um certo tempo para aprender a usar as views baseadas em classes e a form
 
 Um((("Tkinter GUI toolkit", "multiple inheritance in", id="tinkter14"))) exemplo extremo de herança múltipla na biblioteca padrão do Python é o
 https://docs.python.org/pt-br/3/library/tkinter.html[toolkit de interface gráfica Tkinter].
-Usei parte da hierarquia de componentes do Tkinter para ilustrar a ORM na <<tkwidgets_mro_uml>>. A
+Usei parte da hierarquia de componentes do Tkinter para ilustrar a MRO na <<tkwidgets_mro_uml>>. A
 <<tkinter_uml>> mostra todos as classes de componentes no pacote base `tkinter` (há mais componentes gráficos no subpacote https://docs.python.org/pt-br/3/library/tkinter.ttk.html[`tkinter.ttk`]).
 
 [[tkinter_uml]]
@@ -670,7 +670,7 @@ Considere as seguintes classes na <<tkinter_uml>>:
 
 ➎ `Text`: Um campo de texto editável de múltiplas linhas.
 
-Aqui estão as ORMs dessas classes, como exibidas pela função `print_mro` do <<ex_tkinter_text_mro>>:
+Aqui estão as MROs dessas classes, como exibidas pela função `print_mro` do <<ex_tkinter_text_mro>>:
 
 [source, pycon]
 ----
