@@ -825,17 +825,17 @@ Mas((("Tkinter GUI toolkit", "benefits and drawbacks of"))) lembre-se que o Tkin
 
 A docstring de `tkinter.Widget` começa com as palavras "Internal class" (_Classe interna_). Isso sugere que `Widget` deveria provavelmente ser uma ABC. Apesar da classe `Widget` não ter métodos próprios, ela define uma interface. Sua mensagem é: "Você pode contar que todos os componentes do Tkinter vão oferecer os métodos básicos de componente (`+__init__+`, `destroy`, e dezenas de funções da API Tk), além dos métodos de todos os três gerenciadores de geometria". Vamos combinar que essa não é uma boa definição de interface (é abrangente demais), mas ainda assim é uma interface, e `Widget` a "define" como a união das interfaces de suas superclasses.
 
-A classe `Tk`, qie encapsula a lógica da aplicação gráfica, herda de `Wm` e `Misc`, nenhuma das quais é abstrata ou mixin (`Wm` não é uma mixin adequada, porque `TopLevel` é subclasse apenas dela). O nome da classe `Misc` é—sozinho—é um forte _code smell_. `Misc` tem mais de 100 métodos, e todos os componentes herdam dela. Por que é necessário que cada um dos componentes tenham métodos para tratamento do clipboard, seleção de texto, gerenciamento de timer e coisas assim? Não é possível colar algo em um botão ou selecionar texto de uma barra de rolagem. `Misc` deveria ser dividida em várias classes mixin especializadas, e nem todos os componentes deveriam herdar de todas aquelas mixins.
+A classe `Tk`, qie encapsula a lógica da aplicação gráfica, herda de `Wm` e `Misc`, nenhuma das quais é abstrata ou mixin (`Wm` não é uma mixin adequada, porque `TopLevel` é subclasse apenas dela). O nome da classe `Misc` é, por sí só, um mau sinal. `Misc` tem mais de 100 métodos, e todos os componentes herdam dela. Por que é necessário que cada um dos componentes tenham métodos para tratamento do clipboard, seleção de texto, gerenciamento de timer e coisas assim? Não é possível colar algo em um botão ou selecionar texto de uma barra de rolagem. `Misc` deveria ser dividida em várias classes mixin especializadas, e nem todos os componentes deveriam herdar de todas aquelas mixins.
 
 Para ser justo, como usuário do Tkinter você não precisa, de forma alguma, entender ou usar herança múltipla. Ela é um detalhe de implementação, oculto atrás das classes de componentes que serão instanciadas ou usadas como base para subclasses em seu código. Mas você sofrerá as consequências da herança múltipla excessiva quando digitar `dir(tkinter.Button)` e tentar encontrar um método específico em meio aos 214 atributos listados.
 E terá que enfrentar a complexidade, caso decida implementar um novo componente Tk.
 
 [TIP]
 ====
-Apesar de ter problemas, o Tkinter é estável, flexível, e fornece um _look-and-feel_ moderno se você usar o pacote `tkinter.ttk` e seus componentes tematizados.
-Além disso, alguns dos componentes originais, como `Canvas` e `Text`, são inacreditavelmente poderosos.
-Em poucas horas é possível transformar um objeto `Canvas` em uma aplicação de desenho simples mas completa.
-Se você está interessada em programação de interfaces gráficas, com certeza vale a pena considerar o Tkinter e o Tcl/Tk.
+Apesar de ter problemas, o Tkinter é estável, flexível, e fornece um visual moderno se você usar o pacote `tkinter.ttk` e seus componentes tematizados.
+Além disso, alguns dos componentes originais, como `Canvas` e `Text`, são incrivelmente poderosos.
+Em poucas horas é possível transformar um objeto `Canvas` em uma aplicação de desenho razoavelmente completa.
+Se você se interessa pela programação de interfaces gráficas, com certeza vale a pena considerar o Tkinter e o Tcl/Tk.
 ====
 
 Aqui termina nossa viagem através do labirinto da herança.((("", startref="IAScop14")))
@@ -923,9 +923,7 @@ Pense nas classes realmente necessárias
 [quote, Alan Kay, The Early History of Smalltalk ("Os Primórdios do Smalltalk")]
 ____
 [Nós] começamos a defender a ideia de herança como uma maneira de permitir que iniciantes pudessem construir [algo] a partir de frameworks que só poderiam ser projetadas por especialistasfootnote:[Alan Kay,
-"The Early History of Smalltalk" (_Os Promórdios do Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95.
-Também disponível https://fpy.li/14-1[online] (EN).].
-(Agradeço a meu amigo Cristiano Anderson, que compartilhou essa referência quando eu estava escrevendo esse capítulo).
+"The Early History of Smalltalk" (_Os Promórdios do Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95. Também disponível https://fpy.li/14-1[online] (EN). Agradeço a meu amigo Cristiano Anderson, que compartilhou essa referência quando eu estava escrevendo esse capítulo)].
 ____
 
 A((("inheritance and subclassing", "Soapbox discussion", id="IASsoap14")))((("Soapbox sidebars", "multilevel class hierarchies"))) imensa maioria dos programadores escreve aplicações, não frameworks. Mesmo aqueles que escrevem frameworks provavelmente passam muito (ou a maior parte) de seu tempo escrevendo aplicações. Quando escrevemos aplicações, normalmente não precisamos criar hierarquias de classes. No máximo escrevemos classes que são subclasses de ABCs ou de outras classes oferecidas pelo framework. Como desenvolvedores de aplicações, é muito raro precisarmos escrever uma classe que funcionará como superclasse de outra. As classes que escrevemos são, quase sempre, "classes folha" (isto é, folhas na árvore de herança).
@@ -961,24 +959,24 @@ Só precisamos estar cientes dos compromissos envolvidos.
 [role="soapbox-title"]
 Herança através das linguagens
 
-Alan Kay((("Soapbox sidebars", "inheritance across languages"))) criou o termo "orientado a objetos", e o Smalltalk tinha apenas herança simples, apesar de existirem versões com diferentes formas de suporte a herança múltipla, incluindo os dialetos modernos de Smalltalk, Squeak e Pharo, que suportam _traits_ ("traços")--um dispositivo de linguagem que faz o papel de classes mixin, ao mesmo tempo em que evita alguns dos problemas da herança múltipla.
+Alan Kay((("Soapbox sidebars", "inheritance across languages"))) criou o termo "orientado a objetos", e o Smalltalk tinha apenas herança simples, apesar de existirem versões com diferentes formas de suporte a herança múltipla, incluindo os dialetos modernos de Smalltalk, Squeak e Pharo, que suportam _traits_ ("traços")—um dispositivo de linguagem que pode substituir classes mixin, mas evita alguns dos problemas da herança múltipla.
 
-A primeira linguagem popular a implementar herança múltipla foi o C&#x2b;&#x2b;, e esse recurso foi abusado o suficiente para que o Java—criado para ser um substituto do C&#x2b;&#x2b;—fosse projetado sem suporte a herança múltipla de implementação (isto é, sem classes mixin).Quer dizer, isso até o Java 8 introduzir os métodos default, que tornam interfaces muito similares às classes abstratas usadas para definir interfaces em C&#x2b;&#x2b; e em Python.
+A primeira linguagem popular a implementar herança múltipla foi o C&#x2b;&#x2b;, e esse recurso foi abusado o suficiente para que o Java—criado para ser um substituto do C&#x2b;&#x2b;—fosse projetado sem suporte a herança múltipla de implementação (isto é, sem classes mixin). Quer dizer, isso até o Java 8 introduzir os métodos default, que tornam interfaces muito similares às classes abstratas usadas para definir interfaces em C&#x2b;&#x2b; e em Python.
 Depois do Java, a linguagem da JVM mais usada é provavelmente o Scala, que implementa _traits_.
 
 Outras linguagens que suportam _traits_ são a última versão estável do PHP e do Groovy,
 bem como o Rust e o Raku—a linguagem antes conhecida como Perl 6.footnote:[Meu amigo e revisor técnico Leonardo Rochael explica isso melhor do que eu poderia:
 "A existência continuada junto com o persistente adiamento da chegada do Perl 6 estava drenando a força de vontade da evolução do próprio Perl. Agora o Perl continua a ser desenvolvido como uma linguagem separada (está na versão 5.34), sem a ameaça de ser descontinuada pela linguagem antes conhecida como Perl 6."]
-Então é correto dizer que _traits_ estão na moda em 2021.
+Então podemos dizer que _traits_ estão na moda em 2021.
 
 O Ruby traz uma perspectiva original para a herança múltipla:
-não a suporta, mas introduz mixins como um recurso da linguagem. Uma classe Ruby pode incluir um módulo em seu corpo, e aí os métodos definidos no módulo se tornam parte da implementação da classe.
+não a suporta, mas introduz mixins como um recurso explícito da linguagem. Uma classe Ruby pode incluir um módulo em seu corpo, e aí os métodos definidos no módulo se tornam parte da implementação da classe.
 Essa é uma forma "pura" de mixin, sem herança envolvida, e está claro que uma mixin Ruby não tem qualquer influência sobre o tipo da classe onde ela é usada.
 Isso oferece os benefícios das mixins, evitando muitos de seus problemas mais comuns.
 
 Duas novas linguagens orientadas a objetos que estão recebendo muita atenção limitam severamente a herança: Go e Julia.
-Ambas giram em torno de programar "objetos", e suportam https://pt.wikipedia.org/wiki/Polimorfismo_(ci%C3%AAncia_da_computa%C3%A7%C3%A3o)[polimorfismo], mas evitam o termo "classe",
+Ambas giram em torno de programar "objetos" implementando "métodos", e suportam https://pt.wikipedia.org/wiki/Polimorfismo_(ci%C3%AAncia_da_computa%C3%A7%C3%A3o)[polimorfismo], mas evitam o termo "classe".
 
-Go não tem qualquer tipo de herança. Julia tem uma hierarquia de tipos, mas subtipos não podem herdar estrutura, apenas comportamentos, e só é permitido criar subtipos de tipos abstratos. Além disso, os métodos de Julia são implementados com despacho múltiplo—uma forma mais avançada do mecanismo que vimos na seção <<generic_functions>>.((("", startref="IASsoap14")))
+Go não tem qualquer tipo de herança, mas oferece uma sintaxe que facilita a composição. Julia tem uma hierarquia de tipos, mas subtipos não podem herdar estrutura, apenas comportamentos, e só é permitido criar subtipos de tipos abstratos. Além disso, os métodos de Julia são implementados com despacho múltiplo—uma forma mais avançada do mecanismo que vimos na seção <<generic_functions>>.((("", startref="IASsoap14")))
 
 ****
