@@ -26,7 +26,7 @@ Funções definidas pelo usuário são descritores. Veremos como o protocolo des
 
 Entender os descritores é crucial para dominar o Python. Esse capítulo é sobre isso.
 
-Nas próximas páginas((("attribute descriptors", "topics covered"))) vamos refatorar o exemplo da loja de comida orgânica a granel, visto na seção <<prop_validation_sec>>, substituindo propriedades por descritores.
+Nas próximas páginas((("attribute descriptors", "topics covered"))) vamos refatorar o exemplo da loja de comida orgânica a granel, visto na <<prop_validation_sec>>, substituindo propriedades por descritores.
 Isso tornará mais fácil reutilizar a lógica de validação de atributos em diferentes classes.
 
 Vamos estudar os conceitos de descritores dominantes e não dominantes, e entender que as funções do Python são descritores.
@@ -36,18 +36,18 @@ Para finalizar, veremos algumas dicas para a implementação de descritores.
 [[whats_new_descriptor_sec]]
 === Novidades nesse capítulo
 
-O((("attribute descriptors", "significant changes to"))) exemplo do descritor `Quantity`, na seção <<auto_storage_sec>>, foi dramaticamente simplificado, graças ao método especial `+__set_name__+`, adicionado ao protocolo descritor no Python 3.6. Nessa mesma seção, removi o exemplo da fábrica de propriedades, pois ele se tornou irrelevante: o ponto ali era mostrar uma solução alternativa para o problema de `Quantity`, mas com `+__set_name__+` a solução com o descritor se tornou muito mais simples.
+O((("attribute descriptors", "significant changes to"))) exemplo do descritor `Quantity`, na <<auto_storage_sec>>, foi dramaticamente simplificado, graças ao método especial `+__set_name__+`, adicionado ao protocolo descritor no Python 3.6. Nessa mesma seção, removi o exemplo da fábrica de propriedades, pois ele se tornou irrelevante: o ponto ali era mostrar uma solução alternativa para o problema de `Quantity`, mas com `+__set_name__+` a solução com o descritor se tornou muito mais simples.
 
-A classe `AutoStorage`, que aparecia na seção <<new_descr_type_sec>>, também foi removida, pois o mesmo `+__set_name__+` a tornou obsoleta.
+A classe `AutoStorage`, que aparecia na <<new_descr_type_sec>>, também foi removida, pois o mesmo `+__set_name__+` a tornou obsoleta.
 
 [[validating_descriptor_sec]]
 === Exemplo de descritor: validação de atributos
 
-Como((("attribute descriptors", "attribute validation", id="ADvalidation23")))((("attributes", "using attribute descriptors for validation", id="ATvalidation23"))) vimos na seção <<coding_prop_factory_sec>>, uma fábrica de propriedades é uma maneira de evitar código repetitivo de _getters_ e _setters_, aplicando padrões de programação funcional.
+Como((("attribute descriptors", "attribute validation", id="ADvalidation23")))((("attributes", "using attribute descriptors for validation", id="ATvalidation23"))) vimos na <<coding_prop_factory_sec>>, uma fábrica de propriedades é uma maneira de evitar código repetitivo de _getters_ e _setters_, aplicando padrões de programação funcional.
 Um fábrica de propriedades é uma função de ordem superior que cria um conjunto de funções de acesso parametrizadas e constrói uma instância de propriedade personalizada, com clausuras para manter configurações como `storage_name`.
 A forma orientada a objetos de resolver o mesmo problema é uma classe descritora.
 
-Vamos seguir com a série de exemplos `LineItem` de onde paramos, na seção <<coding_prop_factory_sec>>, refatorando a fábrica de propriedades `quantity` em uma classe descritora `Quantity`.
+Vamos seguir com a série de exemplos `LineItem` de onde paramos, na <<coding_prop_factory_sec>>, refatorando a fábrica de propriedades `quantity` em uma classe descritora `Quantity`.
 Isso vai torná-la mais fácil de usar.
 
 ==== LineItem versão #3: Um descritor simples
@@ -484,7 +484,7 @@ include::code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS_DEMO5]
 
 Funções não implementam `+__set__+`, portanto são descritores não dominantes, como mostra a última linha do <<descriptorkinds_demo5>>.
 
-A outra lição fundamental do <<descriptorkinds_demo5>> é que `obj.spam` e `Managed.spam` devolvem objetos diferentes. Como de hábito com descritores, o `+__get__+` de uma função devolve uma referência para a própria função quando o acesso ocorre através da classe gerenciada. Mas quando o acesso vem através da instância, o `+__get__+` da função devolve um objeto método vinculado: um invocável que envolve a função e vincula a instância gerenciada (no exemplo, `obj`) ao primeiro argumento da função (isto é, `self`), como faz a função `functools.partial` (que vimos na seção <<functools_partial_sec>>).
+A outra lição fundamental do <<descriptorkinds_demo5>> é que `obj.spam` e `Managed.spam` devolvem objetos diferentes. Como de hábito com descritores, o `+__get__+` de uma função devolve uma referência para a própria função quando o acesso ocorre através da classe gerenciada. Mas quando o acesso vem através da instância, o `+__get__+` da função devolve um objeto método vinculado: um invocável que envolve a função e vincula a instância gerenciada (no exemplo, `obj`) ao primeiro argumento da função (isto é, `self`), como faz a função `functools.partial` (que vimos na <<functools_partial_sec>>).
 Para um entendimento mais profundo desse mecanismo, dê uma olhada no <<func_descriptor_ex>>.
 
 [[func_descriptor_ex]]
@@ -538,7 +538,7 @@ Descritores somente para leitura exigem um `+__set__+`:: Se você usar uma class
 Descritores de validação podem funcionar apenas com `+__set__+`:: Em um descritor projetado apenas para validação, o método `+__set__+` deve verificar o argumento `value` recebido e, se ele for válido, atualizar o `+__dict__+` da instância diretamente, usando o nome da instância do descritor como chave. Dessa forma, ler o atributo de mesmo nome a partir da instância será tão rápido quanto possível, pois não vai precisar de um `+__get__+`. Veja o código no <<lineitem_class_v4>>.
 
 _Caching_ pode ser feito de forma eficiente apenas com `+__get__+`:: Se você escrever apenas o método `+__get__+`, cria um descritor não dominante.
-Eles são úteis para executar alguma computação custosa e então armazenar o resultado, definindo um atributo com o mesmo nome na instânciafootnote:[Entretanto, lembre-se que criar atributos de instância após o método `+__init__+` frustra a otimização de memória através de compartilhamento de chaves, como discutido na seção <<consequences_dict_internals>>.].
+Eles são úteis para executar alguma computação custosa e então armazenar o resultado, definindo um atributo com o mesmo nome na instânciafootnote:[Entretanto, lembre-se que criar atributos de instância após o método `+__init__+` frustra a otimização de memória através de compartilhamento de chaves, como discutido na <<consequences_dict_internals>>.].
 O atributo de mesmo nome na instância vai ocultar o descritor, daí acessos subsequentes a aquele atributo vão buscá-lo diretamente no `+__dict__+` da instância, sem acionar mais o `+__get__+` do descritor.
 O decorador `@functools.cached_property` na verdade produz um descritor não dominante.
 
@@ -550,7 +550,7 @@ O fato de métodos não especiais poderem ser sobrepostos tão facilmente pode s
 [role="man-height"]
 [NOTE]
 ====
-A classe `FrozenJSON` no <<ex_explore1>> está a salvo de atributos de instância ocultando métodos, pois seus únicos métodos são métodos especiais e o método de classe `build`. Métodos de classe são seguros desde que sejam sempre acessados através da classe, como fiz com `FrozenJSON.build` no <<ex_explore1>>—mais tarde substituído por `+__new__+` no <<ex_explore2>>. As classes `Record` e `Event`, apresentadas na seção <<computed_props_sec>>, também estão a salvo: elas implementam apenas métodos especiais, métodos estáticos e propriedades. Propriedades são descritores dominantes, então não são ocultados por atributos de instância.
+A classe `FrozenJSON` no <<ex_explore1>> está a salvo de atributos de instância ocultando métodos, pois seus únicos métodos são métodos especiais e o método de classe `build`. Métodos de classe são seguros desde que sejam sempre acessados através da classe, como fiz com `FrozenJSON.build` no <<ex_explore1>>—mais tarde substituído por `+__new__+` no <<ex_explore2>>. As classes `Record` e `Event`, apresentadas na <<computed_props_sec>>, também estão a salvo: elas implementam apenas métodos especiais, métodos estáticos e propriedades. Propriedades são descritores dominantes, então não são ocultados por atributos de instância.
 ====
 
 Para encerrar esse capítulo, vamos falar de dois recursos que vimos com as propriedades, mas não no contexto dos descritores: documentação e o tratamento de tentativas de excluir um atributo gerenciado.((("", startref="ADtips23")))
@@ -578,9 +578,9 @@ image::images/flpy_2304.png[Capturas de tela do console do Python com a ajuda de
 
 O((("attribute descriptors", "overview of"))) primeiro exemplo deste capítulo foi uma continuação dos exemplos `LineItem` do <<dynamic_attributes>>. No <<lineitem_class_v3>>, substituímos propriedades por descritores. Vimos que um descritor é uma classe que fornece instâncias, que são instaladas como atributos na classe gerenciada. Discutir esse mecanismo exigiu uma terminologia especial, apresentando termos tais como _instância gerenciada_ e _atributo de armazenamento_.
 
-Na seção <<auto_storage_sec>>, removemos a exigência de descritores `Quantity` serem declarados com um `storage_name` explícito, um requisito redundante e propenso a erros. A solução foi implementar o método especial `+__set_name__+` em `Quantity`, para armazenar o nome da propriedade gerenciada como `self.storage_name`.
+Na <<auto_storage_sec>>, removemos a exigência de descritores `Quantity` serem declarados com um `storage_name` explícito, um requisito redundante e propenso a erros. A solução foi implementar o método especial `+__set_name__+` em `Quantity`, para armazenar o nome da propriedade gerenciada como `self.storage_name`.
 
-A seção <<new_descr_type_sec>> mostrou como criar uma subclasse de uma classe descritora abstrata, para compartilhar código ao programar descritores especializados com alguma funcionalidade em comum.
+A <<new_descr_type_sec>> mostrou como criar uma subclasse de uma classe descritora abstrata, para compartilhar código ao programar descritores especializados com alguma funcionalidade em comum.
 
 [role="pagebreak-before less_space"]
 Examinamos então os comportamentos diferentes de descritores, fornecendo ou omitindo o método 
@@ -588,11 +588,11 @@ Examinamos então os comportamentos diferentes de descritores, fornecendo ou omi
 
 Em seguida, estudamos uma categoria específica de descritores não dominantes: métodos. Experimentos no console revelaram como uma função associada ao uma classe se torna um método ao ser acessada através de uma instância, se valendo do protocolo descritor.
 
-Para concluir o capítulo, a seção <<descriptor_usage_sec>> trouxe dicas práticas, e a seção <<descriptor_doc_del_sec>> forneceu um rápido olhar sobre como documentar descritores.
+Para concluir o capítulo, a <<descriptor_usage_sec>> trouxe dicas práticas, e a <<descriptor_doc_del_sec>> forneceu um rápido olhar sobre como documentar descritores.
 
 [NOTE]
 ====
-Como observado na seção <<whats_new_descriptor_sec>>, vários exemplos deste capítulo se tornaram muito mais simples graças ao método especial `+__set_name__+` do protocolo descritor, adicionado no Python 3.6. Isso é evolução da linguagem!
+Como observado na <<whats_new_descriptor_sec>>, vários exemplos deste capítulo se tornaram muito mais simples graças ao método especial `+__set_name__+` do protocolo descritor, adicionado no Python 3.6. Isso é evolução da linguagem!
 ====
 
 === Leitura complementar

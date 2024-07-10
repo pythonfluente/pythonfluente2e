@@ -39,9 +39,9 @@ e mapeamentos, incluindo desempacotamento aumentado e _pattern matching_ (casame
 
 A((("dictionaries and sets", "significant changes to"))) maior parte das mudanças nessa segunda edição se concentra em novos recursos relacionados a tipos de mapeamento:
 
-* A seção <<modern_dict_syntax_sec>> fala da sintaxe aperfeiçoada de desempacotamento e de diferentes maneiras de mesclar mapeamentos—incluindo os operadores `|` e `|=`, suportados pelos `dicts` desde o Python 3.9.
-* A seção <<pattern_matching_mappings_sec>> ilustra o manuseio de mapeamentos com `match/case`, recurso que surgiu no Python 3.10.
-* A seção <<ordereddict_sec>> agora se concentra nas pequenas mas ainda relevantes diferenças entre `dict` e `OrderedDict`—levando em conta que, desde o Python 3.6, `dict` passou a manter a ordem de inserção das chaves.
+* A <<modern_dict_syntax_sec>> fala da sintaxe aperfeiçoada de desempacotamento e de diferentes maneiras de mesclar mapeamentos—incluindo os operadores `|` e `|=`, suportados pelos `dicts` desde o Python 3.9.
+* A <<pattern_matching_mappings_sec>> ilustra o manuseio de mapeamentos com `match/case`, recurso que surgiu no Python 3.10.
+* A <<ordereddict_sec>> agora se concentra nas pequenas mas ainda relevantes diferenças entre `dict` e `OrderedDict`—levando em conta que, desde o Python 3.6, `dict` passou a manter a ordem de inserção das chaves.
 * Novas seções sobre os objetos view devolvidos por `dict.keys`, `dict.items`, e `dict.values`: a <<dictionary_views_sec>> e a <<set_ops_dict_views_sec>>.
 
 A implementação interna de `dict` e `set` ainda está alicerçada em tabelas de hash,
@@ -178,7 +178,7 @@ Agora vamos ver como o pattern matching se aplica aos mapeamentos.((("", startre
 === Pattern matching com mapeamentos
 
 A((("pattern matching", "with mappings", secondary-sortas="mappings", id="PMmap03")))((("mappings", "pattern matching with", id="Mpattern03")))((("match/case statement")))((("dictionaries and sets", "pattern matching with mappings", id="DASmap03"))) instrução `match/case` suporta sujeitos que sejam objetos mapeamento.
-Padrões para mapeamentos se parecem com literais `dict`, mas podem casar com instâncias de qualquer subclasse real ou virtual de `collections.abc.Mapping`.footnote:[Uma subclasse virtual é qualquer classe registrada com uma chamada ao método `.register()` de uma ABC, como explicado na seção <<virtual_subclass_sec>>. Um tipo implementado através da API Python/C também é aceitável, se um bit de marcação específico estiver acionado. Veja https://docs.python.org/pt-br/3.10/c-api/typeobj.html#Py_TPFLAGS_MAPPING[`Py_TPFLAGS_MAPPING`] (EN).]
+Padrões para mapeamentos se parecem com literais `dict`, mas podem casar com instâncias de qualquer subclasse real ou virtual de `collections.abc.Mapping`.footnote:[Uma subclasse virtual é qualquer classe registrada com uma chamada ao método `.register()` de uma ABC, como explicado na <<virtual_subclass_sec>>. Um tipo implementado através da API Python/C também é aceitável, se um bit de marcação específico estiver acionado. Veja https://docs.python.org/pt-br/3.10/c-api/typeobj.html#Py_TPFLAGS_MAPPING[`Py_TPFLAGS_MAPPING`] (EN).]
 
 No <<sequences>> nos concentramos apenas nos padrões de sequência, mas tipos diferentes de padrões podem ser combinados e aninhados.
 Graças à desestruturação, o pattern matching é uma ferramenta poderosa para processar registros estruturados como sequências e mapeamentos aninhados, que frequentemente precisamos ler de APIs JSON ou bancos de dados com schemas semi-estruturados, como o MongoDB, o EdgeDB, ou o PostgreSQL.
@@ -234,7 +234,7 @@ Um exemplo simples:
 Ice cream details: {'flavor': 'vanilla', 'cost': 199}
 ----
 
-Na seção <<mappings_flexible_sec>>, vamos estudar o `defaultdict` e outros mapeamentos onde buscas com chaves via `+__getitem__+` (isto é, `d[chave]`) funcionam porque itens ausentes são criados na hora. No contexto do pattern matching, um match é bem sucedido apenas se o sujeito já possui as chaves necessárias no início do bloco `match`.
+Na <<mappings_flexible_sec>>, vamos estudar o `defaultdict` e outros mapeamentos onde buscas com chaves via `+__getitem__+` (isto é, `d[chave]`) funcionam porque itens ausentes são criados na hora. No contexto do pattern matching, um match é bem sucedido apenas se o sujeito já possui as chaves necessárias no início do bloco `match`.
 
 [TIP]
 ====
@@ -526,7 +526,7 @@ O((("&#x005F;&#x005F;contains&#x005F;&#x005F;"))) método `+__contains__+` tamb�
 herdado de `dict` não invoca `+__missing__+` com chaves ausentes. Há um detalhe sutil em nossa implementação de `+__contains__+`: não verificamos a existência da chave da forma pythônica normal—`k in d`—porque `str(key) in self` chamaria
 `+__contains__+` recursivamente. Evitamos isso procurando a chave explicitamente em `self.keys()`.
 
-Uma busca como `k in my_dict.keys()` é eficiente em Python 3 mesmo para mapeamentos muito grandes, porque `dict.keys()` devolve uma view, que é similar a um _set_, como veremos na seção <<set_ops_dict_views_sec>>.
+Uma busca como `k in my_dict.keys()` é eficiente em Python 3 mesmo para mapeamentos muito grandes, porque `dict.keys()` devolve uma view, que é similar a um _set_, como veremos na <<set_ops_dict_views_sec>>.
 Entretanto, lembre-se que `k in my_dict` faz o mesmo trabalho, e é mais rápido porque evita a busca nos atributos para encontrar o método `.keys`.
 
 Eu tinha uma razão específica para usar `self.keys()` no método `+__contains__+` do
@@ -579,13 +579,13 @@ Não se esqueça que o comportamento de `setdefault` e `update` também é afeta
 E por fim, dependendo da lógica de seu `+__missing__+`,
 pode ser necessário implementar uma lógica especial em `+__setitem__+`,
 para evitar inconsistências ou comportamentos surpreeendentes.
-Veremos um exemplo disso na seção <<sublcassing_userdict_sec>>.
+Veremos um exemplo disso na <<sublcassing_userdict_sec>>.
 
 Até aqui tratamos dos tipos de mapeamentos `dict` e `defaultdict`, mas a biblioteca padrão traz outras implementações de mapeamentos, que discutiremos a seguir.((("", startref="missing03")))((("", startref="Mauto03")))((("", startref="Kauto03")))((("", startref="DASmissing03")))
 
 === Variações de dict
 
-Nessa((("dictionaries and sets", "variations of dict", id="DASvardict03"))) seção falaremos brevemente sobre os tipos de mapeamentos incluídos na biblioteca padrão diferentes de `defaultdict`, já visto na seção <<defaultdict_sec>>.
+Nessa((("dictionaries and sets", "variations of dict", id="DASvardict03"))) seção falaremos brevemente sobre os tipos de mapeamentos incluídos na biblioteca padrão diferentes de `defaultdict`, já visto na <<defaultdict_sec>>.
 
 [[ordereddict_sec]]
 ==== collections.OrderedDict
@@ -715,7 +715,7 @@ As classes `OrderedDict`, `ChainMap`, `Counter`, e `Shelf` podem ser usadas dire
 melhor criar um novo tipo de mapeamento estendendo `collections.UserDict` em vez de `dict`.
 Percebemos isso quando tentamos estender nosso `StrKeyDict0` do <<ex_strkeydict0>> para assegurar que qualquer chave adicionada ao mapeamento seja armazenada como `str`.
 
-A principal razão pela qual é melhor criar uma subclasse de `UserDict` em vez de `dict` é que o tipo embutido tem alguns atalhos de implementação, que acabam nos obrigando a sobrepor métodos que poderíamos apenas herdar de `UserDict` sem maiores problemas.footnote:[O problema exato de se criar subclasses de `dict` e de outros tipos embutidos é tratado na seção <<subclass_builtin_woes>>.]
+A principal razão pela qual é melhor criar uma subclasse de `UserDict` em vez de `dict` é que o tipo embutido tem alguns atalhos de implementação, que acabam nos obrigando a sobrepor métodos que poderíamos apenas herdar de `UserDict` sem maiores problemas.footnote:[O problema exato de se criar subclasses de `dict` e de outros tipos embutidos é tratado na <<subclass_builtin_woes>>.]
 
 Observe que `UserDict` não herda de `dict`, mas usa uma composição:
 a classe tem uma instância interna de `dict`, chamada `data`, que mantém os itens propriamente ditos. Isso evita recursão indesejada quando escrevemos métodos especiais, como `+__setitem__+`, e simplifica a programação de `+__contains__+`, quando comparado com o <<ex_strkeydict0>>.
@@ -753,7 +753,7 @@ Sabemos que existem tipos de sequências imutáveis, mas e mapeamentos imutávei
 
 === Mapeamentos imutáveis
 
-Os((("dictionaries and sets", "immutable mappings")))((("mappings", "immutable mappings")))((("immutable mappings"))) tipos de mapeamentos disponíveis na biblioteca padrão são todos mutáveis, mas pode ser necessário impedir que os usuários mudem um mapeamento por acidente. Um caso de uso concreto pode ser encontrado, novamente, em uma biblioteca de programação de hardware como a((("Pingo library"))) _Pingo_, mencionada na seção <<missing_method>>:
+Os((("dictionaries and sets", "immutable mappings")))((("mappings", "immutable mappings")))((("immutable mappings"))) tipos de mapeamentos disponíveis na biblioteca padrão são todos mutáveis, mas pode ser necessário impedir que os usuários mudem um mapeamento por acidente. Um caso de uso concreto pode ser encontrado, novamente, em uma biblioteca de programação de hardware como a((("Pingo library"))) _Pingo_, mencionada na <<missing_method>>:
 o mapeamento `board.pins` representa as portas de GPIO (General Purpose Input/Output, _Entrada/Saída Genérica_) em um dispositivo. Dessa forma, seria útil evitar atualizações descuidadas de `board.pins`, pois o hardware não pode ser modificado via software: qualquer mudança no mapeamento o tornaria inconsistente com a realidade física do dispositivo.
 
 O módulo `types` oferece uma classe invólucro (_wrapper_) chamada `MappingProxyType` que, dado um mapeamento, devolve uma instância de `mappingproxy`, que é um proxy somente para leitura (mas dinâmico) do mapeamento original. Isso significa que atualizações ao mapeamento original são refletidas no `mappingproxy`, mas nenhuma mudança pode ser feita através desse último. Veja uma breve demonstração no <<ex_MappingProxyType>>.
@@ -859,7 +859,7 @@ TypeError: cannot create 'dict_values' instances
 
 A classe `dict_values` é a view de dicionário mais simples—ela implementa apenas os métodos especiais `+__len__+`, `+__iter__+`, e `+__reversed__+`.
 Além desses métodos, `dict_keys` e `dict_items` implementam vários métodos dos _sets_, quase tantos quanto a classe `frozenset`.
-Após vermos os conjuntos (_sets_), teremos mais a dizer sobre `dict_keys` e `dict_items`, na seção <<set_ops_dict_views_sec>>.
+Após vermos os conjuntos (_sets_), teremos mais a dizer sobre `dict_keys` e `dict_items`, na <<set_ops_dict_views_sec>>.
 
 Agora vamos ver algumas regras e dicas baseadas na forma como `dict` é implementado debaixo dos panos.((("", startref="DASviews03")))
 
@@ -868,13 +868,13 @@ Agora vamos ver algumas regras e dicas baseadas na forma como `dict` é implemen
 
 A((("dictionaries and sets", "consequences of how dict works"))) implementação da tabela de hash do `dict` do Python é muito eficiente, mas é importante entender os efeitos práticos desse design:
 
-* Chaves((("keys", "practical consequences of using dict"))) devem ser objetos hashable. Eles devem implementar métodos `+__hash__+` e `+__eq__+` apropriados, como descrito na seção <<what_is_hashable>>.
+* Chaves((("keys", "practical consequences of using dict"))) devem ser objetos hashable. Eles devem implementar métodos `+__hash__+` e `+__eq__+` apropriados, como descrito na <<what_is_hashable>>.
 * O acesso aos itens através da chave é muito rápido. Mesmo que um `dict` tenha milhões de chaves, o Python pode localizar uma chave diretamente, computando o código hash da chave e derivando um deslocamento do índice na tabela de hash, com um possível ônus de um pequeno número de tentativas até encontrar a entrada correspondente.
 * A ordenação das chaves é preservada, como efeito colateral de um layout de memória mais compacto para `dict` no CPython 3.6, que se tornou um recurso oficial da linguagem no 3.7.
 * Apesar de seu novo layout compacto, os dicts apresentam, inevitavelmente, um uso adicional significativo de memória. A estrutura de dados interna mais compacta para um contêiner seria um array de ponteiros para os itens.footnote:[É assim que as tuplas são armazenadas.] Comparado a isso, uma tabela de hash precisa armazenar mais dados para cada entrada e, para manter a eficiência, o Python precisa manter pelo menos um terço das linhas da tabela de hash vazias.
 * Para economizar memória, evite criar atributos de instância fora do método `+__init__+`.
 
-Essa última dica, sobre atributos de instância, é consequência do comportamento default do Python, de armazenar atributos de instância em um atributo `+__dict__+` especial, que é um `dict` vinculado a cada instância.footnote:[A menos que classe tenha umm atributo `+__slots__+`, como explicado na seção <<slots_section>>.]
+Essa última dica, sobre atributos de instância, é consequência do comportamento default do Python, de armazenar atributos de instância em um atributo `+__dict__+` especial, que é um `dict` vinculado a cada instância.footnote:[A menos que classe tenha umm atributo `+__slots__+`, como explicado na <<slots_section>>.]
 Desde a implementação da https://fpy.li/pep412[PEP 412—Key-Sharing Dictionary (_Dicionário de Compartilhamento de Chaves_)] (EN), no Python 3.3,
 instâncias de uma classe podem compartilhar uma tabela de hash comum, armazenada com a classe.
 Essa tabela de hash comum é compartilhada pelo `+__dict__+` de cada nova instância que, quando `+__init__+` retorna, tenha os mesmos nomes de atributos que a primeira instância daquela classe a ser criada. O `+__dict__+` de cada instância então pode manter apenas seus próprios valores de atributos como uma simples array de ponteiros.
@@ -1008,7 +1008,7 @@ E por falar em sintaxe, a ideia das listcomps foi adaptada para criar conjuntos 
 
 ==== Compreensões de conjuntos
 
-Compreensões de conjuntos((("sets", "set comprehensions"))) (_setcomps_) apareceram há bastante tempo, no Python 2.7, junto com as dictcomps que vimos na seção <<dictcomp_sec>>. O <<ex_setcomp>> mostra procedimento.
+Compreensões de conjuntos((("sets", "set comprehensions"))) (_setcomps_) apareceram há bastante tempo, no Python 2.7, junto com as dictcomps que vimos na <<dictcomp_sec>>. O <<ex_setcomp>> mostra procedimento.
 
 [[ex_setcomp]]
 .Cria um conjunto de caracteres Latin-1 que tenham a palavra "SIGN" em seus nomes Unicode
@@ -1024,7 +1024,7 @@ Compreensões de conjuntos((("sets", "set comprehensions"))) (_setcomps_) aparec
 <1> Importa a função `name` de `unicodedata` para obter os nomes dos caracteres.
 <2> Cria um conjunto de caracteres com códigos entre 32 e 255 que contenham a palavra `'SIGN'` em seus nomes.
 
-A ordem da saída muda a cada processo Python, devido ao hash "salgado", mencionado na seção <<what_is_hashable>>.
+A ordem da saída muda a cada processo Python, devido ao hash "salgado", mencionado na <<what_is_hashable>>.
 
 Questões de sintaxe à parte, vamos considerar agora o comportamento dos conjuntos.((("", startref="DASset03")))
 
@@ -1035,7 +1035,7 @@ Questões de sintaxe à parte, vamos considerar agora o comportamento dos conjun
 
 Os((("dictionaries and sets", "consequences of how set works")))((("sets", "consequences of how set works"))) tipos `set` e `frozenset` são ambos implementados com um tabela de hash. Isso tem os seguintes efeitos:
 
-* Elementos de conjuntos tem que ser objetos hashable. Eles precisam implementar métodos `+__hash__+` e `+__eq__+` adequados, como descrido na seção <<what_is_hashable>>.
+* Elementos de conjuntos tem que ser objetos hashable. Eles precisam implementar métodos `+__hash__+` e `+__eq__+` adequados, como descrido na <<what_is_hashable>>.
 * O teste de existência de um elemento é muito eficiente. Um conjunto pode ter milhões de elementos, mas um elemento pode ser localizado diretamente, computando o código hash da chave e derivando um deslocamento do índice, com o possível ônus de um pequeno número de tentativas até encontrar a entrada correspondente ou exaurir a busca.
 * Conjuntos usam mais memória se comparados aos simples ponteiros de um array para seus elementos—que é uma estrutura mais compacta, mas também muito mais lenta para buscas se seu tamanho cresce além de uns poucos elementos.
 * A ordem dos elementos depende da ordem de inserção, mas não de forma útil ou confiável. Se dois elementos são diferentes mas tem o mesmo código hash, sua posição depende de qual elemento foi inserido primeiro.
@@ -1141,7 +1141,7 @@ Além de operadores e métodos derivados da teoria matemática dos conjuntos, os
 |===================================================================================================================
 
 
-Isso encerra nossa visão geral dos recursos dos conjuntos. Como prometido na seção <<dictionary_views_sec>>, vamos agora ver como dois dos tipos de views de dicionários se comportam de forma muito similar a um `frozenset`.((("", startref="Soper03")))((("", startref="DASset03-ops")))
+Isso encerra nossa visão geral dos recursos dos conjuntos. Como prometido na <<dictionary_views_sec>>, vamos agora ver como dois dos tipos de views de dicionários se comportam de forma muito similar a um `frozenset`.((("", startref="Soper03")))((("", startref="DASset03-ops")))
 
 
 [[set_ops_dict_views_sec]]

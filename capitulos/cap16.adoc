@@ -40,7 +40,7 @@ Está claro que operadores infixos tornam as fórmulas mais legíveis.
 A sobrecarga de operadores é necessária para suportar a notação infixa de operadores com tipos definidos pelo usuário ou estendidos, tal como os arrays do NumPy.
 Oferecer a sobrecarga de operadores em uma linguagem de alto nível e fácil de usar foi provavelmente uma das principais razões do imenso sucesso do Python na ciência de dados, incluindo as aplicações financeiras e científicas.
 
-Na seção <<data_model_emulating_sec>> (do <<data_model>>) vimos algumas implementações triviais de operadores em uma classe básica `Vector`. Os métodos `+__add__+` e `+__mul__+` no <<ex_vector2d>> foram escritos para demonstrar como os métodos especiais suportam a sobrecarga de operadores, mas deixamos passar problemas sutis naquelas implementações. Além disso, no <<ex_vector2d_v0>> notamos que o método `+Vector2d.__eq__+` considera `True` a seguinte expressão: `Vector(3, 4) == [3, 4]`&#x2014;algo que pode ou não fazer sentido. Nesse capítulo vamos cuidar desses problemas, e((("operator overloading", "topics covered"))) falaremos também de:
+Na <<data_model_emulating_sec>> (do <<data_model>>) vimos algumas implementações triviais de operadores em uma classe básica `Vector`. Os métodos `+__add__+` e `+__mul__+` no <<ex_vector2d>> foram escritos para demonstrar como os métodos especiais suportam a sobrecarga de operadores, mas deixamos passar problemas sutis naquelas implementações. Além disso, no <<ex_vector2d_v0>> notamos que o método `+Vector2d.__eq__+` considera `True` a seguinte expressão: `Vector(3, 4) == [3, 4]`&#x2014;algo que pode ou não fazer sentido. Nesse capítulo vamos cuidar desses problemas, e((("operator overloading", "topics covered"))) falaremos também de:
 
 * Como um método de operador infixo deveria indicar que não consegue tratar um operando
 * O uso de _duck typing_ ou _goose typing_ para lidar com operandos de vários tipos
@@ -50,12 +50,12 @@ Na seção <<data_model_emulating_sec>> (do <<data_model>>) vimos algumas implem
 
 === Novidades nesse capítulo
 
-O _goose typing_((("operator overloading", "significant changes to"))) é uma parte fundamental do Python, mas as ABCs `numbers` não são suportadas na tipagem estática. Então modifiquei o <<ex_vector_v7>> para usar _duck typing_, em vez de uma verificação explícita usando `isinstance` contra `numbers.Real`.footnote:[O restante das ABCs na biblioteca padrão do Python ainda são valiosas para o _goose typing_ e a tipagem estática. O problema com as ABCs `numbers` é explicado na seção <<numbers_abc_proto_sec>>.]
+O _goose typing_((("operator overloading", "significant changes to"))) é uma parte fundamental do Python, mas as ABCs `numbers` não são suportadas na tipagem estática. Então modifiquei o <<ex_vector_v7>> para usar _duck typing_, em vez de uma verificação explícita usando `isinstance` contra `numbers.Real`.footnote:[O restante das ABCs na biblioteca padrão do Python ainda são valiosas para o _goose typing_ e a tipagem estática. O problema com as ABCs `numbers` é explicado na <<numbers_abc_proto_sec>>.]
 
-Na primeira edição do _Python Fluente_, tratei do operador de multiplicação de matrizes `@` como uma mudança futura, quando o Python 3.5 ainda estava em sua versão alfa. Agora o `@` está integrado ao fluxo do capítulo na seção <<matmul_operator_sec>>.
+Na primeira edição do _Python Fluente_, tratei do operador de multiplicação de matrizes `@` como uma mudança futura, quando o Python 3.5 ainda estava em sua versão alfa. Agora o `@` está integrado ao fluxo do capítulo na <<matmul_operator_sec>>.
 Aproveitei o _goose typing_ para tornar a implementação de `+__matmul__+` aqui mais segura que a da primeira edição, sem comprometer sua flexibilidade.
 
-A seção <<further_reading_op_sec>> agora inclui algumas novas referências—incluindo um post de blog de Guido van Rossum.
+A <<further_reading_op_sec>> agora inclui algumas novas referências—incluindo um post de blog de Guido van Rossum.
 Também adicionei menções a duas bibliotecas que demonstram um uso efetivo da sobrecarga de operadores fora do domínio da matemática: `pathlib` e `Scapy`.
 
 
@@ -80,7 +80,7 @@ Vamos começar pelo tópico mais fácil: operadores unários.
 A seção https://docs.python.org/pt-br/3/reference/expressions.html#unary-arithmetic-and-bitwise-operations["6.5. Unary arithmetic and bitwise operations" (_Aritmética unária e operações binárias_)] (EN), de _A Referência da Linguagem Python_, elenca((("operator overloading", "unary operators", id="OOunary16")))((("unary operators", id="unary16"))) três operações unárias, listadas abaixo juntamente com seus métodos especiais associados:
 
 `-`, implementado por `+__neg__+`:: Negativo((("&#x005F;&#x005F;neg&#x005F;&#x005F;"))) aritmético unário. Se `x` é `-2` então `-x == 2`.
-`{plus}`, implementado por `+__pos__+`:: Positivo((("&#x005F;&#x005F;pos&#x005F;&#x005F;"))) aritmético unário. De forma geral, `x == +x`, mas há alguns poucos casos onde isso não é verdadeiro. Veja a seção <<when_plus_x_sec>>, se estiver curioso.
+`{plus}`, implementado por `+__pos__+`:: Positivo((("&#x005F;&#x005F;pos&#x005F;&#x005F;"))) aritmético unário. De forma geral, `x == +x`, mas há alguns poucos casos onde isso não é verdadeiro. Veja a <<when_plus_x_sec>>, se estiver curioso.
 `~`, implementado por `+__invert__+`:: Negação((("&#x005F;&#x005F;invert&#x005F;&#x005F;"))) binária, ou inversão binária de um inteiro, definida como `~x == -(x+1)`. Se `x` é `2` então `~x == -3`.footnote:[Veja https://pt.wikipedia.org/wiki/L%C3%B3gica_bin%C3%A1ria#NOT[Lógica Binária - NOT] para uma explicação da negação binária.]
 
 O pass:[<a href="https://docs.python.org/pt-br/3/reference/datamodel.html#object.__neg__">capítulo "Modelo de Dados"</a>] de _A Referência da Linguagem Python_ também inclui a função embutida `abs()` como um operador unário. O método especial associado é `+__abs__+`, como já vimos.
@@ -229,7 +229,7 @@ Observe como `+__add__+` devolve uma nova instância de `Vector`, sem modificar 
 
 [WARNING]
 ====
-Métodos especiais implementando operadores unários ou infixos não devem nunca modificar o valor dos operandos. Se espera que expressões com tais operandos produzam resultados criando novos objetos. Apenas operadores de atribuição aumentada podem modidifcar o primeiro operando (`self`), como discutido na seção <<augmented_assign_ops>>.
+Métodos especiais implementando operadores unários ou infixos não devem nunca modificar o valor dos operandos. Se espera que expressões com tais operandos produzam resultados criando novos objetos. Apenas operadores de atribuição aumentada podem modidifcar o primeiro operando (`self`), como discutido na <<augmented_assign_ops>>.
 ====
 
 O <<ex_vector_add_t1>> permite somar um `Vector` a um `Vector2d`, e `Vector` a uma tupla ou qualquer iterável que produza números, como prova o <<ex_vector_add_demo_mixed_ok>>.
@@ -408,7 +408,7 @@ Vector([11.0, 22.0, 33.0])
 [NOTE]
 ====
 Outro tipo de produto envolvendo operandos de `Vector` seria o _dot product_ (produto vetorial) de dois vetores—ou multiplicação de matrizes, se tomarmos um vetor como uma matriz de 1 &#x00D7; N e o outro como uma matriz de N &#x00D7; 1.
-Vamos implementar esse operador em nossa classe `Vector` na seção <<matmul_operator_sec>>.
+Vamos implementar esse operador em nossa classe `Vector` na <<matmul_operator_sec>>.
 ====
 
 De volta a nosso produto escalar, começamos novamente com os métodos `+__mul__+` e `+__rmul__+` mais simples possíveis que possam funcionar:
@@ -480,7 +480,7 @@ Na primeira edição de _Python Fluente_, usei _goose typing_ no <<ex_vector_v7>
 Agora eu evito usar as ABCs de `numbers`, por não serem suportadas pelas anotações de tipo introduzidas na PEP 484.
 Usar durante a execução tipos que não podem ser também verificados de forma estática me parece uma má ideia.
 
-Outra alternativa seria verificar com o protocolo `typing.SupportsFloat`, que vimos na seção <<runtime_checkable_proto_sec>>. Escolhi usar _duck typing_ naquele exemplo por achar que pythonistas fluentes devem se sentir confortáveis com esse padrão de programação.
+Outra alternativa seria verificar com o protocolo `typing.SupportsFloat`, que vimos na <<runtime_checkable_proto_sec>>. Escolhi usar _duck typing_ naquele exemplo por achar que pythonistas fluentes devem se sentir confortáveis com esse padrão de programação.
 
 Mas `+__matmul__+`, no <<ex_vector_v7_matmul>>, que é novo e foi escrito para essa segunda edição, é um bom exemplo de _goose typing_.((("", startref="starover16")))((("", startref="staroverb16")))((("", startref="OOscalar16")))((("", startref="Mscalar16")))
 ====
@@ -572,7 +572,7 @@ No <<ex_vector_v7_matmul>>, substituí o `if` interno por um `try/except ValueEr
 O <<ex_vector_v7_matmul>> é um bom exemplo prático de _goose typing_.
 Testar o operando `other` contra `Vector` negaria aos usuários a flexibilidade de usar listas ou arrays como operandos de `@`.
 Desde que um dos operandos seja um `Vector`, nossa implementação de `@` suporta outros operandos que sejam instâncias de `abc.Sized` e `abc.Iterable`.
-Ambas as ABCs implementam o `+__subclasshook__+`, portanto qualquer objeto que forneça `+__len__+` e `+__iter__+` satisfaz nosso teste—não há necessidade de criar subclasses concretas dessas ABCs ou sequer registrar-se com elas, como explicado na seção <<subclasshook_sec>>.
+Ambas as ABCs implementam o `+__subclasshook__+`, portanto qualquer objeto que forneça `+__len__+` e `+__iter__+` satisfaz nosso teste—não há necessidade de criar subclasses concretas dessas ABCs ou sequer registrar-se com elas, como explicado na <<subclasshook_sec>>.
 Em especial, nossa classe `Vector` não é subclasse nem de `abc.Sized` nem de `abc.Iterable`, mas passa os testes de `isinstance` contra aquelas ABCs, pois implementa os métodos necessários.
 
 Vamos revisar os operadores aritméticos suportados pelo Python antes de mergulhar na categoria especial dos <<rich_comp_op_sec>>.((("", startref="atinfix16")))((("", startref="OOatsign16")))
@@ -907,7 +907,7 @@ Misturar operandos de mais de um tipo exige detectar os operandos que não podem
 De modo geral, bibliotecas deveriam tirar proveito do _duck typing_--abrindo a porta para objetos independente de seus tipos, desde que eles suportem as operações necessárias.
 Entretanto, o algoritmo de despacho de operadores do Python pode produzir mensagens de erro enganosas ou resultados inesperados quando combinado com o _duck typing_.
 Por essa razão, a disciplina da verificação de tipo com invocações de `isinstance` contra ABCs é muitas vezes útil quando escrevemos métodos especiais para sobrecarga de operadores.
-Essa é a técnica batizada de _goose typing_ por Alex Martelli—como vimos na seção <<goose_typing_sec>>.
+Essa é a técnica batizada de _goose typing_ por Alex Martelli—como vimos na <<goose_typing_sec>>.
 A _goose typing_ é um bom compromisso entre a flexibilidade e a segurança, porque os tipos definidos pelo usuário, existentes ou futuros, podem ser declarados como subclasses reais ou virtuais de uma ABC.
 Além disso, se uma ABC implementa o `+__subclasshook__+`, objetos podem então passar por verificações com `isinstance` contra aquela ABC apenas fornecendo os métodos exigidos--sem necessidade de ser uma subclasse ou de se registrar com a ABC.
 
@@ -925,7 +925,7 @@ Guido van Rossum((("operator overloading", "further reading on"))) escreveu uma 
 Trey Hunner postou https://fpy.li/16-11["Tuple ordering and deep comparisons in Python" (_Ordenação de tuplas e comparações profundas em Python_)] (EN), argumentando que os operadores de comparação cheia do Python são mais flexíveis e poderosos do que os programadores vindos de outras linguagens costumam pensar.
 
 A sobrecarga de operadores é uma área da programação em Python onde testes com `isinstance` são comuns.
-A melhor prática relacionada a tais testes é a _goose typing_, tratada na seção <<goose_typing_sec>>.
+A melhor prática relacionada a tais testes é a _goose typing_, tratada na <<goose_typing_sec>>.
 Se você pulou essa parte, se assegure de voltar lá e ler aquela seção.
 
 A principal referência para os métodos especiais de operadores é o https://docs.python.org/pt-br/3/reference/datamodel.html[capítulo "Modelos de Dados"] na documentação do Python. Outra leitura relevante é https://docs.python.org/pt-br/3/library/numbers.html#implementing-the-arithmetic-operations["Implementando as operações aritméticas"] no módulo `numbers` da _Biblioteca Padrão do Python_.
