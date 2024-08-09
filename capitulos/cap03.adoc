@@ -887,14 +887,18 @@ Agora vamos estudar conjuntos(_sets_).
 
 === Teoria dos conjuntos
 
-Conjuntos((("sets", "set theory", id=Stheory03")))((("dictionaries and sets", "set theory", id="DASset03"))) não são novidade no Python, mais ainda são um tanto subutilizados. O tipo `set` e seu irmão imutável, `frozenset`, surgiram inicialmente como módulos, na biblioteca padrão do Python 2.3, e foram promovidos a tipos embutidos no Python 2.6.
+Conjuntos((("sets", "set theory", id=Stheory03")))((("dictionaries and sets", "set theory", id="DASset03")))((("frozenset")))
+não são novidade no Python, mais ainda são um tanto subutilizados.
+O tipo `set` e seu irmão imutável, `frozenset`,
+surgiram inicialmente como módulos na biblioteca padrão do Python 2.3,
+e foram promovidos a tipos embutidos no Python 2.6.
 
 [NOTE]
 ====
-Nesse((("frozenset"))) livro, uso a palavra "conjunto" para me referir tanto a `set` quanto a `frozenset`. Quando falo especificamente sobre a classe `set`, uso a fonte de espaçamento constante: `set`.
+Nesse livro, uso a palavra "conjunto" para me referir tanto a `set` quanto a `frozenset`.
 ====
 
-Um conjunto é uma coleção de objetos únicos. Um caso de uso básico é a remoção de itens duplicados:
+Um conjunto é uma coleção de objetos únicos. Uma grande utilidade dos conjuntos é descartar itens duplicados:
 
 [source, pycon]
 ----
@@ -917,11 +921,23 @@ dict_keys(['spam', 'eggs', 'bacon'])
 ----
 ====
 
-Elementos de um conjunto devem ser hashable. O tipo `set` não é hashable, então não é possível criar um `set` com instâncias aninhadas de `set`. Mas `frozenset` é hashable, então você pode ter elementos `frozenset` dentro de um `set`.
+Elementos de um conjunto devem ser _hashable_.
+O tipo `set` não é hashable, então não é possível criar um `set` com instâncias aninhadas de `set`.
+Mas `frozenset` é hashable, então você pode ter instâncias de `frozenset` dentro de um `set`.
 
-Além de impor a unicidade de cada elemento, os tipos conjunto implementam muitas operações entre conjuntos como operadores infixos. Assim, dados dois conjuntos `a` e `b`, `a | b` devolve sua união, `a & b` calcula a intersecção, `a - b` a diferença, e `a ^ b` a diferença simétrica. Usadas com sabedoria, as operações de conjuntos podem reduzir tanto a contagem de linhas quanto o tempo de execução de programas Python, ao mesmo tempo em que tornam o código mais legível e mais fácil de entender e debater—pela remoção de loops e da lógica condicional.
+Além de impor a unicidade de cada elemento,
+os tipos conjunto implementam muitas operações entre conjuntos como operadores infixos.
+Assim, dados dois conjuntos `a` e `b`, `a | b` devolve sua união,
+`a & b` calcula a intersecção, `a - b` a diferença, e `a ^ b` a diferença simétrica.
+Quando bem utilizadas,
+as operações de conjuntos podem reduzir tanto a contagem de linhas quanto o tempo de execução de programas Python,
+ao mesmo tempo em que tornam o código mais legível e mais fácil de entender—pela remoção de loops e lógica condicional.
 
-Por exemplo, imagine que você tem um grande conjunto de endereços de email (o `palheiro`—_haystack_) e um conjunto menor de endereços (as `agulhas`—_needles_), e precisa contar quantas `agulhas` existem no `palheiro`. Graças à interseção de `set` (o operador `&`), é possível programar isso em uma única linha (veja o <<ex_set_ops_ex>>).
+Por exemplo, imagine que você tem um grande conjunto de endereços de email (o "palheiro"—`haystack`)
+e um conjunto menor de endereços (as "agulhas"—`needles``),
+e precisa contar quantas agulhas existem no palheiro.
+Graças à interseção de `set` (o operador `&`),
+é possível codar isso em uma expressão simples (veja o <<ex_set_ops_ex>>).
 
 [[ex_set_ops_ex]]
 .Conta as ocorrências de agulhas (_needles_) em um palheiro (_haystack_), ambos do tipo set
@@ -946,7 +962,10 @@ for n in needles:
 ----
 ====
 
-O <<ex_set_ops_ex>> é um pouco mais rápido que o <<ex_set_loop_ex>>. Por outros lado, o <<ex_set_loop_ex>> funciona para quaisquer objetos iteráveis `needles` e `haystack`, enquanto o <<ex_set_ops_ex>> exige que ambos sejam conjuntos. Mas se você não tem conjuntos à mão, pode sempre criá-los na hora, como mostra o <<ex_set_ops_ex2>>.
+O <<ex_set_ops_ex>> é um pouco mais rápido que o <<ex_set_loop_ex>>.
+Por outro lado, o <<ex_set_loop_ex>> funciona para quaisquer objetos iteráveis `needles` e `haystack`,
+enquanto o <<ex_set_ops_ex>> exige que ambos sejam conjuntos.
+Mas se você não tem conjuntos à mão, pode sempre criá-los na hora, como mostra o <<ex_set_ops_ex2>>.
 
 [[ex_set_ops_ex2]]
 .Conta as ocorrências de agulhas (_needles_) em um palheiro (_haystack_); essas linhas funcionam  para qualquer tipo iterável
@@ -960,24 +979,34 @@ found = len(set(needles).intersection(haystack))
 ----
 ====
 
-Claro, há o custo extra envolvido na criação dos conjuntos no <<ex_set_ops_ex2>>, mas se ou as `needles` ou o `haystack` já forem um `set`, a alternativa no <<ex_set_ops_ex2>> pode ser mais barata que o <<ex_set_loop_ex>>.
+Claro, há o custo extra envolvido na criação dos conjuntos no <<ex_set_ops_ex2>>,
+mas se ou as `needles` ou o `haystack` já forem um `set`,
+a alternativa no <<ex_set_ops_ex2>> pode ser mais barata que o <<ex_set_loop_ex>>.
 
-Qualquer dos exemplos acima é capaz de buscar 1000 elementos em um `haystack` de 10,000,000 de itens em cerca de 0,3 milisegundos—isso é próximo de 0,3 microsegundos por elemento.
+Qualquer dos exemplos acima é capaz de buscar 1000 elementos em um `haystack` de 10 milhões
+de itens em cerca de 0,3 milisegundos—isso é cerca de 0,3 microsegundos por elemento.
 
-Além do teste de existência extremamente rápido (graças à tabela de hash subjacente), os tipos embutidos `set` e `frozenset` oferecem uma rica API para criar novos conjuntos ou, no caso de `set`, para modificar conjuntos existentes. Vamos discutir essas operações em breve, após uma observação sobre sintaxe.((("", startref="Stheory03")))
+Além do teste de existência extremamente rápido (graças à tabela de hash subjacente),
+os tipos embutidos `set` e `frozenset` oferecem uma rica API para criar novos conjuntos ou,
+no caso de `set`, para modificar conjuntos existentes.
+Vamos discutir essas operações em breve, após uma observação sobre sintaxe.((("", startref="Stheory03")))
 
 
 ==== Sets literais
 
-A((("sets", "set literals"))) sintaxe de literais `set`—`{1}`, `{1, 2}`, etc.—parece exatamente igual à notação matemática, mas tem uma importante exceção: não há notação literal para o `set` vazio, então precisamos nos lembrar de escrever `set()`.
+A((("sets", "set literals"))) sintaxe de literais `set`—`{1}`, `{1, 2}`, etc.—parece
+muito com a notação matemática, mas tem uma importante exceção:
+não há notação literal para o `set` vazio, então precisamos nos lembrar de escrever `set()`.
 
 .Peculiaridade sintática
 [WARNING]
 ====
-Não esqueça que, para criar um `set` vazio, é preciso usar o construtor sem argumentos: `set()`. Se você escrever `{}`, vai criar um +dict+ vazio&#x2014;isso não mudou no Python 3.
+Para criar um `set` vazio, usamos o construtor sem argumentos: `set()`.
+Se você escrever `{}`, vai criar um +dict+ vazio&#x2014;isso não mudou no Python 3.
 ====
 
-No Python 3, a representação padrão dos sets como strings sempre usa a notação `{…}`, exceto para o conjunto vazio:
+No Python 3, a representação padrão dos sets como strings sempre usa a notação `{…}`,
+exceto para o conjunto vazio:
 
 [source, pycon]
 ----
@@ -992,10 +1021,15 @@ No Python 3, a representação padrão dos sets como strings sempre usa a notaç
 set()
 ----
 
-[role="pagebreak-before less_space"]
-A sintaxe do `set` literal, como `{1, 2, 3}`, é mais rápida e mais legível que uma chamada ao construtor (por exemplo, `set([1, 2, 3])`). Essa última forma é mais lenta porque, para avaliá-la, o Python precisa buscar o nome `set` para obter seu construtor, daí criar uma lista e, finalmente, passá-la para o construtor. Por outro lado, para processar um literal como `{1, 2, 3}`, o Python roda um bytecode especializado, `BUILD_SET`.footnote:[Isso pode ser interessante, mas não é super importante. Essa diferença de velocidade vai ocorrer apenas quando um conjunto literal for avaliado, e isso acontece no máximo uma vez por processo Python—quando um módulo é compilado pela primeira vez. Se você estiver curiosa, importe a função `dis` do módulo `dis`, e a use para desmontar os bytecodes para um `set` literal—por exemplo, `dis('{1}')`—e uma chamada a `set`—`+dis('set([1])')+`]
+A sintaxe do `set` literal, como `{1, 2, 3}`, é mais rápida e mais legível que uma chamada ao construtor (por exemplo, `set([1, 2, 3])`).
+Essa última forma é mais lenta porque, para avaliá-la, o Python precisa buscar o nome `set` para obter seu construtor,
+daí criar uma lista e, finalmente, passá-la para o construtor.
+Por outro lado, para processar um literal como `{1, 2, 3}`,
+o Python roda um bytecode especializado, `BUILD_SET`.footnote:[Isso pode ser interessante, mas não é super importante. Essa diferença de velocidade vai ocorrer apenas quando um conjunto literal for avaliado, e isso acontece no máximo uma vez por processo Python—quando um módulo é compilado pela primeira vez. Se você estiver curiosa, importe a função `dis` do módulo `dis`, e a use para inspecionar os bytecodes de um `set` literal—por exemplo, `dis('{1}')`—e uma chamada ao construtor `set`—`+dis('set([1])')+`]
 
-Não há sintaxe especial para representar literais `frozenset`—eles devem ser criados chamando seu construtor. Sua representação padrão como string no Python 3 se parece com uma chamada ao construtor de `frozenset`. Observe a saída na sessão de console a seguir:
+Não há sintaxe especial para representar literais `frozenset`—eles só podem ser criados chamando seu construtor.
+Sua representação padrão como string no Python 3 se parece com uma chamada ao construtor de `frozenset` com um argumento `set``.
+Observe a saída na sessão de console a seguir:
 
 [source, pycon]
 ----
