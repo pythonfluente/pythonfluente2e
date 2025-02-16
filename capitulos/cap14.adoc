@@ -8,15 +8,15 @@
 [[inheritance]]
 == Herança: para o bem ou para o mal
 
-[quote, Alan Kay, Os Primórdios do Smalltalk]
+[quote, Alan Kay, Os Primórdios de Smalltalk]
 ____
-[...] precisávamos de toda uma teoria melhor sobre herança (e ainda precisamos). Por exemplo, herança e instanciação (que é um tipo de herança) embaralham tanto a pragmática (tal como fatorar o código para economizar espaço) quanto a semântica (usada para um excesso de tarefas tais como: especialização, generalização, especiação, etc.).footnote:[Alan Kay, "The Early History of Smalltalk" (_Os Primórdios do Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95. Também disponível https://fpy.li/14-1[online] (EN).
+[...] precisávamos de toda uma teoria melhor sobre herança (e ainda precisamos). Por exemplo, herança e instanciação (que é um tipo de herança) embaralham tanto a pragmática (tal como fatorar o código para economizar espaço) quanto a semântica (usada para um excesso de tarefas tais como: especialização, generalização, especiação, etc.).footnote:[Alan Kay, "The Early History of Smalltalk" (_Os Primórdios de Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95. Também disponível https://fpy.li/14-1[online] (EN).
 Agradeço a meu amigo Christiano Anderson, por compartilhar essa referência quando eu estava escrevendo este capítulo.]
 ____
 
 Esse((("inheritance and subclassing", "topics covered"))) capítulo é sobre herança e criação de subclasses.
-Vou presumir um entendimento básico desses conceitos, que você pode ter aprendido lendo https://docs.python.org/pt-br/3/tutorial/classes.html[_O Tutorial do Python_], ou por experiências com outra linguagem orientada a objetos popular, tal como Java, C# ou C&#x2b;&#x2b;.
-Aqui vamos nos concentrar em quatro características do Python:
+Vou presumir um entendimento básico desses conceitos, que você pode ter aprendido lendo https://docs.python.org/pt-br/3/tutorial/classes.html[_O Tutorial de Python_], ou por experiências com outra linguagem orientada a objetos popular, tal como Java, C# ou C&#x2b;&#x2b;.
+Aqui vamos nos concentrar em quatro características de Python:
 
 * A função `super()`
 * As armadilhas na criação de subclasses de tipos embutidos
@@ -25,7 +25,7 @@ Aqui vamos nos concentrar em quatro características do Python:
 
 Herança múltipla acontece quando uma classe tem mais de uma classe base. O C&#x2b;&#x2b; a suporta; Java e C# não.
 Muitos consideram que a herança múltipla não vale a quantidade de problemas que causa.
-Ela foi deliberadamente deixada de fora do Java, após seu aparente abuso nas primeiras bases de código C&#x2b;&#x2b;.
+Ela foi deliberadamente deixada de fora de Java, após seu aparente abuso nas primeiras bases de código C&#x2b;&#x2b;.
 
 Esse capítulo introduz a herança múltipla para aqueles que nunca a usaram,
 e oferece orientações sobre como lidar com herança simples ou múltipla, se você precisar usá-la.
@@ -77,7 +77,7 @@ Invocar um `+__init__+` sobreposto é particulamente importante, para permitir q
 
 [TIP]
 ====
-Se você aprendeu programação orientada a objetos com Java, com certeza se lembra que, naquela linguagem, um método construtor invoca automaticamente o construtor sem argumentos da superclasse. O Python não faz isso. Se acostume a escrever o seguinte código padrão:
+Se você aprendeu programação orientada a objetos com Java, com certeza se lembra que, naquela linguagem, um método construtor invoca automaticamente o construtor sem argumentos da superclasse. Python não faz isso. Se acostume a escrever o seguinte código padrão:
 
 [source, py]
 ----
@@ -119,7 +119,7 @@ class LastUpdatedOrderedDict(OrderedDict):
 ----
 
 Os dois argumento de `super` são agora opcionais.
-O compilador de bytecode do Python 3 obtém e fornece ambos examinando o contexto circundante, quando `super()` é invocado dentro de um método.
+O compilador de bytecode de Python 3 obtém e fornece ambos examinando o contexto circundante, quando `super()` é invocado dentro de um método.
 Os argumentos são:
 
 `type`::
@@ -142,8 +142,8 @@ Vamos agora discutir as ressalvas à criação de subclasses de tipos embutidos.
 [[subclass_builtin_woes]]
 === É complicado criar subclasses de tipos embutidos
 
-Nas((("inheritance and subclassing", "subclassing built-in types", id="IASsubbuilt14"))) primeiras versões do Python não era possível criar subclasses de tipos embutidos como `list` ou `dict`.
-Desde o Python 2.2 isso é possível, mas há restrição importante:
+Nas((("inheritance and subclassing", "subclassing built-in types", id="IASsubbuilt14"))) primeiras versões de Python não era possível criar subclasses de tipos embutidos como `list` ou `dict`.
+Desde Python 2.2 isso é possível, mas há restrição importante:
 o código (escrito em C) dos tipos embutidos normalmente não chama os métodos sobrepostos por classes definidas pelo usuário.
 Há uma boa descrição curta do problema na documentação do PyPy, na seção "Differences between PyPy and CPython" (_"Diferenças entre o PyPy e o CPython"_),
 https://fpy.li/pypydif["Subclasses of built-in types" (_Subclasses de tipos embutidos_)]:
@@ -182,7 +182,7 @@ O <<ex_doppeldict>> ilustra o problema.
 
 Esse comportamento dos tipos embutidos é uma violação de uma regra básica da programação orientada a objetos:
 a busca por métodos deveria sempre começar pela classe do receptor (`self`), mesmo quando a chamada ocorre dentro de um método implementado na superclasse.
-Isso é o que se chama "vinculação tardia" ("_late binding_"), que Alan Kay—um dos criadores do Smalltalk—considera ser uma característica básica da programação orientada a objetos:
+Isso é o que se chama "vinculação tardia" ("_late binding_"), que Alan Kay—um dos criadores de Smalltalk—considera ser uma característica básica da programação orientada a objetos:
 em qualquer chamada na forma `x.method()`, o método exato a ser chamado deve ser determinado durante a execução, baseado na classe do receptor `x`.footnote:[É interessante observar que o
 C&#x2b;&#x2b; diferencia métodos virtuais e não-virtuais. Métodos virtuais tem vinculação tardia, enquanto os métodos não-virtuais são vinculados na compilação. Apesar de todos os métodos que podemos escrever em Python serem de vinculação tardia, como um método virtual, objetos embutidos escritos em C parecem ter métodos não-virtuais por default, pelo menos no CPython.]
 Este triste estado de coisas contribui para os problemas que vimos na <<inconsistent_missing>>.
@@ -271,7 +271,7 @@ Para deixar claro: essa seção tratou de um problema que se aplica apenas à de
 Se você criar uma subclasse de uma classe escrita em Python, tal como `UserDict` ou `MutableMapping`, não vai encontrar esse problema.footnote:[Aliás, nesse mesmo tópico, o PyPy se comporta de forma mais "correta" que o CPython, às custas de introduzir uma pequena incompatibilidade. Veja os detalhes em https://fpy.li/14-5["Differences between PyPy and CPython" (_Diferenças entre o PyPy e o CPython_)] (EN).]
 
 Vamos agora examinar uma questão que aparece na herança múltipla:
-se uma classe tem duas superclasses, como o Python decide qual atributo usar quando invocamos `super().attr`, mas ambas as superclasses tem um atributo com esse nome?((("", startref="IASsubbuilt14")))
+se uma classe tem duas superclasses, como Python decide qual atributo usar quando invocamos `super().attr`, mas ambas as superclasses tem um atributo com esse nome?((("", startref="IASsubbuilt14")))
 
 [[mro_section]]
 === Herança múltipla e a Ordem de Resolução de Métodos
@@ -364,7 +364,7 @@ Por isso, é recomendado que todo método `m` de uma classe não-base chame `sup
 Métodos cooperativos devem ter assinaturas compatíveis, porque nunca se sabe se `A.ping` será chamado antes ou depois de `B.ping`.
 A sequência de ativação depende da ordem de `A` e `B` na declaração de cada subclasse que herda de ambos.
 
-O Python é uma linguagem dinâmica, então a interação de `super()` com a MRO também é dinâmica.
+Python é uma linguagem dinâmica, então a interação de `super()` com a MRO também é dinâmica.
 O <<ex_diamond2>> mostra um resultado surpreendente desse comportamento dinâmico.
 
 [[ex_diamond2]]
@@ -414,7 +414,7 @@ Em um programa real, uma classe como `U` poderia ser uma _classe mixin_:
 uma classe projetada para ser usada junto com outras classes em herança múltipla, fornecendo funcionalidade adicional.
 Vamos estudar isso em breve, na <<mixin_classes_sec>>.
 
-Para((("UML class diagrams", "Tkinter Text widget class and superclasses"))) concluir essa discussão sobre a MRO, a <<tkwidgets_mro_uml>> ilustra parte do complexo grafo de herança múltipla do toolkit de interface gráfica Tkinter, da biblioteca padrão do Python.
+Para((("UML class diagrams", "Tkinter Text widget class and superclasses"))) concluir essa discussão sobre a MRO, a <<tkwidgets_mro_uml>> ilustra parte do complexo grafo de herança múltipla do toolkit de interface gráfica Tkinter, da biblioteca padrão de Python.
 
 [[tkwidgets_mro_uml]]
 .Esquerda: diagrama UML da classe e das superclasses do componente `Text` do Tkinter. Direita: O longo e sinuoso caminho de `+Text.__mro__+`, desenhado com as setas pontilhadas.
@@ -452,7 +452,7 @@ Uma mixin não é feita para ser a única classe base de uma classe concreta, po
 [NOTE]
 ====
 Classes mixin são uma convenção sem qualquer suporte explícito no Python e no C++.
-O Ruby permite a definição explícita e o uso de módulos que funcionam como mixins—coleções de métodos que podem ser incluídas para adicionar funcionalidade a uma classe.
+Ruby permite a definição explícita e o uso de módulos que funcionam como mixins—coleções de métodos que podem ser incluídas para adicionar funcionalidade a uma classe.
 C#, PHP, e Rust implementam traits (_características_ ou _traços_ ou _aspectos_), que são também uma forma explícita de mixin.
 ====
 
@@ -534,10 +534,10 @@ Em Python a herança múltipla também não é regra, mas há exemplos important
 
 ==== ABCs também são mixins
 
-Na((("collections.abc module", "multiple inheritance in")))((("mixin methods"))) biblioteca padrão do Python, o uso mais visível de herança múltipla é o pacote `collections.abc`.
-Nenhuma controvérsia aqui:  afinal, até o Java suporta herança múltipla de interfaces, e ABCs são declarações de interface que podem, opcionalmente, fornecer implementações concretas de métodos.footnote:[Como já mencionado, o Java 8 permite que interfaces também forneçam implementações de métodos. Esse novo recurso é chamado https://fpy.li/14-12["Default Methods" (_Métodos Default_)] (EN) no Tutorial oficial do Java.]
+Na((("collections.abc module", "multiple inheritance in")))((("mixin methods"))) biblioteca padrão de Python, o uso mais visível de herança múltipla é o pacote `collections.abc`.
+Nenhuma controvérsia aqui:  afinal, até o Java suporta herança múltipla de interfaces, e ABCs são declarações de interface que podem, opcionalmente, fornecer implementações concretas de métodos.footnote:[Como já mencionado, o Java 8 permite que interfaces também forneçam implementações de métodos. Esse novo recurso é chamado https://fpy.li/14-12["Default Methods" (_Métodos Default_)] (EN) no Tutorial oficial de Java.]
 
-A documentação oficial do Python para
+A documentação oficial de Python para
 https://docs.python.org/pt-br/3/library/collections.abc.html[`collections.abc`] (EN)
 usa o termo _mixin method_  ("método mixin") para os métodos concretos implementados em muitas das coleções nas ABCs.
 As ABCs que oferecem métodos mixin cumprem dois papéis: elas são definições de interfaces e também classes mixin.
@@ -647,7 +647,7 @@ Demora um certo tempo para aprender a usar as views baseadas em classes e a form
 
 ==== Herança múltipla no Tkinter
 
-Um((("Tkinter GUI toolkit", "multiple inheritance in", id="tinkter14"))) exemplo extremo de herança múltipla na biblioteca padrão do Python é o
+Um((("Tkinter GUI toolkit", "multiple inheritance in", id="tinkter14"))) exemplo extremo de herança múltipla na biblioteca padrão de Python é o
 https://docs.python.org/pt-br/3/library/tkinter.html[toolkit de interface gráfica Tkinter].
 Usei parte da hierarquia de componentes do Tkinter para ilustrar a MRO na <<tkwidgets_mro_uml>>. A
 <<tkinter_uml>> mostra todos as classes de componentes no pacote base `tkinter` (há mais componentes gráficos no subpacote https://docs.python.org/pt-br/3/library/tkinter.ttk.html[`tkinter.ttk`]).
@@ -689,11 +689,11 @@ Text, Widget, BaseWidget, Misc, Pack, Place, Grid, XView, YView, object
 
 [NOTE]
 ====
-Pelos padrões atuais, a hierarquia de classes do Tkinter é muito profunda. Poucas partes da bilbioteca padrão do Python tem mais que três ou quatro níveis de classes concretas, e o mesmo pode ser dito da biblioteca de classes do Java.
-Entretanto, é interessante observar que algumas das hierarquias mais profundas da biblioteca de classes do Java são precisamente os pacotes relacionados à programação de interfaces gráficas:
+Pelos padrões atuais, a hierarquia de classes do Tkinter é muito profunda. Poucas partes da bilbioteca padrão de Python tem mais que três ou quatro níveis de classes concretas, e o mesmo pode ser dito da biblioteca de classes de Java.
+Entretanto, é interessante observar que algumas das hierarquias mais profundas da biblioteca de classes de Java são precisamente os pacotes relacionados à programação de interfaces gráficas:
 https://fpy.li/14-26[`java.awt`] e
 https://fpy.li/14-27[`javax.swing`].
-O https://fpy.li/14-28[Squeak], uma versão moderna e aberta do Smalltalk,
+O https://fpy.li/14-28[Squeak], uma versão moderna e aberta de Smalltalk,
 inclui o poderoso e inovador toolkit de interface gráfica Morphic, também com uma hierarquia de classes profunda.
 Na minha experiência, é nos toolkits de interface gráfica que a herança é mais útil.
 ====
@@ -796,7 +796,7 @@ Criar subclasses e sobrepor métodos de qualquer classe complexa é um processo 
 
 A primeira resposta é a documentação (algumas vezes na forma de docstrings ou até de comentários no código).
 Por exemplo, o pacote
-https://docs.python.org/pt-br/3/library/socketserver.html[`socketserver`] (EN) do Python é descrito como "um framework para servidores de rede".
+https://docs.python.org/pt-br/3/library/socketserver.html[`socketserver`] (EN) de Python é descrito como "um framework para servidores de rede".
 Sua classe https://docs.python.org/pt-br/3/library/socketserver.html#socketserver.BaseServer[`BaseServer`] (EN) foi projetada para a criação de subclasses, como o próprio nome sugere.
 E mais importante, a documentação e a https://fpy.li/14-33[docstring] (EN) no código-fonte da classe informa explicitamente quais de seus métodos foram criados para serem sobrepostos por subclasses.
 
@@ -821,7 +821,7 @@ Vamos agora analisar o Tkinter do ponto de vista dessas recomendações
 
 Afootnote:[NT: O nome da seção é uma referência ao filme "The Good, the Bad and the Ugly", um clássico do _spaghetti western_ de 1966, lançado no Brasil com o título "Três Homens em Conflito".] maioria dos conselhos da seção anterior não são seguidos pelo Tkinter, com a notável excessão de "<<aggregate_class_sec>>". E mesmo assim, esse não é um grande exemplo, pois a composição provavelmente funcionaria melhor para integrar os gerenciadores de geometria a `Widget`, como discutido na <<favor_composition_sec>>.
 
-Mas((("Tkinter GUI toolkit", "benefits and drawbacks of"))) lembre-se que o Tkinter é parte da biblioteca padrão desde o Python 1.1, lançado em 1994. O Tkinter é uma camada sobreposta ao excelente toolkit Tk GUI, da linguagem Tcl. O combo Tcl/Tk não é, na origem, orientado a objetos, então a API Tk é basicamente um imenso catálogo de funções. Entretanto, o toolkit é orientado a objetos por projeto, apesar de não o ser em sua implementação Tcl original.
+Mas((("Tkinter GUI toolkit", "benefits and drawbacks of"))) lembre-se que o Tkinter é parte da biblioteca padrão desde Python 1.1, lançado em 1994. O Tkinter é uma camada sobreposta ao excelente toolkit Tk GUI, da linguagem Tcl. O combo Tcl/Tk não é, na origem, orientado a objetos, então a API Tk é basicamente um imenso catálogo de funções. Entretanto, o toolkit é orientado a objetos por projeto, apesar de não o ser em sua implementação Tcl original.
 
 A docstring de `tkinter.Widget` começa com as palavras "Internal class" (_Classe interna_). Isso sugere que `Widget` deveria provavelmente ser uma ABC. Apesar da classe `Widget` não ter métodos próprios, ela define uma interface. Sua mensagem é: "Você pode contar que todos os componentes do Tkinter vão oferecer os métodos básicos de componente (`+__init__+`, `destroy`, e dezenas de funções da API Tk), além dos métodos de todos os três gerenciadores de geometria". Vamos combinar que essa não é uma boa definição de interface (é abrangente demais), mas ainda assim é uma interface, e `Widget` a "define" como a união das interfaces de suas superclasses.
 
@@ -852,7 +852,7 @@ https://docs.python.org/pt-br/3/library/collections.html[`collections`]—, que 
 O restante do capítulo foi dedicado à faca de dois gumes da herança múltipla. Primeiro vimos como a ordem de resolução de métodos, definida no atributo de classe `+__mro__+`, trata o problema de conflitos potenciais de nomes em métodos herdados. Também examinamos como a função embutida
 `super()` se comporta em hierarquias com herança múltipla, e como ela algumas vezes se comporta de forma inesperada. O comportamento de `super()` foi projetado para suportar classes mixin, que estudamos usando o exemplo simples de `UpperCaseMixin` (para mapeamentos indiferentes a maiúsculas/minúsculas).
 
-Exploramos como a herança múltipla e os métodos mixin são usados nas ABCs do Python, bem como nos mixins de threading e forking de `socketserver`.
+Exploramos como a herança múltipla e os métodos mixin são usados nas ABCs de Python, bem como nos mixins de threading e forking de `socketserver`.
 Usos mais complexos de herança múltipla foram exemplificados com as views baseadas em classes do Django e com o toolkit de interface gráfica Tkinter.
 Apesar do Tkinter não ser um exemplo das melhores práticas modernas, é um exemplo de hierarquias de classe complexas que podemos encontrar em sistemas legados.
 
@@ -860,7 +860,7 @@ Encerrando o capítulo, apresentamos sete recomendações para lidar com heranç
 
 Rejeitar a herança—mesmo a herança simples—é uma tendência moderna.
 Go é uma das mais bem sucedidas linguagens criadas no século 21. Ela não inclui um elemento chamado "classe", mas você pode construir tipos que são estruturas (_structs_) de campos encapsulados, e anexar métodos a essas estruturas.
-Em Go é possível definir interfaces, que são verificadas pelo compilador usando tipagem estrutural, também conhecida como((("static duck typing"))) _duck typing estática_—algo muito similar ao que temos com os tipos protocolo desde o Python 3.8. Essa linguagem também tem uma sintaxe especial para a criação de tipos e interfaces por composição, mas não há suporte a herança—nem entre interfaces.
+Em Go é possível definir interfaces, que são verificadas pelo compilador usando tipagem estrutural, também conhecida como((("static duck typing"))) _duck typing estática_—algo muito similar ao que temos com os tipos protocolo desde Python 3.8. Essa linguagem também tem uma sintaxe especial para a criação de tipos e interfaces por composição, mas não há suporte a herança—nem entre interfaces.
 
 Então talvez o melhor conselho sobre herança seja: evite-a se puder.
 Mas, frequentemente, não temos essa opção: os frameworks que usamos nos impõe suas escolhas de design.
@@ -884,14 +884,14 @@ Meu objetivo foi mostrar o quanto você pode alcançar com funções se valendo 
 
 A criação de subclasses de tipos embutidos, a função `super`, e recursos avançados como descritores e metaclasses, foram todos introduzidos no artigo https://fpy.li/descr101["Unifying types and classes in Python 2.2" (_Unificando tipos e classes em Python 2.2_)] (EN), de Guido van Rossum.
 Desde então, nada realmente importante mudou nesses recursos.
-O Python 2.2 foi uma proeza fantástica de evolução da linguagem, adicionando vários novos recursos poderosos em um todo coerente, sem quebrar a compatibilidade com versões anteriores. Os novo recursos eram 100% opcionais. Para usá-los, bastava programar explicitamente uma subclasse de `object`—direta ou indiretamente—, para criar uma assim chamada "classe no novo estilo". No Python 3, todas as classes são subclasses de `object`.
+Python 2.2 foi uma proeza fantástica de evolução da linguagem, adicionando vários novos recursos poderosos em um todo coerente, sem quebrar a compatibilidade com versões anteriores. Os novo recursos eram 100% opcionais. Para usá-los, bastava programar explicitamente uma subclasse de `object`—direta ou indiretamente—, para criar uma assim chamada "classe no novo estilo". No Python 3, todas as classes são subclasses de `object`.
 
 O pass:[<a class="orm:hideurl" href="https://fpy.li/pycook3"><em>Python Cookbook</em>, 3ª ed.</a>], de David Beazley e Brian K. Jones (O'Reilly) inclui várias receitas mostrando o uso de `super()` e de classes mixin. Você pode começar pela esclarecedora seção https://fpy.li/14-38["8.7. Calling a Method on a Parent Class" (_Invocando um Método em uma Superclasse_)], e seguir as referências internas a partir dali.
 
-O post https://fpy.li/14-39["Python’s super() considered super!" (O _super() do Python é mesmo super!_)] (EN), de Raymond Hettinger, explica o funcionamento de `super` e a herança múltipla de uma perspectiva positiva. Ele foi escrito em resposta a  https://fpy.li/14-40["Python's Super is nifty, but you can't use it (Previously: Python's Super Considered Harmful)" _O Super do Python é bacana, mas você não deve usá-lo (Antes: Super do Python Considerado Nocivo)_] (EN), de James Knight.
+O post https://fpy.li/14-39["Python’s super() considered super!" (O _super() de Python é mesmo super!_)] (EN), de Raymond Hettinger, explica o funcionamento de `super` e a herança múltipla de uma perspectiva positiva. Ele foi escrito em resposta a  https://fpy.li/14-40["Python's Super is nifty, but you can't use it (Previously: Python's Super Considered Harmful)" _O Super de Python é bacana, mas você não deve usá-lo (Antes: Super de Python Considerado Nocivo)_] (EN), de James Knight.
 A resposta de Martijn Pieters a
 https://fpy.li/14-41["How to use super() with one argument?" _(Como usar super() com um só argumento?)_] (EN) inclui uma explicação concisa e aprofundada de `super`, incluindo sua relação com descritores, um conceito que estudaremos apenas no <<attribute_descriptors>>.
-Essa é a natureza de `super`. Ele é simples de usar em casos de uso básicos, mas é uma ferramenta poderosa e complexa, que alcança alguns dos recursos dinâmicos mais avançados do Python, raramente encontrados em outras linguagens.
+Essa é a natureza de `super`. Ele é simples de usar em casos de uso básicos, mas é uma ferramenta poderosa e complexa, que alcança alguns dos recursos dinâmicos mais avançados de Python, raramente encontrados em outras linguagens.
 
 Apesar dos títulos daqueles posts, o problema não é exatamente com a função embutida `super`—que no Python 3 não é tão feia quanto era no Python 2.
 A questão real é a herança múltipla, algo inerentemente complicado e traiçoeiro.
@@ -902,9 +902,9 @@ Simionato escreveu, em seu blog, uma longa série de posts sobre herança múlti
 https://fpy.li/14-43["The wonders of cooperative inheritance, or using super in Python 3" (_As maravilhas da herança cooperativa, ou usando super em Python 3_)] (EN);
 https://fpy.li/14-44["Mixins considered harmful," part 1 (_Mixins consideradas nocivas_)] (EN) e
 https://fpy.li/14-45[part 2] (EN);
-e https://fpy.li/14-46["Things to Know About Python Super," part 1 (_O que você precisa saber sobre o super do Python_)] (EN),
+e https://fpy.li/14-46["Things to Know About Python Super," part 1 (_O que você precisa saber sobre o super de Python_)] (EN),
 https://fpy.li/14-47[part 2] (EN), e https://fpy.li/14-48[part 3] (EN).
-Os posts mais antigos usam a sintaxe de `super` do Python 2, mas ainda são relevantes.
+Os posts mais antigos usam a sintaxe de `super` de Python 2, mas ainda são relevantes.
 
 Eu li a primeira edição do _Object-Oriented Analysis and Design_, 3ª ed., de Grady Booch et al., e o recomendo fortemente como uma introdução geral ao pensamento orientado a objetos, independente da linguagem de programação. É um dos raros livros que trata da herança múltipla sem ideias pré-concebidas.
 
@@ -912,7 +912,7 @@ Hoje, mais que nunca, é de bom tom evitar a herança, então cá estão duas re
 Brandon Rhodes escreveu https://fpy.li/14-49["The Composition Over Inheritance Principle" (_O Princípio da Composição Antes da Herança_)] (EN), parte de seu excelente guia https://fpy.li/14-50[_Python Design Patterns_ (_Padrões de Projetos no Python_)].
 Augie Fackler e Nathaniel Manista apresentaram https://fpy.li/14-51["The End Of Object Inheritance & The Beginning Of A New Modularity" (_O Fim da Herança de Objetos & O Início de Uma Nova Modularidade_)] na PyCon 2013.
 Fackler e Manista falam sobre organizar sistemas em torno de interfaces e das funções que lidam com os objetos que implementam aquelas interfaces, evitando o acoplamento estreito e os pontos de falha de classes e da herança.
-Isso me lembra muito a maneira de pensar do Go, mas aqui os autores a defendem para o Python.
+Isso me lembra muito a maneira de pensar do Go, mas aqui os autores a defendem para Python.
 
 .Soapbox
 ****
@@ -920,10 +920,10 @@ Isso me lembra muito a maneira de pensar do Go, mas aqui os autores a defendem p
 [role="soapbox-title"]
 Pense nas classes realmente necessárias
 
-[quote, Alan Kay, The Early History of Smalltalk ("Os Primórdios do Smalltalk")]
+[quote, Alan Kay, The Early History of Smalltalk ("Os Primórdios de Smalltalk")]
 ____
 [Nós] começamos a defender a ideia de herança como uma maneira de permitir que iniciantes pudessem construir [algo] a partir de frameworks que só poderiam ser projetadas por especialistasfootnote:[Alan Kay,
-"The Early History of Smalltalk" (_Os Promórdios do Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95. Também disponível https://fpy.li/14-1[online] (EN). Agradeço a meu amigo Cristiano Anderson, que compartilhou essa referência quando eu estava escrevendo esse capítulo)].
+"The Early History of Smalltalk" (_Os Promórdios de Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95. Também disponível https://fpy.li/14-1[online] (EN). Agradeço a meu amigo Cristiano Anderson, que compartilhou essa referência quando eu estava escrevendo esse capítulo)].
 ____
 
 A((("inheritance and subclassing", "Soapbox discussion", id="IASsoap14")))((("Soapbox sidebars", "multilevel class hierarchies"))) imensa maioria dos programadores escreve aplicações, não frameworks. Mesmo aqueles que escrevem frameworks provavelmente passam muito (ou a maior parte) de seu tempo escrevendo aplicações. Quando escrevemos aplicações, normalmente não precisamos criar hierarquias de classes. No máximo escrevemos classes que são subclasses de ABCs ou de outras classes oferecidas pelo framework. Como desenvolvedores de aplicações, é muito raro precisarmos escrever uma classe que funcionará como superclasse de outra. As classes que escrevemos são, quase sempre, "classes folha" (isto é, folhas na árvore de herança).
@@ -959,17 +959,17 @@ Só precisamos estar cientes dos compromissos envolvidos.
 [role="soapbox-title"]
 Herança através das linguagens
 
-Alan Kay((("Soapbox sidebars", "inheritance across languages"))) criou o termo "orientado a objetos", e o Smalltalk tinha apenas herança simples, apesar de existirem versões com diferentes formas de suporte a herança múltipla, incluindo os dialetos modernos de Smalltalk, Squeak e Pharo, que suportam _traits_ ("traços")—um dispositivo de linguagem que pode substituir classes mixin, mas evita alguns dos problemas da herança múltipla.
+Alan Kay((("Soapbox sidebars", "inheritance across languages"))) criou o termo "orientado a objetos", e Smalltalk tinha apenas herança simples, apesar de existirem versões com diferentes formas de suporte a herança múltipla, incluindo os dialetos modernos de Smalltalk, Squeak e Pharo, que suportam _traits_ ("traços")—um dispositivo de linguagem que pode substituir classes mixin, mas evita alguns dos problemas da herança múltipla.
 
 A primeira linguagem popular a implementar herança múltipla foi o C&#x2b;&#x2b;, e esse recurso foi abusado o suficiente para que o Java—criado para ser um substituto do C&#x2b;&#x2b;—fosse projetado sem suporte a herança múltipla de implementação (isto é, sem classes mixin). Quer dizer, isso até o Java 8 introduzir os métodos default, que tornam interfaces muito similares às classes abstratas usadas para definir interfaces em C&#x2b;&#x2b; e em Python.
-Depois do Java, a linguagem da JVM mais usada é provavelmente o Scala, que implementa _traits_.
+Depois de Java, a linguagem da JVM mais usada é provavelmente o Scala, que implementa _traits_.
 
-Outras linguagens que suportam _traits_ são a última versão estável do PHP e do Groovy,
-bem como o Rust e o Raku—a linguagem antes conhecida como Perl 6.footnote:[Meu amigo e revisor técnico Leonardo Rochael explica isso melhor do que eu poderia:
+Outras linguagens que suportam _traits_ são versões recentes de PHP e Groovy,
+bem como Rust e Raku—a linguagem antes conhecida como Perl 6.footnote:[Meu amigo e revisor técnico Leonardo Rochael explica isso melhor do que eu poderia:
 "A existência continuada junto com o persistente adiamento da chegada do Perl 6 estava drenando a força de vontade da evolução do próprio Perl. Agora o Perl continua a ser desenvolvido como uma linguagem separada (está na versão 5.34), sem a ameaça de ser descontinuada pela linguagem antes conhecida como Perl 6."]
 Então podemos dizer que _traits_ estão na moda em 2021.
 
-O Ruby traz uma perspectiva original para a herança múltipla:
+Ruby traz uma perspectiva original para a herança múltipla:
 não a suporta, mas introduz mixins como um recurso explícito da linguagem. Uma classe Ruby pode incluir um módulo em seu corpo, e aí os métodos definidos no módulo se tornam parte da implementação da classe.
 Essa é uma forma "pura" de mixin, sem herança envolvida, e está claro que uma mixin Ruby não tem qualquer influência sobre o tipo da classe onde ela é usada.
 Isso oferece os benefícios das mixins, evitando muitos de seus problemas mais comuns.
