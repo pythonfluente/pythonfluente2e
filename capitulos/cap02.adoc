@@ -25,15 +25,24 @@
 </blockquote>
 ++++
 
-Antes de criar Python, Guido foi um dos desenvolvedores da linguagem ABC—um projeto de pesquisa de 10 anos para criar um ambiente de programação para iniciantes.
-A ABC introduziu várias ideias que hoje consideramos "pythônicas": operações genéricas com diferentes tipos de sequências, tipos tupla e mapeamento embutidos, estrutura [do código] por indentação, tipagem forte sem declaração de variáveis, entre outras.
+Antes de criar Python, Guido foi um dos desenvolvedores da linguagem
+ABC—um projeto de pesquisa de 10 anos para criar um ambiente de programação para iniciantes.
+A ABC introduziu várias ideias que hoje consideramos "pythônicas":
+operações genéricas com diferentes tipos de sequências, tipos tupla e mapeamento embutidos,
+estrutura de blocos por indentação, tipagem forte sem declaração de variáveis, entre outras.
 Python não é assim tão amigável por acidente.
 
-Python herdou da ABC o tratamento uniforme de sequências. Strings, listas, sequências de bytes, arrays, elementos XML e resultados vindos de bancos de dados compartilham um rico conjunto de operações comuns, incluindo iteração, fatiamento, ordenação e concatenação.
+Python herdou da ABC o tratamento uniforme de sequências.
+Strings, listas, sequências de bytes, arrays, elementos XML e resultados vindos de bancos de dados compartilham um rico conjunto de operações comuns, incluindo iteração, fatiamento, ordenação e concatenação.
 
-Entender a variedade de sequências disponíveis no Python evita que reinventemos a roda, e sua interface comum nos inspira a criar APIs que suportem e se aproveitem de forma apropriada dos tipos de sequências existentes e futuras.
+Entender a variedade de sequências disponíveis no Python evita que reinventemos a roda,
+e sua interface comum nos inspira a criar APIs que
+suportem e aproveitem bem os tipos de sequências existentes e futuras.
 
-A maior parte da discussão deste capítulo se aplica às sequências em geral, desde a conhecida `list` até os tipos `str` e `bytes`, adicionados no Python 3. Tópicos específicos sobre listas, tuplas, arrays e filas também foram incluídos, mas os detalhes sobre strings Unicode e sequências de bytes são tratados no <<strings_bytes_files>>.
+A maior parte da discussão deste capítulo se aplica às sequências em geral,
+desde a conhecida `list` até os tipos `str` e `bytes`, adicionados no Python 3.
+Tópicos específicos sobre listas, tuplas, arrays e filas também foram incluídos,
+mas os detalhes sobre strings Unicode e sequências de bytes são tratados no <<strings_bytes_files>>.
 Além disso, a ideia aqui é falar sobre os tipos de sequências prontas para usar.
 A criação de novos tipos de sequência é o tema do <<user_defined_sequences>>.
 
@@ -75,32 +84,38 @@ pass:[<span class="keep-together"><a href="http://fluentpython.com" class="orm:h
 
 === Uma visão geral das sequências embutidas
 
-A((("sequences", "overview of built-in", id="Soverv02"))) biblioteca padrão oferece uma boa seleção de tipos de sequências,
-implementadas em C:
+A((("sequences", "overview of built-in", id="Soverv02"))) biblioteca padrão oferece
+uma boa seleção de tipos de sequências, implementadas em C:
 
 Sequências contêiner::
   Podem((("container sequences"))) armazenar itens de tipos diferentes, incluindo contêineres aninhados e objetos de qualquer tipo. Alguns exemplos: `list`, `tuple`, e `collections.deque`.
 Sequências planas::
   Armazenam((("flat sequences"))) itens de algum tipo simples, mas não outras coleções ou referências a objetos. Alguns exemplos: `str`, `bytes`, e `array.array`.
 
-Uma((("tuples", "simplified memory diagram for")))((("arrays"))) _sequência contêiner_ mantém referências para os objetos que contém, que podem ser de qualquer tipo, enquanto uma  _sequência plana_ armazena o valor de seu conteúdo em seu próprio espaço de memória, e não como objetos Python distintos. Veja a <<container_v_flat_img>>.
+Uma((("tuples", "simplified memory diagram for")))((("arrays"))) _sequência contêiner_ mantém
+referências para os objetos que contém, que podem ser de qualquer tipo,
+enquanto uma  _sequência plana_ armazena o valor de seu conteúdo em seu próprio espaço de memória,
+e não como objetos Python distintos. Veja a <<container_v_flat_img>>.
 
 [[container_v_flat_img]]
 .Diagramas de memória simplificados mostrando uma `tuple` e um `array`, cada uma com três itens. As células em cinza representam o cabeçalho de cada objeto Python na memória. A `tuple` tem um array de referências para seus itens. Cada item é um objeto Python separado, possivelmente contendo também referências aninhadas a outros objetos Python, como aquela lista de dois itens. Por outro lado, um `array` Python é um único objeto, contendo um array da linguagem C com três números de ponto flutuante`.
 image::images/flpy_0201.png[Diagrama de memória simplificado de um `array` e de uma `tuple`]
 
-Dessa forma, sequências planas são mais compactas, mas estão limitadas a manter valores primitivos como bytes e números inteiros e de ponto flutuante.
+Dessa forma, sequências planas são mais compactas, mas estão limitadas a manter valores primitivos como
+bytes e números inteiros e de ponto flutuante.
 
 [NOTE]
 ====
-Todo objeto Python na memória tem um cabeçalho com metadados. O objeto Python mais simples, um `float`, tem um campo de valor e dois campos de metadados:
+Todo objeto Python na memória tem um cabeçalho com metadados.
+O objeto Python mais simples, um `float`, tem um campo de valor e dois campos de metadados:
 
 * `ob_refcnt`: a contagem de referências ao objeto
 * `ob_type`: um ponteiro para o tipo do objeto
 * `ob_fval`: um `double` de C mantendo o valor do `float`
 
 No Python 64-bits, cada um desses campos ocupa 8 bytes.
-Por isso um array de números de ponto flutuante é muito mais compacto que uma tupla de números de ponto flutuante: o array é um único objeto contendo apenas o valor dos números,
+Por isso um array de números de ponto flutuante é muito mais compacto que uma tupla de números de ponto flutuante:
+o array é um único objeto contendo apenas o valor dos números,
 enquanto a tupla consiste de vários objetos—a própria tupla e cada objeto `float` que ela contém.
 ====
 
@@ -112,8 +127,12 @@ Sequências mutáveis::
 Sequências imutáveis::
   Por((("immutable sequences"))) exemplo, `tuple`, `str`, e `bytes`.
 
-A <<sequence_uml>> ajuda a visualizar como as sequências mutáveis herdam todos os métodos das sequências imutáveis e implementam vários métodos adicionais.
-Os tipos embutidos concretos de sequências na verdade não são subclasses das classes base abstratas (ABCs) `Sequence` e `MutableSequence`, mas sim _subclasses virtuais_ registradas com aquelas ABCs—como veremos no <<ifaces_prot_abc>>. Por serem subclasses virtuais, `tuple` e `list` passam nesses testes:
+A <<sequence_uml>> ajuda a visualizar como as sequências mutáveis herdam todos os métodos
+das sequências imutáveis e implementam vários métodos adicionais.
+Os tipos embutidos de sequências na verdade não são subclasses das classes base abstratas (ABCs)
+`Sequence` e `MutableSequence`, mas sim _subclasses virtuais_ registradas com aquelas
+ABCs—como veremos no <<ifaces_prot_abc>>.
+Por serem subclasses virtuais, `tuple` e `list` passam nesses testes:
 
 [source, pycon]
 ----
@@ -128,31 +147,40 @@ True
 .Diagrama de classe UML simplificado para algumas classes de collections.abc (as superclasses estão à esquerda; as setas de herança apontam das subclasses para as superclasses; nomes em itálico indicam classes e métodos abstratos).
 image::images/flpy_0202.png[Diagrama de classe UML para `Sequence` e `MutableSequence`]
 
-Lembre-se((("UML class diagrams", "simplified for collections.abc"))) dessas características básicas: mutável versus imutável; contêiner versus plana.
+Lembre-se((("UML class diagrams", "simplified for collections.abc"))) dessas características básicas:
+mutável versus imutável; contêiner versus plana.
 Elas ajudam a extrapolar o que se sabe sobre um tipo de sequência para outros tipos.
 
 O tipo mais fundamental de sequência é a lista: um contêiner mutável.
-Espero que você já esteja muito familiarizada com listas, então vamos passar diretamente para a compreensão de listas, uma forma potente de criar listas que algumas vezes é subutilizada por sua sintaxe parecer, a princípio, estranha.
-Dominar as compreensões de listas abre as portas para expressões geradoras que—entre outros usos—podem produzir elementos para preencher sequências de qualquer tipo.
+Espero que você já esteja muito familiarizada com listas,
+então vamos passar diretamente para a compreensão de listas,
+uma forma potente de criar listas que algumas vezes é subutilizada por sua sintaxe parecer, a princípio, estranha.
+Dominar as compreensões de listas abre as portas para expressões geradoras que—entre outros usos—podem produzir
+elementos para preencher sequências de qualquer tipo.
 Ambas são temas da próxima seção.((("", startref="Soverv02")))
 
 
 === Compreensões de listas e expressões geradoras
 
-Um((("sequences", "list comprehensions and generator expressions", id="Slist02")))((("list comprehensions (listcomps)", "building sequences with"))) jeito rápido de criar uma sequência é usando uma compreensão de lista (se o alvo é uma `list`) ou uma expressão geradora (para outros tipos de sequências).
-Se você não usa essas formas sintáticas diariamente, aposto que está perdendo oportunidades de escrever código mais legível e, muitas vezes, mais rápido também.
+Um((("sequences", "list comprehensions and generator expressions", id="Slist02")))((("list comprehensions (listcomps)", "building sequences with")))
+jeito rápido de criar uma sequência é usando uma compreensão de lista (se o alvo é uma `list`) ou
+uma expressão geradora (para outros tipos de sequências).
+Se você não usa essas formas sintáticas diariamente,
+aposto que está perdendo oportunidades de escrever código mais legível e, muitas vezes, mais rápido também.
 
 Se você duvida de minha alegação, sobre essas formas serem "mais legíveis", continue lendo. Vou tentar convencer você.
 
 [TIP]
 ====
-Por comodidade, muitos programadores Python se referem a compreensões de listas como _listcomps_, e a expressões geradoras como _genexps_.
+Por comodidade, muitos programadores Python se referem a compreensões de listas como _listcomps_,
+e a expressões geradoras como _genexps_.
 Usarei também esses dois termos.
 ====
 
 ==== Compreensões de lista e legibilidade
 
-Aqui((("list comprehensions (listcomps)", "readability and"))) está um teste: qual dos dois você acha mais fácil de ler, o <<ex_build_list>> ou o <<ex_listcomp0>>?
+Em sua opinião((("list comprehensions (listcomps)", "readability and")))
+qual desses exemplos é mais fácil de ler, o <<ex_build_list>> ou o <<ex_listcomp0>>?
 
 [[ex_build_list]]
 .Cria uma lista de pontos de código Unicode a partir de uma string
@@ -182,29 +210,51 @@ Aqui((("list comprehensions (listcomps)", "readability and"))) está um teste: q
 ====
 
 Qualquer um que saiba um pouco de Python consegue ler o <<ex_build_list>>.
-Entretanto, após aprender sobre as listcomps, acho o <<ex_listcomp0>> mais legível, porque deixa sua intenção explícita.
+Entretanto, após aprender sobre as listcomps, acho o <<ex_listcomp0>> mais legível,
+porque deixa sua intenção explícita.
 
-Um loop `for` pode ser usado para muitas coisas diferentes: percorrer uma sequência para contar ou encontrar itens, computar valores agregados (somas, médias), ou inúmeras outras tarefas.
+Um loop `for` pode ser usado para muitas coisas diferentes:
+percorrer uma sequência para contar ou encontrar itens, computar valores agregados (somas, médias),
+ou inúmeras outras tarefas.
 O código no <<ex_build_list>> está criando uma lista.
 Uma listcomp, por outro lado, é mais clara. Seu objetivo é sempre criar uma nova lista.
 
-Naturalmente, é possível abusar das compreensões de lista para escrever código verdadeiramente incompreensível. Já vi código Python usando listcomps apenas para repetir um bloco de código por seus efeitos colaterais. Se você não vai fazer alguma coisa com a lista criada, não deveria usar essa sintaxe. Além disso, tente manter o código curto. Se uma compreensão ocupa mais de duas linhas, provavelmente seria melhor quebrá-la ou reescrevê-la como um bom e velho loop `for`. Avalie qual o melhor caminho: em Python, como em português, não existem regras absolutas para se escrever bem.
+Naturalmente, é possível abusar das compreensões de lista para escrever código verdadeiramente incompreensível.
+Já vi código Python usando listcomps apenas para repetir um bloco de código por seus efeitos colaterais.
+Se você não vai fazer alguma coisa com a lista criada, não deveria usar essa sintaxe.
+Além disso, tente manter o código curto. Se uma compreensão ocupa mais de duas linhas,
+provavelmente seria melhor quebrá-la ou reescrevê-la como um bom e velho loop `for`.
+Avalie qual o melhor caminho: em Python, como em português, não existem regras absolutas para se escrever bem.
 
 
 .Dica de sintaxe
 [TIP]
 ====
-No((("list comprehensions (listcomps)", "syntax tip")))((("&#x005C; line continuation escape")))((("backslash (&#x005C;)")))((("&#x005C; (backslash)")))((("line breaks")))((("multiline lists")))((("lists", "multiline")))((("square brackets ([])")))((("[] (square brackets)")))((("&#x007B;&#x007D; (curly brackets)")))((("curly brackets (&#x007B;&#x007D;)"))) código Python, quebras de linha são ignoradas dentro de pares de `[]`, `{}`, ou `()`.
-Então você pode usar múltiplas linhas para criar listas, listcomps, tuplas, dicionários, etc., sem necessidade de usar o marcador de continuação de linha `\`, que não funciona se após o `\` você acidentalmente digitar um espaço.
-Outro detalhe, quando aqueles pares de delimitadores são usados para definir um literal com uma série de itens separados por vírgulas, uma vírgula solta no final será ignorada.
-Daí, por exemplo, quando se codifica uma lista a partir de um literal com múltiplas linhas, é de bom tom deixar uma vírgula após o último item. Isso torna um pouco mais fácil ao próximo programador acrescentar mais um item àquela lista, e reduz o ruído quando se lê os diffs.
+Em((("list comprehensions (listcomps)", "syntax tip")))((("&#x005C; line continuation escape")))((("backslash (&#x005C;)")))((("&#x005C; (backslash)")))((("line breaks")))((("multiline lists")))((("lists", "multiline")))((("square brackets ([])")))((("[] (square brackets)")))((("&#x007B;&#x007D; (curly brackets)")))((("curly brackets (&#x007B;&#x007D;)")))
+código Python, quebras de linha são ignoradas dentro de pares de `[]`, `{}`, ou `()`.
+Então você pode usar múltiplas linhas para criar listas, listcomps, tuplas, dicionários, etc.,
+sem necessidade de usar o marcador de continuação de linha `\`,
+que não funciona se após o `\` você acidentalmente digitar um espaço.
+Outro detalhe, quando aqueles pares de delimitadores são usados para definir um literal com uma série de itens
+separados por vírgulas, uma vírgula solta no final será ignorada.
+Daí, por exemplo, quando se codifica uma lista a partir de um literal com múltiplas linhas,
+é uma gentileza deixar uma vírgula após o último item.
+Isso torna um pouco mais fácil ao próximo programador acrescentar mais um item àquela lista,
+e reduz o ruído quando se lê os diffs.
 ====
 
 .Escopo local dentro de compreensões e expressões geradoras
 ****
-No((("scope", "within comprehensions and generator expressions")))((("generator expressions (genexps)")))((("list comprehensions (listcomps)", "local scope within"))) Python 3, compreensões de lista, expressões geradoras, e suas irmãs, as compreensões de `set` e de `dict`, tem um escopo local para manter as variáveis criadas na condição `for`.
-Entretanto, variáveis atribuídas com o((("assignment expression (&#x003A;&#x3D;)")))((("Walrus operator (&#x003A;&#x3D;)")))((("&#x003A;&#x3D; (Walrus operator)"))) "operador morsa" (_"Walrus operator"_), `:=`, continuam acessíveis após aquelas compreensões ou expressões retornarem—diferente das variáveis locais em uma função.
-A https://fpy.li/pep572[PEP 572—Assignment Expressions] (EN) define o escopo do alvo de um `:=` como a função à qual ele pertence, exceto se houver uma declaração `global` ou `nonlocal` para aquele alvo.footnote:[Agradeço à leitora Tina Lapine por apontar essa informação.]
+No((("scope", "within comprehensions and generator expressions")))((("generator expressions (genexps)")))((("list comprehensions (listcomps)", "local scope within")))
+Python 3, compreensões de lista, expressões geradoras, e suas irmãs, as compreensões de `set` e de `dict`,
+tem um escopo local para manter as variáveis criadas na condição `for`.
+Entretanto, variáveis atribuídas com
+o((("assignment expression (&#x003A;&#x3D;)")))((("Walrus operator (&#x003A;&#x3D;)")))((("&#x003A;&#x3D; (Walrus operator)"))) "operador morsa" (_"Walrus operator"_),
+`:=`, continuam acessíveis após aquelas compreensões ou expressões retornarem—diferente
+das variáveis locais em uma função.
+A https://fpy.li/pep572[PEP 572—Assignment Expressions] (EN) define o escopo do alvo de um `:=`
+como a função à qual ele pertence, exceto se houver uma declaração `global` ou `nonlocal` para aquele
+identificador.footnote:[Agradeço à leitora Tina Lapine por apontar essa informação.]
 
 [source, pycon]
 ----
@@ -228,13 +278,16 @@ NameError: name 'c' is not defined
 
 ****
 
-Compreensões de lista criam listas a partir de sequências ou de qualquer outro tipo iterável, filtrando e transformando os itens.
+Compreensões de lista criam listas a partir de sequências ou de qualquer outro tipo iterável,
+filtrando e transformando os itens.
 As funções embutidas `filter` e `map` podem fazer o mesmo, mas perde-se alguma legibilidade, como veremos a seguir.
 
 
 ==== Listcomps versus map e filter
 
-Listcomps((("map function")))((("functions", "map function")))((("filter function")))((("functions", "filter, map, and reduce functions")))((("list comprehensions (listcomps)", "versus map and filter functions"))) fazem tudo que as funções `map` e `filter` fazem, sem os malabarismos exigidos pela funcionalidade limitada do `lambda` de Python.
+Listcomps((("map function")))((("functions", "map function")))((("filter function")))((("functions", "filter, map, and reduce functions")))((("list comprehensions (listcomps)", "versus map and filter functions")))
+fazem tudo que as funções `map` e `filter` fazem,
+sem os malabarismos exigidos pela funcionalidade limitada do `lambda` de Python.
 
 Considere o <<ex_listcomp_x_filter_map>>.
 
@@ -256,15 +309,18 @@ Considere o <<ex_listcomp_x_filter_map>>.
 Eu acreditava que `map` e `filter` eram mais rápidas que as listcomps equivalentes, mas Alex Martelli
 assinalou que não é o caso—pelo menos não nos exemplos acima.
 O script https://fpy.li/2-1[listcomp_speed.py] no
-https://fpy.li/code[repositório de código de Python Fluente] é um teste de velocidade simples, comparando listcomp com `filter/map`.
+https://fpy.li/code[repositório de código de Python Fluente]
+é um teste de desempenho simples, comparando listcomp com `filter/map`.
 
 Vou falar mais sobre `map` e `filter` no <<functions_as_objects>>.
-Vamos agora ver o uso de listcomps para computar produtos cartesianos: uma lista contendo tuplas criadas a partir de todos os itens de duas ou mais listas.
+Vamos agora ver o uso de listcomps para computar produtos cartesianos:
+uma lista contendo tuplas criadas a partir de todos os itens de duas ou mais listas.
 
 [[cartesian_product_sec]]
 ==== Produtos cartesianos
 
-Listcomps((("list comprehensions (listcomps)", "building lists from cartesian products")))((("Cartesian products", id="cartprod02"))) podem criar listas a partir do produto cartesiano de dois ou mais iteráveis.
+Listcomps((("list comprehensions (listcomps)", "building lists from cartesian products")))((("Cartesian products", id="cartprod02")))
+podem criar listas a partir do produto cartesiano de dois ou mais iteráveis.
 Os itens resultantes de um produto cartesiano são tuplas criadas com os itens de cada iterável na entrada, e
 a lista resultante tem o tamanho igual ao produto da multiplicação dos tamanhos dos iteráveis usados.
 Veja a <<cartesian_product_fig>>.
@@ -310,7 +366,10 @@ O resultado tem seis itens.
 <3> Para ter os itens ordenados por tamanho e então por cor, apenas rearranje as cláusulas `for`; adicionar uma quebra de linha listcomp torna mais fácil ver como o resultado será ordenado.
 
 
-No <<ex_pythonic_deck>> (em <<data_model>>), usei a seguinte expressão para inicializar um baralho de cartas com uma lista contendo 52 cartas de todos os 13 valores possíveis para cada um dos quatro naipes, ordenada por naipe e então por valor:
+No <<ex_pythonic_deck>> (em <<data_model>>)
+usei a seguinte expressão para inicializar um baralho de cartas com uma lista
+contendo 52 cartas de todos os 13 valores possíveis para cada um dos quatro naipes,
+ordenada por naipe e então por valor:
 
 [source, python3]
 ----
@@ -320,12 +379,17 @@ No <<ex_pythonic_deck>> (em <<data_model>>), usei a seguinte expressão para ini
 
 Listcomps são mágicos de um só truque: elas criam listas.
 Para gerar dados para outros tipos de sequências, uma genexp é o caminho.
-A próxima seção é uma pequena incursão às genexps, no contexto de criação de sequências que não são listas.((("", startref="cartprod02")))
+A próxima seção é uma pequena incursão às genexps, no contexto de criação de sequências que não são
+listas.((("", startref="cartprod02")))
 
 
 ==== Expressões geradoras
 
-Para((("generator expressions (genexps)")))((("list comprehensions (listcomps)", "versus generator expressions", secondary-sortas="generator expressions"))) inicializar tuplas, arrays e outros tipos de sequências, você também poderia começar de uma listcomp, mas uma genexp (expressão geradora) economiza memória, pois ela produz itens um de cada vez usando o protocolo iterador, em vez de criar uma lista inteira apenas para alimentar outro construtor.
+Para((("generator expressions (genexps)")))((("list comprehensions (listcomps)", "versus generator expressions", secondary-sortas="generator expressions")))
+inicializar tuplas, arrays e outros tipos de sequências, você também pode usar uma listcomp,
+mas uma genexp (expressão geradora) economiza memória,
+pois ela produz itens um de cada vez usando o protocolo iterador,
+em vez de criar uma lista inteira apenas para alimentar outro construtor.
 
 As genexps usam a mesma sintaxe das listcomps, mas são delimitadas por parênteses em vez de colchetes.
 
@@ -344,9 +408,12 @@ O <<ex_genexp_load>> demonstra o uso básico de genexps para criar uma tupla e u
 array('I', [36, 162, 163, 165, 8364, 164])
 ----
 ====
-<1> Se a expressão geradora é o único argumento em uma chamada de função, não há necessidade de duplicar os parênteses circundantes.
-<2> O construtor de `array` espera dois argumentos, então os parênteses em torno da expressão geradora são obrigatórios.
-O primeiro argumento do construtor de `array` define o tipo de armazenamento usado para os números no array, como veremos na <<arrays_sec>>.
+<1> Se a expressão geradora é o único argumento em uma chamada de função,
+não há necessidade de duplicar os parênteses circundantes.
+<2> O construtor de `array` espera dois argumentos,
+então os parênteses em torno da expressão geradora são obrigatórios.
+O primeiro argumento do construtor de `array` define o tipo de armazenamento usado para os números no array,
+como veremos na <<arrays_sec>>.
 
 O <<ex_genexp_cartesian>> usa uma genexp com um produto cartesiano para
 gerar uma relação de camisetas de duas cores em três tamanhos.
@@ -375,12 +442,14 @@ white M
 white L
 ----
 ====
-<1> A expressão geradora produz um item por vez; uma lista com todas as seis variações de camisetas nunca aparece neste exemplo.
+<1> A expressão geradora produz um item por vez; uma lista com todas as seis variações de camisetas
+nunca é criada neste exemplo.
 
 [NOTE]
 ====
 O <<iterables2generators>> explica em detalhes o funcionamento de geradoras.
-A ideia aqui é apenas mostrar o uso de expressões geradores para inicializar sequências diferentes de listas, ou produzir uma saída que não precise ser mantida na memória.
+A ideia aqui é apenas mostrar o uso de expressões geradores para inicializar sequências diferentes de listas,
+ou produzir uma saída que não precise ser mantida na memória.
 ====
 
 Vamos agora estudar outra sequência fundamental de Python: a tupla.
@@ -388,19 +457,26 @@ Vamos agora estudar outra sequência fundamental de Python: a tupla.
 [[tuples_more_than_lists_sec]]
 === Tuplas não são apenas listas imutáveis
 
-Alguns((("sequences", "tuples", id="Stup02"))) textos introdutórios de Python apresentam as tuplas como "listas imutáveis", mas isso é subestimá-las. Tuplas tem duas funções: elas podem ser usada como listas imutáveis e também como registros sem nomes de campos.
+Alguns((("sequences", "tuples", id="Stup02"))) textos introdutórios de Python apresentam as tuplas como
+"listas imutáveis", mas isso é subestimá-las.
+Tuplas tem duas funções: elas podem ser usada como listas imutáveis e também como registros sem nomes de campos.
 Esse uso algumas vezes é negligenciado, então vamos começar por ele.((("", startref="Slist02")))
 
 
 ==== Tuplas como registros
 
 Tuplas podem conter registros:
-cada((("tuples", "as records", secondary-sortas="records", id="tuple02"))) item na tupla contém os dados de um campo, e a posição do item indica seu significado.
+cada((("tuples", "as records", secondary-sortas="records", id="tuple02")))
+item na tupla contém os dados de um campo, e a posição do item indica seu significado.
 
-Se você pensar em uma tupla apenas como uma lista imutável, a quantidade e a ordem dos elementos pode ou não ter alguma importância, dependendo do contexto. Mas quando usamos uma tupla como uma coleção de campos, o número de itens em geral é fixo e sua ordem é sempre importante.
+Se você pensar em uma tupla apenas como uma lista imutável,
+a quantidade e a ordem dos elementos pode ser importante ou não, dependendo do contexto.
+Mas quando usamos uma tupla como uma coleção de campos,
+o número de itens em geral é fixo e sua ordem é sempre importante.
 
 O <<ex_tuples_as_records>> mostras tuplas usadas como registros.
-Observe que, em todas as expressões, ordenar a tupla destruiria a informação, pois o significado de cada campo é dado por sua posição na tupla.
+Observe que, em todas as expressões, ordenar a tupla destruiria a informação,
+pois o significado de cada campo é dado por sua posição na tupla.
 
 [[ex_tuples_as_records]]
 .Tuplas usadas como registros
@@ -449,7 +525,8 @@ Mas muitas vezes não é preciso se dar ao trabalho de criar uma classe apenas p
 especialmente se você aproveitar o desempacotamento e evitar o uso de índices para acessar os campos.
 No <<ex_tuples_as_records>>, atribuímos
 `('Tokyo', 2003, 32_450, 0.66, 8014)` a `city, year, pop, chg, area` em um único comando.
-E daí o operador `%` atribuiu cada item da tupla `passport` para a posição correspondente da string de formato no argumento `print`.
+E daí o operador `%` atribuiu cada item da tupla `passport` para a posição correspondente
+da string de formato no argumento `print`.
 Esses foram dois exemplos de _desempacotamento de tuplas_.
 
 
@@ -468,11 +545,14 @@ não apenas de tuplas, mas também de sequências e iteráveis em geral.
 PROD: The note above is one more example that runs over the next paragraph in the rendered PDF.
 ////
 
-Agora vamos considerar o uso da classe `tuple` como uma variante imutável da classe `list`.((("", startref="tuple02")))
+Agora vamos considerar o uso da classe `tuple` como uma variante imutável da classe
+`list`.((("", startref="tuple02")))
 
 ==== Tuplas como listas imutáveis
 
-O((("tuples", "as immutable lists", secondary-sortas="immutable lists", id="Timlist02")))((("lists", "using tuples as immutable", id="Ltupple02"))) interpretador Python e a biblioteca padrão fazem uso extensivo das tuplas como listas imutáveis, e você deveria seguir o exemplo. Isso traz dois benefícios importantes:
+O((("tuples", "as immutable lists", secondary-sortas="immutable lists", id="Timlist02")))((("lists", "using tuples as immutable", id="Ltupple02")))
+interpretador Python e a biblioteca padrão fazem uso extensivo das tuplas como listas imutáveis,
+e você deve seguir o exemplo. Isso traz dois benefícios importantes:
 
 Clareza:: Quando você vê uma `tuple` no código, sabe que seu tamanho nunca mudará.
 Desempenho:: Uma `tuple` usa menos memória que uma `list` de mesmo tamanho, e permite ao Python realizar algumas otimizações.
@@ -503,10 +583,12 @@ False
 ----
 
 Tuplas com itens mutáveis podem ser uma fonte de bugs.
-Se uma tupla contém qualquer item mutável, ela não pode ser usada como chave em um `dict` ou como elemento em um `set`.
+Se uma tupla contém qualquer item mutável,
+ela não pode ser usada como chave em um `dict` ou como elemento em um `set`.
 O motivo será explicado em <<what_is_hashable>>.
 
-Se você quiser determinar explicitamente se uma tupla (ou qualquer outro objeto) tem um valor fixo, pode usar a função embutida `hash` para criar uma função `fixed`, assim:
+Se você quiser determinar explicitamente se uma tupla (ou qualquer outro objeto) tem um valor fixo,
+pode usar a função embutida `hash` para criar uma função `fixed`, assim:
 
 [source, pycon]
 ----
