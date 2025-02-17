@@ -1,4 +1,4 @@
-[[futures_ch]]
+[[ch_executors]]
 == Executores concorrentes
 :figure-caption: Figura
 :example-caption: Exemplo
@@ -33,7 +33,7 @@ não apenas com threads mas também com processos—úteis para tarefas de proce
 
 Também((("futures", "definition of term"))) introduzo aqui o conceito de
 _futures_—objetos que representam a execução assíncrona de uma operação, similares às _promises_ de Javascript.
-Essa ideia básica é a fundação de `concurrent.futures` bem como do pacote `asyncio`, assunto do <<async_ch>>.
+Essa ideia básica é a fundação de `concurrent.futures` bem como do pacote `asyncio`, assunto do <<ch_async>>.
 
 
 === Novidades nesse capítulo
@@ -51,7 +51,7 @@ então na primeira edição desse livro precisei usar um servidor externo.
 
 A <<launching_processes_sec>> agora demonstra como um executor simplifica o código que vimos na <<code_for_multicore_prime_sec>>.
 
-Por fim, movi a maior parte da teoria para o novo <<concurrency_models_ch>>.
+Por fim, movi a maior parte da teoria para o novo <<ch_concurrency_models>>.
 
 [[ex_web_downloads_sec]]
 === Downloads concorrentes da web
@@ -124,7 +124,7 @@ No caso do <<ex_flags_sample_runs>> não há problema, pois aqueles scripts est�
 Mais adiante nesse capítulo usaremos o pacote `http.server` de Python para executar nossos testes localmente.
 ====
 
-Vamos agora estudar as implementações de dois dos scripts testados no <<ex_flags_sample_runs>>: _flags.py_ e _flags_threadpool.py_. Vou deixar o terceiro, _flags_asyncio.py_, para o <<async_ch>>, mas queria demonstrar os três juntos para fazer duas observações:
+Vamos agora estudar as implementações de dois dos scripts testados no <<ex_flags_sample_runs>>: _flags.py_ e _flags_threadpool.py_. Vou deixar o terceiro, _flags_asyncio.py_, para o <<ch_async>>, mas queria demonstrar os três juntos para fazer duas observações:
 
 . Independente dos elementos de concorrência que você use—threads ou corrotinas—haverá um ganho enorme de desempenho sobre código sequencial em operações de E/S de rede, se o script for escrito corretamente.
 . Para clientes HTTP que podem controlar quantas requisições eles fazem, não há diferenças significativas de desempenho entre threads e corrotinas.footnote:[Para servidores que podem ser acessados por muitos clientes, há uma diferença: as corrotinas escalam melhor, pois usam menos memória que as threads, e também reduzem o custo das mudanças de contexto, que mencionei na <<thread_non_solution_sec>>.]
@@ -358,7 +358,7 @@ Diminuindo aquele valor para `1` fará o script rodar de forma sequencial, e a o
 ====
 
 Vimos duas variantes do script de download usando `concurrent.futures`: uma no <<flags_threadpool_ex>> com `ThreadPoolExecutor.map` e uma no <<flags_threadpool_futures_ex>> com `futures.as_completed`.
-Se você está curioso sobre o código de _flags_asyncio.py_, pode espiar o <<flags_asyncio_ex>> no <<async_ch>>, onde ele é explicado.
+Se você está curioso sobre o código de _flags_asyncio.py_, pode espiar o <<flags_asyncio_ex>> no <<ch_async>>, onde ele é explicado.
 
 Agora vamos dar uma olhada rápida em um modo simples de desviar da GIL para tarefas de uso intensivo de CPU, usando `concurrent.futures`.((("", startref="Fbasic20")))((("", startref="IOfuturesrole20")))((("", startref="CEwebdown20")))
 
@@ -567,7 +567,7 @@ flags2_sequential.py:: Um cliente HTTP sequencial com tratamento de erro correto
 
 flags2_threadpool.py:: Cliente HTTP concorrente, baseado em `futures.ThreadPoolExecutor`, para demonstrar o tratamento de erros e a integração da barra de progresso.
 
-flags2_asyncio.py:: Mesma funcionalidade do exemplo anterior, mas implementado com  `asyncio` e `httpx`. Isso será tratado na <<flags2_asyncio_sec>>, [.keep-together]#no <<async_ch>>.#
+flags2_asyncio.py:: Mesma funcionalidade do exemplo anterior, mas implementado com  `asyncio` e `httpx`. Isso será tratado na <<flags2_asyncio_sec>>, [.keep-together]#no <<ch_async>>.#
 
 [[careful_testing_clients]]
 [WARNING]
@@ -813,9 +813,9 @@ As threads de Python são bastante adequadas a aplicações de uso intensivo de 
 
 Nós((("concurrent executors", "overview of"))) começamos o capítulo comparando dois clientes HTTP concorrentes com um sequencial, demonstrando que as soluções concorrentes mostram um ganho significativo de desempenho sobre o script sequencial.
 
-Após estudar o primeiro exemplo, baseado no `concurrent.futures`, olhamos mais de perto os objetos _future_, instâncias de `concurrent.futures.Future` ou de pass:[<code>asyncio&#x200b;.Future</code>], enfatizando as semelhanças entre essas classes (suas diferenças serão examinadas no <<async_ch>>). Vimos como criar _futures_ chamando `Executor.submit`, e como iterar sobre _futures_ que terminaram sua execução com `concurrent.futures.as_completed`.
+Após estudar o primeiro exemplo, baseado no `concurrent.futures`, olhamos mais de perto os objetos _future_, instâncias de `concurrent.futures.Future` ou de pass:[<code>asyncio&#x200b;.Future</code>], enfatizando as semelhanças entre essas classes (suas diferenças serão examinadas no <<ch_async>>). Vimos como criar _futures_ chamando `Executor.submit`, e como iterar sobre _futures_ que terminaram sua execução com `concurrent.futures.as_completed`.
 
-Então discutimos o uso de múltiplos processos com a classe `concurrent.futures.ProcessPoolExecutor`, para evitar a GIL e usar múltiplos núcleos de CPU, simplificando o verificador de números primos multi-núcleo que vimos antes no <<concurrency_models_ch>>.
+Então discutimos o uso de múltiplos processos com a classe `concurrent.futures.ProcessPoolExecutor`, para evitar a GIL e usar múltiplos núcleos de CPU, simplificando o verificador de números primos multi-núcleo que vimos antes no <<ch_concurrency_models>>.
 
 Na seção seguinte vimos como funciona a `concurrent.futures.ThreadPoolExecutor`, com um exemplo didático, iniciando tarefas que apenas não faziam nada por alguns segundos, exceto exibir seu status e a hora naquele instante.
 
@@ -827,7 +827,7 @@ Nós então voltamos para os exemplos de download de bandeiras. Melhorar aqueles
 O((("concurrent executors", "further reading on"))) pacote `concurrent.futures` foi uma contribuição de Brian Quinlan, que o apresentou em uma palestra sensacional intitulada https://fpy.li/20-20["The Future Is Soon!"] (EN), na PyCon Australia 2010. A palestra de Quinlan não tinha slides; ele mostra o que a biblioteca faz digitando código diretamente no console de Python. Como exemplo motivador, a apresentação inclui um pequeno vídeo com o cartunista/programador do XKCD, Randall Munroe, executando um ataque de negação de serviço (DoS) não-intencional contra o Google Maps, para criar um mapa colorido de tempos de locomoção pela cidade. A introdução formal à biblioteca é a https://fpy.li/pep3148[PEP 3148 - `futures` - execute computations asynchronously] (_`futures` - executar processamento assíncrono_) (EN). Na PEP, Quinlan escreveu que a biblioteca `concurrent.futures` foi "muito influenciada pelo pacote `java.util.concurrent` de Java."
 
 Para recursos adicionais falando do `concurrent.futures`,
-por favor consulte o <<concurrency_models_ch>>.
+por favor consulte o <<ch_concurrency_models>>.
 Todas as referências que tratam de `threading` e `multiprocessing` de Python na <<concurrency_further_threads_procs_sec>> também tratam do `concurrent.futures`.
 
 .Ponto de vista

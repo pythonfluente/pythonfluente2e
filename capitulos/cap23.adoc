@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[attribute_descriptors]]
+[[ch_descriptors]]
 == Descritores de Atributos
 
 [quote, Raymond Hettinger, guru de Python e um de seus desenvolvedores principais]
@@ -204,13 +204,13 @@ class LineItem:
 
 Da forma como está escrito, o <<lineitem_class_v3>> exige nomear explicitamente cada `Quantity`, algo não apenas inconveniente, mas também perigoso. Se um programador, ao copiar e colar código, se esquecer de editar os dois nomes, e terminar com uma linha como `price = Quantity('weight')`, o programa vai se comportar de forma muito errática, sobrescrevendo o valor de `weight` sempre que `price` for definido.
 
-O problema é que—como vimos no <<mutability_and_references>>—o lado direito de uma atribuição é executado antes da variável existir. A expressão `Quantity()` é avaliada para criar uma instância do descritor, e não há como o código na classe `Quantity` adivinhar o nome da variável à qual o descritor será vinculado (por exemplo, `weight` ou `price`).
+O problema é que—como vimos no <<ch_refs_mut_mem>>—o lado direito de uma atribuição é executado antes da variável existir. A expressão `Quantity()` é avaliada para criar uma instância do descritor, e não há como o código na classe `Quantity` adivinhar o nome da variável à qual o descritor será vinculado (por exemplo, `weight` ou `price`).
 
 Felizmente, o protocolo descritor agora suporta o muito bem batizado método `+__set_name__+`. Veremos a seguir como usá-lo.
 
 [NOTE]
 ====
-Nomear automaticamente o atributo de armazenamendo de um descritor contumava ser uma tarefa espinhosa. Na primeira edição do _Python Fluente_, dediquei várias páginas e muitas linhas de código neste capítulo e no seguinte para apresentar diferentes soluções, incluindo o uso de um decorador de classe e depois metaclasses (no <<class_metaprog>>).
+Nomear automaticamente o atributo de armazenamendo de um descritor contumava ser uma tarefa espinhosa. Na primeira edição do _Python Fluente_, dediquei várias páginas e muitas linhas de código neste capítulo e no seguinte para apresentar diferentes soluções, incluindo o uso de um decorador de classe e depois metaclasses (no <<ch_class_metaprog>>).
 Tudo isso ficou muito mais simples no Python 3.6.
 ====
 
@@ -221,7 +221,7 @@ Para evitar a redigitação do nome do atributo em instâncias do descritor, vam
 `+__set_name__+`, para definir o `storage_name` de cada instância de `Quantity`. O método especial
 `+__set_name__+` foi acrescentado ao protocolo descritor no Python 3.6.
 
-O interpretador invoca `+__set_name__+` em cada descritor encontrado no corpo de uma `class`—se o descritor implementar esse método.footnote:[Mais precisamente, `+__set_name__+` é invocado por `+type.__new__+`—o construtor de objetos que representam classes. A classe embutida `type` é na verdade uma metaclasse, a classe default de classes definidas pelo usuário. Isso é um pouco difícil de entender de início, mas fique tranquila: o <<class_metaprog>> é dedicado à configuração dinâmica de classes, incluindo o conceito de metaclasses.]
+O interpretador invoca `+__set_name__+` em cada descritor encontrado no corpo de uma `class`—se o descritor implementar esse método.footnote:[Mais precisamente, `+__set_name__+` é invocado por `+type.__new__+`—o construtor de objetos que representam classes. A classe embutida `type` é na verdade uma metaclasse, a classe default de classes definidas pelo usuário. Isso é um pouco difícil de entender de início, mas fique tranquila: o <<ch_class_metaprog>> é dedicado à configuração dinâmica de classes, incluindo o conceito de metaclasses.]
 
 No <<lineitem_class_v4>>, a classe descritora `Quantity` não precisa de um `+__init__+`.
 Em vez disso, `+__set_item__+` armazena o nome do atributo de armazenamento.
@@ -458,7 +458,7 @@ O <<descriptorkinds_demo4>> expõe outra assimetria entre a leitura e a escrita 
 
 [TIP]
 ====
-Para controlar a escrita a atributos em uma classe, é preciso associar descritores à classe da classe—em outras palavras, à metaclasse. Por default, a metaclasse de classes definidas pelo usuário é `type`, e não podemos acrescentar atributos a `type`. Mas, no <<class_metaprog>>, vamos criar nossas próprias metaclasses.
+Para controlar a escrita a atributos em uma classe, é preciso associar descritores à classe da classe—em outras palavras, à metaclasse. Por default, a metaclasse de classes definidas pelo usuário é `type`, e não podemos acrescentar atributos a `type`. Mas, no <<ch_class_metaprog>>, vamos criar nossas próprias metaclasses.
 ====
 
 Vamos ver agora como descritores são usados para implementar métodos no Python.((("", startref="ADovervnon23")))((("", startref="nonover23")))((("", startref="overrid23")))
@@ -576,7 +576,7 @@ image::images/flpy_2304.png[Capturas de tela do console de Python com a ajuda de
 
 === Resumo do capítulo
 
-O((("attribute descriptors", "overview of"))) primeiro exemplo deste capítulo foi uma continuação dos exemplos `LineItem` do <<dynamic_attributes>>. No <<lineitem_class_v3>>, substituímos propriedades por descritores. Vimos que um descritor é uma classe que fornece instâncias, que são instaladas como atributos na classe gerenciada. Discutir esse mecanismo exigiu uma terminologia especial, apresentando termos tais como _instância gerenciada_ e _atributo de armazenamento_.
+O((("attribute descriptors", "overview of"))) primeiro exemplo deste capítulo foi uma continuação dos exemplos `LineItem` do <<ch_dynamic_attrs>>. No <<lineitem_class_v3>>, substituímos propriedades por descritores. Vimos que um descritor é uma classe que fornece instâncias, que são instaladas como atributos na classe gerenciada. Discutir esse mecanismo exigiu uma terminologia especial, apresentando termos tais como _instância gerenciada_ e _atributo de armazenamento_.
 
 Na <<auto_storage_sec>>, removemos a exigência de descritores `Quantity` serem declarados com um `storage_name` explícito, um requisito redundante e propenso a erros. A solução foi implementar o método especial `+__set_name__+` em `Quantity`, para armazenar o nome da propriedade gerenciada como `self.storage_name`.
 

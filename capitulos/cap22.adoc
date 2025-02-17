@@ -7,7 +7,7 @@
 :section-caption: Seção
 :chapter-caption: Capítulo
 :part-caption: Parte
-[[dynamic_attributes]]
+[[ch_dynamic_attrs]]
 == Atributos dinâmicos e propriedades
 
 
@@ -261,7 +261,7 @@ Nossa próxima tarefa é reestruturar os dados para preparar a recuperação aut
 [[computed_props_sec]]
 === Propriedades computadas
 
-Vimos inicialmente o decorador `@property` no <<pythonic_objects>>, na <<hashable_vector2d>>. No <<ex_vector2d_v3>>, usei duas propriedades no `Vector2d` apenas para tornar os atributos `x` e `y` apenas para leitura.
+Vimos inicialmente o decorador `@property` no <<ch_pythonic_obj>>, na <<hashable_vector2d>>. No <<ex_vector2d_v3>>, usei duas propriedades no `Vector2d` apenas para tornar os atributos `x` e `y` apenas para leitura.
 Aqui vamos ver propriedades que calculam valores, levando a uma discussão sobre como armazenar tais valores.
 
 Os((("computed properties", "properties that compute values")))((("dynamic attributes and properties", "computed properties", id="DAPcomputp22"))) registros na lista `'events'` dos dados JSON da OSCON contêm números de série inteiros apontando para registros nas listas `'speakers'` e `'venues'`.
@@ -487,7 +487,7 @@ Por essa razão, ler ou escrever dados diretamente no `+__dict__+` de um objeto 
 O interpretador avalia `+obj.my_attr+` olhando primeiro a classe de `obj`.
 Se a classe possuir uma propriedade de nome `my_attr`, aquela propriedade oculta um atributo de instância com o mesmo nome.
 Isso será demonstrado por exemplos na <<prop_override_instance>>,
-e o <<attribute_descriptors>> vai revelar que uma propriedade é implementada como um descritor—uma abstração mais geral e poderosa.
+e o <<ch_descriptors>> vai revelar que uma propriedade é implementada como um descritor—uma abstração mais geral e poderosa.
 ====
 
 Quando programava a compreensão de lista no <<ex_schedule_v3_speakers>>, meu cérebro réptil de programador pensou: "Isso talvez seja custoso". Na verdade não é, porque os eventos no conjuntos de dados da OSCON contêm poucos palestrantes, então programar algo mais complexo seria uma otimização prematura.
@@ -542,7 +542,7 @@ Infelizmente, ele vem com algumas ressalvas, discutidas a seguir.((("", startref
 ==== Passo 5: _Caching_ de propriedades com functools
 
 O((("computed properties", "caching properties with functools", id="CPfunctool22")))((("functools module", "caching properties with", id="functools22"))) módulo `functools` oferece três decoradores para _caching_.
-Vimos `@cache` e `@lru_cache` na <<memoization_sec>> (no <<closures_and_decorators>>). Python 3.8 introduziu `@cached_property`.
+Vimos `@cache` e `@lru_cache` na <<memoization_sec>> (no <<ch_closure_decorator>>). Python 3.8 introduziu `@cached_property`.
 
 O decorador `functools.cached_property` faz _cache_ do resultado de um método em uma variável de instância com o mesmo nome.
 
@@ -565,9 +565,9 @@ computando a `key` e rodando `fetch` todas as vezes!
 
 A((("attribute descriptors", "overriding versus nonoverriding")))((("nonoverriding descriptors")))((("overriding descriptors"))) resposta é um tanto triste: `cached_property` é um nome enganador.
 O decorador `@cached_property` não cria uma propriedade completa, ele cria um _descritor não dominante_. Um descritor é um objeto que gerencia o acesso a um atributo em outra classe.
-Vamos mergulhar nos descritores no <<attribute_descriptors>>.
+Vamos mergulhar nos descritores no <<ch_descriptors>>.
 O decorador `property` é uma API de alto nível para criar um _descritor dominante_.
-O <<attribute_descriptors>> inclui um explicação completa sobre descritores _dominantes_ e _não dominantes_.
+O <<ch_descriptors>> inclui um explicação completa sobre descritores _dominantes_ e _não dominantes_.
 
 Por hora, vamos deixar de lado a implementação subjacente e nos concentrar nas diferenças entre `cached_property` e `property` do ponto de vista de um usuário.
 Raymond Hettinger os explica muito bem na https://docs.python.org/pt-br/3/library/functools.html#functools.cached_property[Documentação de Python]:
@@ -579,7 +579,7 @@ Uma propriedade regular bloqueia a escrita em atributos, a menos que um _setter_
 
 O decorador `cached_property` só funciona para consultas e apenas quando um atributo de mesmo nome não existe. Quando funciona, `cached_property` escreve no atributo de mesmo nome. Leituras e escritas subsequentes do/no atributo tem precedência sobre o método decorado com `cached_property` e ele funciona como um atributo normal.
 
-O valor em cache pode ser excluído apagando-se o atributo. Isso permite que o método `cached_property` rode novamente.footnote:[Fonte: documentação de https://docs.python.org/pt-br/3/library/functools.html#functools.cached_property[@functools.cached_property]. Sei que autor dessa explicação é Raymond Hettinger porque ele a escreveu em resposta a um problema que eu mesmo reportei: https://fpy.li/22-11[bpo42781—functools.cached_property docs should explain that it is non-overriding (_a documentação de functools.cached_property deveria explicar que ele é não-dominante_)] (EN). Hettinger é um grande colaborador da documentação oficial de Python e da biblioteca padrão. Ele também escreveu o excelente https://fpy.li/22-12[Descriptor HowTo Guide (_Guia de Utilização de Descritores_)] (EN), um recurso fundamental para o <<attribute_descriptors>>.]
+O valor em cache pode ser excluído apagando-se o atributo. Isso permite que o método `cached_property` rode novamente.footnote:[Fonte: documentação de https://docs.python.org/pt-br/3/library/functools.html#functools.cached_property[@functools.cached_property]. Sei que autor dessa explicação é Raymond Hettinger porque ele a escreveu em resposta a um problema que eu mesmo reportei: https://fpy.li/22-11[bpo42781—functools.cached_property docs should explain that it is non-overriding (_a documentação de functools.cached_property deveria explicar que ele é não-dominante_)] (EN). Hettinger é um grande colaborador da documentação oficial de Python e da biblioteca padrão. Ele também escreveu o excelente https://fpy.li/22-12[Descriptor HowTo Guide (_Guia de Utilização de Descritores_)] (EN), um recurso fundamental para o <<ch_descriptors>>.]
 ____
 
 Voltando((("@cached_property"))) à nossa classe `Event`: o comportamento específico de `@cached_property` o torna inadequado para decorar `speakers`, porque aquele método depende de um atributo existente também chamado `speakers`, contendo os números de série dos palestrantes do evento.
@@ -706,7 +706,7 @@ ValueError: value must be > 0
 
 Agora protegemos `weight` impedindo que usuários forneçam valores negativos. Apesar de compradores normalmente não poderem definir o preço de um produto, um erro administrativo ou um bug poderiam criar um `LineItem` com um `price` negativo. Para evitar isso, poderíamos também transformar `price` em uma propriedade, mas isso levaria a alguma repetição no nosso código.
 
-Lembre-se da citação de Paul Graham no <<iterables2generators>>: "Quando vejo padrões em meus programas, considero isso um mau sinal." A cura para a repetição é a abstração. Há duas maneiras de abstrair definições de propriedades: usar uma fábrica de propriedades ou uma classe descritora. A abordagem via classe descritora é mais flexível, e dedicaremos o <<attribute_descriptors>> a uma discussão completa desse recurso. Na verdade, propriedades são, elas mesmas, implementadas como classes descritoras. Mas aqui vamos seguir com nossa exploração das propriedades, implementando uma fábrica de propriedades em forma de função.
+Lembre-se da citação de Paul Graham no <<ch_generators>>: "Quando vejo padrões em meus programas, considero isso um mau sinal." A cura para a repetição é a abstração. Há duas maneiras de abstrair definições de propriedades: usar uma fábrica de propriedades ou uma classe descritora. A abordagem via classe descritora é mais flexível, e dedicaremos o <<ch_descriptors>> a uma discussão completa desse recurso. Na verdade, propriedades são, elas mesmas, implementadas como classes descritoras. Mas aqui vamos seguir com nossa exploração das propriedades, implementando uma fábrica de propriedades em forma de função.
 
 Mas antes de podermos implementar uma fábrica de propriedades, precisamos entender melhor as propriedades em si.((("", startref="Aval22")))((("", startref="DAPval22")))
 
@@ -848,7 +848,7 @@ Como uma demonstração final, vamos adicionar uma propriedade a `Class`, e vê-
 <6> `obj.data` agora lê novamente o atributo de instância `data`.
 
 O ponto principal desta seção é que uma expressão como `obj.data` não começa a busca por `data` em `obj`. A busca na verdade começa em `+obj.__class__+`, e Python só olha para a instância `obj` se não houver uma propriedade chamada `data` na classe. Isso se aplica a((("overriding descriptors"))) _descritores dominantes_ em geral, dos quais as propriedades são apenas um exemplo.
-Mas um tratamento mais profundo de descritores vai ter que aguardar pelo <<attribute_descriptors>>.
+Mas um tratamento mais profundo de descritores vai ter que aguardar pelo <<ch_descriptors>>.
 
 Voltemos às propriedades. Toda unidade de código de Python—módulos, funções, classes, métodos—pode conter uma docstring. O próximo tópico mostra como anexar documentação às propriedades.
 
@@ -912,7 +912,7 @@ Mas evitar tal repetição é complicado, pois a propriedade não tem como saber
 [NOTE]
 ====
 Aperfeiçoar a propriedade `quantity` para que o usuário não precise redigitar o nome do atributo é uma problema não-trivial de metaprogramação.
-Um problema que resolveremos no <<attribute_descriptors>>.
+Um problema que resolveremos no <<ch_descriptors>>.
 ====
 
 O <<lineitem_class_v2prop>> apresenta a implementação da fábrica de propriedades `quantity`.footnote:[Esse código foi adaptado da "Recipe 9.21. Avoiding Repetitive Property Methods" (_Receita 9.21. Evitando Métodos Repetitivos de Propriedades_) do https://fpy.li/pycook3[Python Cookbook] (EN), 3ª ed., de David Beazley e Brian K. Jones (O’Reilly).]
@@ -957,7 +957,7 @@ Observe como as propriedades criadas por nossa fábrica se valem do comportament
 
 O código no <<lineitem_class_v2prop>> pode ser um pouco complicado, mas é conciso: seu tamanho é idêntico ao do par _getter/setter_ decorado que define apenas a propriedade `weight` no <<lineitem_class_v2>>. A definição de  `LineItem` no <<lineitem_class_v2prop_class>> parece muito melhor sem o ruído de _getters_ e _setters_.
 
-Em um sistema real, o mesmo tipo de validação pode aparecer em muitos campos espalhados por várias classes, e a fábrica `quantity` estaria em um módulo utilitário, para ser usada continuamente. Por fim, aquela fábrica simples poderia ser refatorada em um classe descritora mais extensível, com subclasses especializadas realizando diferentes validações. Faremos isso no <<attribute_descriptors>>.
+Em um sistema real, o mesmo tipo de validação pode aparecer em muitos campos espalhados por várias classes, e a fábrica `quantity` estaria em um módulo utilitário, para ser usada continuamente. Por fim, aquela fábrica simples poderia ser refatorada em um classe descritora mais extensível, com subclasses especializadas realizando diferentes validações. Faremos isso no <<ch_descriptors>>.
 
 Vamos agora encerrar a discussão das propriedades com a questão da exclusão de atributos.((("", startref="DAPfactory22")))((("", startref="quantprop22")))
 

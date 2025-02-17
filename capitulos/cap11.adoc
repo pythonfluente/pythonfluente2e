@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[pythonic_objects]]
+[[ch_pythonic_obj]]
 == Um objeto pythônico
 
 
@@ -24,7 +24,7 @@ As classes na sua aplicação provavelmente não precisam nem devem implementar 
 Mas se você estiver escrevendo uma biblioteca ou um framework, os programadores que usarão suas classes talvez esperem que elas se comportem como as classes fornecidas pelo Python.
 Satisfazer tal expectativa é um dos jeitos de ser "pythônico".
 
-Esse capítulo começa onde o <<data_model>> terminou, mostrando como implementar vários métodos especiais comumente vistos em objetos Python de diferentes tipos.
+Esse capítulo começa onde o <<ch_data_model>> terminou, mostrando como implementar vários métodos especiais comumente vistos em objetos Python de diferentes tipos.
 
 Veremos((("Pythonic objects", "topics covered"))) como:
 
@@ -36,7 +36,7 @@ Veremos((("Pythonic objects", "topics covered"))) como:
 * Economizar memória com `+__slots__+`
 
 Vamos fazer tudo isso enquanto desenvolvemos `Vector2d`, um tipo simples de vetor euclidiano bi-dimensional.
-No <<user_defined_sequences>>, o mesmo código servirá de base para uma classe de vetor N-dimensional.
+No <<ch_seq_methods>>, o mesmo código servirá de base para uma classe de vetor N-dimensional.
 
 A evolução do exemplo será interrompida para discutirmos dois tópicos conceituais:
 
@@ -64,7 +64,7 @@ Todas((("Pythonic objects", "object representations"))) as linguagens orientadas
 `repr()`:: Devolve((("repr() function")))((("functions", "repr() function"))) uma string representando o objeto como o desenvolvedor quer vê-lo. É o que aparece quando o console de Python ou um depurador mostram um objeto.
 `str()`:: Devolve((("str() function")))((("functions", "str() function"))) uma string representando o objeto como o usuário quer vê-lo. É o que aparece quando se passa um objeto como argumento para `print()`.
 
-Os((("&#x005F;&#x005F;repr&#x005F;&#x005F;")))((("&#x005F;&#x005F;str&#x005F;&#x005F;"))) métodos especiais `+__repr__+` e `+__str__+` suportam `repr()` e `str()`, como vimos no <<data_model>>.
+Os((("&#x005F;&#x005F;repr&#x005F;&#x005F;")))((("&#x005F;&#x005F;str&#x005F;&#x005F;"))) métodos especiais `+__repr__+` e `+__str__+` suportam `repr()` e `str()`, como vimos no <<ch_data_model>>.
 
 Existem((("&#x005F;&#x005F;bytes&#x005F;&#x005F;")))((("&#x005F;&#x005F;format&#x005F;&#x005F;"))) dois métodos especiais adicionais para suportar representações alternativas de objetos, `+__bytes__+` e `+__format__+`. O método `+__bytes__+` é análogo a `+__str__+`: ele é chamado por `bytes()` para obter um objeto representado como uma sequência de bytes.
 Já `+__format__+` é usado por f-strings, pela função embutida `format()`
@@ -81,7 +81,7 @@ Se você está vindo de Python 2, lembre-se que no Python 3 `+__repr__+`, `+__st
 
 Para((("Pythonic objects", "Vector2d class example", id="PYvector11")))((("Vector2d", "class example", id="V2dclass11")))
 demonstrar os vários métodos usados para gerar representações de objetos,
-vamos criar uma classe `Vector2d`, similar à que vimos no <<data_model>>.
+vamos criar uma classe `Vector2d`, similar à que vimos no <<ch_data_model>>.
 O <<ex_vector2d_v0_demo>> ilustra o comportamento básico que esperamos de uma instância de `Vector2d`.
 
 [[ex_vector2d_v0_demo]]
@@ -104,7 +104,7 @@ include::code/11-pythonic-obj/vector2d_v0.py[tags=VECTOR2D_V0_DEMO]
 <9> `bool` usa o método `+__bool__+` para devolver `False` se o `Vector2d` tiver magnitude zero, caso contrário esse método devolve `True`.
 
 O `Vector2d` do <<ex_vector2d_v0_demo>> é implementado em _vector2d_v0.py_ (no <<ex_vector2d_v0>>).
-O código está baseado no <<ex_vector2d>>, exceto pelos métodos para os operadores `+` e `*`, que veremos mais tarde no <<operator_overloading>>. Vamos acrescentar o método para `==`, já que ele é  útil para testes.
+O código está baseado no <<ex_vector2d>>, exceto pelos métodos para os operadores `+` e `*`, que veremos mais tarde no <<ch_op_overload>>. Vamos acrescentar o método para `==`, já que ele é  útil para testes.
 Nesse ponto, `Vector2d` usa vários métodos especiais para oferecer operações que um pythonista espera encontrar em um objeto bem projetado.
 
 [[ex_vector2d_v0]]
@@ -117,7 +117,7 @@ include::code/11-pythonic-obj/vector2d_v0.py[tags=VECTOR2D_V0]
 ====
 <1> `typecode` é um atributo de classe, usado na conversão de instâncias de `Vector2d` de/para `bytes`.
 <2> Converter `x` e `y` para `float` em `+__init__+` captura erros mais rápido, algo útil quando `Vector2d` é chamado com argumentos inadequados.
-<3> `+__iter__+` torna um `Vector2d` iterável; é isso que faz o desempacotamento funcionar (por exemplo, `x, y = my_vector`). Vamos implementá-lo aqui usando uma expressão geradora para produzir os componentes, um após outro.footnote:[Essa linha também poderia ser escrita assim: `yield self.x; yield.self.y`. Terei muito mais a dizer sobre o método especial `+__iter__+`, sobre expressões geradoras e sobre a palavra reservada `yield` no <<iterables2generators>>.]
+<3> `+__iter__+` torna um `Vector2d` iterável; é isso que faz o desempacotamento funcionar (por exemplo, `x, y = my_vector`). Vamos implementá-lo aqui usando uma expressão geradora para produzir os componentes, um após outro.footnote:[Essa linha também poderia ser escrita assim: `yield self.x; yield.self.y`. Terei muito mais a dizer sobre o método especial `+__iter__+`, sobre expressões geradoras e sobre a palavra reservada `yield` no <<ch_generators>>.]
 <4> O `+__repr__+` cria uma string interpolando os componentes com `{!r}`, para obter seus `repr`; como `Vector2d` é iterável, `*self` alimenta `format` com os componentes `x` e `y`.
 <5> Dado um iterável `Vector2d`, é fácil criar uma `tuple` para exibição como um par ordenado.
 <6> Para gerar `bytes`, convertemos o typecode para `bytes` e concatenamos...
@@ -129,7 +129,7 @@ assim, `0.0` se torna `False`, qualquer valor diferente de zero é `True`.
 
 [WARNING]
 ====
-O método `+__eq__+` no <<ex_vector2d_v0>> funciona para operandos `Vector2d`, mas também devolve `True` ao comparar instâncias de `Vector2d` a outros iteráveis contendo os mesmos valores numéricos  (por exemplo, `Vector(3, 4) == [3, 4]`). Isso pode ser considerado uma característica ou um bug. Essa discussão terá que esperar até o <<operator_overloading>>, onde falamos de sobrecarga de operadores.
+O método `+__eq__+` no <<ex_vector2d_v0>> funciona para operandos `Vector2d`, mas também devolve `True` ao comparar instâncias de `Vector2d` a outros iteráveis contendo os mesmos valores numéricos  (por exemplo, `Vector(3, 4) == [3, 4]`). Isso pode ser considerado uma característica ou um bug. Essa discussão terá que esperar até o <<ch_op_overload>>, onde falamos de sobrecarga de operadores.
 ====
 
 Temos um conjunto bastante completo de métodos básicos, mas ainda precisamos de uma maneira de reconstruir um `Vector2d` a partir da representação binária produzida por `bytes()`.((("", startref="PYvector11")))((("", startref="V2dclass11")))
@@ -418,7 +418,7 @@ include::code/11-pythonic-obj/vector2d_v3_prophash.py[tags=VECTOR2D_V3_PROP]
 
 [NOTE]
 ====
-`Vector.x` e `Vector.y` são exemplos de propriedades apenas para leitura. Propriedades para leitura/escrita serão tratadas no <<dynamic_attributes>>, onde mergulhamos mais fundo no decorador `@property`.
+`Vector.x` e `Vector.y` são exemplos de propriedades apenas para leitura. Propriedades para leitura/escrita serão tratadas no <<ch_dynamic_attrs>>, onde mergulhamos mais fundo no decorador `@property`.
 ====
 
 Agora que nossos vetores estão razoavelmente protegidos contra mutação acidental, podemos implementar o método `+__hash__+`.
@@ -852,7 +852,7 @@ Se o código for parte de uma biblioteca para uso por outros programadores, ent�
 Por exemplo, `+__eq__+` pode não ser necessário para suportar um requisito do negócio, mas torna a classe mais fácil de testar.
 
 Minha meta, ao expandir o código do `Vector2d`, foi criar um contexto para a discussão dos métodos especiais e das convenções de programação em Python.
-Os exemplos neste capítulo demonstraram vários dos métodos especiais vistos antes na <<special_names_tbl>> (do <<data_model>>):
+Os exemplos neste capítulo demonstraram vários dos métodos especiais vistos antes na <<special_names_tbl>> (do <<ch_data_model>>):
 
 * Métodos de representação de strings e bytes: `+__repr__+`, `+__str__+`, `+__format__+` e `+__bytes__+`
 * Métodos para reduzir um objeto a um número: `+__abs__+`, `+__bool__+` e `+__hash__+`
@@ -880,7 +880,7 @@ ____
 [[pythonic_further_reading]]
 === Leitura complementar
 
-Este((("Pythonic objects", "further reading on"))) capítulo tratou de vários dos métodos especiais do modelo de dados, então naturalmente as referências primárias são as mesmas do <<data_model>>, onde tivemos uma ideia geral do mesmo tópico. Por conveniência, vou repetir aquelas quatro recomendações anteriores aqui, e acrescentar algumas outras:
+Este((("Pythonic objects", "further reading on"))) capítulo tratou de vários dos métodos especiais do modelo de dados, então naturalmente as referências primárias são as mesmas do <<ch_data_model>>, onde tivemos uma ideia geral do mesmo tópico. Por conveniência, vou repetir aquelas quatro recomendações anteriores aqui, e acrescentar algumas outras:
 
 O https://docs.python.org/pt-br/3/reference/datamodel.html[capítulo "Modelo de Dados"] em _A Referência da Linguagem Python_:: A maioria dos métodos usados nesse capítulo estão documentados em https://docs.python.org/pt-br/3/reference/datamodel.html#basic-customization["3.3.1. Personalização básica"].
 
@@ -898,11 +898,11 @@ ____
 ____
 
 Mencionei `attrs` como uma alternativa mais poderosa ao `@dataclass` na <<further_data_class>>.
-As fábricas de classes de dados do <<data_class_ch>>, assim como `attrs`, equipam suas classes automaticamente com vários métodos especiais. Mas saber como programar métodos especiais ainda é essencial para entender o que aqueles pacotes fazem, para decidir se você realmente precisa deles e para—quando necessário—sobrescrever os métodos que eles geram.
+As fábricas de classes de dados do <<ch_dataclass>>, assim como `attrs`, equipam suas classes automaticamente com vários métodos especiais. Mas saber como programar métodos especiais ainda é essencial para entender o que aqueles pacotes fazem, para decidir se você realmente precisa deles e para—quando necessário—sobrescrever os métodos que eles geram.
 
 Vimos neste capítulo todos os métodos especiais relacionados à representação de objetos, exceto
 `+__index__+` e `+__fspath__+`.
-Discutiremos `+__index__+` no <<user_defined_sequences>>, na <<slice_aware_sec>>.
+Discutiremos `+__index__+` no <<ch_seq_methods>>, na <<slice_aware_sec>>.
 Não vou tratar de `+__fspath__+`. Para aprender sobre esse método, veja a https://fpy.li/pep519[PEP 519—Adding a file system path protocol (_Adicionando um protocolo de caminho de sistema de arquivos_)] (EN).
 
 Uma percepção precoce da necessidade de strings de representação diferentes para objetos apareceu  em Smalltalk. O artigo de 1996 https://fpy.li/11-13["How to Display an Object as a String: printString and displayString" (_Como Mostrar um Objeto como uma String: printString and displayString_)] (EN), de Bobby Woolf, discute a implementação dos métodos `printString` e `displayString` naquela linguagem. Foi desse artigo que peguei emprestado as expressivas descrições "como o desenvolvedor quer vê-lo" e "como o usuário quer vê-lo" para definir `repr()` e `str()`, na <<object_repr_sec>>.

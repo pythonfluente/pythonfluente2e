@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[user_defined_sequences]]
+[[ch_seq_methods]]
 == Métodos especiais para sequências
 
 [quote, Alex Martelli]
@@ -16,7 +16,7 @@ ____
 Não queira saber se aquilo _é_-um pato: veja se ele _grasna_-como-um pato, _anda_-como-um pato, etc., etc., dependendo de qual subconjunto exato de comportamentos de pato você precisa para usar em seus jogos de linguagem. (`comp.lang.python`, Jul. 26, 2000)
 ____
 
-Neste((("sequences, special methods for", "topics covered")))((("Vector class, multidimensional", "topics covered"))) capítulo, vamos criar uma classe `Vector`, para representar um vetor multidimensional—um avanço significativo sobre o `Vector2D` bidimensional do <<pythonic_objects>>.
+Neste((("sequences, special methods for", "topics covered")))((("Vector class, multidimensional", "topics covered"))) capítulo, vamos criar uma classe `Vector`, para representar um vetor multidimensional—um avanço significativo sobre o `Vector2D` bidimensional do <<ch_pythonic_obj>>.
 `Vector` vai se comportar como uma simples sequência imutável padrão de Python.
 Seus elementos serão números de ponto flutuante, e ao final do capítulo a classe suportará o seguinte:
 
@@ -35,7 +35,7 @@ Nossa apresentação voltada para o código será interrompida por uma discussã
 Não((("sequences, special methods for", "significant changes to"))) ocorreu qualquer grande modificação neste capítulo. Há uma breve discussão nova sobre o `typing.Protocol` em um quadro de dicas, no final da <<protocol_duck_section>>.
 
 Na <<slice_aware_sec>>, a implementação do `+__getitem__+` no <<ex_vector_v2>> está mais concisa e robusta que o exemplo na primeira edição, graças ao _duck typing_ e ao `operator.index`.
-Essa mudança foi replicada para as implementações seguintes de `Vector` aqui e no <<operator_overloading>>.
+Essa mudança foi replicada para as implementações seguintes de `Vector` aqui e no <<ch_op_overload>>.
 
 Vamos começar.
 
@@ -83,7 +83,7 @@ Quando um `Vector` tem mais de seis componentes, a string produzida por `repr()`
 `...`, como visto na última linha do <<ex_vector_demo>>. Isso é fundamental para qualquer tipo de coleção que possa conter um número grande de itens, pois `repr` é usado na depuração—e você não quer que um único objeto grande ocupe milhares de linhas em seu console ou arquivo de log. Use o módulo `reprlib` para produzir representações de tamanho limitado, como no <<ex_vector_v1>>. O módulo `reprlib` se chamava `repr` no Python 2.7.
 ====
 
-O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector` (esse exemplo usa como base o código mostrado no pass:[<a data-type="xref" href="#ex_vector2d_v0" data-xrefstyle="select: labelnumber">#ex_vector2d_v0</a>] e no pass:[<a data-type="xref" href="#ex_vector2d_v1" data-xrefstyle="select: labelnumber">#ex_vector2d_v1</a>] do <<pythonic_objects>>).
+O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector` (esse exemplo usa como base o código mostrado no pass:[<a data-type="xref" href="#ex_vector2d_v0" data-xrefstyle="select: labelnumber">#ex_vector2d_v0</a>] e no pass:[<a data-type="xref" href="#ex_vector2d_v1" data-xrefstyle="select: labelnumber">#ex_vector2d_v1</a>] do <<ch_pythonic_obj>>).
 
 [[ex_vector_v1]]
 .vector_v1.py: derived from vector2d_v1.py
@@ -94,7 +94,7 @@ include::code/12-seq-hacking/vector_v1.py[tags=VECTOR_V1]
 ----
 ====
 <1> O atributo de instância "protegido" `self._components` vai manter um `array` com os componentes do `Vector`.
-<2> Para permitir iteração, devolvemos um itereador sobre ++self._components++.footnote:[A função `iter()` é tratada no <<iterables2generators>>, juntamente com o  método `+__iter__+`.]
+<2> Para permitir iteração, devolvemos um itereador sobre ++self._components++.footnote:[A função `iter()` é tratada no <<ch_generators>>, juntamente com o  método `+__iter__+`.]
 <3> Usa `reprlib.repr()` para obter um representação de tamanho limitado de `self._components` (por exemplo, `array('d', [0.0, 1.0, 2.0, 3.0, 4.0, ...])`).
 <4> Remove o prefixo `array('d',` e o `)`  final, antes de inserir a string em uma chamada ao construtor de `Vector`.
 <5> Cria um objeto `bytes` diretamente de `self._components`.
@@ -119,7 +119,7 @@ Aliás, poderíamos ter criado `Vector` como uma subclasse de `Vector2d`, mas es
 [[protocol_duck_section]]
 === Protocolos e o _duck typing_
 
-Já((("Vector class, multidimensional", "protocols and duck typing")))((("sequences, special methods for", "protocols and duck typing")))((("protocols", "duck typing and")))((("duck typing"))) no <<data_model>>, vimos que não é necessário herdar de qualquer classe em especial para criar um tipo sequência completamente funcional em Python; basta implementar os métodos que satisfazem o protocolo de sequência. Mas de que tipo de protocolo estamos falando?
+Já((("Vector class, multidimensional", "protocols and duck typing")))((("sequences, special methods for", "protocols and duck typing")))((("protocols", "duck typing and")))((("duck typing"))) no <<ch_data_model>>, vimos que não é necessário herdar de qualquer classe em especial para criar um tipo sequência completamente funcional em Python; basta implementar os métodos que satisfazem o protocolo de sequência. Mas de que tipo de protocolo estamos falando?
 
 No contexto da programação orientada a objetos, um protocolo é uma interface informal, definida apenas na documentação (e não no código). Por exemplo, o protocolo de sequência no Python implica apenas no métodos `+__len__+` e `+__getitem__+`. Qualquer classe `Spam`, que implemente esses métodos com a assinatura e a semântica padrões, pode ser usada em qualquer lugar onde uma sequência for esperada. É irrelevante se `Spam` é uma subclasse dessa ou daquela outra classe; tudo o que importa é que ela fornece os métodos necessários. Vimos isso no <<ex_pythonic_deck>>, reproduzido aqui no <<ex_pythonic_deck_rep>>.
 
@@ -148,7 +148,7 @@ o Python((("protocol classes")))((("protocols", "static protocols"))) 3.8 suport
 que estudamos na <<protocols_in_fn>>.
 Esse novo uso da palavra protocolo no Python tem um significado relacionado, mas diferente. Quando preciso diferenciá-los, escrevo((("static protocols", "versus dynamic protocols", secondary-sortas="dynamic protocols"))) _protocolo estático_ para me referir aos protocolos formalizados em classes protocolo (subclasses de `typing.Protocol`), e((("dynamic protocols"))) _protocolos dinâmicos_ para o sentido tradicional.
 Uma diferença fundamental é que implementações de um protocolo estático precisam oferecer todos os métodos definidos na classe protocolo.
-A <<two_kinds_protocols_sec>> no <<ifaces_prot_abc>> traz maiores detalhes.
+A <<two_kinds_protocols_sec>> no <<ch_ifaces_prot_abc>> traz maiores detalhes.
 ====
 
 ////
@@ -402,7 +402,7 @@ e então `+__getattr__+` não será mais invocado para obter `v.x`: o interpreta
 
 Para evitar essa inconsistência, precisamos modificar a lógica de definição de atributos em nossa classe `Vector`.
 
-Como você se lembra, nos nossos últimos exemplos de `Vector2d` no <<pythonic_objects>>, tentar atribuir valores aos atributos de instância `.x` ou `.y` gerava um `AttributeError`. Em `Vector`, queremos produzir a mesma exceção em resposta a tentativas de atribuição a qualquer nome de atributo com um única letra, só para evitar confusão. Para fazer isso, implementaremos `+__setattr__+`, como listado no <<ex_vector_v3_setattr>>.
+Como você se lembra, nos nossos últimos exemplos de `Vector2d` no <<ch_pythonic_obj>>, tentar atribuir valores aos atributos de instância `.x` ou `.y` gerava um `AttributeError`. Em `Vector`, queremos produzir a mesma exceção em resposta a tentativas de atribuição a qualquer nome de atributo com um única letra, só para evitar confusão. Para fazer isso, implementaremos `+__setattr__+`, como listado no <<ex_vector_v3_setattr>>.
 
 [[ex_vector_v3_setattr]]
 .Parte de vector_v3.py: o método `+__setattr__+` na classe `Vector`
@@ -737,10 +737,10 @@ include::code/12-seq-hacking/vector_v5.py[tags=VECTOR_V5]
 
 [NOTE]
 ====
-Estamos fazendo uso intensivo de expressões geradoras em `+__format__+`, `angle`, e `angles`, mas nosso foco aqui é fornecer um `+__format__+` para levar `Vector` ao mesmo nível de implementação de `Vector2d`. Quando tratarmos de geradores, no <<iterables2generators>>, vamos usar parte do código de `Vector` nos exemplos, e lá os recursos dos geradores serão explicados em detalhes.
+Estamos fazendo uso intensivo de expressões geradoras em `+__format__+`, `angle`, e `angles`, mas nosso foco aqui é fornecer um `+__format__+` para levar `Vector` ao mesmo nível de implementação de `Vector2d`. Quando tratarmos de geradores, no <<ch_generators>>, vamos usar parte do código de `Vector` nos exemplos, e lá os recursos dos geradores serão explicados em detalhes.
 ====
 
-Isso conclui nossa missão nesse capítulo. A classe `Vector` será aperfeiçoada com operadores infixos no <<operator_overloading>>. Nosso objetivo aqui foi explorar técnicas para programação de métodos especiais que são úteis em uma grande variedade de classes de coleções.((("", startref="VCMformat12")))((("", startref="SSMformat12")))((("", startref="format12")))
+Isso conclui nossa missão nesse capítulo. A classe `Vector` será aperfeiçoada com operadores infixos no <<ch_op_overload>>. Nosso objetivo aqui foi explorar técnicas para programação de métodos especiais que são úteis em uma grande variedade de classes de coleções.((("", startref="VCMformat12")))((("", startref="SSMformat12")))((("", startref="format12")))
 
 
 === Resumo do capítulo
@@ -755,16 +755,16 @@ O próximo passo foi fornecer acesso somente para leitura aos primeiros componen
 
 Implementar a função `+__hash__+` nos deu um contexto perfeito para usar `functools.reduce`, pois precisávamos aplicar o operador xor (`^`) sucessivamente aos _hashes_ de todos os componentes de `Vector`, para produzir um código de _hash_ agregado referente a todo o `Vector`. Após aplicar `reduce` em `+__hash__+`, usamos a função embutida de redução `all`, para criar um método `+__eq__+` mais eficiente.
 
-O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+` de `Vector2d`, para suportar coordenadas esféricas como alternativa às coordenadas cartesianas default. Usamos bastante matemática e vários geradores para programar `+__format__+` e suas funções auxiliares, mas esses são detalhes de implementação—e voltaremos aos geradores no <<iterables2generators>>. O objetivo daquela última seção foi suportar um formato personalizado, cumprindo assim a promessa de um `Vector` capaz de fazer tudo que um `Vector2d` faz e algo mais.
+O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+` de `Vector2d`, para suportar coordenadas esféricas como alternativa às coordenadas cartesianas default. Usamos bastante matemática e vários geradores para programar `+__format__+` e suas funções auxiliares, mas esses são detalhes de implementação—e voltaremos aos geradores no <<ch_generators>>. O objetivo daquela última seção foi suportar um formato personalizado, cumprindo assim a promessa de um `Vector` capaz de fazer tudo que um `Vector2d` faz e algo mais.
 
-Como fizemos no <<pythonic_objects>>, muitas vezes aqui olhamos como os objetos padrão de Python se comportam, para emulá-los e dar a `Vector` uma aparência "pythônica".
+Como fizemos no <<ch_pythonic_obj>>, muitas vezes aqui olhamos como os objetos padrão de Python se comportam, para emulá-los e dar a `Vector` uma aparência "pythônica".
 
-No <<operator_overloading>> vamos implemenar vários operadores infixos em `Vector`. A matemática será muito mais simples que aquela no método `angle()` daqui, mas explorar como os operadores infixos funcionam no Python é uma grande lição sobre design orientado a objetos. Mas antes de chegar à sobrecarga de operadores, vamos parar um pouco de trabalhar com uma única classe e olhar para a organização de múltiplas classes com interfaces e herança, os assuntos dos capítulos pass:[<a data-type="xref" href="#ifaces_prot_abc" data-xrefstyle="select: labelnumber">#ifaces_prot_abc</a>] e pass:[<a data-type="xref" href="#inheritance" data-xrefstyle="select: labelnumber">#inheritance</a>].
+No <<ch_op_overload>> vamos implemenar vários operadores infixos em `Vector`. A matemática será muito mais simples que aquela no método `angle()` daqui, mas explorar como os operadores infixos funcionam no Python é uma grande lição sobre design orientado a objetos. Mas antes de chegar à sobrecarga de operadores, vamos parar um pouco de trabalhar com uma única classe e olhar para a organização de múltiplas classes com interfaces e herança, os assuntos dos capítulos pass:[<a data-type="xref" href="#ch_ifaces_prot_abc" data-xrefstyle="select: labelnumber">#ch_ifaces_prot_abc</a>] e pass:[<a data-type="xref" href="ch_inheritance" data-xrefstyle="select: labelnumber">ch_inheritance</a>].
 
 
 === Leitura complementar
 
-A((("Vector class, multidimensional", "further reading on")))((("sequences, special methods for", "further reading on"))) maioria dos métodos especiais tratados no exemplo de `Vector` também apareceram no exemplo do `Vector2d`, no <<pythonic_objects>>, então as referências na <<pythonic_further_reading>> ali são todas relevantes aqui também.
+A((("Vector class, multidimensional", "further reading on")))((("sequences, special methods for", "further reading on"))) maioria dos métodos especiais tratados no exemplo de `Vector` também apareceram no exemplo do `Vector2d`, no <<ch_pythonic_obj>>, então as referências na <<pythonic_further_reading>> ali são todas relevantes aqui também.
 
 A poderosa função de ordem superior `reduce` também é conhecida como _fold_ (dobrar), _accumulate_ (acumular), _aggregate_ (agregar), _compress_ (comprimir), e _inject_ (injetar).  Para mais informações, veja o https://fpy.li/12-5[artigo "Fold (higher-order function)" (_"Dobrar (função de ordem superior)"_)] (EN), que apresenta aplicações daquela função de ordem superior, com ênfase em programação funcional com estruturas de dados recursivas. O artigo também inclui uma tabela mostrando funções similares a _fold_ em dezenas de linguagens de programação.
 
@@ -796,7 +796,7 @@ Quando((("KISS principle"))) não precisamos escrever métodos inúteis apenas p
 
 Por outro lado, se você quiser usar um verificador de tipo para checar suas implementações de protocolos, então uma definição mais estrita de "protocolo" é necessária. É isso que `typing.Protocol` nos fornece.
 
-Terei mais a dizer sobre protocolos e interfaces no <<ifaces_prot_abc>>, onde esses conceitos são o assunto principal.
+Terei mais a dizer sobre protocolos e interfaces no <<ch_ifaces_prot_abc>>, onde esses conceitos são o assunto principal.
 
 
 [role="soapbox-title"]

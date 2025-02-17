@@ -1,4 +1,4 @@
-[[concurrency_models_ch]]
+[[ch_concurrency_models]]
 == Modelos de concorrência em Python
 :figure-caption: Figura
 :example-caption: Exemplo
@@ -138,7 +138,7 @@ Thread::
 Corrotina::
     Uma((("coroutines", "definition of term"))) função que pode suspender sua própria execução e continuar depois.
     Em Python, _corrotinas clássicas_ são criadas a partir de funções geradoras, e _corrotinas nativas_ são definidas com `async def`.
-    A <<classic_coroutines_sec>> introduziu o conceito, e <<async_ch>> trata do uso de corrotinas nativas.
+    A <<classic_coroutines_sec>> introduziu o conceito, e <<ch_async>> trata do uso de corrotinas nativas.
     As corrotinas de Python normalmente rodam dentro de uma única thread, sob a supervisão de um _loop de eventos_, também na mesma thread.
     Frameworks de programação assíncrona como _asyncio_, _Curio_, ou _Trio_ fornecem um loop de eventos e bibliotecas de apoio para E/S não-bloqueante baseado em corrotinas.
     Corrotinas permitem _multitarefa cooperativa_:
@@ -338,7 +338,7 @@ mas sua implementação é muito diferente, e `multiprocessing`
 tem uma API muito maior, para dar conta da complexidade adicional da programação multiprocessos.
 Por exemplo, um dos desafios ao converter um programa de threads para processos é a comunicação entre processos, que estão isolados pelo sistema operacional e não podem compartilhar objetos Python.
 Isso significa que objetos cruzando fronteiras entre processos tem que ser serializados e deserializados, criando custos adicionais.
-No <<spinner_proc_ex>>, o único dado que cruza a fronteira entre os processos é o estado de `Event`, que é implementado com um semáforo de baixo nível do SO, no código em C sob o módulo `multiprocessing`.footnote:[O semáforo é um bloco fundamental que pode ser usado para implementar outros mecanismos de sincronização. Python fornece diferentes classes de semáforos para uso com threads, processos e corrotinas. Veremos o `asyncio.Semaphore` na <<using_as_completed_sec>> (no <<async_ch>>).]
+No <<spinner_proc_ex>>, o único dado que cruza a fronteira entre os processos é o estado de `Event`, que é implementado com um semáforo de baixo nível do SO, no código em C sob o módulo `multiprocessing`.footnote:[O semáforo é um bloco fundamental que pode ser usado para implementar outros mecanismos de sincronização. Python fornece diferentes classes de semáforos para uso com threads, processos e corrotinas. Veremos o `asyncio.Semaphore` na <<using_as_completed_sec>> (no <<ch_async>>).]
 
 [TIP]
 ====
@@ -351,7 +351,7 @@ para mais detalhes.
 
 // [NOTE]
 // ====
-// The semaphore is a fundamental building block that can be used to implement other synchronization mechanisms. Python provides different semaphore classes for use with threads, processes, and coroutines. We'll see `asyncio.Semaphore` in <<using_as_completed_sec>> (<<async_ch>>).
+// The semaphore is a fundamental building block that can be used to implement other synchronization mechanisms. Python provides different semaphore classes for use with threads, processes, and coroutines. We'll see `asyncio.Semaphore` in <<using_as_completed_sec>> (<<ch_async>>).
 // ====
 
 Agora vamos ver como o mesmo comportamento pode ser obtido com corrotinas em vez de threads ou processos.
@@ -361,7 +361,7 @@ Agora vamos ver como o mesmo comportamento pode ser obtido com corrotinas em vez
 
 [NOTE]
 ====
-O <<async_ch>> é((("spinners (loading indicators)", "created using coroutines", id="Scoroutine19")))((("coroutines", "spinners (loading indicators) using", id="Cspin19"))) inteiramente dedicado à programação assíncrona com corrotinas. Essa seção é apenas um introdução rápida, para contrastar essa abordagem com as threads e os processos. Assim, vamos ignorar muitos detalhes.
+O <<ch_async>> é((("spinners (loading indicators)", "created using coroutines", id="Scoroutine19")))((("coroutines", "spinners (loading indicators) using", id="Cspin19"))) inteiramente dedicado à programação assíncrona com corrotinas. Essa seção é apenas um introdução rápida, para contrastar essa abordagem com as threads e os processos. Assim, vamos ignorar muitos detalhes.
 ====
 
 Alocar tempo da CPU para a execução de threads e processos é trabalho dos agendadores do SO. As corrotinas, por outro lado, são controladas por um loop de evento no nível da aplicação, que gerencia uma fila de corrotinas pendentes, as executa uma por vez, monitora eventos disparados por operações de E/S iniciadas pelas corrotinas, e passa o controle de volta para a corrotina correspondente quando cada evento acontece.
@@ -679,7 +679,7 @@ Entretanto, observe que isso vai tornar `is_prime` mais lento, e—mais importan
 Quando eu usei `await asyncio.sleep(0)` a cada 100.000 iterações, a animação foi suave mas o programa rodou por 4,9s na minha máquina, quase 50% a mais que a função `primes.is_prime` rodando sozinha com o mesmo argumento (`5_000_111_000_222_021`).
 
 Usar `await asyncio.sleep(0)` deve ser considerada uma medida paliativa até o código assíncrono ser refatorado para delegar computações de uso intensivo da CPU para outro processo.
-Veremos uma forma de fazer isso com o https://fpy.li/19-21[`asyncio.loop.run_in_executor`], abordado no <<async_ch>>. Outra opção seria uma fila de tarefas, que vamos discutir brevemente na <<distributed_task_queues_sec>>.
+Veremos uma forma de fazer isso com o https://fpy.li/19-21[`asyncio.loop.run_in_executor`], abordado no <<ch_async>>. Outra opção seria uma fila de tarefas, que vamos discutir brevemente na <<distributed_task_queues_sec>>.
 ****
 
 Até aqui experimentamos com uma única chamada para uma função de uso intensivo de CPU. A próxima seção apresenta a execução concorrente de múltiplas chamadas de uso intensivo da CPU.
@@ -692,7 +692,7 @@ Até aqui experimentamos com uma única chamada para uma função de uso intensi
 Escrevi((("concurrency models", "process pools", id="CMprocess19")))((("process pools", "example problem")))
 essa seção para mostrar o uso de múltiplos processos em cenários de uso intensivo de CPU,
 e o padrão comum de usar filas para distribuir tarefas e coletar resultados.
-O <<futures_ch>> apresenta uma forma mais simples de distribuir tarefas para processos:
+O <<ch_executors>> apresenta uma forma mais simples de distribuir tarefas para processos:
 um `ProcessPoolExecutor` do pacote `concurrent.futures`, que internamente usa filas.
 ====
 
@@ -892,7 +892,7 @@ De outra forma eu não teria como saber que resultado corresponde a cada número
 Se o processo principal terminar antes que todos os subprocessos finalizem,
 podem surgir relatórios de rastreamento (_tracebacks_) confusos, com referências a exceções de `FileNotFoundError` causados por uma trava interna em `multiprocessing`.
 Depurar código concorrente é sempre difícil, e depurar código baseado no `multiprocessing` é ainda mais difícil devido a toda a complexidade por trás da fachada emulando threads.
-Felizmente, o `ProcessPoolExecutor` que veremos no <<futures_ch>> é mais fácil de usar e mais robusto.
+Felizmente, o `ProcessPoolExecutor` que veremos no <<ch_executors>> é mais fácil de usar e mais robusto.
 
 [NOTE]
 ====
@@ -940,7 +940,7 @@ Também((("process pools", "thread-based nonsolution")))((("threads", "thread-ba
 como invalidar os caches da CPU e talvez até trocar páginas de memória.
 footnote:[Para saber mais, consulte https://pt.wikipedia.org/wiki/Troca_de_contexto["Troca de contexto"] na Wikipedia.]
 
-Os dois próximos capítulos tratam de mais temas ligados à programação concorrente em Python, usando a biblioteca de alto nível _concurrent.futures_ para gerenciar threads e processos (<<futures_ch>>) e a biblioteca _asyncio_ para programação assíncrona (<<async_ch>>).
+Os dois próximos capítulos tratam de mais temas ligados à programação concorrente em Python, usando a biblioteca de alto nível _concurrent.futures_ para gerenciar threads e processos (<<ch_executors>>) e a biblioteca _asyncio_ para programação assíncrona (<<ch_async>>).
 
 As((("", startref="CMprocess19"))) demais seções nesse capítulo procuram responder à questão:
 
@@ -1000,7 +1000,7 @@ Os maiores provedores de serviços na nuvem suportam Python através de bibliote
 
 Nesse campo, scripts Python automatizam tarefas de configuração, emitindo comandos a serem executados pelas máquinas remotas, então raramente há operações limitadas pela CPU.
 Threads ou corrotinas são bastante adequadas para tais atividades.
-Em particular, o pacote `concurrent.futures`, que veremos no <<futures_ch>>, pode ser usado para realizar as mesmas operações em muitas máquinas remotas ao mesmo tempo, sem grande complexidade.
+Em particular, o pacote `concurrent.futures`, que veremos no <<ch_executors>>, pode ser usado para realizar as mesmas operações em muitas máquinas remotas ao mesmo tempo, sem grande complexidade.
 
 Além da biblioteca padrão, há muito projetos populares baseados em Python para gerenciar clusters (_agrupamentos_) de servidores:
 ferramentas como o https://fpy.li/19-30[_Ansible_] (EN) e o https://fpy.li/19-31[_Salt_] (EN),
@@ -1238,7 +1238,7 @@ Este((("concurrency models", "further reading on", id="CMfurther19"))) capítulo
 [[concurrency_further_threads_procs_sec]]
 ==== Concorrência com threads e processos
 
-A((("threads", "further reading on"))) biblioteca _concurrent.futures_, tratada no <<futures_ch>>, usa threads, processos, travas e filas debaixo dos panos, mas você não vai ver as instâncias individuais desses elementos;
+A((("threads", "further reading on"))) biblioteca _concurrent.futures_, tratada no <<ch_executors>>, usa threads, processos, travas e filas debaixo dos panos, mas você não vai ver as instâncias individuais desses elementos;
 eles são encapsulados e gerenciados por abstrações de um nível mais alto: `ThreadPoolExecutor` ou `ProcessPoolExecutor`.
 Para aprender mais sobre a prática da programação concorrente com aqueles objetos de baixo nível,
 https://fpy.li/19-51["An Intro to Threading in Python"] (_Uma Introdução [à Programação com] Threads no Python_) de Jim Anderson é uma boa primeira leitura.
