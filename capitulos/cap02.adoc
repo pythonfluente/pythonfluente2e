@@ -614,44 +614,54 @@ Elas oferecem algumas vantagens de desempenho, explicadas por uma dos desenvolve
 Raymond Hettinger, em uma resposta à questão
 https://fpy.li/2-3["Are tuples more efficient than lists in Python?" (_As tuplas são mais eficientes que as listas no Python?_)] no StackOverflow. Em resumo, Hettinger escreveu:
 
-* Para avaliar uma tupla literal, o compilador Python gera bytecode para uma constante tupla em uma operação; mas para um literal lista, o bytecode gerado insere cada elemento como uma constante separada no stack de dados, e então cria a lista.
-* Dada a tupla `t`, `tuple(t)` simplesmente devolve uma referência para a mesma `t`. Não há necessidade de cópia. Por outro lado, dada uma lista `l`, o construtor `list(l)` precisa criar uma nova cópia de `l`.
-* Devido a seu tamanho fixo, uma instância de `tuple` tem alocado para si o espaço exato de memória que precisa. Em contrapartida, instâncias de `list` tem alocadas para si memória adicional, para amortizar o custo de acréscimos futuros.
-* As referências para os itens em uma tupla são armazenadas em um array na struct da tupla, enquanto uma lista mantém um ponteiro para um array de referências armazenada em outro lugar. Essa indireção é necessária porque, quando a lista cresce além do espaço alocado naquele momento, Python precisa realocar o array de referências para criar espaço. A indireção adicional torna o cache da CPU menos eficiente.((("", startref="Timlist02")))((("", startref="Ltupple02")))
+* Para avaliar uma tupla literal, o compilador Python gera bytecode para uma constante tupla em uma operação;
+mas para um literal lista, o bytecode gerado insere cada elemento como uma constante separada na pilha,
+e então cria a lista.
+* Dada a tupla `t`, `tuple(t)` simplesmente devolve uma referência para a mesma `t`. Não há necessidade de cópia.
+Por outro lado, dada uma lista `l`, o construtor `list(l)` precisa criar uma nova cópia de `l`.
+* Devido a seu tamanho fixo, uma instância de `tuple` tem alocado para si o espaço exato de memória que precisa.
+Em contrapartida, instâncias de `list` reservam memória adicional, para amortizar o custo de acréscimos futuros.
+* As referências para os itens em uma tupla são armazenadas em um array na struct da tupla,
+enquanto uma lista mantém um ponteiro para um array de referências armazenada em outro lugar.
+Essa indireção é necessária porque, quando a lista cresce além do espaço alocado naquele momento,
+Python precisa realocar o array de referências para criar espaço.
+A indireção adicional torna o cache da CPU menos eficiente.((("", startref="Timlist02")))((("", startref="Ltupple02")))
 
 ==== Comparando os métodos de tuplas e listas
 
-Quando((("tuples", "versus lists", secondary-sortas="lists")))((("lists", "versus tuples", secondary-sortas="tuples"))) usamos uma tupla como uma variante imutável de `list`, é bom saber o quão similares são suas APIs.
+Quando((("tuples", "versus lists", secondary-sortas="lists")))((("lists", "versus tuples", secondary-sortas="tuples")))
+usamos uma tupla como uma variante imutável de `list`, é bom saber o quão similares são suas APIs.
 Como se pode ver na <<list_x_tuple_attrs_tbl>>,
-`tuple` suporta todos os métodos de `list` que não envolvem adicionar ou remover itens, com uma exceção—`tuple` não possui o método `+__reversed__+`.
+`tuple` suporta todos os métodos de `list` que não envolvem adicionar ou remover itens,
+com uma exceção—`tuple` não possui o método `+__reversed__+`.
 Entretanto, isso é só uma otimização; `reversed(my_tuple)` funciona sem esse método.
 
 [[list_x_tuple_attrs_tbl]]
 .Métodos e atributos encontrados em `list` ou `tuple` (os métodos implementados por `object` foram omitidos para economizar espaço)
 [options="header"]
 |================================================================================================================================================
-|                       | `list` | `tuple` | &#xa0;
+|                         | `list` | `tuple` | &#xa0;
 |       `+s.__add__(s2)+` |   ●   |   ●   | ++s + s2++—concatenação
 |      `+s.__iadd__(s2)+` |   ●   |       | ++s += s2++—concatenação no mesmo lugar
-|         `s.append(e)` |   ●   |       | Acrescenta um elemento após o último
-|           `s.clear()` |   ●   |       | Apaga todos os itens
+|           `s.append(e)` |   ●   |       | Acrescenta um elemento após o último
+|             `s.clear()` |   ●   |       | Apaga todos os itens
 |   `+s.__contains__(e)+` |   ●   |   ●   | `e in s`
-|            `s.copy()` |   ●   |       | Cópia rasa da lista
-|          `s.count(e)` |   ●   |   ●   | Conta as ocorrências de um elemento
+|              `s.copy()` |   ●   |       | Cópia rasa da lista
+|            `s.count(e)` |   ●   |   ●   | Conta as ocorrências de um elemento
 |    `+s.__delitem__(p)+` |   ●   |       | Remove o item na posição `p`
-|        `s.extend(it)` |   ●   |       | Acrescenta itens do iterável `it`
+|          `s.extend(it)` |   ●   |       | Acrescenta itens do iterável `it`
 |    `+s.__getitem__(p)+` |   ●   |   ●   | ++s[p]++—obtém o item na posição `p`
 |  `+s.__getnewargs__()+` |       |   ●   | Suporte a serialização otimizada com `pickle`
-|          `s.index(e)` |   ●   |   ●   | Encontra a posição da primeira ocorrência de `e`
-|      `s.insert(p, e)` |   ●   |       | Insere elemento `e` antes do item na posição `p`
+|            `s.index(e)` |   ●   |   ●   | Encontra a posição da primeira ocorrência de `e`
+|        `s.insert(p, e)` |   ●   |       | Insere elemento `e` antes do item na posição `p`
 |        `+s.__iter__()+` |   ●   |   ●   | Obtém o iterador
 |         `+s.__len__()+` |   ●   |   ●   | ++len(s)++—número de itens
 |        `+s.__mul__(n)+` |   ●   |   ●   | ++s * n++—concatenação repetida
 |       `+s.__imul__(n)+` |   ●   |       | ++s *= n++—concatenação repetida no mesmo lugar
 |       `+s.__rmul__(n)+` |   ●   |   ●   | ++n * s++—concatenação repetida inversafootnote:[Operadores invertidos são explicados no <<operator_overloading>>.]
-|          `s.pop([p])` |   ●   |       | Remove e devolve o último item ou o item na posição opcional `p`
-|         `s.remove(e)` |   ●   |       | Remove a primeira ocorrência do elemento `e`, por valor
-|         `s.reverse()` |   ●   |       | Reverte, no lugar, a ordem dos itens
+|            `s.pop([p])` |   ●   |       | Remove e devolve o último item ou o item na posição opcional `p`
+|           `s.remove(e)` |   ●   |       | Remove a primeira ocorrência do elemento `e`, por valor
+|           `s.reverse()` |   ●   |       | Reverte, no lugar, a ordem dos itens
 |    `+s.__reversed__()+` |   ●   |       | Obtém iterador para examinar itens, do último para o primeiro
 | `+s.__setitem__(p, e)+` |   ●   |       | ++s[p] = e++—coloca `e` na posição `p`, sobrescrevendo o item existentefootnote:[Também usado para sobrescrever uma sub-sequência. Veja a <<assigning_to_slices>>.]
 |`s.sort([key], [reverse])` |   ●   |       | Ordena os itens no lugar, com os argumentos nomeados opcionais `key` e `reverse`
@@ -664,11 +674,16 @@ tuplas, listas e desempacotamento iterável.((("", startref="Stup02")))
 [[iterable_unpacking_sec]]
 === Desempacotando sequências e iteráveis
 
-O desempacotamento((("sequences", "unpacking sequences and iterables", id="Sunpack02")))((("iterables", "unpacking", id="iterun02")))((("unpacking", "sequences and iterables"))) é importante porque evita o uso de índices para extrair elementos de sequências, um processo  desnecessário e vulnerável a erros.
-Além disso, o desempacotamento funciona tendo qualquer objeto iterável como fonte de dados—incluindo iteradores, que não suportam((("square brackets ([])")))((("[] (square brackets)"))) a notação de índice (`[]`).
-O único requisito é que o iterável produza exatamente um item por variável na ponta de recebimento, a menos que você use um asterisco (`*`) para capturar os itens em excesso, como explicado na <<tuple_star>>.
+O desempacotamento((("sequences", "unpacking sequences and iterables", id="Sunpack02")))((("iterables", "unpacking", id="iterun02")))((("unpacking", "sequences and iterables")))
+é importante porque evita o uso de índices acessar itens de sequências,
+um processo desnecessário e vulnerável a erros.
+Além disso, o desempacotamento funciona tendo qualquer objeto iterável como fonte de dados—incluindo iteradores,
+que não suportam((("square brackets ([])")))((("[] (square brackets)"))) a notação de índice (`[]`).
+O único requisito é que o iterável produza exatamente um item por variável do lado esquerdo da atribuição,
+a menos que você use um asterisco (`*`) para capturar os itens em excesso, como explicado na <<tuple_star>>.
 
-A forma mais visível de desempacotamento é a _atribuição paralela_; isto é, atribuir itens de um iterável a uma tupla de variáveis, como vemos nesse exemplo:
+A forma mais visível de desempacotamento é a _atribuição paralela_;
+isto é, atribuir itens de um iterável a uma tupla de variáveis, como vemos nesse exemplo:
 
 [source, pycon]
 ----
@@ -703,7 +718,8 @@ Outro exemplo de desempacotamento é prefixar um argumento com `*` ao chamar uma
 
 O código acima mostra outro uso do desempacotamento:
 permitir que funções devolvam múltiplos valores de forma conveniente para quem as chama.
-Em ainda outro exemplo, a função `os.path.split()` cria uma tupla `(path, last_part)` a partir de um caminho do sistema de arquivos:
+Em ainda outro exemplo, a função `os.path.split()` cria uma tupla `(path, last_part)`
+a partir de um caminho do sistema de arquivos:
 
 [source, pycon]
 ----
@@ -718,7 +734,8 @@ Outra forma de usar apenas alguns itens quando desempacotando é com a sintaxe `
 [[tuple_star]]
 ==== Usando * para recolher itens em excesso
 
-Definir((("unpacking", "using &#x002A; to grab excess items")))((("star (&#x002A;) operator", id="star02")))((("&#x002A; (star) operator", id="star02a"))) parâmetros de função com `*args` para capturar argumentos arbitrários em excesso é um recurso clássico de Python.
+Definir((("unpacking", "using &#x002A; to grab excess items")))((("star (&#x002A;) operator", id="star02")))((("&#x002A; (star) operator", id="star02a")))
+parâmetros de função com `*args` para capturar argumentos arbitrários em excesso é um recurso clássico de Python.
 
 No Python 3, essa ideia foi estendida para se aplicar também à atribuição paralela:
 
@@ -735,7 +752,8 @@ No Python 3, essa ideia foi estendida para se aplicar também à atribuição pa
 (0, 1, [])
 ----
 
-No contexto da atribuição paralela, o prefixo `*` pode ser aplicado a exatamente uma variável, mas pode aparecer em qualquer posição:
+No contexto da atribuição paralela, o prefixo `*` pode ser aplicado a exatamente uma variável,
+mas pode aparecer em qualquer posição:
 
 [source, pycon]
 ----
@@ -750,7 +768,10 @@ No contexto da atribuição paralela, o prefixo `*` pode ser aplicado a exatamen
 
 ==== Desempacotando com * em chamadas de função e sequências literais
 
-A https://fpy.li/pep448[PEP 448—Additional Unpacking Generalizations (_Generalizações adicionais de desempacotamento_)] (EN) introduziu((("unpacking", "with &#x002A; in function calls and sequence literals"))) uma sintaxe mais flexível para desempacotamento iterável, melhor resumida em https://docs.python.org/pt-br/3/whatsnew/3.5.html#pep-448-additional-unpacking-generalizations["O que há de novo no Python 3.5" ] (EN).
+A https://fpy.li/pep448[PEP 448—Additional Unpacking Generalizations (_Generalizações adicionais de desempacotamento_)]
+(EN) introduziu((("unpacking", "with &#x002A; in function calls and sequence literals")))
+uma sintaxe mais flexível para desempacotamento iterável, melhor resumida em
+https://docs.python.org/pt-br/3/whatsnew/3.5.html#pep-448-additional-unpacking-generalizations["O que há de novo no Python 3.5" ] (EN).
 
 Em chamadas de função, podemos usar `*` múltiplas vezes:
 
@@ -780,7 +801,8 @@ https://docs.python.org/pt-br/3/whatsnew/3.5.html#pep-448-additional-unpacking-g
 
 A PEP 448 introduziu uma nova sintaxe similar para `**`, que veremos na <<dict_unpacking_sec>>.
 
-Por fim, outro importante aspecto do desempacotamento de tuplas: ele funciona com estruturas aninhadas.((("", startref="star02")))((("", startref="star02a")))
+Por fim, outro importante aspecto do desempacotamento de tuplas:
+ele funciona com estruturas aninhadas.((("", startref="star02")))((("", startref="star02a")))
 
 
 ==== Desempacotamento aninhado
@@ -813,7 +835,9 @@ São Paulo       |  -23.5478 |  -46.6358
 ----
 
 O alvo da atribuição de um desempacotamento pode também ser uma lista, mas bons casos de uso aqui são raros.
-Aqui está o único que conheço: se você tem uma consulta de banco de dados que devolve um único registro (por exemplo, se o código SQL tem a instrução `LIMIT 1`), daí é possível desempacotar e ao mesmo tempo se assegurar que há apenas um resultado com o seguinte código:
+Aqui está o único que conheço: se você tem uma consulta de banco de dados que devolve um único registro
+(por exemplo, se o código SQL tem a instrução `LIMIT 1`),
+daí é possível desempacotar e ao mesmo tempo se assegurar que há apenas um resultado com o seguinte código:
 
 [source, pycon]
 ----
@@ -827,26 +851,36 @@ Se o registro contiver apenas um campo, é possível obtê-lo diretamente, assim
 >>> [[field]] = query_returning_single_row_with_single_field()
 ----
 
-Ambos os exemplos acima podem ser escritos com tuplas, mas não esqueça da peculiaridade sintática, tuplas com um único item devem ser escritas com uma vírgula final.
+Ambos os exemplos acima podem ser escritos com tuplas, mas não esqueça da peculiaridade sintática,
+tuplas com um único item devem ser escritas com uma vírgula final.
 Então o primeiro alvo seria  `(record,)` e o segundo `((field,),)`.
-Nos dois casos, esquecer aquela vírgula causa um bug silencioso.footnote:[Agradeço ao revisor técnico Leonardo Rochael por esse exemplo.]
+Nos dois casos, esquecer aquela vírgula causa um bug
+silencioso.footnote:[Agradeço ao revisor técnico Leonardo Rochael por esse exemplo.]
 
-Agora vamos estudar _pattern matching_, que suporta maneiras ainda mais poderosas para desempacotar sequências.((("", startref="Sunpack02")))((("", startref="iterun02")))
+Agora vamos estudar _pattern matching_,
+que suporta maneiras ainda mais poderosas para desempacotar
+sequências.((("", startref="Sunpack02")))((("", startref="iterun02")))
 
 
 [[sequence_patterns_sec]]
 === Pattern matching com sequências
 
-O((("match/case statement")))((("sequences", "pattern matching with", id="Spattern02")))((("pattern matching", "match/case statement"))) novo recurso mais visível de Python 3.10 é o _pattern matching_ (casamento de padrões) com a instrução `match/case`, proposta na https://fpy.li/pep634[PEP 634—Structural Pattern Matching: Specification (_Casamento Estrutural de Padrões: Especificação_)] (EN).
+O((("match/case statement")))((("sequences", "pattern matching with", id="Spattern02")))((("pattern matching", "match/case statement")))
+novo recurso mais visível de Python 3.10 é o _pattern matching_
+(casamento de padrões) com a instrução `match/case`, proposta na
+https://fpy.li/pep634[PEP 634—Structural Pattern Matching: Specification (_Casamento Estrutural de Padrões: Especificação_)] (EN).
 
 [role="man-height2"]
 [NOTE]
 ====
-Carol Willing, uma das desenvolvedoras principais de Python, escreveu uma excelente introdução ao _pattern matching_ na seção https://docs.python.org/pt-br/3.10/whatsnew/3.10.html#pep-634-structural-pattern-matching["Correspondência de padrão estrutural"]footnote:[NT: A tradução em português da documentação de Python adotou o termo "correspondência de padrões" no lugar de _pattern matching_. Escolhemos manter o termo em inglês, pois é usado nas comunidades brasileiras
-de linguagens que implementam _pattern matching_ há muitos anos, como por exemplo Scala, Elixir e Haskell. Naturalmente mantivemos os títulos originais nos links externos.] em
-https://docs.python.org/pt-br/3.10/whatsnew/3.10.html["O que há de novo no Python 3.10"].
+Carol Willing, uma das desenvolvedoras principais de Python,
+escreveu uma excelente introdução ao _pattern matching_ na seção
+https://docs.python.org/pt-br/3.10/whatsnew/3.10.html#pep-634-structural-pattern-matching["Casamento de padrão estrutural"]footnote:[NT: A tradução em português da documentação de Python adotou o termo "casamento de padrões" no lugar de _pattern matching_.
+O termo em inglês é usado nas comunidades brasileiras
+de linguagens que implementam _pattern matching_ há muitos anos, como por exemplo Scala, Elixir e Haskell. Naturalmente mantivemos os títulos originais nos links externos.]
+em https://docs.python.org/pt-br/3.10/whatsnew/3.10.html["O que há de novo no Python 3.10"].
 Você pode querer ler aquela revisão rápida.
-Neste livro, optei por dividir o tratamento da correspondência de padrões em diferentes capítulos,
+Neste livro, dividi o tratamento do casamento de padrões em diferentes capítulos,
 dependendo dos tipos de padrão:
 Na <<pattern_matching_mappings_sec>> e na <<pattern_instances_sec>>.
 E há um exemplo mais longo na <<pattern_matching_case_study_sec>>.
@@ -2217,7 +2251,7 @@ https://fpy.li/pep448[PEP 448--Additional Unpacking Generalizations (_Generaliza
 
 [role="pagebreak-before less_space"]
 Como mencionei na <<sequence_patterns_sec>>, o texto introdutório
-https://docs.python.org/pt-br/3.10/whatsnew/3.10.html#pep-634-structural-pattern-matching["Correspondência de padrão estrutural"], de Carol Willing, no
+https://docs.python.org/pt-br/3.10/whatsnew/3.10.html#pep-634-structural-pattern-matching["Casamento de padrão estrutural"], de Carol Willing, no
 https://docs.python.org/pt-br/3.10/whatsnew/3.10.html["O que há de novo no Python 3.10"], é uma ótima introdução a esse novo grande recurso, em mais ou menos 1.400 palavras (isso é menos de 5 páginas quando o Firefox converte o HTML em PDF).
 A https://fpy.li/pep636[PEP 636—Structural Pattern Matching: Tutorial (_Casamento de Padrões Estrutural: Tutorial_)] (EN) também é boa, mas mais longa. A mesma PEP 636 inclui o
 https://fpy.li/2-27["Appendix A—Quick Intro" (_Apêndice A-Introdução Rápida_)] (EN).
