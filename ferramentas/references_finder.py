@@ -45,11 +45,11 @@ def find_all_xrefs():
     anchors.read('anchors.ini')
 
     chaps = anchors.sections()  # Lista dos capítulos
-    chap_part =  [(i, 'parte 1') for i in set(chaps[0:6])]
-    chap_part += [(i, 'parte 2') for i in set(chaps[6:10])]
-    chap_part += [(i, 'parte 3') for i in set(chaps[10:17])]
-    chap_part += [(i, 'parte 4') for i in set(chaps[17:22])]
-    chap_part += [(i, 'parte 5') for i in set(chaps[22:])] #TODO falta um cap nesse último?
+    chap_part =  [(i, 'parte 1') for i in chaps[0:6]]
+    chap_part += [(i, 'parte 2') for i in chaps[6:10]]
+    chap_part += [(i, 'parte 3') for i in chaps[10:16]]
+    chap_part += [(i, 'parte 4') for i in chaps[16:21]]
+    chap_part += [(i, 'parte 5') for i in chaps[21:]]
     parte = dict(chap_part)
 
     for file in list_of_files:
@@ -57,7 +57,7 @@ def find_all_xrefs():
             f = fp.read()
         actual_chap = re.search(r'\[\[[\w-]+\]\]', f).group(0)[2:-2]
         xrefs_ini += f'\n[{actual_chap}]\n'  # Escreve o nome do capítulo no arquivo
-        xrefs_chap = dict() #  {xref, part}
+        xrefs_chap = dict() #  {xref, parte}
         refs = find_refs(f)
         for ref in refs:
             if ref in xrefs_chap:  
@@ -68,7 +68,7 @@ def find_all_xrefs():
                 #Analisa se a referência é um capítulo
                 xrefs_chap[ref] = parte[ref]
             else:
-                for chap in chaps:
+                for chap in chaps:  # Procura em cada cap pela âncora
                     if ref in anchors[chap]:
                         if parte[chap] != parte[actual_chap]:
                             xrefs_chap[ref] = parte[chap]
@@ -80,9 +80,6 @@ def find_all_xrefs():
 
     with open("xrefs_xparts.ini","w",encoding="utf-8") as fp:
         fp.write(xrefs_ini)
-
-
-
 
 
 
