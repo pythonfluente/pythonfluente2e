@@ -38,7 +38,7 @@ def find_all_anchors():
     with open("anchors.ini","w",encoding="utf-8") as fp:
         fp.write(anchors_ini)
 
-def find_all_xrefs():
+def find_all_xrefs(repeticao = "False"):
     """Procura as referências cruzadas e gera o arquivo xrefs_xparts.ini"""
     xrefs_ini = '''# Referências cruzadas para outras partes
 # Aqui só aparecem xrefs <<xxxx>> para outras partes do livro'''
@@ -61,7 +61,7 @@ def find_all_xrefs():
         xrefs_chap = dict() #  {xref, parte}
         refs = find_refs(f)
         for ref in refs:
-            if ref in xrefs_chap:  
+            if ref in xrefs_chap and repeticao:  
                 continue  # Pula caso a ref já esteja listada
             elif ref in anchors[actual_chap]:
                 continue  # Pula caso a referência esteja no próprio capítulo
@@ -72,7 +72,7 @@ def find_all_xrefs():
                 for chapter in chapters:  # Procura em cada cap pela âncora
                     if ref in anchors[chapter]:
                         if parte[chapter] != parte[actual_chap]:
-                            xrefs_chap[ref] = parte[chapter]
+                            xrefs_chap[ref] = f'{parte[chapter]} , {chapter}'
                     break
                 else:
                     xrefs_ini += f'{ref} = NÃO ENCONTRADA\n'
