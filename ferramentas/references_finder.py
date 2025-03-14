@@ -46,11 +46,11 @@ def find_all_xrefs(repeticao = "False"):
     anchors.read('anchors.ini')
 
     chapters = anchors.sections()  # Lista dos capítulos
-    chap_part =  [(i, 'parte 1') for i in chapters[0:6]]
-    chap_part += [(i, 'parte 2') for i in chapters[6:10]]
-    chap_part += [(i, 'parte 3') for i in chapters[10:16]]
-    chap_part += [(i, 'parte 4') for i in chapters[16:21]]
-    chap_part += [(i, 'parte 5') for i in chapters[21:]]
+    chap_part =  [(i, 'Parte 1') for i in chapters[0:6]]
+    chap_part += [(i, 'Parte 2') for i in chapters[6:10]]
+    chap_part += [(i, 'Parte 3') for i in chapters[10:16]]
+    chap_part += [(i, 'Parte 4') for i in chapters[16:21]]
+    chap_part += [(i, 'Parte 5') for i in chapters[21:]]
     parte = dict(chap_part)
 
     for file in FILES:
@@ -62,17 +62,18 @@ def find_all_xrefs(repeticao = "False"):
         refs = find_refs(f)
         for ref in refs:
             if ref in xrefs_chap and repeticao:  
-                continue  # Pula caso a ref já esteja listada
+                continue  # Pula caso a referência encontrada já esteja listada
             elif ref in anchors[actual_chap]:
-                continue  # Pula caso a referência esteja no próprio capítulo
+                continue  # Pula caso a referência encontrada esteja no próprio capítulo
             elif ref in chapters and parte[ref] != parte[actual_chap]:
-                #Analisa se a referência é um capítulo
-                xrefs_chap[ref] = parte[ref]
+                # A referência encontrada é um capítulo
+                xrefs_chap[ref] = f'{parte[ref]}'
             else:
                 for chapter in chapters:  # Procura em cada cap pela âncora
                     if ref in anchors[chapter]:
+                        # A referência encontrada é uma âncora dentro de um capítulo
                         if parte[chapter] != parte[actual_chap]:
-                            xrefs_chap[ref] = f'{parte[chapter]} , {chapter}'
+                            xrefs_chap[ref] = f'do capítulo [[{chapter}]] da {parte[chapter]}'
                     break
                 else:
                     xrefs_ini += f'{ref} = NÃO ENCONTRADA\n'
