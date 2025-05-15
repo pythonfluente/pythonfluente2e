@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[pythonic_objects]]
+[[ch_pythonic_obj]]
 == Um objeto pythônico
 
 
@@ -17,14 +17,14 @@ ____
 Para uma biblioteca ou framework, ser pythônica significa tornar tão fácil e tão natural quanto possível que uma programadora Python descubra como realizar uma tarefa.footnote:[Do post no blog de Faassen intitulado https://fpy.li/11-1[_What is Pythonic?_ (O que é Pythônico?)]]
 ____
 
-Graças((("Pythonic objects", "building user-defined classes"))) ao Modelo de Dados do Python, nossos tipos definidos pelo usuário podem se comportar de forma tão natural quanto os tipos embutidos. E isso pode ser realizado sem herança, no espírito do _duck typing:_ implemente os métodos necessários e seus objetos se comportarão da forma esperada.
+Graças((("Pythonic objects", "building user-defined classes"))) ao Modelo de Dados de Python, nossos tipos definidos pelo usuário podem se comportar de forma tão natural quanto os tipos embutidos. E isso pode ser realizado sem herança, no espírito do _duck typing:_ implemente os métodos necessários e seus objetos se comportarão da forma esperada.
 
 Nos capítulos anteriores, estudamos o comportamento de vários objetos embutidos. Vamos agora criar classes definidas pelo usuário que se portam como objetos Python reais.
 As classes na sua aplicação provavelmente não precisam nem devem implementar tantos métodos especiais quanto os exemplos nesse capítulo.
-Mas se você estiver escrevendo uma biblioteca ou uma framework, os programadores que usarão suas classes talvez esperem que elas se comportem como as classes fornecidas pelo Python.
+Mas se você estiver escrevendo uma biblioteca ou um framework, os programadores que usarão suas classes talvez esperem que elas se comportem como as classes fornecidas pelo Python.
 Satisfazer tal expectativa é um dos jeitos de ser "pythônico".
 
-Esse capítulo começa onde o <<data_model>> terminou, mostrando como implementar vários métodos especiais comumente vistos em objetos Python de diferentes tipos.
+Esse capítulo começa onde o <<ch_data_model>> terminou, mostrando como implementar vários métodos especiais comumente vistos em objetos Python de diferentes tipos.
 
 Veremos((("Pythonic objects", "topics covered"))) como:
 
@@ -36,7 +36,7 @@ Veremos((("Pythonic objects", "topics covered"))) como:
 * Economizar memória com `+__slots__+`
 
 Vamos fazer tudo isso enquanto desenvolvemos `Vector2d`, um tipo simples de vetor euclidiano bi-dimensional.
-No <<user_defined_sequences>>, o mesmo código servirá de base para uma classe de vetor N-dimensional.
+No <<ch_seq_methods>>, o mesmo código servirá de base para uma classe de vetor N-dimensional.
 
 A evolução do exemplo será interrompida para discutirmos dois tópicos conceituais:
 
@@ -47,24 +47,24 @@ A evolução do exemplo será interrompida para discutirmos dois tópicos concei
 
 Acrescentei((("Pythonic objects", "significant changes to"))) uma nova epígrafe e também algumas palavras ao segundo parágrafo do capítulo, para falar do conceito de "pythônico"—que na primeira edição era discutido apenas no final do livro.
 
-A seção <<format_display_sec>> foi atualizada para mencionar as f-strings, introduzidas no Python 3.6.
+A <<format_display_sec>> foi atualizada para mencionar as f-strings, introduzidas no Python 3.6.
 É uma mudança pequena, pois as f-strings suportam a mesma mini-linguagem de formatação que a função embutida `format()` e o método `str.format()`,
 então quaisquer métodos `+__format__+` implementados antes vão funcionar também com as f-strings.
 
 O resto do capítulo quase não mudou—os métodos especiais são praticamente os mesmos
-desde o Python 3.0, e as ideias centrais apareceram no Python 2.2.
+desde Python 3.0, e as ideias centrais apareceram no Python 2.2.
 
 Vamos começar pelos métodos de representação de objetos.
 
 [[object_repr_sec]]
 === Representações de objetos
 
-Todas((("Pythonic objects", "object representations"))) as linguagens orientadas a objetos tem pelo menos uma forma padrão de se obter uma representação de qualquer objeto como uma string. O Python tem duas formas:
+Todas((("Pythonic objects", "object representations"))) as linguagens orientadas a objetos tem pelo menos uma forma padrão de se obter uma representação de qualquer objeto como uma string. Python tem duas formas:
 
-`repr()`:: Devolve((("repr() function")))((("functions", "repr() function"))) uma string representando o objeto como o desenvolvedor quer vê-lo. É o que aparece quando o console do Python ou um depurador mostram um objeto.
+`repr()`:: Devolve((("repr() function")))((("functions", "repr() function"))) uma string representando o objeto como o desenvolvedor quer vê-lo. É o que aparece quando o console de Python ou um depurador mostram um objeto.
 `str()`:: Devolve((("str() function")))((("functions", "str() function"))) uma string representando o objeto como o usuário quer vê-lo. É o que aparece quando se passa um objeto como argumento para `print()`.
 
-Os((("&#x005F;&#x005F;repr&#x005F;&#x005F;")))((("&#x005F;&#x005F;str&#x005F;&#x005F;"))) métodos especiais `+__repr__+` e `+__str__+` suportam `repr()` e `str()`, como vimos no <<data_model>>.
+Os((("&#x005F;&#x005F;repr&#x005F;&#x005F;")))((("&#x005F;&#x005F;str&#x005F;&#x005F;"))) métodos especiais `+__repr__+` e `+__str__+` suportam `repr()` e `str()`, como vimos no <<ch_data_model>>.
 
 Existem((("&#x005F;&#x005F;bytes&#x005F;&#x005F;")))((("&#x005F;&#x005F;format&#x005F;&#x005F;"))) dois métodos especiais adicionais para suportar representações alternativas de objetos, `+__bytes__+` e `+__format__+`. O método `+__bytes__+` é análogo a `+__str__+`: ele é chamado por `bytes()` para obter um objeto representado como uma sequência de bytes.
 Já `+__format__+` é usado por f-strings, pela função embutida `format()`
@@ -73,7 +73,7 @@ e pelo método `str.format()`. Todos eles chamam `obj.__format__(format_spec)` p
 
 [WARNING]
 ====
-Se você está vindo do Python 2, lembre-se que no Python 3 `+__repr__+`, `+__str__+` e `+__format__+` devem sempre devolver strings Unicode (tipo `str`). Apenas `+__bytes__+` deveria devolver uma sequência de bytes (tipo `bytes`).
+Se você está vindo de Python 2, lembre-se que no Python 3 `+__repr__+`, `+__str__+` e `+__format__+` devem sempre devolver strings Unicode (tipo `str`). Apenas `+__bytes__+` deveria devolver uma sequência de bytes (tipo `bytes`).
 ====
 
 
@@ -81,7 +81,7 @@ Se você está vindo do Python 2, lembre-se que no Python 3 `+__repr__+`, `+__st
 
 Para((("Pythonic objects", "Vector2d class example", id="PYvector11")))((("Vector2d", "class example", id="V2dclass11")))
 demonstrar os vários métodos usados para gerar representações de objetos,
-vamos criar uma classe `Vector2d`, similar à que vimos no <<data_model>>.
+vamos criar uma classe `Vector2d`, similar à que vimos no <<ch_data_model>>.
 O <<ex_vector2d_v0_demo>> ilustra o comportamento básico que esperamos de uma instância de `Vector2d`.
 
 [[ex_vector2d_v0_demo]]
@@ -104,7 +104,7 @@ include::code/11-pythonic-obj/vector2d_v0.py[tags=VECTOR2D_V0_DEMO]
 <9> `bool` usa o método `+__bool__+` para devolver `False` se o `Vector2d` tiver magnitude zero, caso contrário esse método devolve `True`.
 
 O `Vector2d` do <<ex_vector2d_v0_demo>> é implementado em _vector2d_v0.py_ (no <<ex_vector2d_v0>>).
-O código está baseado no <<ex_vector2d>>, exceto pelos métodos para os operadores `+` e `*`, que veremos mais tarde no <<operator_overloading>>. Vamos acrescentar o método para `==`, já que ele é  útil para testes.
+O código está baseado no <<ex_vector2d>>, exceto pelos métodos para os operadores `+` e `*`, que veremos mais tarde no <<ch_op_overload>>. Vamos acrescentar o método para `==`, já que ele é  útil para testes.
 Nesse ponto, `Vector2d` usa vários métodos especiais para oferecer operações que um pythonista espera encontrar em um objeto bem projetado.
 
 [[ex_vector2d_v0]]
@@ -117,7 +117,7 @@ include::code/11-pythonic-obj/vector2d_v0.py[tags=VECTOR2D_V0]
 ====
 <1> `typecode` é um atributo de classe, usado na conversão de instâncias de `Vector2d` de/para `bytes`.
 <2> Converter `x` e `y` para `float` em `+__init__+` captura erros mais rápido, algo útil quando `Vector2d` é chamado com argumentos inadequados.
-<3> `+__iter__+` torna um `Vector2d` iterável; é isso que faz o desempacotamento funcionar (por exemplo, `x, y = my_vector`). Vamos implementá-lo aqui usando uma expressão geradora para produzir os componentes, um após outro.footnote:[Essa linha também poderia ser escrita assim: `yield self.x; yield.self.y`. Terei muito mais a dizer sobre o método especial `+__iter__+`, sobre expressões geradoras e sobre a palavra reservada `yield` no <<iterables2generators>>.]
+<3> `+__iter__+` torna um `Vector2d` iterável; é isso que faz o desempacotamento funcionar (por exemplo, `x, y = my_vector`). Vamos implementá-lo aqui usando uma expressão geradora para produzir os componentes, um após outro.footnote:[Essa linha também poderia ser escrita assim: `yield self.x; yield.self.y`. Terei muito mais a dizer sobre o método especial `+__iter__+`, sobre expressões geradoras e sobre a palavra reservada `yield` no <<ch_generators>>.]
 <4> O `+__repr__+` cria uma string interpolando os componentes com `{!r}`, para obter seus `repr`; como `Vector2d` é iterável, `*self` alimenta `format` com os componentes `x` e `y`.
 <5> Dado um iterável `Vector2d`, é fácil criar uma `tuple` para exibição como um par ordenado.
 <6> Para gerar `bytes`, convertemos o typecode para `bytes` e concatenamos...
@@ -129,14 +129,14 @@ assim, `0.0` se torna `False`, qualquer valor diferente de zero é `True`.
 
 [WARNING]
 ====
-O método `+__eq__+` no <<ex_vector2d_v0>> funciona para operandos `Vector2d`, mas também devolve `True` ao comparar instâncias de `Vector2d` a outros iteráveis contendo os mesmos valores numéricos  (por exemplo, `Vector(3, 4) == [3, 4]`). Isso pode ser considerado uma característica ou um bug. Essa discussão terá que esperar até o <<operator_overloading>>, onde falamos de sobrecarga de operadores.
+O método `+__eq__+` no <<ex_vector2d_v0>> funciona para operandos `Vector2d`, mas também devolve `True` ao comparar instâncias de `Vector2d` a outros iteráveis contendo os mesmos valores numéricos  (por exemplo, `Vector(3, 4) == [3, 4]`). Isso pode ser considerado uma característica ou um bug. Essa discussão terá que esperar até o <<ch_op_overload>>, onde falamos de sobrecarga de operadores.
 ====
 
 Temos um conjunto bastante completo de métodos básicos, mas ainda precisamos de uma maneira de reconstruir um `Vector2d` a partir da representação binária produzida por `bytes()`.((("", startref="PYvector11")))((("", startref="V2dclass11")))
 
 === Um construtor alternativo
 
-Já((("Pythonic objects", "alternative constructor for"))) que podemos exportar um `Vector2d` na forma de bytes, naturalmente precisamos de um método para importar um `Vector2d` de uma sequência binária. Procurando na biblioteca padrão por algo similar, descobrimos que `array.array` tem um método de classe chamado `.frombytes`, adequado a nossos propósitos--já o vimos na seção <<arrays_sec>>. Adotamos o mesmo nome e usamos sua funcionalidade em um método de classe para `Vector2d` em _vector2d_v1.py_ (no <<ex_vector2d_v1>>).
+Já((("Pythonic objects", "alternative constructor for"))) que podemos exportar um `Vector2d` na forma de bytes, naturalmente precisamos de um método para importar um `Vector2d` de uma sequência binária. Procurando na biblioteca padrão por algo similar, descobrimos que `array.array` tem um método de classe chamado `.frombytes`, adequado a nossos propósitos--já o vimos na <<arrays_sec>>. Adotamos o mesmo nome e usamos sua funcionalidade em um método de classe para `Vector2d` em _vector2d_v1.py_ (no <<ex_vector2d_v1>>).
 
 [[ex_vector2d_v1]]
 .Parte de vector2d_v1.py: esse trecho mostra apenas o método de classe `frombytes`, acrescentado à definição de `Vector2d` em vector2d_v0.py (no <<ex_vector2d_v0>>)
@@ -149,15 +149,15 @@ include::code/11-pythonic-obj/vector2d_v1.py[tags=VECTOR2D_V1]
 <1> O decorador `classmethod` modifica um método para que ele possa ser chamado diretamente em uma classe.
 <2> Nenhum argumento `self`; em vez disso, a própria classe é passada como primeiro argumento—por convenção chamado `cls`.
 <3> Lê o `typecode` do primeiro byte.
-<4> Cria uma `memoryview` a partir da sequência binária `octets`, e usa o `typecode` para convertê-la.footnote:[Tivemos uma pequena introdução a `memoryview` e explicamos seu método `.cast` na seção <<memoryview_sec>>.]
+<4> Cria uma `memoryview` a partir da sequência binária `octets`, e usa o `typecode` para convertê-la.footnote:[Tivemos uma pequena introdução a `memoryview` e explicamos seu método `.cast` na <<memoryview_sec>>.]
 <5> Desempacota a `memoryview` resultante da conversão no par de argumentos necessários para o construtor.
 
-Acabei de usar um decorador `classmethod`, e ele é muito específico do Python. Vamos então falar um pouco disso.
+Acabei de usar um decorador `classmethod`, e ele é muito específico de Python. Vamos então falar um pouco disso.
 
 [[classmethod_x_staticmethod_sec]]
 === classmethod versus staticmethod
 
-O((("Pythonic objects", "classmethod versus staticmethod")))((("classmethod decorator")))((("staticmethod decorator")))((("decorators and closures", "classmethod versus staticmethod"))) decorador `classmethod` não é mencionado no tutorial do Python, nem tampouco o `staticmethod`. Qualquer um que tenha aprendido OO com Java pode se perguntar porque o Python tem esses dois decoradores, e não apenas um deles.
+O((("Pythonic objects", "classmethod versus staticmethod")))((("classmethod decorator")))((("staticmethod decorator")))((("decorators and closures", "classmethod versus staticmethod"))) decorador `classmethod` não é mencionado no tutorial de Python, nem tampouco o `staticmethod`. Qualquer um que tenha aprendido OO com Java pode se perguntar porque Python tem esses dois decoradores, e não apenas um deles.
 
 Vamos começar com `classmethod`. O <<ex_vector2d_v1>> mostra seu uso: definir um método que opera na classe, e não em suas instâncias. O `classmethod` muda a forma como o método é chamado, então recebe a própria classe como primeiro argumento, em vez de uma instância. Seu uso mais comum é em construtores alternativos, como `frombytes` no <<ex_vector2d_v1>>. Observe como a última linha de `frombytes` de fato usa o argumento `cls`, invocando-o para criar uma nova instância: `cls(*memv)`.
 
@@ -384,7 +384,7 @@ Traceback (most recent call last):
 TypeError: unhashable type: 'Vector2d'
 ----
 
-Para tornar um `Vector2d` _hashable_, precisamos implementar `+__hash__+` (`+__eq__+` também é necessário, mas já temos esse método). Além disso, precisamos tornar imutáveis as instâncias do vetor, como vimos na seção <<what_is_hashable>>.
+Para tornar um `Vector2d` _hashable_, precisamos implementar `+__hash__+` (`+__eq__+` também é necessário, mas já temos esse método). Além disso, precisamos tornar imutáveis as instâncias do vetor, como vimos na <<what_is_hashable>>.
 
 [role="pagebreak-before less_space"]
 Nesse momento, qualquer um pode fazer `v1.x = 7`, e não há nada no código sugerindo que é proibido modificar um `Vector2d`. O comportamento que queremos é o seguinte:
@@ -409,7 +409,7 @@ Faremos isso transformando os componentes `x` e `y` em propriedades apenas para 
 include::code/11-pythonic-obj/vector2d_v3_prophash.py[tags=VECTOR2D_V3_PROP]
 ----
 ====
-<1> Usa exatamente dois sublinhados como prefixo (com zero ou um sublinhado como sufixo), para tornar um atributo privado.footnote:[Os prós e contras dos atributos privados são assunto da seção <<private_protected_sec>>, mais adiante.]
+<1> Usa exatamente dois sublinhados como prefixo (com zero ou um sublinhado como sufixo), para tornar um atributo privado.footnote:[Os prós e contras dos atributos privados são assunto da <<private_protected_sec>>, mais adiante.]
 <2> O decorador `@property` marca o método _getter_ de uma propriedade.
 <3> O método _getter_ é nomeado de acordo com o nome da propriedade pública que ele expõe: `x`.
 <4> Apenas devolve `self.__x`.
@@ -418,7 +418,7 @@ include::code/11-pythonic-obj/vector2d_v3_prophash.py[tags=VECTOR2D_V3_PROP]
 
 [NOTE]
 ====
-`Vector.x` e `Vector.y` são exemplos de propriedades apenas para leitura. Propriedades para leitura/escrita serão tratadas no <<dynamic_attributes>>, onde mergulhamos mais fundo no decorador `@property`.
+`Vector.x` e `Vector.y` são exemplos de propriedades apenas para leitura. Propriedades para leitura/escrita serão tratadas no <<ch_dynamic_attrs>>, onde mergulhamos mais fundo no decorador `@property`.
 ====
 
 Agora que nossos vetores estão razoavelmente protegidos contra mutação acidental, podemos implementar o método `+__hash__+`.
@@ -551,11 +551,11 @@ Na próxima seção, deixamos o `Vector2d` de lado por um tempo para discutir o 
 [[private_protected_sec]]
 === Atributos privados e "protegidos" no Python
 
-Em((("Pythonic objects", "private and protected attributes", id="POprivate11")))((("attributes", "private and protected", id=Aprivate11"))) Python, não há como criar variáveis privadas como as criadas com o modificador `private` no Java. O que temos no Python é um mecanismo simples para prevenir que um atributo "privado" em uma subclasse seja acidentalmente sobrescrito.
+Em((("Pythonic objects", "private and protected attributes", id="POprivate11")))((("attributes", "private and protected", id=Aprivate11"))) Python, não há como criar variáveis privadas como as criadas com o modificador `private` em Java. O que temos no Python é um mecanismo simples para prevenir que um atributo "privado" em uma subclasse seja acidentalmente sobrescrito.
 
 Considere o seguinte cenário: alguém escreveu uma classe chamada `Dog`, que usa um atributo de instância `mood` internamente, sem expô-lo. Você precisa criar a uma subclasse `Beagle` de `Dog`. Se você criar seu próprio atributo de instância `mood`, sem saber da colisão de nomes, vai afetar o atributo `mood` usado pelos métodos herdados de `Dog`. Isso seria bem complicado de depurar.
 
-Para prevenir esse tipo de problema, se você nomear o atributo de instância no formato `+__mood+` (dois sublinhados iniciais e zero ou no máximo um sublinhado no final), o Python armazena o nome no `+__dict__+` da instância, prefixado com um sublinhado seguido do nome da classe. Na classe `Dog`, por exemplo, `__mood` se torna `+_Dog__mood+` e em `Beagle` ele será `+_Beagle__mood+`.
+Para prevenir esse tipo de problema, se você nomear o atributo de instância no formato `+__mood+` (dois sublinhados iniciais e zero ou no máximo um sublinhado no final), Python armazena o nome no `+__dict__+` da instância, prefixado com um sublinhado seguido do nome da classe. Na classe `Dog`, por exemplo, `__mood` se torna `+_Dog__mood+` e em `Beagle` ele será `+_Beagle__mood+`.
 
 Esse recurso da linguagem é conhecido pela encantadora
 alcunha de((("name mangling"))) _desfiguração de nome_ ("name mangling").
@@ -591,11 +591,11 @@ ____
 .Uma cobertura sobre um interruptor é um dispositivo de proteção, não de segurança: ele previne acidentes, não sabotagem
 image::images/flpy_1101.png[interruptores com coberturas de proteção]
 
-O prefixo de sublinhado único não tem nenhum significado especial para o interpretador Python, quando usado em nomes de atributo. Mas essa é uma convenção muito presente entre programadores Python: tais atributos não devem ser acessados de fora da classe.footnote:[Em módulos, um único `+_+` no início de um nome de nível superior tem sim um efeito: se você escrever `from mymod import *`, os nomes com um prefixo `+_+` não são importados de `mymod`. Entretanto, ainda é possível escrever `+from mymod import _privatefunc+`. Isso é explicado no https://docs.python.org/pt-br/3/tutorial/modules.html#more-on-modules[_Tutorial do Python_, seção 6.1., "Mais sobre módulos"].] É fácil respeitar a privacidade de um objeto que marca seus atributos com um único `_`, da mesma forma que é fácil respeitar a convenção de tratar como constantes as variáveis com nomes inteiramente em maiúsculas.
+O prefixo de sublinhado único não tem nenhum significado especial para o interpretador Python, quando usado em nomes de atributo. Mas essa é uma convenção muito presente entre programadores Python: tais atributos não devem ser acessados de fora da classe.footnote:[Em módulos, um único `+_+` no início de um nome de nível superior tem sim um efeito: se você escrever `from mymod import *`, os nomes com um prefixo `+_+` não são importados de `mymod`. Entretanto, ainda é possível escrever `+from mymod import _privatefunc+`. Isso é explicado no https://docs.python.org/pt-br/3/tutorial/modules.html#more-on-modules[_Tutorial de Python_, seção 6.1., "Mais sobre módulos"].] É fácil respeitar a privacidade de um objeto que marca seus atributos com um único `_`, da mesma forma que é fácil respeitar a convenção de tratar como constantes as variáveis com nomes inteiramente em maiúsculas.
 
-Atributos com um único `+_+` como prefixo são chamados "protegidos" em algumas partes da documentação do Python.footnote:[Um exemplo é a https://docs.python.org/pt-br/3/library/gettext.html#gettext.NullTranslations[documentação do módulo gettext].] A prática de "proteger" atributos por convenção com a forma `self._x` é muito difundida, mas chamar isso de atributo "protegido" não é tão comum. Alguns até falam em atributo "privado" nesses casos.
+Atributos com um único `+_+` como prefixo são chamados "protegidos" em algumas partes da documentação de Python.footnote:[Um exemplo é a https://docs.python.org/pt-br/3/library/gettext.html#gettext.NullTranslations[documentação do módulo gettext].] A prática de "proteger" atributos por convenção com a forma `self._x` é muito difundida, mas chamar isso de atributo "protegido" não é tão comum. Alguns até falam em atributo "privado" nesses casos.
 
-Concluindo: os componentes de `Vector2d` são "privados" e nossas instâncias de `Vector2d` são "imutáveis"—com aspas irônicas—pois não há como tornar uns realmente privados e outras realmente imutáveis.footnote:[Se você acha este estado de coisas deprimente e desejaria que o Python fosse mais parecido com o Java nesse aspecto, nem leia minha discussão sobre a força relativa do modificador `private` do Java no <<pythonic_soapbox>>.]
+Concluindo: os componentes de `Vector2d` são "privados" e nossas instâncias de `Vector2d` são "imutáveis"—com aspas irônicas—pois não há como tornar uns realmente privados e outras realmente imutáveis.footnote:[Se você acha este estado de coisas deprimente e desejaria que Python fosse mais parecido com o Java nesse aspecto, nem leia minha discussão sobre a força relativa do modificador `private` de Java no <<pythonic_soapbox>>.]
 
 Vamos agora voltar à nossa classe `Vector2d`. Na próxima seção trataremos de um atributo (e não um método) especial que afeta o armazenamento interno de um objeto, com um imenso impacto potencial sobre seu uso de memória, mas pouco efeito sobre sua interface pública: `+__slots__+`.((("", startref="Aprivate11")))((("", startref="POprivate11")))
 
@@ -603,9 +603,9 @@ Vamos agora voltar à nossa classe `Vector2d`. Na próxima seção trataremos de
 [[slots_section]]
 === Economizando memória com pass:[__slots__]
 
-Por((("Pythonic objects", "saving memory with &#x005F;&#x005F;slots&#x005F;&#x005F;", id="POslot11")))((("&#x005F;&#x005F;slots&#x005F;&#x005F;", id="slots11")))((("memory, saving with &#x005F;&#x005F;slots&#x005F;&#x005F;", id="memsave11"))) default, o Python armazena os atributos de cada instância em um `dict` chamado `+__dict__+`.
+Por((("Pythonic objects", "saving memory with &#x005F;&#x005F;slots&#x005F;&#x005F;", id="POslot11")))((("&#x005F;&#x005F;slots&#x005F;&#x005F;", id="slots11")))((("memory, saving with &#x005F;&#x005F;slots&#x005F;&#x005F;", id="memsave11"))) default, Python armazena os atributos de cada instância em um `dict` chamado `+__dict__+`.
 Como vimos em <<consequences_dict_internals>>, um `dict` ocupa um espaço significativo de memória, mesmo com as otimizações mencionadas naquela seção.
-Mas se você definir um atributo de classe chamado `+__slots__+`, que mantém uma sequência de nomes de atributos, o Python usará um modelo alternativo de armazenamento para os atributos de instância:
+Mas se você definir um atributo de classe chamado `+__slots__+`, que mantém uma sequência de nomes de atributos, Python usará um modelo alternativo de armazenamento para os atributos de instância:
 os atributos nomeados em `+__slots__+` serão armazenados em um array de referências oculto, que usa menos memória que um `dict`.
 Vamos ver como isso funciona através de alguns exemplos simples, começando pelo <<slots_ex1>>.
 
@@ -668,13 +668,13 @@ Curiosamente, também é possível colocar o nome `'+__dict__+'` em  `+__slots__
 Neste caso, as instâncias vão manter os atributos nomeados em `+__slots__+` num array de referências da instância,
 mas também vão aceitar atributos criados dinamicamente, que serão armazenados no habitual
 `+__dict__+`.
-Isso é necessário para usar o decorador `@cached_property` (tratado na seção <<caching_properties_sec>>).
+Isso é necessário para usar o decorador `@cached_property` (tratado na <<caching_properties_sec>>).
 
 Naturalmente, incluir `+__dict__+` em `+__slots__+` pode desviar completamente do objetivo deste último,
 dependendo do número de atributos estáticos e dinâmicos em cada instância, e de como eles são usados.
 Otimização descuidada é pior que otimização prematura: adiciona complexidade sem colher qualquer benefício.
 
-Outro atributo de instância especial que você pode querer manter é `+__weakref__+`, necessário para que objetos suportem referências fracas (mencionadas brevemente na seção <<del_sec>>).
+Outro atributo de instância especial que você pode querer manter é `+__weakref__+`, necessário para que objetos suportem referências fracas (mencionadas brevemente na <<del_sec>>).
 Esse atributo existe por default em instâncias de classes definidas pelo usuário.
 Entretanto, se a classe define `+__slots__+`, e é necessário que as instâncias possam ser alvo de referências fracas, então é preciso incluir  `+__weakref__+`  entre os atributos nomeados em
 `+__slots__+`.
@@ -731,7 +731,7 @@ Como revela o <<mem_test_demo>>, o uso de RAM do script cresce para 1,55 GB quan
 
 [TIP]
 ====
-Se você precisa manipular milhões de objetos com dados numéricos, deveria na verdade estar usando os arrays do NumPy (veja a seção <<numpy_sec>>), que são eficientes no de uso de memória, e também tem funções para processamento numérico extremamente otimizadas, muitas das quais operam sobre o array inteiro ao mesmo tempo. Projetei a classe `Vector2d` apenas como um contexto para a discussão de métodos especiais, pois sempre que possível tento evitar exemplos vagos com `Foo` e `Bar`.
+Se você precisa manipular milhões de objetos com dados numéricos, deveria na verdade estar usando os arrays do NumPy (veja a <<numpy_sec>>), que são eficientes no de uso de memória, e também tem funções para processamento numérico extremamente otimizadas, muitas das quais operam sobre o array inteiro ao mesmo tempo. Projetei a classe `Vector2d` apenas como um contexto para a discussão de métodos especiais, pois sempre que possível tento evitar exemplos vagos com `Foo` e `Bar`.
 ====
 
 [[problems_with_slots]]
@@ -750,7 +750,7 @@ O último tópico do capítulo trata da sobreposição de um atributo de classe 
 [[overriding_class_attributes]]
 === Sobrepondo atributos de classe
 
-Um((("Pythonic objects", "overriding class attributes", id="POoverride11")))((("attributes", "overriding class attributes", id="Aover11"))) recurso característico do Python é a forma como atributos de classe podem ser usados como valores default para atributos de instância. `Vector2d` contém o atributo de classe `typecode`. Ele é usado duas vezes no método `+__bytes__+`, mas é lido intencionalmente como `self.typecode`. As instâncias de `Vector2d` são criadas sem um atributo `typecode` próprio, então `self.typecode` vai, por default, se referir ao atributo de classe `Vector2d.typecode`.
+Um((("Pythonic objects", "overriding class attributes", id="POoverride11")))((("attributes", "overriding class attributes", id="Aover11"))) recurso característico de Python é a forma como atributos de classe podem ser usados como valores default para atributos de instância. `Vector2d` contém o atributo de classe `typecode`. Ele é usado duas vezes no método `+__bytes__+`, mas é lido intencionalmente como `self.typecode`. As instâncias de `Vector2d` são criadas sem um atributo `typecode` próprio, então `self.typecode` vai, por default, se referir ao atributo de classe `Vector2d.typecode`.
 
 Mas se incluirmos um atributo de instância que não existe, estamos criando um novo atributo de instância—por exemplo, um atributo de instância `typecode`—e o atributo de classe com o mesmo nome permanece intocado. Entretanto, daí em diante, sempre que algum código referente àquela instância contiver `self.typecode`, o `typecode` da instância será usado, na prática escondendo o atributo de classe de mesmo nome. Isso abre a possibilidade de personalizar uma instância individual com um `typecode` diferente.
 
@@ -833,14 +833,14 @@ Esse exemplo também explica porque não escrevi explicitamente o `class_name` e
 
 Se eu tivesse escrito o `class_name` explicitamente, subclasses de `Vector2d` como `ShortVector2d` teriam que sobrescrever `+__repr__+` só para mudar o `class_name`. Lendo o nome do `type` da instância, tornei `+__repr__+` mais seguro de ser herdado.
 
-Aqui termina nossa conversa sobre a criação de uma classe simples, que se vale do modelo de dados para se adaptar bem ao restante do Python: oferecendo diferentes representações do objeto, fornecendo um código de formatação personalizado, expondo atributos somente para leitura e suportando `hash()` para se integrar a conjuntos e mapeamentos.((("", startref="Aover11")))((("", startref="POoverride11")))
+Aqui termina nossa conversa sobre a criação de uma classe simples, que se vale do modelo de dados para se adaptar bem ao restante de Python: oferecendo diferentes representações do objeto, fornecendo um código de formatação personalizado, expondo atributos somente para leitura e suportando `hash()` para se integrar a conjuntos e mapeamentos.((("", startref="Aover11")))((("", startref="POoverride11")))
 
 
 === Resumo do capítulo
 
 O((("Pythonic objects", "overview of"))) objetivo desse capítulo foi demonstrar o uso dos métodos especiais e as convenções na criação de uma classe pythônica bem comportada.
 
-Será _vector2d_v3.py_ (do <<ex_vector2d_v3_full>>) mais pythônica que _vector2d_v0.py_ (do <<ex_vector2d_v0>>)? A classe `Vector2d` em _vector2d_v3.py_ com certeza utiliza mais recursos do Python. Mas decidir qual das duas implementações de `Vector2d` é mais adequada, a primeira ou a última, depende do contexto onde a classe será usada. O "Zen of Python" (_Zen do Python_), de Tim Peter, diz:
+Será _vector2d_v3.py_ (do <<ex_vector2d_v3_full>>) mais pythônica que _vector2d_v0.py_ (do <<ex_vector2d_v0>>)? A classe `Vector2d` em _vector2d_v3.py_ com certeza utiliza mais recursos de Python. Mas decidir qual das duas implementações de `Vector2d` é mais adequada, a primeira ou a última, depende do contexto onde a classe será usada. O "Zen of Python" (_Zen de Python_), de Tim Peter, diz:
 
 [quote]
 ____
@@ -852,7 +852,7 @@ Se o código for parte de uma biblioteca para uso por outros programadores, ent�
 Por exemplo, `+__eq__+` pode não ser necessário para suportar um requisito do negócio, mas torna a classe mais fácil de testar.
 
 Minha meta, ao expandir o código do `Vector2d`, foi criar um contexto para a discussão dos métodos especiais e das convenções de programação em Python.
-Os exemplos neste capítulo demonstraram vários dos métodos especiais vistos antes na <<special_names_tbl>> (do <<data_model>>):
+Os exemplos neste capítulo demonstraram vários dos métodos especiais vistos antes na <<special_names_tbl>> (do <<ch_data_model>>):
 
 * Métodos de representação de strings e bytes: `+__repr__+`, `+__str__+`, `+__format__+` e `+__bytes__+`
 * Métodos para reduzir um objeto a um número: `+__abs__+`, `+__bool__+` e `+__hash__+`
@@ -869,26 +869,26 @@ Discutimos a seguir a economia de memória e as ressalvas de se declarar um atri
 
 O último tópico tratado foi a sobreposição de um atributo de classe acessado através das instâncias (por exemplo, `self.typecode`). Fizemos isso primeiro criando um atributo de instância, depois criando uma subclasse e sobrescrevendo o atributo no nível da classe.
 
-Por todo o capítulo, apontei como escolhas de design nos exemplos foram baseadas no estudo das APIs dos objetos padrão do Python.
+Por todo o capítulo, apontei como escolhas de design nos exemplos foram baseadas no estudo das APIs dos objetos padrão de Python.
 Se esse capítulo pode ser resumido em uma só frase, seria essa:
 
 [quote, Antigo provérbio chinês]
 ____
-Para criar objetos pythônicos, observe como se comportam objetos reais do Python.
+Para criar objetos pythônicos, observe como se comportam objetos reais de Python.
 ____
 
 [[pythonic_further_reading]]
 === Leitura complementar
 
-Este((("Pythonic objects", "further reading on"))) capítulo tratou de vários dos métodos especiais do modelo de dados, então naturalmente as referências primárias são as mesmas do <<data_model>>, onde tivemos uma ideia geral do mesmo tópico. Por conveniência, vou repetir aquelas quatro recomendações anteriores aqui, e acrescentar algumas outras:
+Este((("Pythonic objects", "further reading on"))) capítulo tratou de vários dos métodos especiais do modelo de dados, então naturalmente as referências primárias são as mesmas do <<ch_data_model>>, onde tivemos uma ideia geral do mesmo tópico. Por conveniência, vou repetir aquelas quatro recomendações anteriores aqui, e acrescentar algumas outras:
 
 O https://docs.python.org/pt-br/3/reference/datamodel.html[capítulo "Modelo de Dados"] em _A Referência da Linguagem Python_:: A maioria dos métodos usados nesse capítulo estão documentados em https://docs.python.org/pt-br/3/reference/datamodel.html#basic-customization["3.3.1. Personalização básica"].
 
 pass:[<a class="orm:hideurl" href="https://fpy.li/pynut3"><em>Python in a Nutshell</em>, 3ª ed.,</a>] de Alex Martelli, Anna Ravenscroft, e Steve Holden:: Trata com profundidade dos métodos especiais .
 
-pass:[<a class="orm:hideurl" href="https://fpy.li/pycook3"><em>Python Cookbook</em>, 3ª ed.</a>], de David Beazley e Brian K. Jones:: Práticas modernas do Python demonstradas através de receitas. Especialmente o Capítulo 8, "Classes and Objects" (_Classes e Objetos_), que contém várias receitas relacionadas às discussões deste capítulo.
+pass:[<a class="orm:hideurl" href="https://fpy.li/pycook3"><em>Python Cookbook</em>, 3ª ed.</a>], de David Beazley e Brian K. Jones:: Práticas modernas de Python demonstradas através de receitas. Especialmente o Capítulo 8, "Classes and Objects" (_Classes e Objetos_), que contém várias receitas relacionadas às discussões deste capítulo.
 
-_Python Essential Reference_, 4ª ed., de David Beazley:: Trata do modelo de dados em detalhes, apesar de falar apenas do Python 2.6 e do 3.0 (na quarta edição). Todos os conceitos fundamentais são os mesmos, e a maior parte das APIs do Modelo de Dados não mudou nada desde o Python 2.2, quando os tipos embutidos e as classes definidas pelo usuário foram unificados.
+_Python Essential Reference_, 4ª ed., de David Beazley:: Trata do modelo de dados em detalhes, apesar de falar apenas de Python 2.6 e do 3.0 (na quarta edição). Todos os conceitos fundamentais são os mesmos, e a maior parte das APIs do Modelo de Dados não mudou nada desde Python 2.2, quando os tipos embutidos e as classes definidas pelo usuário foram unificados.
 
 Em 2015—o ano que terminei a primeira edição de _Python Fluente_—Hynek Schlawack começou a desenvolver o pacote `attrs`. Da documentação de `attrs`:
 
@@ -898,14 +898,14 @@ ____
 ____
 
 Mencionei `attrs` como uma alternativa mais poderosa ao `@dataclass` na <<further_data_class>>.
-As fábricas de classes de dados do <<data_class_ch>>, assim como `attrs`, equipam suas classes automaticamente com vários métodos especiais. Mas saber como programar métodos especiais ainda é essencial para entender o que aqueles pacotes fazem, para decidir se você realmente precisa deles e para—quando necessário—sobrescrever os métodos que eles geram.
+As fábricas de classes de dados do <<ch_dataclass>>, assim como `attrs`, equipam suas classes automaticamente com vários métodos especiais. Mas saber como programar métodos especiais ainda é essencial para entender o que aqueles pacotes fazem, para decidir se você realmente precisa deles e para—quando necessário—sobrescrever os métodos que eles geram.
 
 Vimos neste capítulo todos os métodos especiais relacionados à representação de objetos, exceto
 `+__index__+` e `+__fspath__+`.
-Discutiremos `+__index__+` no <<user_defined_sequences>>, na seção <<slice_aware_sec>>.
+Discutiremos `+__index__+` no <<ch_seq_methods>>, na <<slice_aware_sec>>.
 Não vou tratar de `+__fspath__+`. Para aprender sobre esse método, veja a https://fpy.li/pep519[PEP 519—Adding a file system path protocol (_Adicionando um protocolo de caminho de sistema de arquivos_)] (EN).
 
-Uma percepção precoce da necessidade de strings de representação diferentes para objetos apareceu no Smalltalk. O artigo de 1996 https://fpy.li/11-13["How to Display an Object as a String: printString and displayString" (_Como Mostrar um Objeto como uma String: printString and displayString_)] (EN), de Bobby Woolf, discute a implementação dos métodos `printString` e `displayString` naquela linguagem. Foi desse artigo que peguei emprestado as expressivas descrições "como o desenvolvedor quer vê-lo" e "como o usuário quer vê-lo" para definir `repr()` e `str()`, na seção <<object_repr_sec>>.
+Uma percepção precoce da necessidade de strings de representação diferentes para objetos apareceu  em Smalltalk. O artigo de 1996 https://fpy.li/11-13["How to Display an Object as a String: printString and displayString" (_Como Mostrar um Objeto como uma String: printString and displayString_)] (EN), de Bobby Woolf, discute a implementação dos métodos `printString` e `displayString` naquela linguagem. Foi desse artigo que peguei emprestado as expressivas descrições "como o desenvolvedor quer vê-lo" e "como o usuário quer vê-lo" para definir `repr()` e `str()`, na <<object_repr_sec>>.
 
 
 [role="pagebreak-before less_space"]
@@ -957,11 +957,11 @@ por não ter sido convidado, e
 não porque ele tem uma espingarda.
 ____
 
-O Python((("Soapbox sidebars", "safety versus security in private attributes")))((("attributes", "safety versus security in private"))) e o Perl estão em polos opostos em vários aspectos, mas Guido e Larry parecem concordar sobre a privacidade de objetos.
+Python((("Soapbox sidebars", "safety versus security in private attributes")))((("attributes", "safety versus security in private"))) e o Perl estão em polos opostos em vários aspectos, mas Guido e Larry parecem concordar sobre a privacidade de objetos.
 
 Ensinando Python para muitos programadores Java ao longo do anos, descobri que muitos deles tem uma fé excessiva nas garantias de privacidade oferecidas pelo Java.
-E na verdade, os modificadores `private` e `protected` do Java normalmente fornecem defesas apenas contra acidentes (isto é, proteção).
-Eles só oferecem segurança contra ataques mal-intencionados se a aplicação for especialmente configurada e implantada sob um https://fpy.li/11-15[SecurityManager] (EN) do Java, e isso raramente acontece na prática, mesmo em configurações corporativas atentas à segurança.
+E na verdade, os modificadores `private` e `protected` de Java normalmente fornecem defesas apenas contra acidentes (isto é, proteção).
+Eles só oferecem segurança contra ataques mal-intencionados se a aplicação for especialmente configurada e implantada sob um https://fpy.li/11-15[SecurityManager] (EN) de Java, e isso raramente acontece na prática, mesmo em configurações corporativas atentas à segurança.
 
 Para provar meu argumento, gostaria de mostrar essa classe Java (o <<ex_java_confidential_class>>).
 
@@ -976,7 +976,7 @@ include::code/11-pythonic-obj/private/Confidential.java[]
 
 No <<ex_java_confidential_class>>, armazeno o `text` no campo `secret` após convertê-lo todo para caixa alta, só para deixar óbvio que qualquer coisa que esteja naquele campo estará escrito inteiramente em maiúsculas.
 
-A verdadeira demonstração consiste em rodar _expose.py_ com Jython. Aquele script usa introspecção  ("reflexão"—_reflection_—no jargão do Java) para obter o valor de um campo privado. O código aparece no <<ex_expose_py>>.
+A verdadeira demonstração consiste em rodar _expose.py_ com Jython. Aquele script usa introspecção  ("reflexão"—_reflection_—no jargão de Java) para obter o valor de um campo privado. O código aparece no <<ex_expose_py>>.
 
 [[ex_expose_py]]
 .expose.py: código em Jython para ler o conteúdo de um campo privado em outra classe
@@ -997,7 +997,7 @@ message.secret = TOP SECRET TEXT
 
 A string `'TOP SECRET TEXT'` foi lida do campo privado `secret` da classe `Confidential`.
 
-Não há magia aqui: _expose.py_ usa a API de reflexão do Java para
+Não há magia aqui: _expose.py_ usa a API de reflexão de Java para
 obter uma referência para o campo privado chamado `'secret'`,
 e então chama `secret_field.setAccessible(True)` para tornar acessível seu conteúdo.
 A mesma coisa pode ser feita com código Java, claro (mas exige mais que o triplo de linhas; veja o arquivo https://fpy.li/11-16[_Expose.java_]

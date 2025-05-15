@@ -8,12 +8,12 @@
 :chapter-caption: Capítulo
 
 
-[[with_match_ch]]
+[[ch_with_match]]
 == Instruções with, match, e blocos else
 
 [quote, Raymond Hettinger, um eloquente evangelista de Python]
 ____
-Gerenciadores de contexto podem vir a ser quase tão importantes quanto a própria sub-rotina. Só arranhamos a superfície das possibilidades. [...] Basic tem uma instrução `with`, há instruções `with` em várias linguagens. Mas elas não fazem a mesma coisa, todas fazem algo muito raso, economizam consultas a atributos com o operador ponto (`.`), elas não configuram e desfazem ambientes. Não pense que é a mesma coisa só porque o nome é igual. A instrução `with` é muito mais que isso.footnote:[Palestra de abertura da PyCon US 2013: https://fpy.li/18-1["What Makes Python Awesome" ("_O que torna o Python incrível_")]; a parte sobre `with` começa em 23:00 e termina em 26:15.] (EN)
+Gerenciadores de contexto podem vir a ser quase tão importantes quanto a própria sub-rotina. Só arranhamos a superfície das possibilidades. [...] Basic tem uma instrução `with`, há instruções `with` em várias linguagens. Mas elas não fazem a mesma coisa, todas fazem algo muito raso, economizam consultas a atributos com o operador ponto (`.`), elas não configuram e desfazem ambientes. Não pense que é a mesma coisa só porque o nome é igual. A instrução `with` é muito mais que isso.footnote:[Palestra de abertura da PyCon US 2013: https://fpy.li/18-1["What Makes Python Awesome" ("_O que torna Python incrível_")]; a parte sobre `with` começa em 23:00 e termina em 26:15.] (EN)
 ____
 
 
@@ -33,9 +33,9 @@ A cláusula `else` não é grande coisa, mas ajuda a transmitir a intenção por
 
 === Novidades nesse capítulo
 
-A seção <<pattern_matching_case_study_sec>> é nova.
+A <<pattern_matching_case_study_sec>> é nova.
 
-Também((("with, match, and else blocks", "significant changes to"))) atualizei a seção <<context_utilities_sec>> para incluir alguns recursos do módulo `contextlib` adicionados desde o Python 3.6,
+Também((("with, match, and else blocks", "significant changes to"))) atualizei a <<context_utilities_sec>> para incluir alguns recursos do módulo `contextlib` adicionados desde Python 3.6,
 e os novos gerenciadores de contexto "parentizados", introduzidos no Python 3.10.
 
 Vamos começar com a poderosa instrução `with`.
@@ -62,7 +62,7 @@ Alguns exemplos, da biblioteca padrão, são:
 * Remendar (_patch_) objetos para testes—veja a https://docs.python.org/pt-br/3/library/unittest.mock.html#patch[função `unittest.mock.patch`] (EN).
 
 A((("context managers", "methods included in interface")))((("&#x005F;&#x005F;enter&#x005F;&#x005F;")))((("&#x005F;&#x005F;exit&#x005F;&#x005F;"))) interface gerenciador de contexto consiste dos métodos `+__enter__+` and `+__exit__+`.
-No topo do `with`, o Python chama o método `+__enter__+` do objeto gerenciador de contexto. Quando o bloco `with` encerra ou termina por qualquer razão, o Python chama
+No topo do `with`, Python chama o método `+__enter__+` do objeto gerenciador de contexto. Quando o bloco `with` encerra ou termina por qualquer razão, Python chama
 `+__exit__+` no objeto gerenciador de contexto.
 
 O((("context managers", "demonstrations of", id="CMdemo18"))) exemplo mais comum é se assegurar que um objeto arquivo seja fechado. O <<with_file_demo>> é uma demonstração detalhada do uso do `with` para fechar um arquivo.
@@ -113,7 +113,7 @@ O <<looking_glass_demo_1>> mostra o funcionamento de um gerenciador de contexto 
 include::code/18-with-match/mirror.py[tags=MIRROR_DEMO_1]
 ----
 ====
-<1> O gerenciador de contexto é uma instância de `LookingGlass`; o Python chama `+__enter__+` no gerenciador de contexto e o resultado é vinculado a `what`.
+<1> O gerenciador de contexto é uma instância de `LookingGlass`; Python chama `+__enter__+` no gerenciador de contexto e o resultado é vinculado a `what`.
 <2> Exibe uma `str`, depois o valor da variável alvo `what`.
 A saída de cada `print` será invertida.
 <3> Agora o bloco `with` terminou. Podemos ver que o valor devolvido por `+__enter__+`, armazenado em `what`, é a string `'JABBERWOCKY'`.
@@ -130,12 +130,12 @@ O <<looking_glass_ex>> mostra a implementação de `LookingGlass`.
 include::code/18-with-match/mirror.py[tags=MIRROR_EX]
 ----
 ====
-<1> O Python invoca `+__enter__+` sem argumentos além de `self`.
+<1> Python invoca `+__enter__+` sem argumentos além de `self`.
 <2> Armazena o método `sys.stdout.write`  original, para podermos restaurá-lo mais tarde.
 <3> Faz um _monkey-patch_ em `sys.stdout.write`, substituindo-o com nosso próprio método.
 <4> Devolve a string `'JABBERWOCKY'`, apenas para termos algo para colocar na variável alvo `what`.
 <5> Nosso substituto de `sys.stdout.write` inverte o argumento `text` e chama a implementação original.
-<6> Se tudo correu bem, o Python chama `+__exit__+` com `None, None, None`; se ocorreu uma exceção, os três argumentos recebem dados da exceção, como descrito a seguir, logo após esse exemplo.
+<6> Se tudo correu bem, Python chama `+__exit__+` com `None, None, None`; se ocorreu uma exceção, os três argumentos recebem dados da exceção, como descrito a seguir, logo após esse exemplo.
 <7> Restaura o método original em `sys.stdout.write`.
 <8> Se a exceção não é `None` e seu tipo é `ZeroDivisionError`, exibe uma mensagem...
 <9> ...e devolve `True`, para informar o interpretador que a exceção foi tratada.
@@ -174,7 +174,7 @@ include::code/18-with-match/mirror.py[tags=MIRROR_DEMO_2]
 .Gerenciadores de contexto entre parênteses
 [TIP]
 ====
-O Python((("context managers", "parenthesized in Python 3.10"))) 3.10 adotou
+Python((("context managers", "parenthesized in Python 3.10"))) 3.10 adotou
 https://fpy.li/pep617[um novo parser] (analisador sintático),
 mais poderoso que o antigo https://fpy.li/18-8[parser LL(1)].
 Isso permitiu introduzir novas sintaxes que não eram viáveis anteriormente.
@@ -199,7 +199,7 @@ A biblioteca padrão inclui o pacote `contextlib`, com funções, classe e decor
 ==== Utilitários do contextlib
 
 Antes((("context managers", "contextlib utilities"))) de desenvolver suas próprias classes gerenciadoras de contexto, dê uma olhada em
-https://docs.python.org/pt-br/3/library/contextlib.html[`contextlib`—"Utilities for ++with++-statement contexts" ("Utilitários para contextos da instrução ++with++)], na documentação do Python.
+https://docs.python.org/pt-br/3/library/contextlib.html[`contextlib`—"Utilities for ++with++-statement contexts" ("Utilitários para contextos da instrução ++with++)], na documentação de Python.
 Pode ser que você esteja prestes a escrever algo que já existe, ou talvez exista uma classe ou algum invocável que tornará seu trabalho mais fácil.
 
 Além do gerenciador de contexto `redirect_stdout` mencionado logo após o <<looking_glass_ex>>, o `redirect_stderr` foi acrescentado no Python 3.5—ele faz o mesmo que seu par mais antigo, mas com as saídas direcionadas para `stderr`.
@@ -215,7 +215,7 @@ Ele serve como um substituto quando o código condicional antes do bloco `with` 
 
 O módulo `contextlib` fornece classes e um decorador que são mais largamente aplicáveis que os decoradores mencionados acima:
 
-`@contextmanager`:: Um decorador que permite construir um gerenciador de contexto a partir de um simples função geradora, em vez de criar uma classe e implementar a interface. Veja a seção <<using_cm_decorator_sec>>.
+`@contextmanager`:: Um decorador que permite construir um gerenciador de contexto a partir de um simples função geradora, em vez de criar uma classe e implementar a interface. Veja a <<using_cm_decorator_sec>>.
 
 `AbstractContextManager`:: Uma ABC que formaliza a interface gerenciador de contexto, e torna um pouco mais fácil criar classes gerenciadoras de contexto, através de subclasses—adicionada no Python 3.6.
 
@@ -223,15 +223,15 @@ O módulo `contextlib` fornece classes e um decorador que são mais largamente a
 
 `ExitStack`:: Um gerenciador de contexto que permite entrar em um número variável de gerenciadores de contexto. Quando o bloco ++with++ termina, ++ExitStack++ chama os métodos `+__exit__+` dos gerenciadores de contexto empilhados na ordem LIFO (Last In, First Out, _Último a Entrar, Primeiro a Sair_). Use essa classe quando você não sabe de antemão em quantos gerenciadores de contexto será necessário entrar no bloco `with`; por exemplo, ao abrir ao mesmo tempo todos os arquivos de uma lista arbitrária de arquivos.
 
-Com o Python 3.7, `contextlib` acrescentou `AbstractAsyncContextManager`, `@asynccontextmanager`, e `AsyncExitStack`.
-Eles são similares aos utilitários equivalentes sem a parte `async` no nome, mas projetados para uso com a nova instrução `async with`, tratado no <<async_ch>>.
+Com Python 3.7, `contextlib` acrescentou `AbstractAsyncContextManager`, `@asynccontextmanager`, e `AsyncExitStack`.
+Eles são similares aos utilitários equivalentes sem a parte `async` no nome, mas projetados para uso com a nova instrução `async with`, tratado no <<ch_async>>.
 
 Desses todos, o utilitário mais amplamente usado é o decorador `@contextmanager`, então ele merece mais atenção. Esse decorador também é interessante por mostrar um uso não relacionado a iteração para a instrução `yield`.
 
 [[using_cm_decorator_sec]]
 ==== Usando o @contextmanager
 
-O((("@contextmanager decorator", id="atcontextm18")))((("context managers", "@contextmanager decorator", id="CMatcontextm18"))) decorador `@contextmanager` é uma ferramenta elegante e prática, que une três recursos distintos do Python: um decorador de função, um gerador, e a instrução `with`.
+O((("@contextmanager decorator", id="atcontextm18")))((("context managers", "@contextmanager decorator", id="CMatcontextm18"))) decorador `@contextmanager` é uma ferramenta elegante e prática, que une três recursos distintos de Python: um decorador de função, um gerador, e a instrução `with`.
 
 Usar o `@contextmanager` reduz o código repetitivo na criação de um gerenciador de contexto: em vez de escrever toda uma classe com métodos `+__enter__/__exit__+`, você só precisa implementar um gerador com uma única instrução `yield`, que deve produzir o que o método `+__enter__+` deveria devolver.
 
@@ -266,7 +266,7 @@ include::code/18-with-match/mirror_gen.py[tags=MIRROR_GEN_DEMO_1]
 ====
 <1> A única diferença do <<looking_glass_demo_1>> é o nome do gerenciador de contexto:`looking_glass` em vez de `LookingGlass`.
 
-O decorador `contextlib.contextmanager` envolve a função em uma classe que implementa os métodos `+__enter__+` e `+__exit__+`.footnote:[A classe real se chama `_GeneratorContextManager`. Se você quiser saber exatamente como ela funciona, leia seu https://fpy.li/18-10[código fonte] na __Lib/contextlib.py__ do Python 3.10.]
+O decorador `contextlib.contextmanager` envolve a função em uma classe que implementa os métodos `+__enter__+` e `+__exit__+`.footnote:[A classe real se chama `_GeneratorContextManager`. Se você quiser saber exatamente como ela funciona, leia seu https://fpy.li/18-10[código fonte] na __Lib/contextlib.py__ de Python 3.10.]
 
 O método `+__enter__+` daquela classe:
 
@@ -357,14 +357,14 @@ Isso conclui nossa revisão da instrução `with` e dos gerenciadores de context
 [[pattern_matching_case_study_sec]]
 === Pattern matching no lis.py: um estudo de caso
 
-Na((("lis.py interpreter", "topics covered")))((("with, match, and else blocks", "pattern matching in lis.py", id="WMEBlispy18")))((("pattern matching", "in lis.py interpreter", secondary-sortas="lis.py", id="PMlispy18"))) seção <<pattern_matching_seq_interp_sec>>, vimos exemplos de sequências de padrões extraídos da funcão `evaluate` do interpretador _lis.py_ de Peter Norvig, portado para o Python 3.10.
+Na((("lis.py interpreter", "topics covered")))((("with, match, and else blocks", "pattern matching in lis.py", id="WMEBlispy18")))((("pattern matching", "in lis.py interpreter", secondary-sortas="lis.py", id="PMlispy18"))) <<pattern_matching_seq_interp_sec>>, vimos exemplos de sequências de padrões extraídos da funcão `evaluate` do interpretador _lis.py_ de Peter Norvig, portado para Python 3.10.
 Nessa seção quero dar um visão geral do funcionamento do _lis.py_, e também explorar todas as cláusulas `case` de `evaluate`, explicando não apenas os padrões mas também o que o interpretador faz em cada `case`.
 
 Além de mostrar mais _pattern matching_, escrevi essa seção por três razões:
 
 . O _lis.py_ de Norvig é um lindo exemplo de código Python idiomático.
 . A simplicidade do Scheme é uma aula magna de design de linguagens.
-. Aprender como um interpretador funciona me deu um entendimento mais profundo sobre o Python e sobre linguagens de programação em geral—interpretadas ou compiladas.
+. Aprender como um interpretador funciona me deu um entendimento mais profundo sobre Python e sobre linguagens de programação em geral—interpretadas ou compiladas.
 
 Antes de olhar o código Python, vamos ver um pouquinho de Scheme, para você poder entender este estudo de caso—pensando em quem nunca viu Scheme e Lisp antes.
 
@@ -435,7 +435,7 @@ do repositório https://fpy.li/code[_fluentpython/example-code-2e_] no Github.((
 ==== Importações e tipos
 
 O <<lis_top_ex>> mostra((("lis.py interpreter", "imports and types"))) as primeiras linhas do _lis.py_.
-O uso do `TypeAlias` e do operador de união de tipos `|` exige o Python 3.10.
+O uso do `TypeAlias` e do operador de união de tipos `|` exige Python 3.10.
 
 [[lis_top_ex]]
 .lis.py: início do arquivo
@@ -459,7 +459,7 @@ não há um tipo de dados string, com operações como fatiamento (_slicing_), d
 ==== O parser
 
 O parser (_analisador sintático_)((("lis.py interpreter", "parser", id="lispyparser18"))) de Norvig tem 36 linhas de código que
-exibem o poder do Python aplicado ao tratamento da sintaxe recursiva simples das expressões-S—sem strings,
+exibem o poder de Python aplicado ao tratamento da sintaxe recursiva simples das expressões-S—sem strings,
 comentários, macros e outros recursos que tornam a análise sintática do Scheme padrão mais complicada (<<lis_parser_ex>>).
 
 [[lis_parser_ex]]
@@ -533,7 +533,7 @@ include::code/18-with-match/lispy/py3.10/examples_test.py[tags=ENVIRONMENT]
 <2> Atribuir com `[]` sobrescreve ou insere novos itens, mas sempre no primeiro mapeamento, `inner_env` nesse exemplo.
 <3> `env.change('b', 333)` busca a chave `b` e atribui a ela um novo valor no mesmo lugar, no `outer_env`
 
-A seguir temos a função `standard_env()`, que constrói e devolve um `Environment` carregado com funções pré-definidas, similar ao módulo `+__builtins__+` do Python, que está sempre disponível (<<lis_std_env_ex>>).
+A seguir temos a função `standard_env()`, que constrói e devolve um `Environment` carregado com funções pré-definidas, similar ao módulo `+__builtins__+` de Python, que está sempre disponível (<<lis_std_env_ex>>).
 
 [[lis_std_env_ex]]
 .lis.py: `standard_env()` constrói e devolve o ambiente global
@@ -550,17 +550,17 @@ include::code/18-with-match/lispy/py3.10/lis.py[lines=111..116]
 
 Resumindo, o mapeamento `env` é carregado com:
 
-* Todas as funções do módulo `math` do Python
-* Operadores selecionados do módulo `op` do Python
-* Funções simples porém poderosas construídas com o `lambda` do Python
-* Estruturas e entidades embutidas do Python, ou renomeadas, como `callable` para `procedure?`, ou mapeadas diretamente, como `round`
+* Todas as funções do módulo `math` de Python
+* Operadores selecionados do módulo `op` de Python
+* Funções simples porém poderosas construídas com o `lambda` de Python
+* Estruturas e entidades embutidas de Python, ou renomeadas, como `callable` para `procedure?`, ou mapeadas diretamente, como `round`
 
 ==== O REPL
 
 O((("lis.py interpreter", "REPL (read-eval-print-loop)"))) REPL (read-eval-print-loop, _loop-lê-calcula-imprime_ ) de Norvig é fácil de entender mas não é amigável ao usuário (veja o <<ex_lispy_repl>>).
 Se nenhum argumento de linha de comando é passado a _lis.py_,
 a função `repl()` é invocada por `main()`—definida no final do módulo.
-No prompt de `lis.py>`, devemos digitar expressões corretas e completas; se esquecemos de fechar um só parênteses, _lis.py_ se encerra.footnote:[Enquanto estudava o _lis.py_ e o _lispy.py_ de Norvig, comecei uma versão chamada https://fpy.li/18-20[_mylis_], que acrescenta alguns recursos, incluindo um REPL que aceita expressões-S parciais e espera a continuação, como o REPL do Python sabe que não terminamos e apresenta um prompt secundário (`...`) até entrarmos uma expressão ou instrução completa, que possa ser analisada e avaliada. O _mylis_ também trata alguns erros de forma graciosa, mas ele ainda é fácil de quebrar. Não é nem de longe tão robusto quanto o REPL do Python.]
+No prompt de `lis.py>`, devemos digitar expressões corretas e completas; se esquecemos de fechar um só parênteses, _lis.py_ se encerra.footnote:[Enquanto estudava o _lis.py_ e o _lispy.py_ de Norvig, comecei uma versão chamada https://fpy.li/18-20[_mylis_], que acrescenta alguns recursos, incluindo um REPL que aceita expressões-S parciais e espera a continuação, como o REPL de Python sabe que não terminamos e apresenta um prompt secundário (`...`) até entrarmos uma expressão ou instrução completa, que possa ser analisada e avaliada. O _mylis_ também trata alguns erros de forma graciosa, mas ele ainda é fácil de quebrar. Não é nem de longe tão robusto quanto o REPL de Python.]
 
 [role="pagebreak-before less_space"]
 [[ex_lispy_repl]]
@@ -606,7 +606,7 @@ include::code/18-with-match/lispy/py3.10/lis.py[tags=EVALUATE]
 ====
 
 Vamos estudar cada cláusula `case` e o que cada uma faz.
-Em algumas ocasiões eu acrescentei comentários, mostrando uma expressão-S que casaria com padrão quando transformado em uma lista do Python.
+Em algumas ocasiões eu acrescentei comentários, mostrando uma expressão-S que casaria com padrão quando transformado em uma lista de Python.
 Os doctests extraídos de
 https://fpy.li/18-21[_examples_test.py_] demonstram cada `case`.
 
@@ -701,7 +701,7 @@ De modo geral, palavras reservadas são necessárias para:
 * Mudar o fluxo de controle, como em `if` e chamadas de função—que também tem regras especiais de avaliação
 * Para gerenciar o ambiente, como em `define` e `set`
 
-Por isso também o Python, e linguagens de programação em geral, precisam de palavras reservadas.
+Por isso também Python, e linguagens de programação em geral, precisam de palavras reservadas.
 Pense em `def`, `if`, `yield`, `import`, `del`, e o que elas fazem em Python.
 ****
 
@@ -739,7 +739,7 @@ Se mais de uma expressão for necessária em um ramo, você pode combiná-las co
 ===== (lambda …)
 
 A forma `lambda` do Scheme define funções anônimas.
-Ela não sofre das limitações da `lambda` do Python:
+Ela não sofre das limitações da `lambda` de Python:
 qualquer função que pode ser escrita em Scheme pode ser escrita usando a sintaxe `(lambda …)`.
 
 [source, python3]
@@ -862,15 +862,15 @@ Ação&#x3a;::
 O método `Environment.change` atravessa os ambientes encadeados de local para global,
 e atualiza a primeira ocorrência de `name` com o novo valor.
 Se não estivéssemos implementando a palavra reservada `'set!'`,
-esse interpretador poderia usar apenas o `ChainMap` do Python para implementar `env`,
+esse interpretador poderia usar apenas o `ChainMap` de Python para implementar `env`,
 sem precisar da nossa classe `Environment`.
 
 [role="pagebreak-before less_space"]
-.O nonlocal do Python e o set! do Scheme tratam da mesma questão
+.O nonlocal de Python e o set! do Scheme tratam da mesma questão
 ****
 O((("nonlocal keyword")))((("keywords", "nonlocal keyword"))) uso da forma `set!` está relacionado ao uso da palavra reservada `nonlocal` em Python:
 declarar `nonlocal x` permite a `x = 10` atualizar uma variável `x` anteriormente definida fora do escopo local.
-Sem a declaração `nonlocal x`, `x = 10` vai sempre criar uma variável local em Python, como vimos na seção <<nonlocal_sec>>.
+Sem a declaração `nonlocal x`, `x = 10` vai sempre criar uma variável local em Python, como vimos na <<nonlocal_sec>>.
 
 De forma similar, `(set! x 10)` atualiza um `x` anteriormente definido que pode estar fora do ambiente local da função.
 Por outro lado, a variável `x` em `(define x 10)` é sempre uma variável local, criada ou atualizada no ambiente local.
@@ -982,7 +982,7 @@ A((("decorators and closures", "closures in lis.py")))((("lis.py interpreter", "
 uma definição de função junto com um ambiente.
 A definição de função inclui o nome dos parâmetros e as expressões que compõe o corpo da funcão.
 O((("free variables"))) ambiente é usado quando a função é chamada, para fornecer os valores das _variáveis livres_: variáveis que aparecem no corpo da função mas não são parâmetros, variáveis locais ou variáveis globais.
-Vimos os conceitos de _clausura_ e de _variáveis livres_ na seção <<closures_sec>>.
+Vimos os conceitos de _clausura_ e de _variáveis livres_ na <<closures_sec>>.
 
 Aprendemos como usar clausuras em Python,
 mas agora podemos mergulhar mais fundo e ver como uma clausura é implementada em _lis.py_:
@@ -1002,7 +1002,7 @@ include::code/18-with-match/lispy/py3.10/lis.py[tags=PROCEDURE]
 
 Há um par de funções simples após `evaluate` em https://fpy.li/18-24[_lis.py_]:
 `run` lê um programa Scheme completo e o executa,
-e `main` chama `run` ou `repl`, dependendo da linha de comando—parecido com o modo como o Python faz.
+e `main` chama `run` ou `repl`, dependendo da linha de comando—parecido com o modo como Python faz.
 Não vou descrever essas funções, pois não há nada novo ali.
 Meus objetivos aqui eram compartilhar com vocês a beleza do pequeno interpretador de Norvig,
 explicar melhor como as clausuras funcionam,
@@ -1079,7 +1079,7 @@ e até mesmo se o fluxo de execução sair do bloco `try` por uma instrução co
 [NOTE]
 ====
 Não tenho nada contra o funcionamento dessas cláusulas `else`,
-mas do ponto de vista do design da linguagem, 
+mas do ponto de vista do design da linguagem,
 a palavra `else` foi uma escolha infeliz;
 `else` implica em uma alternativa excludente,
 como em "Execute esse loop, caso contrário faça aquilo."
@@ -1132,7 +1132,7 @@ else:
 Agora fica claro que o bloco `try` está de guarda contra possíveis erros na `dangerous_call()`, e não em `after_call()`.
 Também fica explícito que `after_call()` só será executada se nenhuma exceção for gerada no bloco `try`.
 
-Em Python, `try/except` é frequentemene usado para controle de fluxo, não apenas para tratamento de erro. Há inclusive um acrônimo/slogan para isso, documentado no https://docs.python.org/pt-br/3/glossary.html#term-eafp[glossário oficial do Python]:
+Em Python, `try/except` é frequentemene usado para controle de fluxo, não apenas para tratamento de erro. Há inclusive um acrônimo/slogan para isso, documentado no https://docs.python.org/pt-br/3/glossary.html#term-eafp[glossário oficial de Python]:
 
 [quote]
 ____
@@ -1161,7 +1161,7 @@ Agora vamos resumir o capítulo((("", startref="else18")))((("", startref="WMEBe
 === Resumo do capítulo
 
 Este((("with, match, and else blocks", "overview of"))) capítulo começou com gerenciadores de contexto e o significado da instrução `with`, indo rapidamente além de uso comum (o fechamento automático de arquivos abertos). Implementamos um gerenciador de contexto personalizado: a classe `LookingGlass`, usando os métodos
-`+__enter__/__exit__+`, e vimos como tratar exceções no método `+__exit__+`. Uma ideia fundamental apontada por Raymond Hettinger, na palestra de abertura da Pycon US 2013, é que `with` não serve apenas para gerenciamento de recursos; ele é uma ferramenta para fatorar código comum de configuração e de finalização, ou qualquer par de operações que precisem ser executadas antes e depois de outro procedimento.footnote:[Veja https://fpy.li/18-29[slide 21 em "Python is Awesome" ("_O Python é Incrível_")] (EN).]
+`+__enter__/__exit__+`, e vimos como tratar exceções no método `+__exit__+`. Uma ideia fundamental apontada por Raymond Hettinger, na palestra de abertura da Pycon US 2013, é que `with` não serve apenas para gerenciamento de recursos; ele é uma ferramenta para fatorar código comum de configuração e de finalização, ou qualquer par de operações que precisem ser executadas antes e depois de outro procedimento.footnote:[Veja https://fpy.li/18-29[slide 21 em "Python is Awesome" ("_Python é Incrível_")] (EN).]
 
 Revisamos funções no módulo `contextlib` da biblioteca padrão. Uma delas, o decorador `@contextmanager`, permite implementar um gerenciador de contexto usando apenas um mero gerador com um ++yield++—uma solução menos trabalhosa que criar uma classe com pelo menos dois métodos. Reimplementamos a ++LookingGlass++ como uma função geradora `looking_glass`, e discutimos como fazer tratamento de exceções usando o `@contextmanager`.
 
@@ -1176,14 +1176,14 @@ No fim, _lys.py_ se tornou um instrumento para explorarmos muito mais que _patte
 O https://docs.python.org/pt-br/3/reference/compound_stmts.html[Capítulo 8, "Instruções Compostas,"] em((("with, match, and else blocks", "further reading on"))) _A Referência da Linguagem Python_ diz praticamente tudo que há para dizer sobre cláusulas `else` em instruções `if`, `for`, `while` e `try`. Sobre o uso pythônico de `try/except`, com ou sem `else`, Raymond Hettinger deu uma resposta brilhante para a pergunta https://fpy.li/18-31["Is it a good practice to use try-except-else in Python?" (_É uma boa prática usar try-except-else em Python?_)] (EN) no StackOverflow. O pass:[<a class="orm:hideurl" href="https://fpy.li/pynut3"><em>Python in a Nutshell</em></a>], 3rd ed., by Martelli et al., tem um capítulo sobre exceções com uma excelente discussão sobre o estilo EAFP, atribuindo à pioneira da computação Grace Hopper a criação da frase "É mais fácil pedir perdão que pedir permissão."
 
 
-O capítulo 4 de _A Biblioteca Padrão do Python_, "Tipos Embutidos", tem uma seção dedicada a https://docs.python.org/pt-br/3/library/stdtypes.html#typecontextmanager["Tipos de Gerenciador de Contexto"]. Os métodos especiais `+__enter__/__exit__+` também estão documentados em _A Referência da Linguagem Python_, em https://docs.python.org/pt-br/3/reference/datamodel.html#with-statement-context-managers["Gerenciadores de Contexto da Instrução with"].footnote:[NT:No momento em que essa tradução é feita, o título dessa seção na documentação diz "Com gerenciadores de contexto de instruções", uma frase que sequer faz sentido. Foi aberto um issue sobre isso.] Os gerenciadores de contexto foram introduzidos na https://fpy.li/pep343[PEP 343—The "with" Statement] (EN).
+O capítulo 4 de _A Biblioteca Padrão de Python_, "Tipos Embutidos", tem uma seção dedicada a https://docs.python.org/pt-br/3/library/stdtypes.html#typecontextmanager["Tipos de Gerenciador de Contexto"]. Os métodos especiais `+__enter__/__exit__+` também estão documentados em _A Referência da Linguagem Python_, em https://docs.python.org/pt-br/3/reference/datamodel.html#with-statement-context-managers["Gerenciadores de Contexto da Instrução with"].footnote:[NT:No momento em que essa tradução é feita, o título dessa seção na documentação diz "Com gerenciadores de contexto de instruções", uma frase que sequer faz sentido. Foi aberto um issue sobre isso.] Os gerenciadores de contexto foram introduzidos na https://fpy.li/pep343[PEP 343—The "with" Statement] (EN).
 
 Raymond Hettinger apontou a instrução `with` como um "recurso maravilhoso da linguagem" em sua https://fpy.li/18-29[palestra de abertura da PyCon US 2013] (EN). Ele também mostrou alguns usos interessantes de gerenciadores de contexto em sua apresentação https://fpy.li/18-35["Transforming Code into Beautiful, Idiomatic Python" (_"Transformando Código em Lindo Python Idiomático"_)] (EN), na mesma conferência.
 
-O post de Jeff Preshing em seu blog, https://fpy.li/18-36["The Python 'with' Statement by Example" "_A Instrução 'with' do Python através de Exemplos_"](EN) é interessante pelos exemplos de uso de gerenciadores de contexto com a biblioteca gráfica `pycairo`.
+O post de Jeff Preshing em seu blog, https://fpy.li/18-36["The Python 'with' Statement by Example" "_A Instrução 'with' de Python através de Exemplos_"](EN) é interessante pelos exemplos de uso de gerenciadores de contexto com a biblioteca gráfica `pycairo`.
 
 A classe `contextlib.ExitStack` foi baseada em uma ideia original de Nikolaus Rath, que escreveu um post curto explicando porque ela é útil:
-https://fpy.li/18-37["On the Beauty of Python's ExitStack" "_Sobre a Beleza do ExitStack do Python"_]. No texto, Rath propõe que `ExitStack` é similar, mas mais flexível que a instrução `defer` em Go—que acho uma das melhores ideias naquela linguagem.
+https://fpy.li/18-37["On the Beauty of Python's ExitStack" "_Sobre a Beleza do ExitStack de Python"_]. No texto, Rath propõe que `ExitStack` é similar, mas mais flexível que a instrução `defer` em Go—que acho uma das melhores ideias naquela linguagem.
 
 Beazley and Jones desenvolveram gerenciadores de contexto para propósitos muito diferentes em seu livro, pass:[<em><a class="orm:hideurl" href="https://fpy.li/pycook3">Python Cookbook,</a></em>] (EN) 3rd ed. A "Recipe 8.3. Making Objects Support the Context-Management Protocol" (_Receita 8.3. Fazendo Objetos Suportarem o Protocolo Gerenciador de Contexto_) implementa uma classe `LazyConnection`, cujas instâncias são gerenciadores de contexto que abrem e fecham conexões de rede automaticamente, em blocos `with`. A "Recipe 9.22. Defining Context Managers the Easy Way" (_Receita 9.22. O Jeito Fácil de Definir Gerenciadores de Contexto_) introduz um gerenciador de contexto para código de cronometragem, e outro para realizar mudanças transacionais em um objeto `list`: dentro do bloco `with` é criada um cópia funcional da instância de `list`, e todas as mudanças são aplicadas àquela cópia funcional. Apenas quando o bloco `with` termina sem uma exceção a cópia funcional substitui a original. Simples e genial.
 
@@ -1191,7 +1191,7 @@ Peter Norvig descreve seu pequeno interpretador Scheme nos posts
 pass:[<a href="https://fpy.li/18-38">"(How to Write a (Lisp) Interpreter (in Python))" "(_Como Escrever um Interpretador (Lisp) (em Python))_"</a>] (EN) e
 pass:[<a href="https://fpy.li/18-39">"(An ((Even Better) Lisp) Interpreter (in Python))" "_(Um Interpretador (Lisp (Ainda Melhor)) (em Python))_"</a>] (EN).
 O código-fonte de _lis.py_ e _lispy.py_ está no repositório https://fpy.li/18-40[_norvig/pytudes_].
-Meu repositório, https://fpy.li/18-41[_fluentpython/lispy_], inclui a versão _mylis_ do _lis.py_, atualizado para o Python 3.10, com um REPL melhor, integraçào com a linha de comando, exemplos, mais testes e referências para aprender mais sobre Scheme.
+Meu repositório, https://fpy.li/18-41[_fluentpython/lispy_], inclui a versão _mylis_ do _lis.py_, atualizado para Python 3.10, com um REPL melhor, integraçào com a linha de comando, exemplos, mais testes e referências para aprender mais sobre Scheme.
 O melhor ambiente e dialeto de Scheme para aprender e experimentar é o https://fpy.li/18-42[Racket].
 
 ////
@@ -1210,7 +1210,7 @@ Can you please find a way to make it appear right, and not generate an index ent
 [role="soapbox-title"]
 Fatorando o pão
 
-Em ((("Soapbox sidebars", "with statements")))((("with, match, and else blocks", "Soapbox discussion", id="WMEBsoap18"))) sua palestra de abertura na PyCon US 2013, https://fpy.li/18-1["What Makes Python Awesome" ("_O que torna o Python incrível_")],
+Em ((("Soapbox sidebars", "with statements")))((("with, match, and else blocks", "Soapbox discussion", id="WMEBsoap18"))) sua palestra de abertura na PyCon US 2013, https://fpy.li/18-1["What Makes Python Awesome" ("_O que torna Python incrível_")],
 Raymond Hettinger diz que quando viu a proposta da instrução `with`, pensou que era "um pouquinho misteriosa." Inicialmente tive uma reação similar. As PEPs são muitas vezes difíceis de ler, e a PEP 343 é típica nesse sentido.
 
 Mas aí--nos contou Hettinger--ele teve uma ideia: as sub-rotinas são a invenção mais importante na história das linguagens de computador. Se você tem sequências de operações, como A;B;C e P;B;Q, você pode fatorar B em uma sub-rotina. É como fatorar o recheio de um sanduíche: usar atum com tipos de diferentes de pão. Mas e se você quiser fatorar o pão, para fazer sanduíches com pão de trigo integral usando recheios diferentes a cada vez? É isso que a instrução `with` oferece. Ela é o complemento da sub-rotina. Hettinger continuou:
@@ -1229,7 +1229,7 @@ Hettinger admite que está tentando muito vender a instrução `with`.
 Mesmo assim, é um recurso bem útil.
 Quando ele usou a analogia do sanduíche para explicar como `with` é o complemento da sub-rotina, muitas possibilidades se abriram na minha mente.
 
-Se você precisa convencer alguém que o Python é maravilhoso, assista a palestra de abertura de Hettinger.
+Se você precisa convencer alguém que Python é maravilhoso, assista a palestra de abertura de Hettinger.
 A parte sobre gerenciadores de contexto fica entre 23:00 to 26:15. Mas a palestra inteira é excelente.
 
 [role="soapbox-title"]
@@ -1270,10 +1270,10 @@ def factorial_tc(n, product=1):
     return factorial_tc(n - 1, product * n)
 ----
 
-O Python não tem PTC
+Python não tem PTC
 então não há vantagem em escrever funções recursivas de cauda.
 Neste caso, a primeira versão é, na minha opinião, mais curta e mais legível.
-Para usos na vida real, não se esqueça que o Python tem o `math.factorial`,
+Para usos na vida real, não se esqueça que Python tem o `math.factorial`,
 escrito em C sem recursão.
 O ponto é que, mesmo em linguagens que implementam PTC, isso não beneficia toda função recursiva,
 apenas aquelas cuidadosamente escritas para fazerem chamadas de cauda.
@@ -1340,7 +1340,7 @@ Se você estiver curioso em ver como PTC funciona em um interpretador com menos 
 O truque é iniciar com o loop infinito em `evaluate` e o código no `case` para chamadas de função:
 essa combinação faz o interpretador pular para dentro do corpo da próxima `Procedure` sem chamar `evaluate` recursivamente durante a chamada de cauda.
 Esses pequenos interpretadores demonstram o poder da abstração:
-apesar do Python não implementar PTC, é possível e não muito difícil escrever um interpretador, em Python, que implementa PTC.
+apesar de Python não implementar PTC, é possível e não muito difícil escrever um interpretador, em Python, que implementa PTC.
 Aprendi a fazer isso lendo o código de Peter Norvig.
 Obrigado por compartilhar, professor!((("", startref="tco18")))((("", startref="PTC18")))((("", startref="SStail18")))
 

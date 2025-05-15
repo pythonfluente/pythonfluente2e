@@ -1,4 +1,4 @@
-[[mutability_and_references]]
+[[ch_refs_mut_mem]]
 == Referências, mutabilidade, e memória
 :xrefstyle: short
 :example-number: 0
@@ -18,7 +18,7 @@ Começamos o capítulo apresentando uma metáfora para variáveis em Python: var
 
 Depois discutimos os conceitos de identidade, valor e apelidamento de objetos. Uma característica surpreendente das tuplas é revelada: elas são imutáveis, mas seus valores podem mudar. Isso leva a uma discussão sobre cópias rasas e profundas. Referências e parâmetros de funções são o tema seguinte:  o problema com parâmetros mutáveis por default e formas seguras de lidar com argumentos mutáveis passados para nossas funções por clientes.
 
-As últimas seções do capítulo tratam de coleta de lixo (“garbage collection”), o comando `del` e de algumas peças que o Python prega com objetos imutáveis.
+As últimas seções do capítulo tratam de coleta de lixo (“garbage collection”), o comando `del` e de algumas peças que Python prega com objetos imutáveis.
 
 É um capítulo bastante árido, mas os tópicos tratados podem causar muitos bugs sutis em programas reais em Python.
 
@@ -233,7 +233,7 @@ def traverse(...):
     # etc.
 ----
 
-O operador `is` é mais rápido que `==`, pois não pode ser sobrecarregado. Daí o Python não precisa encontrar e invocar métodos especiais para calcular seu resultado, e o processamento é tão simples quanto comparar dois IDs inteiros. Por outro lado, `a == b` é açúcar sintático para `+a.__eq__(b)+`. O método `+__eq__+`, herdado de `object`, compara os IDs dos objetos, então produz o mesmo resultado de `is`. Mas a maioria dos tipos embutidos sobrepõe `+__eq__+` com implementações mais úteis, que  levam em consideração os valores dos atributos dos objetos. A determinação da igualdade pode envolver muito processamento--por exemplo, quando se comparam coleções grandes ou estruturas aninhadas com muitos níveis.
+O operador `is` é mais rápido que `==`, pois não pode ser sobrecarregado. Daí Python não precisa encontrar e invocar métodos especiais para calcular seu resultado, e o processamento é tão simples quanto comparar dois IDs inteiros. Por outro lado, `a == b` é açúcar sintático para `+a.__eq__(b)+`. O método `+__eq__+`, herdado de `object`, compara os IDs dos objetos, então produz o mesmo resultado de `is`. Mas a maioria dos tipos embutidos sobrepõe `+__eq__+` com implementações mais úteis, que  levam em consideração os valores dos atributos dos objetos. A determinação da igualdade pode envolver muito processamento--por exemplo, quando se comparam coleções grandes ou estruturas aninhadas com muitos níveis.
 
 [WARNING]
 ====
@@ -440,7 +440,7 @@ O compartilhamento de objetos através de apelidos também explica como a passag
 
 === Parâmetros de função como referências
 
-O((("object references", "function parameters as references", id="ORfparam06")))((("call by sharing")))((("parameters", "parameter passing"))) único modo de passagem de parâmetros em Python é a _chamada por compartilhamento_ (_call by sharing_). É o mesmo modo usado na maioria das linguagens orientadas a objetos, incluindo Javascript, Ruby e Java (em Java isso se aplica aos tipos de referência; tipos primitivos usam a chamada por valor). Chamada por compartilhamento significa que cada parâmetro formal da função recebe uma cópia de cada referência nos argumentos. Em outras palavras, os parâmetros dentro da função se tornam apelidos dos argumentos.
+O((("object references", "function parameters as references", id="ORfparam06")))((("call by sharing")))((("parameters", "parameter passing"))) único modo de passagem de parâmetros em Python é a _chamada por compartilhamento_ (_call by sharing_). É o mesmo modo usado na maioria das linguagens orientadas a objetos, incluinde Javascript, Ruby e Java (em Java isso se aplica aos tipos de referência; tipos primitivos usam a chamada por valor). Chamada por compartilhamento significa que cada parâmetro formal da função recebe uma cópia de cada referência nos argumentos. Em outras palavras, os parâmetros dentro da função se tornam apelidos dos argumentos.
 
 O resultado desse esquema é que a função pode modificar qualquer objeto mutável passado a ela como parâmetro, mas não pode mudar a identidade daqueles objetos (isto é, ela não pode substituir integralmente um objeto por outro).
 <<ex_param_pass>> mostra uma função simples usando `+=` com um de seus parâmetros. Quando passamos números, listas e tuplas para a função, os argumentos originais são afetados de maneiras diferentes.
@@ -741,7 +741,7 @@ https://fpy.li/weakref["Weak References" em _fluentpython.com_].
 Esta((("object references", "immutability and"))) seção opcional discute alguns detalhes que, na verdade, não são muito importantes para _usuários_ de Python, e que podem não se aplicar a outras implementações da linguagem ou mesmo a futuras versões de CPython. Entretanto, já vi muita gente tropeçar nesses casos laterais e daí passar a usar o((("is operator"))) operador `is` de forma incorreta, então acho que vale a pena mencionar esses detalhes.
 ====
 
-Eu((("tuples", "immutability and"))) fiquei surpreso em descobrir que, para uma tupla `t`, a chamada `t[:]` não cria uma cópia, mas devolve uma referência para o mesmo objeto. Da mesma forma, `tuple(t)` também retorna uma referência para a mesma tupla.footnote:[Isso está claramente documentado. Digite `help(tuple)` no console do Python e leia: "Se o argumento é uma tupla, o valor de retorno é o mesmo objeto." Pensei que sabia tudo sobre tuplas antes de escrever esse livro.]
+Eu((("tuples", "immutability and"))) fiquei surpreso em descobrir que, para uma tupla `t`, a chamada `t[:]` não cria uma cópia, mas devolve uma referência para o mesmo objeto. Da mesma forma, `tuple(t)` também retorna uma referência para a mesma tupla.footnote:[Isso está claramente documentado. Digite `help(tuple)` no console de Python e leia: "Se o argumento é uma tupla, o valor de retorno é o mesmo objeto." Pensei que sabia tudo sobre tuplas antes de escrever esse livro.]
 
 <<ex_same_tuple>> demonstra esse fato.
 
@@ -859,7 +859,7 @@ incluindo outro nome, introduzindo assim níveis diferentes de simbolização."
 [role="soapbox-title"]
 Tratamento igual para todos os objetos
 
-Eu((("object references", "Soapbox discussion")))((("Soapbox sidebars", "equality (&#x3D;&#x3D;) operator")))((("&#x3D;&#x3D; (equality) operator")))((("equality (&#x3D;&#x3D;) operator"))) aprendi Java antes de conhecer Python. O operador `==` em Java nunca me pareceu funcionar corretamente. É muito mais comum que programadores estejam preocupados com a igualdade que com a identidade. Mas para objetos (não tipos primitivos), o `==` em Java compara referências, não valores dos objetos. Mesmo para algo tão básico quanto comparar strings, Java obriga você a usar o método `.equals`. E mesmo assim, há outro problema: se você escrever `a.equals(b)` e `a` for `null`, você causa uma null pointer exception (exceção de ponteiro nulo). Os projetistas do Java sentiram necessidade de sobrecarregar `+` para strings; por que não mantiveram essa ideia e sobrecarregaram `==` também?
+Eu((("object references", "Soapbox discussion")))((("Soapbox sidebars", "equality (&#x3D;&#x3D;) operator")))((("&#x3D;&#x3D; (equality) operator")))((("equality (&#x3D;&#x3D;) operator"))) aprendi Java antes de conhecer Python. O operador `==` em Java nunca me pareceu funcionar corretamente. É muito mais comum que programadores estejam preocupados com a igualdade que com a identidade. Mas para objetos (não tipos primitivos), o `==` em Java compara referências, não valores dos objetos. Mesmo para algo tão básico quanto comparar strings, Java obriga você a usar o método `.equals`. E mesmo assim, há outro problema: se você escrever `a.equals(b)` e `a` for `null`, você causa uma null pointer exception (exceção de ponteiro nulo). Os projetistas de Java sentiram necessidade de sobrecarregar `+` para strings; por que não mantiveram essa ideia e sobrecarregaram `==` também?
 
 Python faz melhor. O operador `==` compara valores de objetos; `is` compara referências. E como Python permite sobrecarregar operadores, `==` funciona de forma sensata com todos os objetos na biblioteca padrão, incluindo `None`, que é um objeto verdadeiro, ao contrário do `Null` de Java.
 
@@ -877,7 +877,7 @@ Se `a == b` é verdade, e nenhum dos dois objetos pode mudar, eles podem perfeit
 Em programação funcional "pura", todos os dados são imutáveis: concatenar algo a uma coleção, na verdade, cria uma nova coleção.
 Elixir é uma linguagem funcional prática e fácil de aprender, na qual todos os tipos nativos são imutáveis, incluindo as listas.
 
-Python, por outro lado, não é uma linguagem funcional, menos uma ainda uma linguagem pura. Instâncias de classes definidas pelo usuário são mutáveis por default em Python -- como na maioria das linguagens orientadas a objetos. Ao criar seus próprios objetos, você tem que tomar o cuidado adicional de torná-los imutáveis, se este for um requisito. Cada atributo do objeto precisa ser também imutável, senão você termina criando algo como uma tupla: imutável quanto ao ID do objeto, mas seu valor pode mudar se a tupla contiver um objeto mutável.
+Python, por outro lado, não é uma linguagem funcional, menos ainda uma linguagem pura. Instâncias de classes definidas pelo usuário são mutáveis por default em Python -- como na maioria das linguagens orientadas a objetos. Ao criar seus próprios objetos, você tem que tomar o cuidado adicional de torná-los imutáveis, se este for um requisito. Cada atributo do objeto precisa ser também imutável, senão você termina criando algo como uma tupla: imutável quanto ao ID do objeto, mas seu valor pode mudar se a tupla contiver um objeto mutável.
 
 Objetos mutáveis também são a razão pela qual programar com threads é tão difícil: threads modificando objetos sem uma sincronização apropriada podem corromper dados. Sincronização excessiva, por outro lado, causa deadlocks.
 A linguagem e a plataforma Erlang -- que inclui Elixir -- foi projetada para maximizar o tempo de execução em aplicações distribuídas de alta concorrência, tais como aplicações de controle de telecomunicações. Naturalmente, eles escolheram tornar os dados imutáveis por default.
