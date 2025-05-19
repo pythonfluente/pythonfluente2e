@@ -148,7 +148,7 @@ include::code/16-op-overloading/unary_plus_decimal.py[tags=UNARY_PLUS_DECIMAL]
 
 O fato é que cada ocorrência da expressão `+one_third` produz uma nova instância de `Decimal` a partir do valor de `one_third`, mas usando a precisão do contexto aritmético atual.
 
-Podemos encontrar o segundo caso onde `x != +x` na https://docs.python.org/pt-br/3/library/collections.html#collections.Counter[documentação] de `collections.Counter`. A classe `Counter` implementa vários operadores aritméticos, incluindo o `+` infixo, para somar a contagem de duas instâncias de `Counter`. Entretanto, por razões práticas, a adição em `Counter` descarta do resultado qualquer item com contagem negativa ou zero. E o prefixo `+` é um atalho para somar um `Counter` vazio, e portanto produz um novo `Counter`, preservando apenas as contagens maiores que zero. Veja o <<ex_unary_plus_counter>>.
+Podemos encontrar o segundo caso onde `x != +x` na https://docs.python.org/pt-br/3/library/collections.html#collections.Counter[documentação] de `collections.Counter`. A classe `Counter` implementa vários operadores aritméticos, incluindo o `+` infixo, para somar a contagem de duas instâncias de `Counter`. Entretanto, por razões práticas, a adição em `Counter` descarta do resultado qualquer item com contagem negativa ou zero. E o prefixo `+++` é um atalho para somar um `Counter` vazio, e portanto produz um novo `Counter`, preservando apenas as contagens maiores que zero. Veja o <<ex_unary_plus_counter>>.
 
 [[ex_unary_plus_counter]]
 .O + unário produz um novo `Counter`sem as contagens negativas ou zero
@@ -177,8 +177,10 @@ Agora voltamos à nossa programação normal.((("", startref="OOunary16")))(((""
 === Sobrecarregando + para adição de Vector
 
 A((("operator overloading", "overloading &#x002B; for vector addition", id="OOplus16")))((("mathematical vector operations")))((("&#x002B; operator", id="Plusover16")))((("vectors", "overloading &#x002B; for vector addition", id="Voverload16"))) classe `Vector` é um tipo sequência,
-e a seção https://docs.python.org/pt-br/3/reference/datamodel.html#emulating-container-types["3.3.7. Emulando de tipos contêineres"] do capítulo "Modelo de Dados", na documentação oficial de Python, diz que sequências devem suportar o operador `+` para concatenação e o `+*+` para repetição.
-Entretanto, aqui vamos implementar `+` e `+*+` como operações matemáticas de vetores, algo um pouco mais complicado mas mais significativo para um tipo `Vector`.
+e a seção https://docs.python.org/pt-br/3/reference/datamodel.html#emulating-container-types["3.3.7. Emulando de tipos contêineres"]
+do capítulo "Modelo de Dados", na documentação oficial do Python, diz que sequências devem suportar o operador
+`+++` para concatenação e o `+*+` para repetição.
+Entretanto, aqui vamos implementar `+++` e `+*+` como operações matemáticas de vetores, algo um pouco mais complicado porém mais útil para um tipo `Vector`.
 
 [TIP]
 ====
@@ -255,7 +257,7 @@ Vector([4.0, 6.0, 5.0])
 ----
 ====
 
-Os dois usos de `+` no <<ex_vector_add_demo_mixed_ok>> funcionam porque `+__add__+` usa
+Os dois usos de `+++` no <<ex_vector_add_demo_mixed_ok>> funcionam porque `+__add__+` usa
 `zip_longest(…)`, capaz de consumir qualquer iterável, e a expressão geradora que cria um novo `Vector` simplemente efetua a operação `a + b` com os pares produzidos por `zip_longest(…)`, então um iterável que produza quaisquer itens numéricos servirá.
 
 Entretanto, se trocarmos a ordem dos operandos (no <<ex_vector_add_demo_mixed_fail>>), a soma de tipos diferentes falha.
@@ -647,7 +649,7 @@ class Vector:
                 all(a == b for a, b in zip(self, other)))
 ----
 
-Eaae método produz os resultados do <<eq_initial_demo>>.
+Esse método produz os resultados do <<eq_initial_demo>>.
 
 [[eq_initial_demo]]
 .Comparando um `Vector` a um `Vector`, a um `Vector2d`, e a uma `tuple`
@@ -859,7 +861,7 @@ include::code/16-op-overloading/bingoaddable.py[tags=ADDABLE_BINGO_IADD_DEMO]
 <5> Durante todo esse exemplo, `globe` sempre se refere ao mesmo objeto que `globe_orig`.
 <6> Tentar adicionar um não-iterável a uma `AddableBingoCage` falha com uma mensagem de erro apropriada.
 
-Observe que o operador `+=` é mais liberal que `+` quanto ao segundo operando. Com `+`, queremos que ambos os operandos sejam do mesmo tipo (nesse caso, `AddableBingoCage`), pois se aceitássemos tipos diferentes, isso poderia causar confusão quanto ao tipo do resultado. Com o `+=`, a situação é mais clara: o objeto à esquerda do operador é atualizado no mesmo lugar, então não há dúvida quanto ao tipo do resultado.
+Observe que o operador `++=+` é mais liberal que `+++` quanto ao segundo operando. Com `+++`, queremos que ambos os operandos sejam do mesmo tipo (nesse caso, `AddableBingoCage`), pois se aceitássemos tipos diferentes, isso poderia causar confusão quanto ao tipo do resultado. Com o `++=+`, a situação é mais clara: o objeto à esquerda do operador é atualizado no mesmo lugar, então não há dúvida quanto ao tipo do resultado.
 
 [TIP]
 ====
