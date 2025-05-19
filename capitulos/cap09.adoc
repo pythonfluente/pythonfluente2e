@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[closures_and_decorators]]
+[[ch_closure_decorator]]
 == Decoradores e Clausuras
 
 [quote, PEP 318—Decorators for Functions and Methods ("Decoradores para Funções e Métodos"—EN)]
@@ -24,7 +24,7 @@ e depois usa esse mapeamento para evitar computar novamente o resultado quando a
 
 Mas para dominar esse recurso é preciso antes entender clausuras (_closures_)—o nome dado à estrutura onde uma função captura variáveis presentes no escopo onde a função é definida, necessárias para a execução da função futuramente.footnote:[NT: Adotamos a tradução "clausura" para "closure". Alguns autores usam "fechamento". O termo em inglês é pronunciado "clôujure", e o nome da linguagem Clojure brinca com esse fato. Gosto da palavra clausura por uma analogia cultural. Em conventos, a clausura é um espaço fechado onde algumas freiras vivem isoladas. Suas memórias são seu único vínculo com o exterior, mas elas refletem o mundo do passado. Em programação, uma clausura é um espaço isolado onde a função tem acesso a variáveis que existiam quando a própria função foi criada, variáveis de um escopo que não existe mais, preservadas apenas na memória clausura.]
 
-A palavra reservada mais obscura do Python é `nonlocal`, introduzida no Python 3.0.
+A palavra reservada mais obscura de Python é `nonlocal`, introduzida no Python 3.0.
 É perfeitamente possível ter uma vida produtiva e lucrativa programando em Python sem jamais usá-la,
 seguindo uma dieta estrita de orientação a objetos centrada em classes.
 Entretanto, caso queira implementar seus próprios decoradores de função,
@@ -34,8 +34,8 @@ Além de sua aplicação aos decoradores, clausuras também são essenciais para
 
 O((("decorators and closures", "topics covered"))) objetivo último deste capítulo é explicar exatamente como funcionam os decoradores de função, desde simples decoradores de registro até os complicados decoradores parametrizados. Mas antes de chegar a esse objetivo, precisamos tratar de:
 
-* Como o Python analisa a sintaxe de decoradores
-* Como o Python decide se uma variável é local
+* Como Python analisa a sintaxe de decoradores
+* Como Python decide se uma variável é local
 * Porque clausuras existem e como elas funcionam
 * Qual problema é resolvido por `nonlocal`
 
@@ -50,11 +50,11 @@ Após criar essa base, poderemos então enfrentar os outros tópicos relativos a
 
 O((("decorators and closures", "significant changes to"))) decorador de _caching_ `functools.cache`—introduzido no Python 3.9—é mais simples que o tradicional `functools.lru_cache`, então falo primeiro daquele. Este último é tratado na <<lru_cache_sec>>, incluindo a forma simplificada introduzida no Python 3.8.
 
-A <<generic_functions>> foi expandida e agora inclui dicas de tipo, a forma recomendada de usar `functools.singledispatch` desde o Python 3.7.
+A <<generic_functions>> foi expandida e agora inclui dicas de tipo, a forma recomendada de usar `functools.singledispatch` desde Python 3.7.
 
 A <<parameterized_dec_sec>> agora inclui um exemplo baseado em classes, o <<clockdeco_param_cls_ex>>.
 
-Transferi o pass:[<a href="#rethinking_design_patterns" data-type="xref" data-xrefstyle="chap-num-title">#rethinking_design_patterns</a>] para o final da <<function_objects_part>>, para melhorar a fluidez do livro.
+Transferi o pass:[<a href="#ch_design_patterns" data-type="xref" data-xrefstyle="chap-num-title">#ch_design_patterns</a>] para o final da <<function_objects_part>>, para melhorar a fluidez do livro.
 E a <<decorated_strategy>> também aparece agora naquele capítulo, juntamente com outras variantes do padrão de projeto Estratégia usando invocáveis.
 
 Começamos com uma introdução muito suave aos decoradores, e dali seguiremos para o restante dos tópicos listados no início do capítulo.
@@ -64,7 +64,7 @@ Começamos com uma introdução muito suave aos decoradores, e dali seguiremos p
 
 Um((("decorators and closures", "decorator basics", id="DACbasic09"))) decorador é um invocável que recebe outra função como um argumento (a função decorada).
 
-Um decorador pode executar algum processamento com a função decorada, e ou a devolve ou a substitui por outra função ou por um objeto invocável.footnote:[Se você substituir "função"por "classe" na sentença anterior, o resultado é uma descrição resumida do papel de um decorador de classe. Decoradores de classe são tratadas no <<class_metaprog>>.]
+Um decorador pode executar algum processamento com a função decorada, e ou a devolve ou a substitui por outra função ou por um objeto invocável.footnote:[Se você substituir "função"por "classe" na sentença anterior, o resultado é uma descrição resumida do papel de um decorador de classe. Decoradores de classe são tratadas no <<ch_class_metaprog>>.]
 
 Em outras palavras, supondo a existência de um decorador chamado `decorate`, esse código:
 
@@ -127,7 +127,7 @@ Três fatos essenciais nos dão um bom resumo dos decoradores:
 Vamos agora nos concentrar nesse terceiro ponto.((("", startref="DACbasic09")))
 
 
-=== Quando o Python executa decoradores
+=== Quando Python executa decoradores
 
 Uma((("decorators and closures", "decorator execution")))((("import time versus runtime"))) característica fundamental dos decoradores é serem executados logo após a função decorada ser definida. Isso normalmente acontece no _tempo de importação_ (isto é, quando um módulo é carregado pelo Python). Observe _registration.py_ no <<registration_ex>>.
 
@@ -202,7 +202,7 @@ Decoradores parecidos são usados por muitos frameworks Python para adicionar fu
 um registro mapeando padrões de URLs para funções que geram respostas HTTP.
 Tais decoradores de registro podem ou não modificar as funções decoradas.
 
-Vamos ver um decorador de registro em ação na <<decorated_strategy>> (do <<rethinking_design_patterns>>).
+Vamos ver um decorador de registro em ação na <<decorated_strategy>> (do <<ch_design_patterns>>).
 
 A maioria dos decoradores modificam a função decorada.
 Eles normalmente fazem isso definindo e devolvendo uma função interna para substituir a função decorada.
@@ -268,9 +268,9 @@ UnboundLocalError: local variable 'b' referenced before assignment
 
 Observe que o a saída começa com `3`, provando que o comando `print(a)` foi executado. Mas o segundo, `print(b)`, nunca roda. Quando vi isso pela primeira vez me espantei, pensava que o `6` deveria ser exibido, pois há uma variável global `b`, e a atribuição para a `b` local ocorre após `print(b)`.
 
-Mas o fato é que, quando o Python compila o corpo da função, ele decide que `b` é uma variável local, por ser atribuída dentro da função. O bytecode gerado reflete essa decisão, e tentará obter `b` no escopo local. Mais tarde, quando a chamada `f2(3)` é realizada, o corpo de `f2` obtém e exibe o valor da variável local `a`, mas ao tentar obter o valor da variável local `b`, descobre que `b` não está vinculado a nada.
+Mas o fato é que, quando Python compila o corpo da função, ele decide que `b` é uma variável local, por ser atribuída dentro da função. O bytecode gerado reflete essa decisão, e tentará obter `b` no escopo local. Mais tarde, quando a chamada `f2(3)` é realizada, o corpo de `f2` obtém e exibe o valor da variável local `a`, mas ao tentar obter o valor da variável local `b`, descobre que `b` não está vinculado a nada.
 
-Isso não é um bug, mas uma escolha de projeto: o Python não exige que você declare variáveis, mas assume que uma variável atribuída no corpo de uma função é local. Isso é muito melhor que o comportamento do Javascript, que também não requer declarações de variáveis, mas se você esquecer de declarar uma variável como local (com `var`), pode acabar alterando uma variável global sem nem saber.
+Isso não é um bug, mas uma escolha de projeto: Python não exige que você declare variáveis, mas assume que uma variável atribuída no corpo de uma função é local. Isso é muito melhor que o comportamento de Javascript, que também não requer declarações de variáveis, mas se você esquecer de declarar uma variável como local (com `var`), pode acabar alterando uma variável global sem nem saber.
 
 Se queremos que o interpretador trate `b` como uma variável global e também atribuir um novo valor a ela dentro da função, usamos a declaração `global`:
 
@@ -303,7 +303,7 @@ Após ver mais de perto como o escopo de variáveis funciona no Python, podemos 
 .Comparando bytecodes
 ****
 
-O((("dis module")))((("bytecode, disassembling")))((("functions", "disassembling bytecode of"))) módulo `dis` module oferece uma forma fácil de descompilar o bytecode de funções do Python. Leia no <<#ex_f1_dis>> e no <<#ex_f2_dis>> os bytecodes de `f1` e `f2`, do <<#ex_global_undef>> e do <<#ex_local_unbound>>, respectivamente.
+O((("dis module")))((("bytecode, disassembling")))((("functions", "disassembling bytecode of"))) módulo `dis` module oferece uma forma fácil de descompilar o bytecode de funções de Python. Leia no <<#ex_f1_dis>> e no <<#ex_f2_dis>> os bytecodes de `f1` e `f2`, do <<#ex_global_undef>> e do <<#ex_local_unbound>>, respectivamente.
 
 [[ex_f1_dis]]
 .Bytecode da função `f1` do <<ex_global_undef>>
@@ -329,7 +329,7 @@ include::code/09-closure-deco/global_x_local.rst[tags=F2_DIS]
 ====
 <1> Carrega o nome _local_ `b`. Isso mostra que o compilador considera `b` uma variável local, mesmo com uma atribuição a `b` ocorrendo mais tarde, porque a natureza da variável—se ela é ou não local—não pode mudar no corpo da função.
 
-A máquina virtual (VM) do CPython que executa o bytecode é uma máquina de _stack_, então as operações `LOAD` e `POP` se referem ao _stack_. A descrição mais detalhada dos opcodes do Python está além da finalidade desse livro, mas eles estão documentados junto com o módulo, em https://docs.python.org/pt-br/3/library/dis.html["dis—Disassembler de bytecode do Python"].
+A máquina virtual (VM) do CPython que executa o bytecode é uma máquina de _stack_, então as operações `LOAD` e `POP` se referem ao _stack_. A descrição mais detalhada dos opcodes de Python está além da finalidade desse livro, mas eles estão documentados junto com o módulo, em https://docs.python.org/pt-br/3/library/dis.html["dis—Disassembler de bytecode de Python"].
 
 ****
 
@@ -444,7 +444,7 @@ Dentro de `averager`, `series` é uma((("free variables")))((("variables", "free
 .A clausura para `averager` estende o escopo daquela função para incluir a vinculação da variável livre `series`.
 image::images/flpy_0901.png[Diagrama de uma clausura]
 
-Inspecionar o objeto `averager` devolvido mostra como o Python mantém os nomes de variáveis locais e livres no atributo `+__code__+`, que representa o corpo compilado da função. O <<ex_average_demo2>> demonstra isso.
+Inspecionar o objeto `averager` devolvido mostra como Python mantém os nomes de variáveis locais e livres no atributo `+__code__+`, que representa o corpo compilado da função. O <<ex_average_demo2>> demonstra isso.
 
 [[ex_average_demo2]]
 .Inspecionando a função criada por `make_averager` no <<ex_average_fn>>
@@ -547,9 +547,9 @@ Após estudar o `nonlocal`, podemos resumir como a consulta de variáveis funcio
 [[var_lookup_logic_sec]]
 ==== A lógica da consulta de variáveis
 
-Quando((("variables", "lookup logic"))) uma função é definida, o compilador de bytecode do Python determina como encontrar uma variável `x` que aparece na função, baseado nas seguintes regras:footnote:[Agradeço ao revisor técnico Leonardo Rochael por sugerir esse resumo.]
+Quando((("variables", "lookup logic"))) uma função é definida, o compilador de bytecode de Python determina como encontrar uma variável `x` que aparece na função, baseado nas seguintes regras:footnote:[Agradeço ao revisor técnico Leonardo Rochael por sugerir esse resumo.]
 
-* Se há uma declaração `global x`, `x` vem de e é atribuída à variável global `x` do módulo.footnote:[O Python não tem um escopo global de programa, apenas escopos globais de módulos.]
+* Se há uma declaração `global x`, `x` vem de e é atribuída à variável global `x` do módulo.footnote:[Python não tem um escopo global de programa, apenas escopos globais de módulos.]
 * Se há uma declaração `nonlocal x`, `x` vem de e atribuída à variável local `x` na função circundante mais próxima de onde `x` for definida.
 * Se `x` é um parâmetro ou tem um valor atribuído a si no corpo da função, então `x` é uma variável local.
 * Se `x` é referenciada mas não atribuída, e não é um parâmetro:
@@ -557,7 +557,7 @@ Quando((("variables", "lookup logic"))) uma função é definida, o compilador d
 ** Se `x` não for encontrada nos escopos circundantes, será lida do escopo global do módulo.
 ** Se `x` não for encontrada no escopo global, será lida de `+__builtins__.__dict__+`.
 
-Tendo visto as clausuras do Python, podemos agora de fato implementar decoradores com funções aninhadas.((("", startref="DACnonlocal09")))((("", startref="nonlocal09")))((("", startref="Knon09")))
+Tendo visto as clausuras de Python, podemos agora de fato implementar decoradores com funções aninhadas.((("", startref="DACnonlocal09")))((("", startref="nonlocal09")))((("", startref="Knon09")))
 
 
 === Implementando um decorador simples
@@ -651,7 +651,7 @@ Esse é o comportamento típico de um decorador: ele substitui a função decora
 
 [TIP]
 ====
-Em _Padrões de Projetos_, de Gamma et al., a descrição curta do padrão decorador começa com: "Atribui dinamicamente responsabilidades adicionais a um objeto." Decoradores de função se encaixam nessa descrição. Mas, no nível da implementação, os decoradores do Python guardam pouca semelhança com o decorador clássico descrito no _Padrões de Projetos_ original. O <<closures_soapbox>> fala um pouco mais sobre esse assunto.
+Em _Padrões de Projetos_, de Gamma et al., a descrição curta do padrão decorador começa com: "Atribui dinamicamente responsabilidades adicionais a um objeto." Decoradores de função se encaixam nessa descrição. Mas, no nível da implementação, os decoradores de Python guardam pouca semelhança com o decorador clássico descrito no _Padrões de Projetos_ original. O <<closures_soapbox>> fala um pouco mais sobre esse assunto.
 ====
 
 O decorador `clock` implementado no <<ex_clockdeco0>> tem alguns defeitos: ele não suporta argumentos nomeados, e encobre o `+__name__+` e o `+__doc__+` da função decorada.
@@ -672,7 +672,7 @@ O `functools.wraps` é apenas um dos decoradores prontos para uso da biblioteca 
 
 === Decoradores na biblioteca padrão
 
-O Python((("decorators and closures", "decorators in Python standard library", id="DACstandard09"))) tem três funções embutidas projetadas para decorar métodos:
+Python((("decorators and closures", "decorators in Python standard library", id="DACstandard09"))) tem três funções embutidas projetadas para decorar métodos:
 `property`, `classmethod` e `staticmethod`.
 Vamos discutir `property` na <<prop_validation_sec>> e os outros na <<classmethod_x_staticmethod_sec>>.
 
@@ -747,7 +747,7 @@ Mas acrescentar apenas duas linhas, para usar `cache`, melhora muito o desempenh
 include::code/09-closure-deco/fibo_demo_cache.py[]
 ----
 ====
-<1> Essa linha funciona com Python 3.9 ou posterior. Veja a <<lru_cache_sec>> para uma alternativa que suporta versões anteriores do Python.
+<1> Essa linha funciona com Python 3.9 ou posterior. Veja a <<lru_cache_sec>> para uma alternativa que suporta versões anteriores de Python.
 <2> Esse é um exemplo de decoradores empilhados: `@cache` é aplicado à função devolvida por `@clock`.
 
 [[stacked_decorators_tip]]
@@ -807,14 +807,14 @@ Para processos de longa duração, recomendo usar `functools.lru_cache` com um p
 [[lru_cache_sec]]
 ==== Usando o lru_cache
 
-O((("functools module", "functools.lru_cache function"))) decorador `functools.cache` é, na realidade, um mero invólucro em torno da antiga função `functools.lru_cache`, que é mais flexível e também compatível com o Python 3.8 e outras versões anteriores.
+O((("functools module", "functools.lru_cache function"))) decorador `functools.cache` é, na realidade, um mero invólucro em torno da antiga função `functools.lru_cache`, que é mais flexível e também compatível com Python 3.8 e outras versões anteriores.
 
 A maior vantagem de `@lru_cache` é a possibilidade de limitar seu uso de memória através do parâmetro `maxsize`, que tem um default bastante conservador de 128—significando que o cache pode manter no máximo 128 registros simultâneos.
 
 LRU((("Least Recently Used (LRU)"))) é a sigla de _Least Recently Used_ (literalmente "Usado Menos Recentemente").
 Significa que registros que há algum tempo não são lidos, são descartados para dar lugar a novos itens.
 
-Desde o Python 3.8, `lru_cache` pode ser aplicado de duas formas.
+Desde Python 3.8, `lru_cache` pode ser aplicado de duas formas.
 Abaixo vemos o modo mais simples em uso:
 
 [source, python3]
@@ -824,7 +824,7 @@ def costly_function(a, b):
     ...
 ----
 
-A outra forma—disponível desde o Python 3.2—é invocá-lo como uma função,
+A outra forma—disponível desde Python 3.2—é invocá-lo como uma função,
 com `()`:
 
 [source, python3]
@@ -875,7 +875,7 @@ def htmlize(obj):
     return f'<pre>{content}</pre>'
 ----
 
-Isso funcionará para qualquer tipo do Python, mas agora queremos estender a função para gerar HTML específico para determinados tipos.
+Isso funcionará para qualquer tipo de Python, mas agora queremos estender a função para gerar HTML específico para determinados tipos.
 Alguns exemplos seriam:
 
 `str`:: Substituir os caracteres de mudança de linha na string por `'<br/>\n'` e usar tags `<p>` tags em vez de `<pre>`.
@@ -906,7 +906,7 @@ include::code/09-closure-deco/htmlizer.py[tags=HTMLIZE_DEMO]
 
 ===== Despacho único de funções
 
-Como não temos no Python a sobrecarga de métodos ao estilo do Java, não podemos simplesmente criar variações de `htmlize` com assinaturas diferentes para cada tipo de dado que queremos tratar de forma distinta. Uma solução possível em Python seria transformar `htmlize` em uma função de despacho, com uma cadeia de `if/elif/…` ou `match/case/…` chamando funções especializadas como `htmlize_str`, `htmlize_int`, etc.
+Como não temos no Python a sobrecarga de métodos ao estilo de Java, não podemos simplesmente criar variações de `htmlize` com assinaturas diferentes para cada tipo de dado que queremos tratar de forma distinta. Uma solução possível em Python seria transformar `htmlize` em uma função de despacho, com uma cadeia de `if/elif/…` ou `match/case/…` chamando funções especializadas como `htmlize_str`, `htmlize_int`, etc.
 Isso não é extensível pelos usuários de nosso módulo, e é desajeitado:
 com o tempo, a despachante `htmlize` de tornaria grande demais, e o acoplamento entre ela e as funções especializadas seria excessivamente sólido.
 
@@ -919,8 +919,8 @@ O <<singledispatch_ex>> mostra como funciona.
 
 [WARNING]
 ====
-`functools.singledispatch` existe desde o python 3.4, mas só passou a suportar dicas de tipo no Python 3.7.
-As últimas duas funções no <<singledispatch_ex>> ilustram a sintaxe que funciona em todas as versões do Python desde a 3.4.
+`functools.singledispatch` existe desde Python 3.4, mas só passou a suportar dicas de tipo no Python 3.7.
+As últimas duas funções no <<singledispatch_ex>> ilustram a sintaxe que funciona em todas as versões de Python desde a 3.4.
 ====
 
 
@@ -939,7 +939,7 @@ include::code/09-closure-deco/htmlizer.py[tags=HTMLIZE]
 <5> As ABCs em `numbers` são úteis para uso em conjunto com `singledispatch`.footnote:[Apesar do alerta em <<numeric_tower_warning>>, as ABCs de `numbers` não foram descontinuadas, e você as encontra em código de Python 3.]
 <6> `bool` é um _subtipo-de_ `numbers.Integral`, mas a lógica de `singledispatch` busca a implementação com o tipo correspondente mais específico, independente da ordem na qual eles aparecem no código.
 <7> Se você não quiser ou não puder adicionar dicas de tipo à função decorada, você pode passar o tipo para o decorador `@«base».register`. Essa sintaxe funciona em Python 3.4 ou posterior.
-<8> O decorador `@«base».register` devolve a função sem decoração, então é possível empilhá-los para registrar dois ou mais tipos na mesma implementação.footnote:[Talvez algum dia seja possível expressar isso com um único `@htmlize.register` sem parâmetros, e uma dica de tipo usando `Union`. Mas quando tentei, o Python gerou um `TypeError` com uma mensagem dizendo que `Union` não é uma classe. Então, apesar da _sintaxe_ da PEP 484 ser suportada, a _semântica_ ainda não chegou lá.]
+<8> O decorador `@«base».register` devolve a função sem decoração, então é possível empilhá-los para registrar dois ou mais tipos na mesma implementação.footnote:[Talvez algum dia seja possível expressar isso com um único `@htmlize.register` sem parâmetros, e uma dica de tipo usando `Union`. Mas quando tentei, Python gerou um `TypeError` com uma mensagem dizendo que `Union` não é uma classe. Então, apesar da _sintaxe_ da PEP 484 ser suportada, a _semântica_ ainda não chegou lá.]
 
 ////
 ++++
@@ -1013,12 +1013,12 @@ register a new function with a matching type hint in the first parameter.</p></d
 
 Sempre que possível, registre as funções especializadas para tratar ABCs (classes abstratas), tais como `numbers.Integral` e `abc.MutableSequence`, ao invés das implementações concretas como `int` e `list`.
 Isso permite ao seu código suportar uma variedade maior de tipos compatíveis.
-Por exemplo, uma extensão do Python pode fornecer alternativas para o tipo `int` com número fixo de bits como subclasses de `numbers.Integral`.footnote:[NumPy, por exemplo, implementa vários tipos de
+Por exemplo, uma extensão de Python pode fornecer alternativas para o tipo `int` com número fixo de bits como subclasses de `numbers.Integral`.footnote:[NumPy, por exemplo, implementa vários tipos de
 https://fpy.li/9-3[números inteiros e de ponto flutuante] (EN) em formatos voltados para a arquitetura da máquina.]
 
 [TIP]
 ====
-Usar ABCs ou `typing.Protocol` com `@singledispatch` permite que seu código suporte classes existentes ou futuras que sejam subclasses reais ou virtuais daquelas ABCs, ou que implementem aqueles protocolos. O uso de ABCs e o conceito de uma subclasse virtual são assuntos do <<ifaces_prot_abc>>.
+Usar ABCs ou `typing.Protocol` com `@singledispatch` permite que seu código suporte classes existentes ou futuras que sejam subclasses reais ou virtuais daquelas ABCs, ou que implementem aqueles protocolos. O uso de ABCs e o conceito de uma subclasse virtual são assuntos do <<ch_ifaces_prot_abc>>.
 ====
 
 Uma qualidade notável do mecanismo de `singledispatch` é que você pode registrar funções especializadas em qualquer lugar do sistema, em qualquer módulo. Se mais tarde você adicionar um módulo com um novo tipo definido pelo usuário, é fácil acrescentar uma nova função específica para  tratar aquele tipo. E é possível também escrever funções personalizadas para classes que você não escreveu e não pode modificar.
@@ -1027,7 +1027,7 @@ O `singledispatch` foi uma adição muito bem pensada à biblioteca padrão, e o
 
 [NOTE]
 ====
-O `@singledispatch` não foi criado para trazer para o Python a sobrecarga de métodos no estilo do Java. Uma classe única com muitas variações sobrecarregadas de um método é melhor que uma única função com uma longa sequênca de blocos `if/elif/elif/elif`. Mas as duas soluções são incorretas, pois concentram responsabilidade excessiva em uma única unidade de código—a classe ou a função. A vantagem de `@singledispatch` é seu suporte à extensão modular: cada módulo pode registrar uma função especializada para cada tipo suportado. Em um caso de uso realista, as implementações das funções genéricas não estariam todas no mesmo módulo, como ocorre no <<singledispatch_ex>>.
+O `@singledispatch` não foi criado para trazer para Python a sobrecarga de métodos no estilo de Java. Uma classe única com muitas variações sobrecarregadas de um método é melhor que uma única função com uma longa sequênca de blocos `if/elif/elif/elif`. Mas as duas soluções são incorretas, pois concentram responsabilidade excessiva em uma única unidade de código—a classe ou a função. A vantagem de `@singledispatch` é seu suporte à extensão modular: cada módulo pode registrar uma função especializada para cada tipo suportado. Em um caso de uso realista, as implementações das funções genéricas não estariam todas no mesmo módulo, como ocorre no <<singledispatch_ex>>.
 ====
 
 Vimos alguns decoradores recebendo argumentos, por exemplo `@lru_cache()` e o
@@ -1038,7 +1038,7 @@ A próxima seção mostra como criar decoradores que aceitam parâmetros.((("", 
 [[parameterized_dec_sec]]
 === Decoradores parametrizados
 
-Ao((("decorators and closures", "parameterized decorators", id="DACparam09")))((("parameterized decorators", id="paramdec09"))) analisar um decorador no código-fonte, o Python passa a função decorada como primeiro argumento para a função do decorador. Mas como fazemos um decorador aceitar outros argumentos? A resposta é: criar uma fábrica de decoradores que recebe aqueles argumentos e devolve um decorador, que é então aplicado à função a ser decorada. Confuso? Com certeza. Vamos começar com um exemplo baseado no decorador mais simples que vimos: `register` no <<registration_ex_repeat>>.
+Ao((("decorators and closures", "parameterized decorators", id="DACparam09")))((("parameterized decorators", id="paramdec09"))) analisar um decorador no código-fonte, Python passa a função decorada como primeiro argumento para a função do decorador. Mas como fazemos um decorador aceitar outros argumentos? A resposta é: criar uma fábrica de decoradores que recebe aqueles argumentos e devolve um decorador, que é então aplicado à função a ser decorada. Confuso? Com certeza. Vamos começar com um exemplo baseado no decorador mais simples que vimos: `register` no <<registration_ex_repeat>>.
 
 [[registration_ex_repeat]]
 .O módulo registration.py resumido, do <<registration_ex>>, repetido aqui por conveniência
@@ -1142,7 +1142,7 @@ include::code/09-closure-deco/clock/clockdeco_param.py[tags=CLOCKDECO_PARAM]
 <4> `_result` é o resultado efetivo da função decorada.
 <5> `_args` mantém os verdadeiros argumentos de `clocked`, enquanto `args` é a `str` usada para exibição.
 <6> `result` é a `str` que representa `_result`, para exibição.
-<7> Usar `**locals()` aqui permite que qualquer variável local de `clocked` seja referenciada em `fmt`.footnote:[O revisor técnico Miroslav Šedivý observou: "Isso também quer dizer que analisadores de código-fonte (_linters_) vão reclamar de variáveis não utilizadas, pois eles tendem a ignorar o uso de `locals()`." Sim, esse é mais um exemplo de como ferramentas estáticas de verificação desencorajam o uso dos recursos dinâmicos do Python que primeiro me atraíram (e a incontáveis outros programadores) na linguagem. Para fazer o _linter_ feliz, eu poderia escrever cada variável local duas vezes na chamada: pass:[<code>fmt.format(elapsed=&#x200b;elapsed, name=name, args=args, result=result)</code>]. Prefiro não fazer isso. Se você usa ferramentas estáticas de verificação, é importante saber quando ignorá-las.]
+<7> Usar `**locals()` aqui permite que qualquer variável local de `clocked` seja referenciada em `fmt`.footnote:[O revisor técnico Miroslav Šedivý observou: "Isso também quer dizer que analisadores de código-fonte (_linters_) vão reclamar de variáveis não utilizadas, pois eles tendem a ignorar o uso de `locals()`." Sim, esse é mais um exemplo de como ferramentas estáticas de verificação desencorajam o uso dos recursos dinâmicos de Python que primeiro me atraíram (e a incontáveis outros programadores) na linguagem. Para fazer o _linter_ feliz, eu poderia escrever cada variável local duas vezes na chamada: pass:[<code>fmt.format(elapsed=&#x200b;elapsed, name=name, args=args, result=result)</code>]. Prefiro não fazer isso. Se você usa ferramentas estáticas de verificação, é importante saber quando ignorá-las.]
 <8> `clocked` vai substituir a função decorada, então ela deve devolver o mesmo que aquela função devolve.
 <9> `decorate` devolve `clocked`.
 <10> `clock` devolve `decorate`.
@@ -1224,7 +1224,7 @@ include::code/09-closure-deco/clock/clockdeco_cls.py[tags=CLOCKDECO_CLS]
 <3> `+__call__+` torna a instância de `clock` invocável. Quando chamada, a instância substitui a função decorada com `clocked`.
 <4> `clocked` envolve a função decorada.
 
-Isso encerra nossa exploração dos decoradores de função. Veremos os decoradores de classe no <<class_metaprog>>.((("", startref="DACparam09")))((("", startref="paramdec09")))
+Isso encerra nossa exploração dos decoradores de função. Veremos os decoradores de classe no <<ch_class_metaprog>>.((("", startref="DACparam09")))((("", startref="paramdec09")))
 
 
 === Resumo do capítulo
@@ -1233,7 +1233,7 @@ Percorremos((("decorators and closures", "overview of"))) um terreno acidentado 
 
 Partimos de um decorador simples `@register`, sem uma função interna, e terminamos com um `@clock()` parametrizado envolvendo dois níveis de funções aninhadas.
 
-Decoradores de registro, apesar de serem essencialmente simples, tem aplicações reais nos frameworks Python. Vamos aplicar a ideia de registro em uma implementação do padrão de projeto Estratégia, no <<rethinking_design_patterns>>.
+Decoradores de registro, apesar de serem essencialmente simples, tem aplicações reais nos frameworks Python. Vamos aplicar a ideia de registro em uma implementação do padrão de projeto Estratégia, no <<ch_design_patterns>>.
 
 Entender como os decoradores realmente funcionam exigiu falar da diferença entre _tempo de importação_ e _tempo de execução_. Então mergulhamos no escopo de variáveis, clausuras e a nova declaração `nonlocal`. Dominar as clausuras e `nonlocal` é valioso não apenas para criar decoradores, mas também para escrever programas orientados a eventos para GUIs ou E/S assíncrona com _callbacks_, e para adotar um estilo funcional quando fizer sentido.
 
@@ -1247,7 +1247,7 @@ Como exemplos de decoradores parametrizados na biblioteca padrão, visitamos os 
 
 O((("decorators and closures", "further reading on"))) item #26 do livro https://fpy.li/effectpy[_Effective Python_, 2nd ed.] (EN) (Addison-Wesley), de Brett Slatkin, trata das melhores práticas para decoradores de função, e recomenda sempre usar `functools.wraps`—que vimos no <<ex_clockdeco2>>.footnote:[Como queria manter o código o mais simples possível, não segui o excelente conselho de Slatkin em todos os exemplos.]
 
-Graham Dumpleton tem, em seu blog, uma https://fpy.li/9-5[série de posts abrangentes] (EN) sobre técnicas para implementar decoradores bem comportados, começando com https://fpy.li/9-6["How you implemented your Python decorator is wrong" (_A forma como você implementou seu decorador em Python está errada_)]. Seus conhecimentos profundos sobre o assunto também estão muito bem demonstrados no módulo https://fpy.li/9-7[`wrapt`], que Dumpleton escreveu para simplificar a implementação de decoradores e invólucros (_wrappers_) dinâmicos de função, que suportam introspecção e se comportam de forma correta quando decorados novamente, quando aplicados a métodos e quando usados como descritores de atributos. O <<attribute_descriptors>> na <<classes_protocols_part>> é sobre descritores.
+Graham Dumpleton tem, em seu blog, uma https://fpy.li/9-5[série de posts abrangentes] (EN) sobre técnicas para implementar decoradores bem comportados, começando com https://fpy.li/9-6["How you implemented your Python decorator is wrong" (_A forma como você implementou seu decorador em Python está errada_)]. Seus conhecimentos profundos sobre o assunto também estão muito bem demonstrados no módulo https://fpy.li/9-7[`wrapt`], que Dumpleton escreveu para simplificar a implementação de decoradores e invólucros (_wrappers_) dinâmicos de função, que suportam introspecção e se comportam de forma correta quando decorados novamente, quando aplicados a métodos e quando usados como descritores de atributos. O <<ch_descriptors>> na <<classes_protocols_part>> é sobre descritores.
 
 https://fpy.li/9-8["Metaprogramming" (_Metaprogramação_)] (EN), o capítulo 9 do _Python Cookbook_, 3ª ed. de David Beazley e Brian K. Jones (O'Reilly), tem várias receitas ilustrando desde decoradores elementares até alguns muito sofisticados, incluindo um que pode ser invocado como um decorador regular ou como uma fábrica de decoradores, por exemplo, `@clock` ou `@clock()`. É a  "Recipe 9.6. Defining a Decorator That Takes an Optional Argument" (_Receita 9.6. Definindo um Decorador Que Recebe um Argumento Opcional_)  desse livro de receitas.
 
@@ -1257,7 +1257,7 @@ Criada quando os decoradores ainda eram um recurso novo no Python, a página wik
 
 https://fpy.li/9-11["Closures in Python" (_Clausuras em Python_)] (EN) é um post de blog curto de Fredrik Lundh, explicando a terminologia das clausuras.
 
-A https://fpy.li/9-12[PEP 3104--Access to Names in Outer Scopes (_Acesso a Nomes em Escopos Externos_)] (EN) descreve a introdução da declaração pass:[<span class="keep-together"><code>nonlocal</code></span>], para permitir a re-vinculação de nomes que não são nem locais nem globais. Ela também inclui uma excelente revisão de como essa questão foi resolvida em outras linguagens dinâmicas (Perl, Ruby, JavaScript, etc.) e os prós e contras das opções de design disponíveis para o Python.
+A https://fpy.li/9-12[PEP 3104--Access to Names in Outer Scopes (_Acesso a Nomes em Escopos Externos_)] (EN) descreve a introdução da declaração pass:[<span class="keep-together"><code>nonlocal</code></span>], para permitir a re-vinculação de nomes que não são nem locais nem globais. Ela também inclui uma excelente revisão de como essa questão foi resolvida em outras linguagens dinâmicas (Perl, Ruby, JavaScript, etc.) e os prós e contras das opções de design disponíveis para Python.
 
 Em um nível mais teórico, a https://fpy.li/9-13[PEP 227--Statically Nested Scopes (_Escopos Estaticamente Aninhados_)] (EN) documenta a introdução do escopo léxico como um opção no Python 2.1 e como padrão no Python 2.2, explicando a justificativa e as opções de design para a implementação de clausuras no Python.
 
@@ -1285,7 +1285,7 @@ A pergunta é: como avaliar as variáveis livres?
 A resposta inicial e mais simples é "escopo dinâmico".
 Isso significa que variáveis livres são avaliadas olhando para dentro do ambiente onde a funcão é invocada.
 
-Se o Python tivesse escopo dinâmico e não tivesse clausuras, poderíamos improvisar `avg`—similar ao <<ex_average_fn>>—assim:
+Se Python tivesse escopo dinâmico e não tivesse clausuras, poderíamos improvisar `avg`—similar ao <<ex_average_fn>>—assim:
 
 [source, pycon]
 ----
@@ -1321,14 +1321,14 @@ ____
 
 Hoje em dia o escopo léxico é o padrão: variáveis livres são avaliadas considerando o ambiente onde a função foi definida. O escopo léxico complica a implementação de linguagens com funções de primeira classe, pois requer o suporte a clausuras. Por outro lado, o escopo léxico torna o código-fonte mais fácil de ler. A maioria das linguagens inventadas desde o Algol tem escopo léxico. Uma exceção notável é o JavaScript, onde a variável especial `this` é confusa, pois pode ter escopo léxico ou dinâmico, https://fpy.li/9-21[dependendo da forma como o código for escrito] (EN).
 
-Por muitos anos, o `lambda` do Python não ofereceu clausuras, contribuindo para a má fama deste recurso entre os fãs da programação funcional na blogosfera. Isso foi resolvido no Python 2.2 (de dezembro de 2001), mas a blogosfera tem uma memória muito boa. Desde então, `lambda` é embaraçoso apenas por sua sintaxe limitada.((("", startref="Scynamic09")))((("", startref="SSdynamic09")))
+Por muitos anos, o `lambda` de Python não ofereceu clausuras, contribuindo para a má fama deste recurso entre os fãs da programação funcional na blogosfera. Isso foi resolvido no Python 2.2 (de dezembro de 2001), mas a blogosfera tem uma memória muito boa. Desde então, `lambda` é embaraçoso apenas por sua sintaxe limitada.((("", startref="Scynamic09")))((("", startref="SSdynamic09")))
 
 [role="soapbox-title"]
-O decoradores do Python e o padrão de projeto Decorador
+O decoradores de Python e o padrão de projeto Decorador
 
-Os decoradores de função((("Soapbox sidebars", "Python decorators and decorator design pattern"))) do Python se encaixam na descrição geral dos decoradores de Gamma et al. em _Padrões de Projeto_: "Acrescenta responsabilidades adicionais a um objeto de forma dinâmica. Decoradores fornecem uma alternativa flexível à criação de subclasses para estender funcionalidade."
+Os decoradores de função((("Soapbox sidebars", "Python decorators and decorator design pattern"))) de Python se encaixam na descrição geral dos decoradores de Gamma et al. em _Padrões de Projeto_: "Acrescenta responsabilidades adicionais a um objeto de forma dinâmica. Decoradores fornecem uma alternativa flexível à criação de subclasses para estender funcionalidade."
 
-Ao nível da implementação, os decoradores do Python não lembram o padrão de projeto decorador clássico, mas é possível fazer uma analogia.
+Ao nível da implementação, os decoradores de Python não lembram o padrão de projeto decorador clássico, mas é possível fazer uma analogia.
 
 No padrão de projeto, `Decorador` e `Componente` são classes abstratas. Uma instância de um decorador concreto envolve uma instância de um componente concreto para adicionar comportamentos a ela. Citando _Padrões de Projeto_:
 

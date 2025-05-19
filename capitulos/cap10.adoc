@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[rethinking_design_patterns]]
+[[ch_design_patterns]]
 == Padrões de projetos com funções de primeira classe
 
 [quote, Ralph Johnson, co-autor do clássico "Padrões de Projetos"]
@@ -24,13 +24,13 @@ O uso de padrões de projeto em programação foi popularizado pelo livro semina
 O livro é um catálogo de 23 padrões, cada um deles composto por arranjos de classes e exemplificados com código em C&#x2b;&#x2b;, mas assumidos como úteis também em outras linguagens orientadas a objetos.
 
 Apesar dos padrões de projeto serem independentes da linguagem, isso não significa que todo padrão se aplica a todas as linguagens.
-Por exemplo, o <<iterables2generators>> vai mostrar que não faz sentido emular a receita do padrão https://fpy.li/10-2[Iterator (_Iterador_)] (EN) no Python, pois esse padrão está embutido na linguagem e pronto para ser usado, na forma de geradores—que não precisam de classes para funcionar, e exigem menos código que a receita clássica.
+Por exemplo, o <<ch_generators>> vai mostrar que não faz sentido emular a receita do padrão https://fpy.li/10-2[Iterator (_Iterador_)] (EN) no Python, pois esse padrão está embutido na linguagem e pronto para ser usado, na forma de geradores—que não precisam de classes para funcionar, e exigem menos código que a receita clássica.
 
 Os autores de _Padrões de Projetos_ reconhecem, na introdução, que a linguagem usada na implementação determina quais padrões são relevantes:
 
 [quote]
 ____
-A escolha da linguagem de programação é importante, pois ela influencia nosso ponto de vista. Nossos padrões supõe uma linguagem com recursos equivalentes aos do Smalltalk e do C++—e essa escolha determina o que pode e o que não pode ser facilmente implementado.
+A escolha da linguagem de programação é importante, pois ela influencia nosso ponto de vista. Nossos padrões supõe uma linguagem com recursos equivalentes aos de Smalltalk e do C++—e essa escolha determina o que pode e o que não pode ser facilmente implementado.
 Se tivéssemos presumido uma linguagem procedural, poderíamos ter incluído padrões de projetos chamados "Herança", "Encapsulamento" e "Polimorfismo".
 Da mesma forma, alguns de nossos padrões são suportados diretamente por linguagens orientadas a objetos menos conhecidas. CLOS, por exemplo, tem multi-métodos, reduzindo a necessidade de um padrão como o Visitante.footnote:[_Visitor_, Citado da página 4 da edição em inglês de _Padrões de Projeto_.]
 ____
@@ -231,7 +231,7 @@ Vamos examinar algumas soluções para essa questão.
 
 ==== Encontrando estratégias em um módulo
 
-Módulos((("refactoring strategies", "finding strategies in modules", id="RSfind10"))) também são objetos de primeira classe no Python, e a biblioteca padrão oferece várias funções para lidar com eles. A((("functions", "globals() function")))((("globals() function"))) função embutida `globals` é descrita assim na documentação do Python:
+Módulos((("refactoring strategies", "finding strategies in modules", id="RSfind10"))) também são objetos de primeira classe no Python, e a biblioteca padrão oferece várias funções para lidar com eles. A((("functions", "globals() function")))((("globals() function"))) função embutida `globals` é descrita assim na documentação de Python:
 
 `globals()`:: Devolve um dicionário representando a tabela de símbolos globais atual. Isso é sempre o dicionário do módulo atual (dentro de uma função ou método, esse é o módulo onde a função ou método foram definidos, não o módulo de onde são chamados).
 
@@ -245,7 +245,7 @@ O <<ex_strategy_best2>> é uma forma um tanto _hacker_ de usar `globals` para aj
 include::code/10-dp-1class-func/strategy_best2.py[tags=STRATEGY_BEST2]
 ----
 ====
-<1> Importa as funções de promoções, para que fiquem disponíveis no espaço de nomes global.footnote:[Tanto o flake8 quanto o VS Code reclamam que esses nomes são importados mas não são usados. Por definição, ferramentas de análise estática não conseguem entender a natureza dinâmica do Python. Se seguirmos todos os conselhos dessas ferramentas, logo estaremos escrevendo programas austeros e prolixos similares aos do Java, mas com a sintaxe do Python.]
+<1> Importa as funções de promoções, para que fiquem disponíveis no espaço de nomes global.footnote:[Tanto o flake8 quanto o VS Code reclamam que esses nomes são importados mas não são usados. Por definição, ferramentas de análise estática não conseguem entender a natureza dinâmica de Python. Se seguirmos todos os conselhos dessas ferramentas, logo estaremos escrevendo programas austeros e prolixos similares aos de Java, mas com a sintaxe de Python.]
 <2> Itera sobre cada item no `dict` devolvido por `globals()`.
 <3> Seleciona apenas aqueles valores onde o nome termina com o sufixo `_promo` e...
 <4> ...filtra e remove a própria `best_promo`, para evitar uma recursão infinita quando `best_promo` for invocada.
@@ -338,7 +338,7 @@ class MacroCommand:
 <1> Criar uma nova lista com os itens do argumento `commands` garante que ela seja iterável e mantém uma cópia local de referências a comandos em cada instância de `MacroCommand`.
 <2> Quando uma instância de `MacroCommand` é invocada, cada comando em `self.commands` é chamado em sequência.
 
-Usos mais avançados do padrão Comando—para implementar "desfazer", por exemplo—podem exigir mais que uma simples função de _callback_. Mesmo assim, o Python oferece algumas alternativas que merecem ser consideradas:
+Usos mais avançados do padrão Comando—para implementar "desfazer", por exemplo—podem exigir mais que uma simples função de _callback_. Mesmo assim, Python oferece algumas alternativas que merecem ser consideradas:
 
 * Uma instância invocável como `MacroCommand` no <<ex_macro_command>> pode manter qualquer estado que seja necessário, e oferecer outros métodos além de `+__call__+`.
 
@@ -347,14 +347,14 @@ Usos mais avançados do padrão Comando—para implementar "desfazer", por exemp
 Isso encerra nossa revisão do padrão Comando usando funções de primeira classe.
 Por alto, a abordagem aqui foi similar à que aplicamos a Estratégia:
 substituir as instâncias de uma classe participante que implementava uma interface de método único por invocáveis.
-Afinal, todo invocável do Python implementa uma interface de método único, e esse método se chama
+Afinal, todo invocável de Python implementa uma interface de método único, e esse método se chama
 `+__call__+`.((("", startref="RScmmnd10")))((("", startref="cmmd10")))((("", startref="FDPcommand10")))
 
 
 [[design_patterns_summary]]
 === Resumo do Capítulo
 
-Como((("functions, design patterns with first-class", "overview of"))) apontou Peter Norvig alguns anos após o surgimento do clássico _Padrões de Projetos_, "16 dos 23 padrões tem implementações qualitativamente mais simples em Lisp ou Dylan que em C++, pelo menos para alguns usos de cada padrão" (slide 9 da apresentação de Norvig, https://fpy.li/10-4["Design Patterns in Dynamic Languages" presentation] (_Padrões de Projetos em Linguagens Dinâmicas_)). O Python compartilha alguns dos recursos dinâmicos das linguagens Lisp e Dylan, especialmente funções de primeira classe, nosso foco nesse capítulo.
+Como((("functions, design patterns with first-class", "overview of"))) apontou Peter Norvig alguns anos após o surgimento do clássico _Padrões de Projetos_, "16 dos 23 padrões tem implementações qualitativamente mais simples em Lisp ou Dylan que em C++, pelo menos para alguns usos de cada padrão" (slide 9 da apresentação de Norvig, https://fpy.li/10-4["Design Patterns in Dynamic Languages" presentation] (_Padrões de Projetos em Linguagens Dinâmicas_)). Python compartilha alguns dos recursos dinâmicos das linguagens Lisp e Dylan, especialmente funções de primeira classe, nosso foco nesse capítulo.
 
 Na mesma palestra citada no início deste capítulo, refletindo sobre o 20º aniversário de _Padrões de Projetos: Soluções Reutilizáveis de Software Orientados a Objetos_, Ralph Johnson afirmou que um dos defeitos do livro é: "Excesso de ênfase nos padrões como linhas de chegada, em vez de como etapas em um processo de design".footnote:["Root Cause Analysis of Some Faults in Design Patterns" (_Análise das Causas Básicas de Alguns Defeitos em Padrões de Projetos_), palestra apresentada por Johnson no IME/CCSL da Universidade de São Paulo, em 15 de novembro de 2014.] Neste capítulo usamos o padrão Estratégia como ponto de partida: uma solução que funcionava, mas que simplificamos usando funções de primeira classe.
 
@@ -367,15 +367,15 @@ A "Receita 8.21. Implementando o Padrão Visitante" (_Receipt 8.21. Implementing
 
 Sobre o tópico mais geral de padrões de projetos, a oferta de leituras para o programador Python não é tão numerosa quando aquela disponível para as comunidades de outras linguagens.
 
-_Learning Python Design Patterns_ ("Aprendendo os Padrões de Projeto do Python"), de Gennadiy Zlobin (Packt), é o único livro inteiramente dedicado a padrões em Python que encontrei. Mas o trabalho de Zlobin é muito breve (100 páginas) e trata de apenas 8 dos 23 padrões de projeto originais.
+_Learning Python Design Patterns_ ("Aprendendo os Padrões de Projeto de Python"), de Gennadiy Zlobin (Packt), é o único livro inteiramente dedicado a padrões em Python que encontrei. Mas o trabalho de Zlobin é muito breve (100 páginas) e trata de apenas 8 dos 23 padrões de projeto originais.
 
 _Expert Python Programming_ ("Programação Avançada em Python"), de Tarek Ziadé (Packt), é um dos melhores livros de Python de nível intermediário, e seu capítulo final, "Useful Design Patterns" (_Padrões de Projetos Úteis_), apresenta vários dos padrões clássicos de uma perspectiva pythônica.
 
 Alex Martelli já apresentou várias palestras sobre padrões de projetos em Python. Há um vídeo de sua https://fpy.li/10-5[apresentação na EuroPython] (EN) e um https://fpy.li/10-6[conjunto de slides em seu site pessoal] (EN). Ao longo dos anos, encontrei diferentes jogos de slides e vídeos de diferentes tamanhos, então vale a pena tentar uma busca mais ampla com o nome dele e as palavras "Python Design Patterns". Um editor me contou que Martelli está trabalhando em um livro sobre esse assunto. Eu certamente comprarei meu exemplar assim que estiver disponível.
 
-Há muitos livros sobre padrões de projetos no contexto do Java mas, dentre todos eles, meu preferido é _Head First Design Patterns_ ("Mergulhando de Cabeça nos Padrões de Projetos"), 2ª ed., de Eric Freeman e Elisabeth Robson (O'Reilly). Esse volume explica 16 dos 23 padrões clássicos. Se você gosta do estilo amalucado da série _Head First_ e precisa de uma introdução a esse tópico, vai adorar esse livro. Ele é centrado no Java, mas a segunda edição foi atualizada para refletir a introdução de funções de primeira classe naquela linguagem, tornando alguns dos exemplos mais próximos de código que escreveríamos em Python.
+Há muitos livros sobre padrões de projetos no contexto de Java mas, dentre todos eles, meu preferido é _Head First Design Patterns_ ("Mergulhando de Cabeça nos Padrões de Projetos"), 2ª ed., de Eric Freeman e Elisabeth Robson (O'Reilly). Esse volume explica 16 dos 23 padrões clássicos. Se você gosta do estilo amalucado da série _Head First_ e precisa de uma introdução a esse tópico, vai adorar esse livro. Ele é centrado em Java, mas a segunda edição foi atualizada para refletir a introdução de funções de primeira classe naquela linguagem, tornando alguns dos exemplos mais próximos de código que escreveríamos em Python.
 
-Para um olhar moderno sobre padrões, do ponto de vista de uma linguagem dinâmica com _duck typing_ e funções de primeira classe, _Design Patterns in Ruby_ ("Padrões de Projetos em Ruby") de Russ Olsen (Addison-Wesley) traz muitas ideias aplicáveis também ao Python. A despeito de suas muitas diferenças sintáticas, no nível semântico o Python e o Ruby estão mais próximos entre si que do Java ou do C++.
+Para um olhar moderno sobre padrões, do ponto de vista de uma linguagem dinâmica com _duck typing_ e funções de primeira classe, _Design Patterns in Ruby_ ("Padrões de Projetos em Ruby") de Russ Olsen (Addison-Wesley) traz muitas ideias aplicáveis também ao Python. A despeito de suas muitas diferenças sintáticas, no nível semântico Python e Ruby estão mais próximos entre si que de Java ou do C++.
 
 
 Em https://fpy.li/norvigdp["Design Patterns in Dynamic Languages" (_Padrões de Projetos em Linguagens Dinâmicas_)] (slides), Peter Norvig mostra como funções de primeira classe (e outros recursos dinâmicos) tornam vários dos padrões de projeto originais mais simples ou mesmo desnecessários.
@@ -389,13 +389,13 @@ uma curiosa apresentação de slides acompanhada de um texto, argumentando que a
 
 .Ponto de vista
 ****
-O Python((("functions, design patterns with first-class", "Soapbox discussion")))((("Soapbox sidebars", "design patterns"))) tem funções de primeira classe e tipos de primeira classe, e Norvig afima que esses recursos afetam 10 dos 23 padrões (no slide 10 de https://fpy.li/norvigdp["Design Patterns in Dynamic Languages" (_Padrões de Projetos em Linguagens Dinâmicas_)]). No <<closures_and_decorators>>, vimos que o Python também tem funções genéricas (na <<generic_functions>>), uma forma limitada dos multi-métodos do CLOS, que Gamma et al. sugerem como uma maneira mais simples de implementar o padrão clássico Visitante (_Visitor_). Norvig, por outro lado, diz (no slide 10) que os multi-métodos simplificam o padrão Construtor (_Builder_). Ligar padrões de projetos a recursos de linguagens não é uma ciência exata.
+Python((("functions, design patterns with first-class", "Soapbox discussion")))((("Soapbox sidebars", "design patterns"))) tem funções de primeira classe e tipos de primeira classe, e Norvig afima que esses recursos afetam 10 dos 23 padrões (no slide 10 de https://fpy.li/norvigdp["Design Patterns in Dynamic Languages" (_Padrões de Projetos em Linguagens Dinâmicas_)]). No <<ch_closure_decorator>>, vimos que Python também tem funções genéricas (na <<generic_functions>>), uma forma limitada dos multi-métodos do CLOS, que Gamma et al. sugerem como uma maneira mais simples de implementar o padrão clássico Visitante (_Visitor_). Norvig, por outro lado, diz (no slide 10) que os multi-métodos simplificam o padrão Construtor (_Builder_). Ligar padrões de projetos a recursos de linguagens não é uma ciência exata.
 
 Em cursos a redor do mundo todo, padrões de projetos são frequentemente ensinados usando exemplos em Java. Ouvi mais de um estudante dizer que eles foram levados a crer que os padrões de projeto originais são úteis qualquer que seja a linguagem usada na implementação. A verdade é que os 23 padrões "clássicos" de _Padrões de Projetos_ se aplicam muito bem ao Java, apesar de terem sido apresentados principalmente no contexto do C++—no livro, alguns deles tem exemplos em Smalltalk. Mas isso não significa que todos aqueles padrões podem ser aplicados de forma igualmente satisfatória a qualquer linguagem. Os autores dizem explicitamente, logo no início de seu livro, que "alguns de nossos padrões são suportados diretamente por linguagens orientadas a objetos menos conhecidas" (a citação completa apareceu na primeira página deste capítulo).
 
-A bibliografia do Python sobre padrões de projetos é muito pequena, se comparada à existente para Java, C++ ou Ruby. Na <<dp_further>>, mencionei _Learning Python Design Patterns_ ("Aprendendo Padrões de Projeto do Python"), de Gennadiy Zlobin, que foi publicado apenas em novembro de 2013. Para se ter uma ideia, _Design Patterns in Ruby_ ("Padrões de Projetos em Ruby"), de Russ Olsen, foi publicado em 2007 e tem 384 páginas—284 a mais que a obra de Zlobin.
+A bibliografia de Python sobre padrões de projetos é muito pequena, se comparada à existente para Java, C++ ou Ruby. Na <<dp_further>>, mencionei _Learning Python Design Patterns_ ("Aprendendo Padrões de Projeto de Python"), de Gennadiy Zlobin, que foi publicado apenas em novembro de 2013. Para se ter uma ideia, _Design Patterns in Ruby_ ("Padrões de Projetos em Ruby"), de Russ Olsen, foi publicado em 2007 e tem 384 páginas—284 a mais que a obra de Zlobin.
 
-Agora que o Python está se tornando cada vez mais popular no ambiente acadêmico, podemos esperar que novos livros sobre padrões de projetos sejam escritos no contexto de nossa linguagem. Além disso, o Java 8 introduziu referências a métodos e funções anônimas, e esses recursos muito esperados devem incentivar o surgimento de novas abordagens aos padrões em Java—reconhecendo que, à medida que as linguagens evoluem, nosso entendimento sobre a forma de aplicação dos padrões de projetos clássicos deve também evoluir.
+Agora que Python está se tornando cada vez mais popular no ambiente acadêmico, podemos esperar que novos livros sobre padrões de projetos sejam escritos no contexto de nossa linguagem. Além disso, o Java 8 introduziu referências a métodos e funções anônimas, e esses recursos muito esperados devem incentivar o surgimento de novas abordagens aos padrões em Java—reconhecendo que, à medida que as linguagens evoluem, nosso entendimento sobre a forma de aplicação dos padrões de projetos clássicos deve também evoluir.
 
 [role="soapbox-title"]
 O __call__ selvagem

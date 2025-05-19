@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[class_metaprog]]
+[[ch_class_metaprog]]
 == Metaprogramação de classes
 
 [quote, Brian W. Kernighan and P. J. Plauger, The Elements of Programming Style]
@@ -24,7 +24,7 @@ Decoradores de classes também são funções, mas são projetados para inspecio
 Por fim, metaclasses são a ferramenta mais avançada para metaprogramação de classes: elas permitem a criação de categorias de classes inteiramente novas, com características especiais, tais como as classes base abstratas, que já vimos anteriormente.
 
 Metaclasses são poderosas, mas difíceis de justificar na prática, e ainda mais difíceis de entender direito. Decoradores de classe resolvem muitos dos mesmos problemas, e são mais fáceis de compreender.
-Mais ainda, o Python 3.6 implementou a https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma personalização mais simples da criação de classes_)], fornecendo métodos especiais para tarefas que antes exigiam metaclasses ou decoradores de classe.footnote:[Isso não quer dizer que a PEP 487 quebrou código que usava aqueles recursos, mas apenas que parte do código que utilizava decoradores de classe ou metaclasses antes do Python 3.6 pode agora ser refatorado para usar classes comuns, resultando em um código mais simples e possivelmente mais eficiente.]
+Mais ainda, Python 3.6 implementou a https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma personalização mais simples da criação de classes_)], fornecendo métodos especiais para tarefas que antes exigiam metaclasses ou decoradores de classe.footnote:[Isso não quer dizer que a PEP 487 quebrou código que usava aqueles recursos, mas apenas que parte do código que utilizava decoradores de classe ou metaclasses antes de Python 3.6 pode agora ser refatorado para usar classes comuns, resultando em um código mais simples e possivelmente mais eficiente.]
 
 Este capítulo apresenta as técnicas de metaprogramação de classes em ordem ascendente de complexidade.
 
@@ -36,15 +36,15 @@ Então preciso deixar aqui esse conselho.
 
 Em nome da legibilidade e facilidade de manutenção, você provavelmente deveria evitar as técnicas descritas neste capítulo em aplicações.
 
-Por outro lado, caso você queira escrever o próximo framework formidável do Python, essas são suas ferramentas de trabalho.
+Por outro lado, caso você queira escrever o próximo framework formidável de Python, essas são suas ferramentas de trabalho.
 ====
 
 === Novidades nesse capítulo
 
 Todo((("class metaprogramming", "significant changes to"))) o código do capítulo "Metaprogramação de Classes" da primeira edição do _Python Fluente_ ainda funciona corretamente.
-Entretanto, alguns dos exemplos antigos não representam mais as soluções mais simples, tendo em vista os novos recursos surgidos desde o Python 3.6.
+Entretanto, alguns dos exemplos antigos não representam mais as soluções mais simples, tendo em vista os novos recursos surgidos desde Python 3.6.
 
-Substituí aqueles exemplos por outros, enfatizando os novos recursos de metaprogramação ou acrescentando novos requisitos para justificar o uso de técnicas mais avançadas. 
+Substituí aqueles exemplos por outros, enfatizando os novos recursos de metaprogramação ou acrescentando novos requisitos para justificar o uso de técnicas mais avançadas.
 Alguns destes novos exemplos se valem de dicas de tipo para fornecer fábricas de classes similares ao decorador `@dataclass` e a `typing.NamedTuple`.
 
 A <<metaclases_real_world_sec>> é nova, trazendo algumas considerações de alto nível sobre a aplicabilidade das metaclasses.
@@ -55,13 +55,13 @@ Algumas das melhores refatorações envolvem a remoção de código tornado redu
 Isso se aplica tanto a código em produção quando a livros.
 ====
 
-Vamos começar revisando os atributos e métodos definidos no Modelo de Dados do Python para todas as classes.
+Vamos começar revisando os atributos e métodos definidos no Modelo de Dados de Python para todas as classes.
 
 [[anatomy_of_classes]]
 === Classes como objetos
 
-Como((("class metaprogramming", "classes as objects"))) acontece com a maioria das entidades programáticas do Python, classes também são objetos.
-Toda classe tem alguns atributos definidos no Modelo de Dados do Python, documentados na seção https://docs.python.org/pt-br/3/library/stdtypes.html#special-attributes["4.13. Atributos Especiais"] do capítulo "Tipos Embutidos" da _Biblioteca Padrão do Python_.
+Como((("class metaprogramming", "classes as objects"))) acontece com a maioria das entidades programáticas de Python, classes também são objetos.
+Toda classe tem alguns atributos definidos no Modelo de Dados de Python, documentados na seção https://docs.python.org/pt-br/3/library/stdtypes.html#special-attributes["4.13. Atributos Especiais"] do capítulo "Tipos Embutidos" da _Biblioteca Padrão de Python_.
 Três((("&#x005F;&#x005F;class&#x005F;&#x005F;")))((("&#x005F;&#x005F;name&#x005F;&#x005F;")))((("&#x005F;&#x005F;mro&#x005F;&#x005F;"))) destes atributos já apareceram várias vezes no livro:
 `+__class__+`, `+__name__+`, and `+__mro__+`.
 Outros atributos de classe padrão são:
@@ -70,7 +70,7 @@ Outros atributos de classe padrão são:
 
 `+cls.__qualname__+`:: O((("cls.&#x005F;&#x005F;qualname&#x005F;&#x005F;"))) nome qualificado de uma classe ou função, que é um caminho pontuado, desde o escopo global do módulo até a definição da classe. Isso é relevante quando a classe é definida dentro de outra classe.
 Por exemplo, em um modelo de classe Django, tal como https://fpy.li/24-2[`Ox`] (EN), há uma classe interna chamada `Meta`. O `+__qualname__+` de `Meta` é `Ox.Meta`, mas seu `+__name__+` é apenas `Meta`.
-A especificação para este atributo está na 
+A especificação para este atributo está na
 https://fpy.li/24-3[PEP 3155--Qualified name for classes and functions (_PEP 3155—Nome qualificado para classes e funções_)] (EN).
 
 `+cls.__subclasses__()+`:: Este((("cls.&#x005F;&#x005F;subclasses&#x005F;&#x005F;()"))) método devolve uma lista das subclasses imediatas da classe.
@@ -117,12 +117,12 @@ MyClass = type('MyClass',
 
 Aquela chamada a `type` é funcionalmente equivalente ao bloco sob a instrução `class MyClass…` anterior.
 
-Quando o Python lê uma instrução `class`, invoca `type` para construir um objeto classe com os parâmetros abaixo:
+Quando Python lê uma instrução `class`, invoca `type` para construir um objeto classe com os parâmetros abaixo:
 
 `name`::
     O identificador que aparece após a palavra-chave `class`, por exemplo, `MyClass`.
 `bases`::
-    A tupla de superclasses passadas entre parênteses após o identificador da classe, ou 
+    A tupla de superclasses passadas entre parênteses após o identificador da classe, ou
     `(object,)`, caso nenhuma superclasse seja mencionada na instrução `class`.
 `dict`::
     Um mapeamento entre nomes de atributo e valores. Invocáveis se tornam métodos, como vimos na <<methods_are_descriptors_sec>>. Outros valores se tornam atributos de classe.
@@ -160,7 +160,7 @@ Agora, vamos usar a classe embutida `type` para criar uma função que constrói
 === Uma função fábrica de classes
 
 A((("class metaprogramming", "class factory function", id="CMfacfun24"))) biblioteca padrão contém uma função fábrica de classes que já apareceu várias vezes aqui: `collections.namedtuple`.
-No <<data_class_ch>> também vimos `typing.NamedTuple` e `@dataclass`.
+No <<ch_dataclass>> também vimos `typing.NamedTuple` e `@dataclass`.
 Todas essas fábricas de classe usam técnicas que veremos neste capítulo.
 
 Vamos começar com uma fábrica muito simples, para classes de objetos mutáveis—a substituta mais simples possível de `@dataclass`.
@@ -197,7 +197,7 @@ include::code/24-class-metaprog/factories.py[tags=RECORD_FACTORY_DEMO]
 ====
 <1> A fábrica pode ser chamada como `namedtuple`: nome da classe, seguido dos nomes dos atributos separados por espaços, em um única string.
 <2> Um `repr` agradável.
-<3> Instâncias são iteráveis, então elas podem ser convenientemente desempacotadas em uma atribuição... 
+<3> Instâncias são iteráveis, então elas podem ser convenientemente desempacotadas em uma atribuição...
 <4> ...ou quando são passadas para funções como `format`.
 <5> Uma instância do registro é mutável.
 <6> A classe recém-criada herda de `object`—não tem qualquer relação com nossa fábrica.
@@ -226,7 +226,7 @@ O <<record_factory_ex>> é a primeira vez que vemos `type` em uma dica de tipo.
 Se a anotação fosse apenas `-> type`, significaria que `record_factory` devolve uma classe—e isso estaria correto.
 Mas a anotação `-> type[tuple]` é mais precisa: indica que a classe devolvida será uma subclasse de `tuple`.
 
-A última linha de `record_factory` no <<record_factory_ex>> cria uma classe cujo nome é o valor de `cls_name`, com `object` como sua única classe base imediata, e um espaço de nomes carregado com 
+A última linha de `record_factory` no <<record_factory_ex>> cria uma classe cujo nome é o valor de `cls_name`, com `object` como sua única classe base imediata, e um espaço de nomes carregado com
 `+__slots__+`, `+__init__+`, `+__iter__+`, e `+__repr__+`, sendo os útimos três métodos de instância.
 
 Poderíamos ter dado qualquer outro nome ao atributo de classe `+__slots__+`, mas então teríamos que implementar `+__setattr__+` para validar os nomes dos atributos em uma atribuição, porque em nossas classes similares a registros queremos que o conjunto de atributos seja sempre o mesmo e na mesma ordem. Entretanto, lembre-se que a principal característica de `+__slots__+` é economizar memória quando estamos lidando com milhões de instâncias, e que usar `+__slots__+` traz algumas desvantagens, discutidas na <<slots_section>>.
@@ -243,12 +243,12 @@ Vamos ver agora como emular fábricas de classes mais modernas, como `typing.Nam
 [[enhancing_with_init_subclass]]
 === Apresentando pass:[__init_subclass__]
 
-Tanto((("class metaprogramming", "&#x005F;&#x005F;init_subclass&#x005F;&#x005F;", id="CMinitsub24", secondary-sortas="init")))((("&#x005F;&#x005F;init&#x005F;subclass&#x005F;&#x005F;", id="initsub24"))) `+__init_subclass__+` quanto `+__set_name__+` foram propostos na 
+Tanto((("class metaprogramming", "&#x005F;&#x005F;init_subclass&#x005F;&#x005F;", id="CMinitsub24", secondary-sortas="init")))((("&#x005F;&#x005F;init&#x005F;subclass&#x005F;&#x005F;", id="initsub24"))) `+__init_subclass__+` quanto `+__set_name__+` foram propostos na
 https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma personalização mais simples da criação de classes_)].
 Falamos pela primeira vez do método especial para descritores `+__set_name__+` na <<auto_storage_sec>>.
 Agora vamos estudar `+__init_subclass__+`.
 
-No <<data_class_ch>>, vimos como `typing.NamedTuple` e `@dataclass` permitem a programadores usarem a instrução `class` para especificar atributos para uma nova classe, que então é aperfeiçoada pela fábrica de classes com a adição automática de métodos essenciais, tais como `+__init__+`, `+__repr__+`, `+__eq__+`, etc.
+No <<ch_dataclass>>, vimos como `typing.NamedTuple` e `@dataclass` permitem a programadores usarem a instrução `class` para especificar atributos para uma nova classe, que então é aperfeiçoada pela fábrica de classes com a adição automática de métodos essenciais, tais como `+__init__+`, `+__repr__+`, `+__eq__+`, etc.
 
 Ambas as fábricas de classes leem as dicas de tipo na instrução `class` do usuário para aperfeiçoar a classe. Essas dicas de tipo também permitem que verificadores de tipo estáticos validem código que define ou lê aqueles atributos.
 Entretanto, `NamedTuple` e `@dataclass` não se valem das dicas de tipo para validação de atributos durante a execução. A classe `Checked`, no próximo exemplo, faz isso.
@@ -326,7 +326,7 @@ blockbuster = Movie(title='Avatar', year='MMIX')
 Isso porque `Movie` herda `+Checked.__init__+`,
 e a assinatura daquele método deve aceitar qualquer argumento nomeado, para suportar classes arbitrárias definidas pelo usuário.
 
-Por outro lado, se você declarar um campo de uma subclasse de `Checked` com a dica de tipo 
+Por outro lado, se você declarar um campo de uma subclasse de `Checked` com a dica de tipo
 `list[float]`, o Mypy pode sinalizar atribuições de listas com tipos incompatíveis, mas `Checked` vai ignorar o parâmetro de tipo e tratá-lo como igual a `list`.
 ====
 
@@ -341,10 +341,10 @@ A primeira classe é o descritor `Field`, como mostra o <<checked_field_ex>>.
 include::code/24-class-metaprog/checked/initsub/checkedlib.py[tags=CHECKED_FIELD]
 ----
 ====
-<1> Lembre-se, desde o Python 3.9, o tipo `Callable` para anotações é a ABC em 
+<1> Lembre-se, desde Python 3.9, o tipo `Callable` para anotações é a ABC em
 `collections.abc`, e não o descontinuado `typing.Callable`.
 <2> Essa é a dica de tipo `Callable` mínima; o parâmetro de tipo e o tipo devolvido para `constructor` são ambos implicitamente `Any`.
-<3> Para verificação durante a execução, usamos o embutido `callable`.footnote:[Na minha opinião, `callable` deveria se tornar adequado para dicas de tipo. Em 6 de maio de 2021, quando essa nota foi escrita, essa ainda era uma https://fpy.li/24-7[questão aberta] (EN).] O teste contra `type(None)` é necessário porque o Python entende `None` em um tipo como `NoneType`, a classe de `None` (e portanto invocável), mas esse é um construtor inútil, que apenas devolve `None`.
+<3> Para verificação durante a execução, usamos o embutido `callable`.footnote:[Na minha opinião, `callable` deveria se tornar adequado para dicas de tipo. Em 6 de maio de 2021, quando essa nota foi escrita, essa ainda era uma https://fpy.li/24-7[questão aberta] (EN).] O teste contra `type(None)` é necessário porque Python entende `None` em um tipo como `NoneType`, a classe de `None` (e portanto invocável), mas esse é um construtor inútil, que apenas devolve `None`.
 <4> Se `+Checked.__init__+` definir `value` como `...` (o objeto embutido `Ellipsis`), invocamos o construtor sem argumentos.
 <5> Caso contrário, invocamos o `constructor` com o `value` dado.
 <6> Se `constructor` gerar qualquer dessas exceções, geramos um `TypeError` com uma mensagem útil, incluindo os nomes do campo e do construtor; por exemplo, `'MMIX' não é compatível com year:int`.
@@ -359,7 +359,7 @@ E assim eu aqui declaro que, nesse exemplo simples, este um recurso, não um bug
 ====
 Na <<auto_storage_sec>>, vimos o conveniente método especial `+__set_name__+` para descritores.
 Não precisamos disso na classe `Field`, porque os descritores não são instanciados no código-fonte cliente; o usuário declara tipos que são construtores, como visto na classe `Movie` (no <<checked_demo1_ex>>).
-Em vez disso, as instâncias do descritor `Field` são criadas durante a execução, pelo método 
+Em vez disso, as instâncias do descritor `Field` são criadas durante a execução, pelo método
 `+Checked.__init_subclass__+`, que veremos no <<checked_class_top_ex>>.
 ====
 
@@ -374,7 +374,7 @@ O restante dos métodos está no <<checked_class_bottom_ex>>.
 include::code/24-class-metaprog/checked/initsub/checkedlib.py[tags=CHECKED_TOP]
 ----
 ====
-<1> Escrevi este método de classe para ocultar a chamada a `typing.get_type_hints` do resto da classe. Se precisasse suportar apenas versões do Python ≥ 3.10, invocaria `inspect.get_annotations` em vez disso. Reveja a <<problems_annot_runtime_sec>> para uma discussão dos problemas com essas funções.
+<1> Escrevi este método de classe para ocultar a chamada a `typing.get_type_hints` do resto da classe. Se precisasse suportar apenas versões de Python ≥ 3.10, invocaria `inspect.get_annotations` em vez disso. Reveja a <<problems_annot_runtime_sec>> para uma discussão dos problemas com essas funções.
 <2> `+__init_subclass__+` é chamado quando uma subclasse da classe atual é definida. Ele recebe aquela nova subclasse como seu primeiro argumento—e por isso nomeei o argumento `subclass` em vez do habitual `cls`. Para mais informações sobre isso, veja <<init_subclass_not_typical_box>>.
 <3> `+super().__init_subclass__()+` não é estritamente necessário, mas deve ser invocado para ajudar outras classes que implementem `+.__init_subclass__()+` na mesma árvore de herança. Veja a <<mro_section>>.
 <4> Itera sobre `name` e `constructor` em cada campo...
@@ -390,9 +390,9 @@ include::code/24-class-metaprog/checked/initsub/checkedlib.py[tags=CHECKED_TOP]
 .pass:[__init_subclass__] não é um método de classe típico
 ****
 O decorador `@classmethod` nunca é usado com `+__init_subclass__+`, mas isso não quer dizer muita coisa, pois o método especial `+__new__+` se comporta como um método de classe mesmo sem `@classmethod`.
-O primeiro argumento que o Python passa para `+__init_subclass__+` é uma classe.
+O primeiro argumento que Python passa para `+__init_subclass__+` é uma classe.
 Entretanto, essa nunca é a classe onde `+__init_subclass__+` é implementado, mas sim uma subclasse recém-definida daquela classe.
-Isso é diferente de `+__new__+` e de qualquer outro método de classe que eu conheço. 
+Isso é diferente de `+__new__+` e de qualquer outro método de classe que eu conheço.
 Assim, acho que `+__init_subclass__+` não é um método de classe no sentido usual, e é errado nomear seu primeiro argumento `cls`. A
 pass:[<a href="https://docs.python.org/pt-br/3/reference/datamodel.html#object.__init_subclass__">documentação de <code>__init_suclass__</code></a>] chama o argumento de `cls`, mas explica: "...chamado sempre que se cria uma subclasse da classe que o contém. `cls` é então a nova subclasse..."footnote:[NT: Em 17 de setembro de 2023, a primeira frase está traduzida de forma confusa na documentação em português. Optamos por traduzir aqui diretamente da documentação em inglês.].
 ****
@@ -412,11 +412,11 @@ include::code/24-class-metaprog/checked/initsub/checkedlib.py[tags=CHECKED_BOTTO
 <1> Intercepta qualquer tentativa de definir um atributo de instância. Isso é necessário para evitar a definição de um atributo desconhecido.
 <2> Se o `name` do atributo é conhecido, busca o `descriptor` correspondente.
 <3> Normalmente não é preciso invocar o `+__set__+` do descritor explicitamente. Nesse caso isso foi necessário porque `+__setattr__+` intercepta todas as tentativas de definir um atributo em uma instância, mesmo na presença de um descritor dominante, tal como `Field`.footnote:[O sutil conceito de descritor dominante foi explicado na <<overriding_descriptor_sec>>.]
-<4> Caso contrário, o atributo `name` é desconhecido, e uma exceção será gerada por 
+<4> Caso contrário, o atributo `name` é desconhecido, e uma exceção será gerada por
 `+__flag_unknown_attrs+`.
 <5> Cria uma mensagem de erro útil, listando todos os argumentos inesperados, e gera um `AttributeError`.
 Este é um raro exemplo do tipo especial `NoReturn`, tratado na <<noreturn_sec>>.
-<6> Cria um `dict` a partir dos atributos de um objeto `Movie`. Eu chamaria este método de 
+<6> Cria um `dict` a partir dos atributos de um objeto `Movie`. Eu chamaria este método de
 `+_as_dict+`, mas segui a convenção iniciada com o método `+_asdict+` em `collections.namedtuple`.
 <7> Implementar um `+__repr__+` agradável é a principal razão para ter `_asdict` neste exemplo.
 
@@ -432,7 +432,7 @@ Entretanto, essa solução mais simples não é viável aqui, como explicado a s
 
 O((("&#x005F;&#x005F;slots&#x005F;&#x005F;"))) atributo `+__slots__+` só é efetivo se for um dos elementos do espaço de nomes da classe passado para `+type.__new__+`.
 Acrescentar `+__slots__+` a uma classe existente não tem qualquer efeito.
-O Python invoca `+__init_subclass__+` apenas após a classe ser criada—neste ponto, é tarde demais para configurar `+__slots__+`.
+Python invoca `+__init_subclass__+` apenas após a classe ser criada—neste ponto, é tarde demais para configurar `+__slots__+`.
 Um decorador de classes também não pode configurar `+__slots__+`, pois ele é aplicado ainda mais tarde que `+__init_subclass__+`.
 Vamos explorar essas questões de sincronia na <<import_v_runtime_sec>>.
 
@@ -440,7 +440,7 @@ Para configurar `+__slots__+` durante a execução, nosso próprio código preci
 Para fazer isso, podemos escrever uma função fábrica de classes, como _record_factory.py_, ou optar pelo caminho bombástico, e implementar uma metaclasse.
 Veremos como configurar `+__slots__+` dinamicamente na <<metclass101_sec>>.
 
-Antes da https://fpy.li/pep487[PEP 487] (EN) simplificar a personalização da criação de classes com 
+Antes da https://fpy.li/pep487[PEP 487] (EN) simplificar a personalização da criação de classes com
 `+__init_subclass__+`, no Python 3.7, uma funcionalidade similar só poderia ser implementada usando um decorador de classe.
 É o tópico de nossa próxima seção.((("", startref="initsub24")))((("", startref="CMinitsub24")))
 
@@ -465,7 +465,7 @@ include::code/24-class-metaprog/checked/decorator/checkeddeco.py[tags=MOVIE_DEFI
 ====
 
 A única diferença entre o <<checkeddeco_demo1_ex>> e o <<checked_demo1_ex>> é a forma como a classe `Movie` é declarada: ela é decorada com `@checked` em vez de ser uma subclasse de `Checked`.
-Fora isso, o comportamento externo é o mesmo, incluindo a validação de tipo e a atribuição de valores default, apresentados após 
+Fora isso, o comportamento externo é o mesmo, incluindo a validação de tipo e a atribuição de valores default, apresentados após
 o <<checked_demo1_ex>>, na <<enhancing_with_init_subclass>>.
 
 Vamos olhar agora para a implementação de _checkeddeco.py_.
@@ -514,7 +514,7 @@ include::code/24-class-metaprog/checked/decorator/checkeddeco.py[tags=CHECKED_ME
 ====
 
 O módulo _checkeddeco.py_ implementa um decorador de classes simples mas usável.
-O `@dataclass` do Python faz muito mais.
+O `@dataclass` de Python faz muito mais.
 Ele suporta várias opções de configuração, acrescenta mais métodos à classe decorada, trata ou avisa sobre conflitos com métodos definidos pelo usuário na classe decorada, e até percorre o `+__mro__+` para coletar atributos definidos pelo usuário declarados em superclasses da classe decorada.
 O https://fpy.li/24-10[código-fonte] do pacote `dataclasses` no Python 3.9 tem mais de 1200 linhas.
 
@@ -537,7 +537,7 @@ Se existir um arquivo _.pyc_ atualizado no `+__pycache__+` local, a análise e a
 Apesar da análise e a compilação serem definitivamente atividades de "importação", outras coisas podem acontecer durante o processo, pois quase todos os comandos ou instruções no Python são executáveis, no sentido de poderem potencialmente rodar código do usuário e modificar o estado do programa do usuário.
 
 Em especial, a instrução `import` não é meramente uma declaraçãofootnote:[Compare com a instrução `import` em Java, que é apenas uma declaração para informar o compilador que determinados pacotes são necessários.], pois na verdade ela executa todo o código no nível superior de um módulo, quando este é importado para o processo pela primeira vez. Importações posteriores do mesmo módulo usarão um _cache_, e então o único efeito será a vinculação dos objetos importados a nomes no módulo cliente. Aquele código no primeiro nível pode fazer qualquer coisa, incluindo ações típicas da "execução", tais como escrever em um arquivo de log ou conectar-se a um banco de dados.footnote:[Não estou dizendo que é uma boa ideia abrir uma conexão com um banco de dados só porque o módulo foi importado, apenas apontando que isso pode ser feito.]
-Por isso a fronteira entre a "importação" e a "execução" é difusa: `import` pode acionar todo tipo de comportamento de "execução", porque a instrução `import` e a função embutida 
+Por isso a fronteira entre a "importação" e a "execução" é difusa: `import` pode acionar todo tipo de comportamento de "execução", porque a instrução `import` e a função embutida
 `+__import__()+` podem ser usadas dentro de qualquer função regular.
 
 Tudo isso é bastante abstrato e sútil, então vamos realizar alguns experimentos para ver o que acontece, e quando.
@@ -586,7 +586,7 @@ include::code/24-class-metaprog/evaltime/builderlib.py[tags=BUILDERLIB_BOTTOM]
 <3> ...`+__set_name__+` será invocado durante a criação da classe `owner`.
 <4> Como os outros métodos, este `+__set__+` não faz nada, exceto exibir seus argumentos.
 
-Se importarmos _builderlib.py_ no console do Python, veremos o seguinte:
+Se importarmos _builderlib.py_ no console de Python, veremos o seguinte:
 
 [source, pycon]
 ----
@@ -599,7 +599,7 @@ Se importarmos _builderlib.py_ no console do Python, veremos o seguinte:
 
 Observe que as linhas exibidas por _builderlib.py_ tem um `@` como prefixo.
 
-Vamos agora voltar a atenção para _evaldemo.py_, que vai acionar método especiais em 
+Vamos agora voltar a atenção para _evaldemo.py_, que vai acionar método especiais em
 _builderlib.py_ (no <<evaldemo_ex>>).
 
 [[evaldemo_ex]]
@@ -639,17 +639,17 @@ Se você abrir o console novamente e importar _evaldemo.py_, a saída aparece no
 ----
 ====
 <1> As primeiras quatro linhas são o resultado de `from builderlib import…`. Elas não vão aparecer se você não fechar o console após o experimento anterior, pois _builderlib.py_ já estará carregado.
-<2> Isso sinaliza que o Python começou a ler o corpo de `Klass`. Neste momento o objeto classe ainda não existe.
-<3> A instância do descritor é criada e vinculada a `attr`, no espaço de nomes que o Python passará para o construtor default do objeto classe: `+type.__new__+`.
-<4> Neste ponto, a função embutida do Python `+type.__new__+` já criou o objeto `Klass` e invoca 
+<2> Isso sinaliza que Python começou a ler o corpo de `Klass`. Neste momento o objeto classe ainda não existe.
+<3> A instância do descritor é criada e vinculada a `attr`, no espaço de nomes que Python passará para o construtor default do objeto classe: `+type.__new__+`.
+<4> Neste ponto, a função embutida de Python `+type.__new__+` já criou o objeto `Klass` e invoca
 `+__set_name__+` em cada instância das classes do descritor que oferecem aquele método, passando `Klass` como argumento `owner`.
 <5> `+type.__new__+` então chama `+__init_subclass__+` na superclasse de `Klass`, passando `Klass` como único argumento.
-<6> Quando `+type.__new__+` devolve o objeto classe, o Python aplica o decorador. Neste exemplo, a classe devolvida por `deco` está vinculada a `Klass` no espaço de nomes do módulo
+<6> Quando `+type.__new__+` devolve o objeto classe, Python aplica o decorador. Neste exemplo, a classe devolvida por `deco` está vinculada a `Klass` no espaço de nomes do módulo
 
 A implementação de `+type.__new__+` está escrita em C.
 O comportamento que acabei de descrever está documentado na seção
 https://docs.python.org/pt-br/3/reference/datamodel.html#creating-the-class-object["Criando o objeto classe"], no capítulo
-https://docs.python.org/pt-br/3/reference/datamodel.html["Modelo de Dados"] da referência do Python.
+https://docs.python.org/pt-br/3/reference/datamodel.html["Modelo de Dados"] da referência de Python.
 
 Observe que a função `main()` de _evaldemo.py_ (no <<evaldemo_ex>>) não foi executada durante a sessão no console (no <<evaldemo_console_ex>>), portanto nenhuma instância de `Klass` foi criada.
 Todas as ações que vimos foram acionadas por operações de "importação":
@@ -676,7 +676,7 @@ $ ./evaldemo.py
 ====
 <1> As 10 primeiras linhas—incluindo essa—são as mesma que aparecem no <<evaldemo_console_ex>>.
 <2> Acionado por `+super().__init__()+` em `+Klass.__init__+`.
-<3> Acionado por `obj.method_a()` em `main`; o `method_a` foi injetado por 
+<3> Acionado por `obj.method_a()` em `main`; o `method_a` foi injetado por
 `+SuperA.__init_subclass__+`.
 <4> Acionado por `obj.method_b()` em `main`; `method_b` foi injetado por `deco`.
 <5> Acionado por `obj.attr = 999` em `main`.
@@ -689,10 +689,11 @@ Esse é o destino final desse capítulo—e desse livro.((("", startref="CMimpor
 [[metclass101_sec]]
 === Introdução às metaclasses
 
-[quote, Tim Peters, inventor do algoritmo timsort e um produtivo colaborador do Python]
-____
+[quote, Tim Peters, inventor do algoritmo timsort e um produtivo colaborador de Python]
+
 &#x5b;Metaclasses&#x5d; são uma mágica tão profunda que 99% dos usuários jamais deveria se preocupar com elas. Quem se pergunta se precisa delas, não precisa (quem realmente precisa de metaclasses sabe disso com certeza, e não precisa que lhe expliquem a razão).footnote:[Mensagem a comp.lang.python, assunto: https://fpy.li/24-12["Acrimony in c.l.p." (_animosidade no c.l.p._)]. 
-Essa é outra parte da mesma mensagem de 23 de dezembro de 2002, citada na <<preface_sec>>. O TimBot estava inspirado naquele dia.]
+Essa é outra parte da mesma mensagem de 23 de dezembro de 2002, citada no <<preface>>. O TimBot estava inspirado naquele dia.]
+
 ____
 
 Uma((("metaclasses", "basics of", id="MCbasics24")))((("class metaprogramming", "metaclass basics", id="CMmetabasic24"))) metaclasse é uma fábrica de classes.
@@ -705,8 +706,8 @@ A <<meta_class_and_class_mgn>> usa a  Notação Engenhocas e Bugigangas para rep
 .Uma metaclasse é uma classe que cria classes.
 image::images/flpy_2401.png[Diagrama MGN com metaclasse e classe.]
 
-Pense no modelo de objetos do Python: classes são objetos, portanto cada classe deve ser uma instância de alguma outra classe.
-Por default, as classes do Python são instâncias de `type`.
+Pense no modelo de objetos de Python: classes são objetos, portanto cada classe deve ser uma instância de alguma outra classe.
+Por default, as classes de Python são instâncias de `type`.
 Em outras palavras, `type` é a metaclasse da maioria das classes, sejam elas embutidas ou definidas pelo usuário:
 
 [source, pycon]
@@ -765,7 +766,7 @@ Uma metaclasse pode personalizar suas instâncias implementando métodos especia
 [[how_metaclass_customizes]]
 ==== Como uma metaclasse personaliza uma classe
 
-Para((("metaclasses", "customizing classes"))) usar uma metaclasse, é crucial entender como 
+Para((("metaclasses", "customizing classes"))) usar uma metaclasse, é crucial entender como
 `+__new__+` funciona em qualquer classe.
 Isso foi discutido na <<flexible_new_sec>>.
 
@@ -780,7 +781,7 @@ class Klass(SuperKlass, metaclass=MetaKlass):
         self.y = y
 ----
 
-Para processar essa instrução `class`, o Python invoca `+MetaKlass.__new__+` com os seguintes argumentos:
+Para processar essa instrução `class`, Python invoca `+MetaKlass.__new__+` com os seguintes argumentos:
 
 `meta_cls`:: A própria metaclasse(`MetaKlass`), porque `+__new__+` funciona como um método de classe.
 
@@ -788,7 +789,7 @@ Para processar essa instrução `class`, o Python invoca `+MetaKlass.__new__+` c
 
 `bases`:: A tupla com um único elemento `(SuperKlass,)` (ou com mais elementos, em caso de herança múltipla).
 
-`cls_dict`:: 
+`cls_dict`::
 +
 --
 Um mapeamento como esse:
@@ -802,13 +803,13 @@ Um mapeamento como esse:
 Ao implementar `+MetaKlass.__new__+`, podemos inspecionar e modificar aqueles argumentos antes de passá-los para `+super().__new__+`, que por fim invocará `+type.__new__+` para criar o novo objeto classe.
 
 Após `+super().__new__+` retornar,
-podemos também aplicar processamento adicional à classe recém-criada, antes de devolvê-la para o Python. O Python então invoca `+SuperKlass.__init_subclass__+`, passando a classe que criamos, e então aplicando um decorador de classe, se algum estiver presente.
-Finalmente, o Python vincula o objeto classe a seu nome no espaço de nomes circundante—normalmente o espaço de nomes global do módulo, se a instrução `class` foi uma instrução no primeiro nível.
+podemos também aplicar processamento adicional à classe recém-criada, antes de devolvê-la para Python. Python então invoca `+SuperKlass.__init_subclass__+`, passando a classe que criamos, e então aplicando um decorador de classe, se algum estiver presente.
+Finalmente, Python vincula o objeto classe a seu nome no espaço de nomes circundante—normalmente o espaço de nomes global do módulo, se a instrução `class` foi uma instrução no primeiro nível.
 
 O processamento mais comum realizado no `+__new__+` de uma metaclasse é adicionar ou substituir itens no `cls_dict`—o mapeamento que representa o espaço de nomes da classe em construção. Por exemplo, antes de chamar `+super().__new__+`, podemos injetar métodos na classe em construção adicionando funções a `cls_dict`.
 Entretanto, observe que adicionar métodos pode também ser feito após a classe ser criada, e é por essa razão que podemos fazer isso usando `+__init_subclass__+` ou um decorador de classe.
 
-Um atributo que precisa ser adicionado a `cls_dict` antes de se executar `+type.__new__+` é 
+Um atributo que precisa ser adicionado a `cls_dict` antes de se executar `+type.__new__+` é
 `+__slots__+`, como discutido na <<why_cannot_config_slots_sec>>.
 O método `+__new__+` de uma metaclasse é o lugar ideal para configurar `+__slots__+`.
 A próxima seção mostra como fazer isso.
@@ -817,9 +818,9 @@ A próxima seção mostra como fazer isso.
 [[nice_metaclass_sec]]
 ==== Um belo exemplo de metaclasse
 
-A((("metaclasses", "example metaclass", id="MCexample24"))) metaclasse `MetaBunch`, apresentada aqui, é uma variação do último exemplo no Capítulo 4 do pass:[<a href="https://fpy.li/pynut3" class="orm:hideurl"><em>Python in a Nutshell</em>, 3ª ed.</a>], de Alex Martelli, Anna Ravenscroft, e Steve Holden, escrito para rodar sob Python 2.7 e 3.5.footnote:[Os autores gentilmente me deram permissão para usar seu exemplo. `MetaBunch` apareceu pela primeira vez em uma mensagem enviada por Martelli para o grupo comp.lang.python, em 7 de julho de 2002, com o assunto 
+A((("metaclasses", "example metaclass", id="MCexample24"))) metaclasse `MetaBunch`, apresentada aqui, é uma variação do último exemplo no Capítulo 4 do pass:[<a href="https://fpy.li/pynut3" class="orm:hideurl"><em>Python in a Nutshell</em>, 3ª ed.</a>], de Alex Martelli, Anna Ravenscroft, e Steve Holden, escrito para rodar sob Python 2.7 e 3.5.footnote:[Os autores gentilmente me deram permissão para usar seu exemplo. `MetaBunch` apareceu pela primeira vez em uma mensagem enviada por Martelli para o grupo comp.lang.python, em 7 de julho de 2002, com o assunto
 https://fpy.li/24-13["a nice metaclass example (was Re: structs in python)" (_um belo exmeplo de metaclasse (era Re: structs no python)_)], na sequência de uma discussão sobre estruturas de dados similares a registros no Python. O código original de Martelli, para Python 2.2, ainda roda após uma única modificação: para usar uma metaclasse no Python 3, é necessário usar o argumento nomeado `metaclass` na declaração da classe (por exemplo, `Bunch(metaclass=MetaBunch)`), em vez da convenção antiga, que era adicionar um atributo `+__metaclass__+` no corpo da classe.]
-Assumindo o uso do Python 3.6 ou mais recente, pude simplificar ainda mais o código.
+Assumindo o uso de Python 3.6 ou mais recente, pude simplificar ainda mais o código.
 
 Mas primeiro vamos ver o que a classe base `Bunch` oferece:
 
@@ -830,7 +831,7 @@ include::code/24-class-metaprog/metabunch/from3.6/bunch.py[tags=BUNCH_POINT_DEMO
 
 Lembre-se que `Checked` atribui nomes aos descritores `Field` em subclasses, baseada em dicas de tipo de variáveis de classe, que não se tornam atributos na classe, já que não tem valores.
 
-Subclasses de `Bunch`, por outro lado, usam atributos de classe reais com valores, que então se tornam os valores default dos atributos de instância. 
+Subclasses de `Bunch`, por outro lado, usam atributos de classe reais com valores, que então se tornam os valores default dos atributos de instância.
 O `+__repr__+` gerado omite os argumentos para atributos iguais aos defaults.
 
 `MetaBunch`—a metaclasse de `Bunch`—gera `+__slots__+` para a nova classe a partir de atributos de classe declarados na classe do usuário.
@@ -861,8 +862,8 @@ Acreditamos em _falhar rápido_ como melhor prática, então não queremos ignor
 <7> `+__repr__+` devolve uma string que se parece com uma chamada ao construtor—por exemplo, `Point(x=3)`, omitindo os argumentos nomeados com valores default.
 <8> Inicializa o espaço de nomes para a nova classe.
 <9> Itera sobre o espaço de nomes da classe do usuário.
-<10> Se um `name` _dunder_ (com sublinhados como prefixo e sufixo) é encontrado, copia o item para o espaço de nomes da nova classe, a menos que ele já esteja lá. Isso evita que usuários sobrescrevam 
-`+__init__+`, `+__repr__+` e outros atributos definidos pelo Python, tais como `+__qualname__+` e 
+<10> Se um `name` _dunder_ (com sublinhados como prefixo e sufixo) é encontrado, copia o item para o espaço de nomes da nova classe, a menos que ele já esteja lá. Isso evita que usuários sobrescrevam
+`+__init__+`, `+__repr__+` e outros atributos definidos pelo Python, tais como `+__qualname__+` e
 `+__module__+`.
 <11> Se `name` não for um _dunder_, acrescenta `name` a `+__slots__+` e armazena seu `value` em `defaults`.
 <12> Cria e devolve a nova classe.
@@ -912,10 +913,10 @@ include::code/24-class-metaprog/evaltime/metalib.py[tags=METALIB_TOP]
 ====
 
 Escrevi a classe `NosyDict` para sobrepor `+__setitem__+` e exibir cada `key` e cada `value` conforme eles são definidos.
-A metaclasse vai usar uma instância de `NosyDict` para manter o espaço de nomes da classe em construção, revelando um pouco mais sobre o funcionamento interno do Python.
+A metaclasse vai usar uma instância de `NosyDict` para manter o espaço de nomes da classe em construção, revelando um pouco mais sobre o funcionamento interno de Python.
 
 A principal atração de _metalib.py_ é a metaclasse no <<metalib_bottom_ex>>.
-Ela implementa o método especial `+__prepare__+`, um método de classe que o Python só invoca em metaclasses.
+Ela implementa o método especial `+__prepare__+`, um método de classe que Python só invoca em metaclasses.
 O método `+__prepare__+` oferece a primeira oportunidade para influenciar o processo de criação de uma nova classe.
 
 [TIP]
@@ -936,8 +937,8 @@ include::code/24-class-metaprog/evaltime/metalib.py[tags=METALIB_BOTTOM]
 ----
 ====
 <1> `+__prepare__+` deve ser declarado como um método de classe.
-Ele não é um método de instância, pois a classe em construção ainda não existe quando o Python invoca `+__prepare__+`.
-<2> O Python invoca `+__prepare__+` em uma metaclasse para obter um mapeamento, onde vai manter o espaço de nomes da classe em construção.
+Ele não é um método de instância, pois a classe em construção ainda não existe quando Python invoca `+__prepare__+`.
+<2> Python invoca `+__prepare__+` em uma metaclasse para obter um mapeamento, onde vai manter o espaço de nomes da classe em construção.
 <3> Devolve uma instância de `NosyDict` para ser usado como o espaço de nomes.
 <4> `cls_dict` é uma instância de `NosyDict` devolvida por `+__prepare__+`.
 <5> `+type.__new__+` exige um `dict` real como último argumento, então passamos a ele o atributo `data` de `NosyDict`, herdado de `UserDict`.
@@ -945,12 +946,12 @@ Ele não é um método de instância, pois a classe em construção ainda não e
 <7> Como sempre, `+__new__+` precisa devolver o objeto que acaba de ser criado—neste caso, a nova classe.
 <8> Definir `+__repr__+` em uma metaclasse permite personalizar o `repr()` de objetos classe.
 
-O principal caso de uso para `+__prepare__+` antes do Python 3.6 era oferecer um 
+O principal caso de uso para `+__prepare__+` antes de Python 3.6 era oferecer um
 `OrderedDict` para manter os atributos de uma classe em construção, para que o `+__new__+` da metaclasse pudesse processar aqueles atributos na ordem em que aparecem no código-fonte da definição de classe do usuário.
 Agora que `dict` preserva a ordem de inserção, `+__prepare__+` raramente é necessário.
 Veremos um uso criativo para ele no <<metahack_sec>>.
 
-Importar _metalib.py_ no console do Python não é muito empolgante.
+Importar _metalib.py_ no console de Python não é muito empolgante.
 Observe o uso de `%` para prefixar as linhas geradas por esse módulo:
 
 [source, pycon]
@@ -999,13 +1000,13 @@ Muitas coisas acontecem quando importamos _evaldemo_meta.py_, como visto no  <<e
 ----
 ====
 <1> As linhas antes disso são resultado da importação de _builderlib.py_ e _metalib.py_.
-<2> O Python invoca `+__prepare__+` para iniciar o processamento de uma instrução `class`.
-<3> Antes de analisar o corpo da classe, o Python acrescenta `+__module__+` e `+__qualname__+` ao espaço de nomes de uma classe em construção.
+<2> Python invoca `+__prepare__+` para iniciar o processamento de uma instrução `class`.
+<3> Antes de analisar o corpo da classe, Python acrescenta `+__module__+` e `+__qualname__+` ao espaço de nomes de uma classe em construção.
 <4> A instância do descritor é criada...
 <5> ...e vinculada a `attr` no espaço de nomes da classe.
 <6> Os métodos `+__init__+` e `+__repr__+` são definidos e adicionados ao espaço de nomes.
-<7> Após terminar o processamento do corpo da classe, o Python chama `+MetaKlass.__new__+`.
-<8> `+__set_name__+`, `+__init_subclass__+` e o decorador são invocados nessa ordem, após o método 
+<7> Após terminar o processamento do corpo da classe, Python chama `+MetaKlass.__new__+`.
+<8> `+__set_name__+`, `+__init_subclass__+` e o decorador são invocados nessa ordem, após o método
 `+__new__+` da metaclasse devolver a classe recém-criada.
 
 Se executarmos _evaldemo_meta.py_ como um script, `main()` é chamado, e algumas outras coisas acontecem (veja o <<evaldemo_meta_script_ex>>).
@@ -1044,9 +1045,9 @@ Nosso _checkedlib.py_ usando `+__init_subclass__+` é um sucesso na empresa, e e
 
 Analisando o perfil de uma prova de conceito, descobrimos que usar `+__slots__+` pode reduzi os custos de hospedagem, por duas razões:
 
-* Menos uso de memória, já que as instâncias de `Checked` não precisarão manter seus próprios 
+* Menos uso de memória, já que as instâncias de `Checked` não precisarão manter seus próprios
 `+__dict__+`
-* Melhor desempenho, pela remoção de `+__setattr__+`, que foi criado só para bloquear atributos inesperados, mas é acionado na instanciação e para todas as definições de atributos antes de 
+* Melhor desempenho, pela remoção de `+__setattr__+`, que foi criado só para bloquear atributos inesperados, mas é acionado na instanciação e para todas as definições de atributos antes de
 `+Field.__set__+` ser chamado para realizar seu trabalho
 
 ****
@@ -1079,7 +1080,7 @@ A classe descritora `Field` agora está um pouco diferente. Nos exemplos anterio
 Isso tornava desnecessário que `Field` implementasse um método `+__get__+`.
 
 Entretanto, quando uma classe como `Movie` usa `+__slots__+`, ela não pode ter atributos de classe e atributos de instância com o mesmo nome. Cada instância do descritor é um atributo de classe, e agora precisamos de atributos de armazenamento separados em cada instância. O código usa o nome do descritor prefixado por um único `_`.
-Portanto, instâncias de `Field` têm atributos `name` e `storage_name` distintos, e implementamos 
+Portanto, instâncias de `Field` têm atributos `name` e `storage_name` distintos, e implementamos
 `+Field.__get__+`.
 
 [[checkedlib_uml_mgn]]
@@ -1113,7 +1114,7 @@ include::code/24-class-metaprog/checked/metaclass/checkedlib.py[tags=CHECKED_MET
 ====
 <1> `+__new__+` é o único método implementado em `CheckedMeta`.
 <2> Só melhora a classe se seu `cls_dict` não incluir `+__slots__+`. Se `+__slots__+` já está presente, assume que essa é a classe base `Checked` e não uma subclasse definida pelo usuário, e cria a classe sem modificações.
-<3> Nos exemplos anteriores usamos `typing.get_type_hints` para obter as dicas de tipo, mas aquilo exige um classe existente como primeiro argumento. Neste ponto, a classe que estamos configurando  ainda não existe, então precisamos recuperar `+__annotations__+` diretamente do `cls_dict`—o espaço de nomes da classe em construção, que o Python passa como último argumento para o `+__new__+` da metaclasse.
+<3> Nos exemplos anteriores usamos `typing.get_type_hints` para obter as dicas de tipo, mas aquilo exige um classe existente como primeiro argumento. Neste ponto, a classe que estamos configurando  ainda não existe, então precisamos recuperar `+__annotations__+` diretamente do `cls_dict`—o espaço de nomes da classe em construção, que Python passa como último argumento para o `+__new__+` da metaclasse.
 <4> Itera sobre `type_hints` para...
 <5> ...criar um `Field` para cada atributo anotado...
 <6> ...sobrescreve o item correspondente em `cls_dict` com a instância de `Field`...
@@ -1164,7 +1165,7 @@ Decoradores de classes:: Mais simples de entender que metaclasses, e com menor p
 
 O `dict` embutido preservando a ordem de inserção de chaves:: Eliminou((("keys", "preserving key insertion order"))) a principal razão para usar `+__prepare__+`:
 fornecer um `OrderedDict` para armazenar o espaço de nomes de uma classe em construção.
-O Python só invoca `+__prepare__+` em metaclasses e então, se fosse necessário processar o espaço de nomes da classe na ordem em que eles aparecem o código-fonte, antes do Python 3.6 era preciso usar uma metaclasse.
+Python só invoca `+__prepare__+` em metaclasses e então, se fosse necessário processar o espaço de nomes da classe na ordem em que eles aparecem o código-fonte, antes de Python 3.6 era preciso usar uma metaclasse.
 
 Em 2021, todas as versões sob manutenção ativa do CPython suportam todos os recursos listados acima.
 
@@ -1178,7 +1179,7 @@ together with so-called "new-style classes," descriptors, and properties.
 
 É impressionante que o exemplo do `MetaBunch`, postado pela primeira vez por Alex Martelli em julho de 2002, ainda funcione no Python 3.9—a única modificação sendo a forma de especificar a metaclasse a ser usada, algo que no Python 3 é feito com a sintaxe `class Bunch(metaclass=MetaBunch):`.
 
-Nenhum dos acréscimos que mencionei na <<metaclass_modern_features_sec>> quebrou código existente que usava metaclasses. Mas código legado com metaclasses frequentemente pode ser simplificado através do uso daqueles recursos, especialmente se for possível ignorar versões do Python anteriores à 3.6—versões que não são mais mantidas.
+Nenhum dos acréscimos que mencionei na <<metaclass_modern_features_sec>> quebrou código existente que usava metaclasses. Mas código legado com metaclasses frequentemente pode ser simplificado através do uso daqueles recursos, especialmente se for possível ignorar versões de Python anteriores à 3.6—versões que não são mais mantidas.
 
 
 ==== Uma classe só pode ter uma metaclasse
@@ -1213,7 +1214,7 @@ Há duas maneiras de lidar com esse erro:
 
 [TIP]
 ====
-Posso aceitar a solução de uma metaclasse com duas metaclasses base, implementada para atender um prazo. 
+Posso aceitar a solução de uma metaclasse com duas metaclasses base, implementada para atender um prazo.
 Na minha experiência, a programação de metaclasses sempre leva mais tempo que o esperado, tornando essa abordagem arriscada ante um prazo inflexível.
 Se você fizer isso e cumprir o prazo previsto, seu código pode conter bugs sutis.
 E mesmo na ausência de bugs conhecidos, essa abordagem deveria ser considerada uma dívida técnica, pelo simples fato de ser difícil de entender e manter.
@@ -1222,16 +1223,16 @@ E mesmo na ausência de bugs conhecidos, essa abordagem deveria ser considerada 
 
 ==== Metaclasses devem ser detalhes de implementação
 
-Além de `type`, existem apenas outras seis metaclasses em toda a bilbioteca padrão do Python 3.9.
-As metaclasses mais conhecidas provavelmnete são `abc.ABCMeta`, `typing.NamedTupleMeta` e 
+Além de `type`, existem apenas outras seis metaclasses em toda a bilbioteca padrão de Python 3.9.
+As metaclasses mais conhecidas provavelmnete são `abc.ABCMeta`, `typing.NamedTupleMeta` e
 `enum.EnumMeta`.
 Nenhuma delas foi projetada com a intenção de aparecer explicitamente no código do usuário.
 Podemos considerá-las detalhes de implementação.
 
-Apesar de ser possível fazer metaprogramação bem maluca com metaclasses, é melhor se ater ao 
+Apesar de ser possível fazer metaprogramação bem maluca com metaclasses, é melhor se ater ao
 https://fpy.li/24-15[princípio do menor espanto], de forma que a maioria dos usuários possa de fato considerar metaclasses detalhes de implementação.footnote:[Eu ganhei a vida por alguns anos escrevendo código para Django, antes de resolver estudar como os campos dos modelos Django eram implementados. Só então aprendi sobre descritores e metaclasses.]
 
-Nos últimos anos, algumas metaclasses na biblioteca padrão do Python foram substituídas por outros mecanismos, sem afetar a API pública de seus pacotes. A forma mais simples de resguardar essas APIs para o futuro é oferecer uma classe regular, da qual usuários podem então criar subclasses para acessar a funcionalidade fornecida pela metaclasse. como fizemos em nossos exemplos.
+Nos últimos anos, algumas metaclasses na biblioteca padrão de Python foram substituídas por outros mecanismos, sem afetar a API pública de seus pacotes. A forma mais simples de resguardar essas APIs para o futuro é oferecer uma classe regular, da qual usuários podem então criar subclasses para acessar a funcionalidade fornecida pela metaclasse. como fizemos em nossos exemplos.
 
 Para encerrar nossa conversa sobre metaprogramação de classes, vou compartilhar com vocês o pequeno exemplo de metaclasse mais sofisticado que encontrei durante minha pesquisa para esse capítulo.((("", startref="CMissue24")))((("", startref="MCconsider24")))
 
@@ -1239,9 +1240,9 @@ Para encerrar nossa conversa sobre metaprogramação de classes, vou compartilha
 [[metahack_sec]]
 === Um _hack_ de metaclasse com pass:[__prepare__]
 
-Quando((("class metaprogramming", "&#x005F;&#x005F;prepare&#x005F;&#x005F; method", id="CMjprepare24", secondary-sortas="prepare")))((("&#x005F;&#x005F;prepare&#x005F;&#x005F;", id="prepare24"))) atualizei esse capítulo para a segunda edição, precisava encontrar exemplos simples mas reveladores, para substituir o código de `LineItem` no exemplo da loja de comida a granel, que não precisava mais de metaclasses desde o Python 3.6.
+Quando((("class metaprogramming", "&#x005F;&#x005F;prepare&#x005F;&#x005F; method", id="CMjprepare24", secondary-sortas="prepare")))((("&#x005F;&#x005F;prepare&#x005F;&#x005F;", id="prepare24"))) atualizei esse capítulo para a segunda edição, precisava encontrar exemplos simples mas reveladores, para substituir o código de `LineItem` no exemplo da loja de comida a granel, que não precisava mais de metaclasses desde Python 3.6.
 
-A ideia de metaclasse mais interessante e mais simples me foi dada por 
+A ideia de metaclasse mais interessante e mais simples me foi dada por
 João S. O. Bueno—mais conhecido como JS na comunidade Python brasileira.
 Uma aplicação de sua ideia é criar uma classe que gera constantes numéricas automaticamente:
 
@@ -1263,12 +1264,12 @@ include::code/24-class-metaprog/autoconst/autoconst.py[tags=AUTOCONST]
 
 Claramente, o truque está em `WilyDict`.
 
-Quando o Python processa o espaço de nomes da classe do usuário e lê `banana`, ele procura aquele nome no mapeamento fornecido por `+__prepare__+`: uma instância de `WilyDict`.
+Quando Python processa o espaço de nomes da classe do usuário e lê `banana`, ele procura aquele nome no mapeamento fornecido por `+__prepare__+`: uma instância de `WilyDict`.
 `WilyDict` implementa `+__missing__+`, tratado na <<missing_method>>.
-A instância de `WilyDict` inicialmente não contém uma chave `'banana'`, então o método 
+A instância de `WilyDict` inicialmente não contém uma chave `'banana'`, então o método
 `+__missing__+` é acionado.
 Ele cria um item em tempo real, com a chave `'banana'` e o valor `0`, e devolve esse valor.
-O Python se contenta com isso, e daí tenta recuperar `'coconut'`.
+Python se contenta com isso, e daí tenta recuperar `'coconut'`.
 `WilyDict` imediatamente adiciona aquele item com o valor `1`, e o devolve.
 O mesmo acontece com `'vanilla'`, que é então mapeado para `2`.
 
@@ -1283,17 +1284,17 @@ Aqui está o código-fonte de `WilyDict`, também de _autoconst.py_:
 include::code/24-class-metaprog/autoconst/autoconst.py[tags=WilyDict]
 ----
 
-Enquanto experimentava, descobri que o Python procurava `+__name__+` no espaço de nomes da classe em construção, fazendo com que `WilyDict` acrescentasse um item `+__name__+` e incrementasse `+__next_value+`.
+Enquanto experimentava, descobri que Python procurava `+__name__+` no espaço de nomes da classe em construção, fazendo com que `WilyDict` acrescentasse um item `+__name__+` e incrementasse `+__next_value+`.
 Eu então inseri uma instrução `if` em `+__missing__+`, para gerar um `KeyError` para chaves que se parecem com atributos _dunder_.
 
-O pacote _autoconst.py_ tanto exige quanto ilustra o mecanismo de criação dinâmica de classes do Python.
+O pacote _autoconst.py_ tanto exige quanto ilustra o mecanismo de criação dinâmica de classes de Python.
 
-Me diverti muito adicionando mais funcionalidades a `AutoConstMeta` e `AutoConst`, mas em vez de compartilhar meus experimentos, vou deixar vocês se divertirem, brincando com o _hack_ genial de JS. 
+Me diverti muito adicionando mais funcionalidades a `AutoConstMeta` e `AutoConst`, mas em vez de compartilhar meus experimentos, vou deixar vocês se divertirem, brincando com o _hack_ genial de JS.
 
 Aqui estão algumas ideias:
 
-* Torne possivel obter o nome da constante a partir do valor. Por exemplo, `Flavor[2]` devolveria `'vanilla'`. Você pode fazer isso implementando `+__getitem__+` em `AutoConstMeta`. Desde o 
-Python 3.9, épossível implementar 
+* Torne possivel obter o nome da constante a partir do valor. Por exemplo, `Flavor[2]` devolveria `'vanilla'`. Você pode fazer isso implementando `+__getitem__+` em `AutoConstMeta`. Desde o
+Python 3.9, épossível implementar
 pass:[<a href="https://fpy.li/24-16"><code>__class_getitem__</code></a>]
 na própria `AutoConst`.
 
@@ -1307,7 +1308,7 @@ Divirta-se!
 [NOTE]
 ====
 O método especial `+__class_getitem__+` foi introduzido no Python 3.9 para suportar tipos genéricos, como parte da https://fpy.li/pep585[PEP 585—Type Hinting Generics In Standard Collections (_Dicas de Tipos Genéricas em Coleções Padrão_)] (EN).
-Graças a `+__class_getitem__+`, os desenvolvedores principais do Python não precisaram escrever uma nova metaclasse para que os tipos embutidos implementassem `+__getitem__+`, de modo que fosse possível escrever dicas de tipo genéricas, tal como `list[int]`.
+Graças a `+__class_getitem__+`, os desenvolvedores principais de Python não precisaram escrever uma nova metaclasse para que os tipos embutidos implementassem `+__getitem__+`, de modo que fosse possível escrever dicas de tipo genéricas, tal como `list[int]`.
 Esse é um recurso restrito, mas representativo, de um caso de uso mais amplo para metaclasses: implementar operadores e outros métodos especiais para funcionarem a nível de classes, tal como fazer a própria classe iterável, como as subclasses de `Enum`.((("", startref="prepare24")))((("", startref="CMjprepare24")))
 ====
 
@@ -1337,10 +1338,10 @@ Acredito que o conselho de Martelli se aplica não apenas a ABCs e metaclasses,
 mas também a hierarquias de classe, sobrecarga de operadores, decoradores de funções, descritores, decoradores de classes e fábricas de classes usando `+__init_subclass__+`.
 
 Em princípio, essas poderosas ferramentas existem para suportar o desenvolvimento de bibliotecas e frameworks.
-Naturalmente, as aplicações devem _usar_ tais ferramentas, na forma oferecida pela biblioteca padrão do Python ou por pacotes externos. 
+Naturalmente, as aplicações devem _usar_ tais ferramentas, na forma oferecida pela biblioteca padrão de Python ou por pacotes externos.
 Mas _implementá-las_ em código de aplicações é frequentemente resultado de uma abstração prematura.
 
-[quote, David Heinemeier Hansson, criador do Ruby on Rails]
+[quote, David Heinemeier Hansson, criador de Ruby on Rails]
 ____
 Bons frameworks são extraídos, não inventados.footnote:[Essa frase é muito citada. Encontrei uma citação direta antiga em um https://fpy.li/24-19[post] de 2005 no blog de DHH.]
 ____
@@ -1360,9 +1361,9 @@ Os conceitos de "[momento/tempo de] importação" e "[momento/tempo de] execuç�
 
 Nossa exploração de metaclasses começou com um explicação geral de `type` como uma metaclasse,
 e sobre como metaclasses definidas pelo usuário podem implementar `+__new__+`, para personalziar as classes que criam.
-Vimos então nossa primeira metaclasse personalizada, o clássico exemplo `MetaBunch`, usando 
+Vimos então nossa primeira metaclasse personalizada, o clássico exemplo `MetaBunch`, usando
 `+__slots__+`.
-A seguir, outro experimento com o tempo de avaliação demonstrou como os métodos `+__prepare__+` e 
+A seguir, outro experimento com o tempo de avaliação demonstrou como os métodos `+__prepare__+` e
 `+__new__+` de uma metaclasse são invocados mais cedo que `+__init_subclass__+` e decoradores de classe, oferecendo oportunidades para uma personalização de classes mais profunda.
 
 A terceira versão de uma fábrica de classes `Checked`, com descritores `Field` e uma configuração personalizada de `+__slots__+` foi apresentada, seguida de considerações gerais sobre o uso de metaclasses na prática.
@@ -1370,7 +1371,7 @@ A terceira versão de uma fábrica de classes `Checked`, com descritores `Field`
 Por fim, vimos o hack `AutoConst`, inventado por João S. O. Bueno, baseado na brilhante ideia de uma metaclasse com `+__prepare__+` devolvendo um mapeamento que implementa `+__missing__+`.
 Em menos de 20 linhas de código, _autoconst.py_ demonstra o poder da combinação de técnicas de metaprogramação no Python.
 
-Nunca encontrei outra linguagem como o Python, fácil para iniciantes, prática para profissionais e empolgante para hackers. 
+Nunca encontrei outra linguagem como Python, fácil para iniciantes, prática para profissionais e empolgante para hackers.
 Obrigado, Guido van Rossum e todos que a fazem ser assim.
 
 
@@ -1380,14 +1381,14 @@ Obrigado, Guido van Rossum e todos que a fazem ser assim.
 Caleb Hattingh—um dos revisores técnicos((("class metaprogramming", "further reading on"))) desse livro—escreveu o pacote https://fpy.li/24-20[_autoslot_], fornecendo uma metaclasse para a criação automática do atributo `+__slots__+` em uma classe definida pelo usuário, através da inspeção do bytecode de `+__init__+` e da identificação de todas as atribuições a atributos de `self`.
 Além de útil, esse pacote é um excelente exemplo para estudo: são apenas 74 linhas de código em _autoslot.py_, incluindo 20 linhas de comentários que explicam as partes mais difíceis.
 
-As referências essenciais deste capítulo na documentação do Python são https://docs.python.org/pt-br/3/reference/datamodel.html#customizing-class-creation["3.3.3. Personalizando a criação de classe"] no capítulo "Modelos de Dados" da _Referência da Linguagem Python_, que cobre `+__init_subclass__+` e metaclasses. A https://docs.python.org/pt-br/3/library/functions.html#type[documentação da classe ++type++] na página "Funções Embutidas", e https://docs.python.org/pt-br/3/library/stdtypes.html#special-attributes["4.13. Atributos especiais"] do capítulo "Tipos embutidos" na _Biblioteca Padrão do Python_ também são leituras fundamentais.
+As referências essenciais deste capítulo na documentação de Python são https://docs.python.org/pt-br/3/reference/datamodel.html#customizing-class-creation["3.3.3. Personalizando a criação de classe"] no capítulo "Modelos de Dados" da _Referência da Linguagem Python_, que cobre `+__init_subclass__+` e metaclasses. A https://docs.python.org/pt-br/3/library/functions.html#type[documentação da classe ++type++] na página "Funções Embutidas", e https://docs.python.org/pt-br/3/library/stdtypes.html#special-attributes["4.13. Atributos especiais"] do capítulo "Tipos embutidos" na _Biblioteca Padrão de Python_ também são leituras fundamentais.
 
-Na _Biblioteca Padrão do Python_, a https://docs.python.org/pt-br/3/library/types.html[documentação do módulo `types`] trata de duas funções introduzidas no Python 3.3, que simplificam a metaprogramação de classes: `types.new_class` and `types.prepare_class`.
+Na _Biblioteca Padrão de Python_, a https://docs.python.org/pt-br/3/library/types.html[documentação do módulo `types`] trata de duas funções introduzidas no Python 3.3, que simplificam a metaprogramação de classes: `types.new_class` and `types.prepare_class`.
 
 Decoradores de classes foram formalizados na https://fpy.li/24-25[PEP 3129—Class Decorators (_Decoradores de Classes_)] (EN), escrita por Collin Winter, com a implemetação de referência desenvolvida por Jack Diederich. A palestra "Class Decorators: Radically Simple"  (_Decoradores de Classes: Radicalmente Simples_. Aqui o https://fpy.li/24-26[video] (EN)), na PyCon 2009, também de Jack Diederich, é uma rápida introdução a esse recurso.
-Além de `@dataclass`, um exemplo interessante—e muito mais simples—de decorador de classes na bilbioteca padrão do Python é https://docs.python.org/pt-br/3/library/functools.html#functools.total_ordering[`functools.total_ordering`] (EN), que gera métodos especiais para comparação de objetos.
+Além de `@dataclass`, um exemplo interessante—e muito mais simples—de decorador de classes na bilbioteca padrão de Python é https://docs.python.org/pt-br/3/library/functools.html#functools.total_ordering[`functools.total_ordering`] (EN), que gera métodos especiais para comparação de objetos.
 
-Para metaclasses, a principal referência na documentação do Python é a 
+Para metaclasses, a principal referência na documentação de Python é a
 https://fpy.li/pep3115[PEP 3115—Metaclasses in Python 3000 (_Metaclasses no Python 3000_)],
 onde o método especial `+__prepare__+` foi introduzido.
 
@@ -1395,7 +1396,7 @@ O pass:[<a href="https://fpy.li/pynut3" class="orm:hideurl"><em>Python in a Nuts
 O pass:[<a href="https://fpy.li/effectpy" class="orm:hideurl"><em>Effective Python</em></a>], 2ª ed. (Addison-Wesley), de Brett Slatkin, traz vários exemplos atualizados de técnicas de criação de classes, incluindo metaclasses.
 
 [role="pagebreak-before less_space"]
-Para aprender sobre as origens da metaprogramação de classes no Python, recomento o artigo de Guido van Rossum de 2003, 
+Para aprender sobre as origens da metaprogramação de classes no Python, recomento o artigo de Guido van Rossum de 2003,
 https://fpy.li/24-28["Unifying types and classes in Python 2.2" (_Unificando tipos e classes no Python 2.2_)] (EN).
 O texto se aplica também ao Python moderno, pois cobre o quê era então chamado de "novo estilo" de  semântica de classes—a semântica default no Python 3—incluindo descritores e metaclasses.
 Uma das referências citadas por Guido é
@@ -1411,19 +1412,20 @@ ____
 Pena que esteja fora de catálogo; sempre me refiro a ele como o melhor tutorial que conheço para o difícil tópico da herança múltipla cooperativa, suportada pelo Python através da função `super()`.footnote:[Comprei um exemplar usado, e achei uma leitura muito desafiadora.]
 ____
 
-Se você gosta de metaprogramação, talvez gostaria que o Python suportasse o recurso definitivo de metaprogramação: macros sintáticas, como as oferecidas pela família de linguagens Lisp e—mais recentemente—pelo Elixir e pelo Rust.
+Se você gosta de metaprogramação, talvez gostaria que Python suportasse o recurso definitivo de metaprogramação: macros sintáticas, como as oferecidas pela família de linguagens Lisp e—mais recentemente—pelo Elixir e pelo Rust.
 Macros sintáticas são mais poderosas e menos sujeitas a erros que as macros primitivas de substituição de código da linguagem C.
 Elas são funções especiais que reescrevem código-fonte para código padronizado, usando uma sintaxe personalizada, antes da etapa de compilação,
 permitindo a desenvolvedores introduzir novas estruturas na linguagem sem modificar o compilador.
 Como a sobrecarga de operadores, macros sintáticas podem ser mal usadas.
 Mas, desde que a comunidade entenda e gerencie as desvantagens, elas suportam abstrações poderosas e amigáveis, como as DSLs (Domain-Specific Languages—_Linguagens de Domínio Específico_).
-Em setembro de 2020, Marc Shannon, um dos desenvolvedores principais do Python, publicou a 
+Em setembro de 2020, Marc Shannon, um dos desenvolvedores principais de Python, publicou a
 https://fpy.li/pep638[PEP 638—Syntactic Macros (_Macros Sintáticas_)] (EN), defendendo exatamente isso.
 Um ano após sua publicação inicial (quando escrevo essas linhas), a PEP 638 ainda era um rascunho e não havia discussões contínuas sobre ela.
-Claramente não é uma prioridade muito alta entre os desenvolvedores principais do Python.
+Claramente não é uma prioridade muito alta entre os desenvolvedores principais de Python.
 Eu gostaria de ver a PEP 638 sendo melhor discutida e, por fim, aprovada.
-Macros sintáticas permitiriam à comunidade Python experimentar com novos recursos controversos, tal como o "operador morsa" (_operador walrus_) (https://fpy.li/pep572[PEP 572] (EN)),
-correspondência/casamento de padrões (https://fpy.li/pep634[PEP 634] (EN)) e regras alternativas para avaliação de dicas de tipo
+Macros sintáticas permitiriam à comunidade Python experimentar com novos recursos controversos,
+tal como o "operador morsa" (_operador walrus_) (https://fpy.li/pep572[PEP 572] (EN)),
+casamento de padrões (https://fpy.li/pep634[PEP 634] (EN)) e regras alternativas para avaliação de dicas de tipo
 (PEPs https://fpy.li/pep563[563] (EN) e
 https://fpy.li/pep649[649] (EN)),
 antes que se fizessem modificações permanentes no núcleo da linguagem.
@@ -1437,7 +1439,7 @@ https://fpy.li/24-29[MacroPy].
 
 Vou((("class metaprogramming", "Soapbox discussion")))((("Soapbox sidebars", "programming language design"))) iniciar o último ponto de vista no livro com uma longa citação de Brian Harvey e Matthew Wright, dois professores de ciência da computação da Universidade da California (Berkeley e Santa Barbara). Em seu livro, _Simply Scheme: Introducing Computer Science_ ("Simplesmente Scheme: Introduzindo a Ciência da Computação") (MIT Press), Harvey e Wright escreveram:
 
-    
+
 [quote, Brian Harvey and Matthew Wright, no prefácio de <em>Simply Scheme</em>]
 ____
 Há duas escolas de pensamento sobre o ensino de ciência da computação. Podemos representar as duas visões de uma forma caricatual, assim:
@@ -1449,7 +1451,7 @@ ____
 As descrições exageradas de Harvey e Wright versam sobre o ensino de ciência da computação,
 mas também se aplicam ao projeto de linguagens de programação.
 Nesse ponto você já deve ter adivinhado que eu concordo com a visão "radical",
-e acredito que o Python foi projetado nesse espírito.
+e acredito que Python foi projetado nesse espírito.
 
 A ideia de propriedade é um grande passo adiante, comparado com a abordagem "métodos de acesso desde o início",
 praticamente exigida em Java e suportada pela geração de _getters/setters_ através de atalhos do teclado por IDEs Java.
@@ -1458,16 +1460,16 @@ simplesmente expondo atributos publicamente—no espírito do _KISS_—sabendo
 que um atributo público pode se tornar uma propriedade a qualquer momento sem quebrar código existente.
 Mas a ideia de descritor vai muito além disso,
 fornecendo um framework para abstrair lógica repetitiva para acessar atributos.
-Esse framework é tão eficiente que mecanismos essenciais do Python o utilizam por baixo dos panos.
+Esse framework é tão eficiente que mecanismos essenciais de Python o utilizam por baixo dos panos.
 
 Outra ideia poderosa são as funções como objetos de primeira classe, pavimentando o caminho para funções de ordem superior. E acontece que a combinação de descritores e funções de ordem superior permite a unificação de funções e métodos. O `+__get__+` de uma função produz um objeto método em tempo real, vinculando a instância ao argumento `self`. Isso é elegante.footnote:[__Machine Beauty: Elegance and the Heart of Technology__ ("Beleza de Máquina: A Elegância e o Coração da Tecnologia"), de David Gelernter (Basic Books), começa com uma discussão intrigante sobre elegância e estética em obras de engenharia, de pontes a software. Os capítulos posteriores não são tão bons, mas o início vale o preço.]
 
 Por fim, temos((("data structures", see="also data class builders; dictionaries and sets; object references; sequences; Unicode text versus bytes")))((("functions, as first-class objects", see="also decorators and closures")))((("control flow", see="also asynchronous programming; concurrent executors; concurrency models; iterators; generators; with, match, and else blocks")))((("metaprogramming", see="also attribute descriptors; class metaprogramming; dynamic attributes and properties")))((("sets", see="also dictionaries and sets")))((("frozenset", see="also dictionaries and sets")))((("byte sequences", see="also Unicode text versus bytes")))((("text files, handling", see="also Unicode text versus bytes")))((("encoding", see="also Unicode text versus bytes")))((("decoding", see="also Unicode text versus bytes")))((("NFC", see="Normalization Form C")))((("UCA", see="Unicode Collation Algorithm")))((("mutable objects", see="also object references")))((("first-class functions", see="functions, as first-class objects")))((("closures", see="decorators and closures")))((("function decorators", see="decorators and closures")))((("design patterns", see="functions, design patterns with first-class")))((("Pythonic objects", see="also objects")))((("patterns", see="functions, design patterns with first-class; pattern matching")))((("special methods", see="also sequences, special methods for")))((("protocols", see="also interfaces")))((("typing map", see="also type hints (type annotations)")))((("interfaces", see="also goose typing; protocols")))((("subclassing", see="inheritance and subclassing")))((("MRO", see="method resolution order")))((("multiple inheritance", see="also inheritance and subclassing")))((("gradual type system", see="also type hints (type annotations)")))((("type hints (type annotations)", "gradual typing", see="also gradual type system")))((("match blocks", see="with, match, and else blocks")))((("spinners (loading indicators)", see="also network I/O")))((("executors, delegating tasks to", see="also concurrent executors")))((("attributes", see="also attribute descriptors; dynamic attributes and properties")))((("attribute descriptors", see="also attributes; dynamic attributes and properties")))((("properties", see="computed properties; dynamic attributes and properties")))((("descriptors", see="also attribute descriptors")))((("PUG", see="Python Users Group")))((("PSF", see="Python Software Foundation")))((("I/O (input/output)", see="network I/O")))((("LRU", see="Least Recently Used")))((("classes", see="also protocols")))((("binary sequences", see="also Unicode text versus bytes")))((("data model", see="Python Data Model")))((("data attributes", see="attributes")))((("data descriptors", see="overriding descriptors")))((("recycling", see="garbage collection")))((("methods, as callable objects", see="also sequences, special methods for; special methods"))) a ideia de classes como objetos de primeira classe.
-É uma façanha marcante do projeto, que uma linguagem acessível para um iniciante forneça abstrações poderosas, tais como fábricas de classe, decoradores de classe, e metaclasses completas e definidas pelo usuário. 
-Melhor ainda, os recursos avançados estão integrados de forma a não afetar a adequação do Python para programação casual (eles na verdade ajudam nisso, por trás da cortina).
+É uma façanha marcante do projeto, que uma linguagem acessível para um iniciante forneça abstrações poderosas, tais como fábricas de classe, decoradores de classe, e metaclasses completas e definidas pelo usuário.
+Melhor ainda, os recursos avançados estão integrados de forma a não afetar a adequação de Python para programação casual (eles na verdade ajudam nisso, por trás da cortina).
 A conveniência e o sucesso de frameworks como o Django e o SQLAlchemy devem muito às metaclasses.
 Ao longo dos anos, a metaprogramação de classes em Python está se tornando cada vez mais simples, pelo menos para os casos de uso comuns.
-Os melhores recursos da linguagem são aqueles que beneficiam a todos, mesmo que alguns usuários do Python não os conheçam. Mas esses usuários sempre podem aprender, e criar a próxima grande biblioteca.
+Os melhores recursos da linguagem são aqueles que beneficiam a todos, mesmo que alguns usuários de Python não os conheçam. Mas esses usuários sempre podem aprender, e criar a próxima grande biblioteca.
 
-Espero notícias sobre suas contribuições ao ecossistema e à comunidade do Python!
+Espero notícias sobre suas contribuições ao ecossistema e à comunidade de Python!
 ****

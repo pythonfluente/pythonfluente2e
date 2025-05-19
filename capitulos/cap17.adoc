@@ -8,8 +8,8 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[iterables2generators]]
-== Iteradores, geradores e corrotinas clássicas 
+[[ch_generators]]
+== Iteradores, geradores e corrotinas clássicas
 
 //++++
 //<blockquote>
@@ -33,11 +33,11 @@ AU: Of course!
 ////
 
 A iteração((("iterators", "role of"))) é fundamental para o processamento de dados: programas aplicam computações sobre séries de dados, de pixels a nucleotídeos.
-Se os dados não cabem na memória, precisamos buscar esses itens de forma _preguiçosa_—um de cada vez e sob demanda. É isso que um iterador faz. 
+Se os dados não cabem na memória, precisamos buscar esses itens de forma _preguiçosa_—um de cada vez e sob demanda. É isso que um iterador faz.
 Este capítulo mostra como o padrão de projeto _Iterator_ ("Iterador") está embutido na linguagem Python, de modo que nunca será necessário programá-lo manualmente.
 
-Todas as coleções padrão do Python são _iteráveis_.
-Um _iterável_ é um objeto que fornece um _iterador_, que o Python usa para suportar operações como:
+Todas as coleções padrão de Python são _iteráveis_.
+Um _iterável_ é um objeto que fornece um _iterador_, que Python usa para suportar operações como:
 
 * loops `for`
 * Compreensões de lista, dict e set
@@ -47,7 +47,7 @@ Um _iterável_ é um objeto que fornece um _iterador_, que o Python usa para sup
 [role="pagebreak-before less_space"]
 Este((("iterators", "topics covered")))((("generators", "topics covered")))((("coroutines", "topics covered"))) capítulo cobre os seguintes tópicos:
 
-* Como o Python usa a função embutida `iter()` para lidar com objetos iteráveis
+* Como Python usa a função embutida `iter()` para lidar com objetos iteráveis
 * Como implementar o padrão _Iterator_ clássico no Python
 * Como o padrão _Iterator_ clássico pode ser substituído por uma função geradora ou por uma expressão geradora
 * Como funciona uma função geradora, em detalhes, com descrições linha a linha
@@ -59,20 +59,20 @@ Este((("iterators", "topics covered")))((("generators", "topics covered")))((("c
 === Novidades nesse capítulo
 
 A <<yield_from_sec0>> aumentou((("iterators", "significant changes to")))((("generators", "significant changes to")))((("coroutines", "significant changes to"))) de uma para seis páginas.
-Ela agora inclui experimentos simples, demonstrando o comportamento de geradoras com `yield from`, e um exemplo de código para percorrer uma árvore de dados, desenvolvido passo a passo. 
+Ela agora inclui experimentos simples, demonstrando o comportamento de geradoras com `yield from`, e um exemplo de código para percorrer uma árvore de dados, desenvolvido passo a passo.
 
 Novas seções explicam as dicas de tipo para os tipos `Iterable`, `Iterator` e `Generator`.
 
 A última grande seção do capítulo, <<classic_coroutines_sec>>, é agora uma introdução de 9 páginas a um tópico que ocupava um capítulo de 40 páginas na primeira edição.
-Atualizei e transferi o capítulo https://fpy.li/oldcoro[Classic Coroutines (_Corrotinas Clássicas_)] para um 
-https://fpy.li/oldcoro[post no site que acompanha o livro], porque ele era o capítulo mais difícil para os leitores, mas seu tema se tornou menos relevante após a introdução das corrotinas nativas no Python 3.5 (estudaremos as corrotinas nativas no <<async_ch>>).
+Atualizei e transferi o capítulo https://fpy.li/oldcoro[Classic Coroutines (_Corrotinas Clássicas_)] para um
+https://fpy.li/oldcoro[post no site que acompanha o livro], porque ele era o capítulo mais difícil para os leitores, mas seu tema se tornou menos relevante após a introdução das corrotinas nativas no Python 3.5 (estudaremos as corrotinas nativas no <<ch_async>>).
 
 Vamos começar examinando como a função embutida `iter()` torna as sequências iteráveis.
 
 
 === Uma sequência de palavras
 
-Vamos((("iterators", "sequence protocol", id="Isequence17")))((("sequence protocol", id="seqpro17"))) começar nossa exploração de iteráveis implementando uma classe `Sentence`: seu construtor recebe uma string de texto e daí podemos iterar sobre a "sentença" palavra por palavra. A primeira versão vai implementar o protocolo de sequência e será iterável, pois todas as sequências são iteráveis—como sabemos desde o <<data_model>>.
+Vamos((("iterators", "sequence protocol", id="Isequence17")))((("sequence protocol", id="seqpro17"))) começar nossa exploração de iteráveis implementando uma classe `Sentence`: seu construtor recebe uma string de texto e daí podemos iterar sobre a "sentença" palavra por palavra. A primeira versão vai implementar o protocolo de sequência e será iterável, pois todas as sequências são iteráveis—como sabemos desde o <<ch_data_model>>.
 Agora veremos exatamente porque isso acontece.
 
 O <<ex_sentence0>> mostra uma classe `Sentence` que extrai palavras de um texto por
@@ -138,15 +138,15 @@ Programadores Python sabem que sequências são iteráveis. Agora vamos descobri
 [[iter_func_sec]]
 === Porque sequências são iteráveis: a função iter
 
-Sempre((("functions", "iter() function")))((("iterators", "iter() function", id="Iinterfun17")))((("iter() function", id="iterfunc17"))) que o Python precisa iterar sobre um objeto `x`, ele automaticamente invoca `iter(x)`.
+Sempre((("functions", "iter() function")))((("iterators", "iter() function", id="Iinterfun17")))((("iter() function", id="iterfunc17"))) que Python precisa iterar sobre um objeto `x`, ele automaticamente invoca `iter(x)`.
 
 A função embutida `iter`:
 
 . Verifica se o objeto implementa o método `+__iter__+`, e o invoca para obter um iterador.
 . Se `+__iter__+` não for implementado, mas `+__getitem__+` sim, então `iter()` cria um iterador que tenta buscar itens pelo índice, começando de 0 (zero).
-. Se isso falhar, o Python gera um `TypeError`, normalmente dizendo `'C' object is not iterable` (_objeto 'C' não é iterável_), onde `C` é a classe do objeto alvo.
+. Se isso falhar, Python gera um `TypeError`, normalmente dizendo `'C' object is not iterable` (_objeto 'C' não é iterável_), onde `C` é a classe do objeto alvo.
 
-Por isso todas as sequências do Python são iteráveis: por definição, todas elas implementam `+__getitem__+`.
+Por isso todas as sequências de Python são iteráveis: por definição, todas elas implementam `+__getitem__+`.
 Na verdade, todas as sequências padrão também implementam `+__iter__+`, e as suas próprias sequências também deviam implementar esse método, porque a iteração via `+__getitem__+` existe para manter a compatibilidade retroativa, e pode desaparecer em algum momento—apesar dela não ter sido descontinuada no Python 3.10, e eu duvidar que vá ser removida algum dia.
 
 Como mencionado na <<python_digs_seq_sec>>, essa é uma forma extrema de _duck typing_: um objeto é considerado iterável não apenas quando implementa o método especial `+__iter__+`, mas também quando implementa `+__getitem__+`. Veja isso:
@@ -170,7 +170,7 @@ False
 ----
 
 Se uma classe fornece `+__getitem__+`, a função embutida `iter()` aceita uma instância daquela classe como iterável e cria um iterador a partir da instância.
-A maquinaria de iteração do Python chamará `+__getitem__+` com índices, começando de 0, e entenderá um `IndexError` como sinal de que não há mais itens.
+A maquinaria de iteração de Python chamará `+__getitem__+` com índices, começando de 0, e entenderá um `IndexError` como sinal de que não há mais itens.
 
 Observe que, apesar de `spam_can` ser iterável (seu método `+__getitem__+` poderia fornecer itens), ela não é reconhecida assim por uma chamada a `isinstance` contra `abc.Iterable`.
 
@@ -193,15 +193,15 @@ True
 
 [TIP]
 ====
-Desde o Python 3.10, a forma mais precisa de verificar se um objeto `x` é iterável é invocar 
+Desde Python 3.10, a forma mais precisa de verificar se um objeto `x` é iterável é invocar
 `iter(x)` e tratar a exceção `TypeError` se ele não for.
 Isso é mais preciso que usar `isinstance(x, abc.Iterable)`, porque `iter(x)` também leva em consideração o método legado `+__getitem__+`, enquanto a ABC `Iterable` não considera tal método.
 ====
 
 Verificar explicitamente se um objeto é iterável pode não valer a pena, se você for iterar sobre o objeto logo após a verificação.
-Afinal, quando se tenta iterar sobre um não-iterável, a exceção gerada pelo Python é bastante clara: `TypeError: 'C' object is not iterable` (_TypeError: o objeto 'C' não é iterável_). 
+Afinal, quando se tenta iterar sobre um não-iterável, a exceção gerada pelo Python é bastante clara: `TypeError: 'C' object is not iterable` (_TypeError: o objeto 'C' não é iterável_).
 Se você puder fazer algo mais além de gerar um `TypeError`, então faça isso em um bloco `try/except` ao invés de realizar uma verificação explícita.
-A verificação explícita pode fazer sentido se você estiver mantendo o objeto para iterar sobre ele mais tarde; nesse caso, capturar o erro mais cedo torna a depuração mais fácil. 
+A verificação explícita pode fazer sentido se você estiver mantendo o objeto para iterar sobre ele mais tarde; nesse caso, capturar o erro mais cedo torna a depuração mais fácil.
 
 A função embutida `iter()` é usada mais frequentemente pelo Python que no nosso código.
 Há uma segunda maneira de usá-la, mas não é muito conhecida.
@@ -252,7 +252,7 @@ with open('mydata.db', 'rb') as f:
         process_block(block)
 ----
 
-Para deixar o código mais claro, adicionei a atribuição `read64`, que não está no 
+Para deixar o código mais claro, adicionei a atribuição `read64`, que não está no
 https://docs.python.org/pt-br/3.10/library/functions.html#iter[exemplo original].
 A função `partial()` é necessária porque o invocável passado a `iter()` não pode requerer argumentos.
 No exemplo, um objeto `bytes` vazio é a sentinela, pois é isso que `f.read` devolve quando não há mais bytes para ler.
@@ -268,7 +268,7 @@ iterável:: Qualquer objeto a partir do qual a função embutida `iter` consegue
 Objetos que implementam um método `+__iter__+` devolvendo um _iterador_ são iteráveis.
 Sequências são sempre iteráveis, bem como objetos que implementam um método `+__getitem__+` que aceite índices iniciando em 0.
 
-É importante deixar clara a relação entre iteráveis e iteradores: o Python obtém iteradores de iteráveis.
+É importante deixar clara a relação entre iteráveis e iteradores: Python obtém iteradores de iteráveis.
 
 Aqui está um simples loop `for` iterando sobre uma `str`. A `str` `'ABC'` é o iterável aqui. Você não vê, mas há um iterador por trás das cortinas:
 
@@ -309,7 +309,7 @@ C
 `StopIteration` sinaliza que o iterador foi exaurido.
 Essa exceção é tratada internamente pela função embutida `iter()`, que é parte da lógica dos loops `for` e de outros contextos de iteração, como compreensões de lista, desempacotamento iterável, etc.
 
-A interface padrão do Python para um iterador tem dois métodos:
+A interface padrão de Python para um iterador tem dois métodos:
 
 `+__next__+`:: Devolve o próximo item em uma série, gerando `StopIteration` se não há mais nenhum.
 
@@ -367,8 +367,8 @@ O código-fonte do módulo https://fpy.li/17-6[_Lib/types.py_] no Python 3.9 tem
 
 ----
 # Iteradores no Python não são uma questão de tipo, mas sim de protocolo. Um número
-# grande e variável de tipos embutidos implementa *alguma* forma de 
-# iterador.  Não verifique o tipo! Em vez disso, use `hasattr` para 
+# grande e variável de tipos embutidos implementa *alguma* forma de
+# iterador.  Não verifique o tipo! Em vez disso, use `hasattr` para
 # verificar [a existência] de ambos os atributos "__iter__" e "__next__".
 ----
 
@@ -379,7 +379,7 @@ E de fato, é exatamente o que o método `+__subclasshook__+` da ABC `abc.Iterat
 Dado o conselho de __Lib/types.py__ e a lógica implementada em __Lib/_collections_abc.py__, a melhor forma de verificar se um objeto `x` é um iterador é invocar `isinstance(x, abc.Iterator)`. Graças ao `+Iterator.__subclasshook__+`, esse teste funciona mesmo se a classe de `x` não for uma subclasse real ou virtual de `Iterator`.
 ====
 
-Voltando à nossa classe `Sentence` no <<ex_sentence0>>, usando o console do Python é possivel ver claramente como o iterador é criado por `iter()` e consumido por `next()`:
+Voltando à nossa classe `Sentence` no <<ex_sentence0>>, usando o console de Python é possivel ver claramente como o iterador é criado por `iter()` e consumido por `next()`:
 
 [source, pycon]
 ----
@@ -443,7 +443,7 @@ que cria e devolve um `SentenceIterator`. É assim que um iterável e um iterado
 include::code/17-it-generator/sentence_iter.py[tags=SENTENCE_ITER]
 ----
 ====
-<1> O método `+__iter__+` é o único acréscimo à implementação anterior de `Sentence`. Essa versão não inclui um `+__getitem__+`, para deixar claro que a classe é iterável por implementar 
+<1> O método `+__iter__+` é o único acréscimo à implementação anterior de `Sentence`. Essa versão não inclui um `+__getitem__+`, para deixar claro que a classe é iterável por implementar
 `+__iter__+`.
 <2> `+__iter__+` atende ao protocolo iterável instanciando e devolvendo um iterador.
 <3> `SentenceIterator` mantém uma referência para a lista de palavras.
@@ -456,8 +456,8 @@ include::code/17-it-generator/sentence_iter.py[tags=SENTENCE_ITER]
 
 O código do <<ex_sentence1>> passa nos testes do <<demo_sentence0>>.
 
-Veja que não é de fato necessário implementar `+__iter__+` em `SentenceIterator` para esse exemplo funcionar, mas é o correto a fazer: supõe-se que iteradores implementem tanto `+__next__+` quanto 
-`+__iter__+`, e fazer isso permite ao nosso iterador passar no teste 
+Veja que não é de fato necessário implementar `+__iter__+` em `SentenceIterator` para esse exemplo funcionar, mas é o correto a fazer: supõe-se que iteradores implementem tanto `+__next__+` quanto
+`+__iter__+`, e fazer isso permite ao nosso iterador passar no teste
 `issubclass(SentenceIterator, abc.Iterator)`.
 Se tivéssemos tornado `SentenceIterator` uma subclasse de `abc.Iterator`, teríamos herdado o método concreto `+abc.Iterator.__iter__+`.
 
@@ -468,9 +468,9 @@ Mas antes, um pequeno desvio para tratar de um atalho de implementação que pod
 [[iterable_not_self_iterator_sec]]
 ==== Não torne o iterável também um iterador
 
-Uma causa comum de erros na criação de iteráveis é confundir os dois. 
+Uma causa comum de erros na criação de iteráveis é confundir os dois.
 Para deixar claro: iteráveis tem um método `+__iter__+` que instancia um novo iterador a cada invocação.
-Iteradores implementam um método `+__next__+`, que devolve itens individuais, e um método 
+Iteradores implementam um método `+__next__+`, que devolve itens individuais, e um método
 `+__iter__+`, que devolve `self`.
 
 Assim, iteradores também são iteráveis, mas iteráveis não são iteradores.
@@ -494,7 +494,7 @@ ____
 Para "suportar travessias múltiplas", deve ser possível obter múltiplos iteradores independentes de uma mesma instância iterável, e cada iterador deve manter seu próprio estado interno. Assim, uma implementação adequada do padrão exige que cada invocação de `iter(my_iterable)` crie um novo iterador independente. É por essa razão que precisamos da classe `SentenceIterator` neste exemplo.
 
 Agora((("yield keyword", id="yielda17")))((("keywords", "yield keyword", id=Kyielda17"))) que demonstramos de forma apropriada o padrão _Iterator_ clássico, vamos em frente.
-O Python incorporou a instrução `yield` da https://fpy.li/17-7[linguagem CLU], de Barbara Liskov, para não termos que "escrever à mão" o código implementando iteradores.
+Python incorporou a instrução `yield` da https://fpy.li/17-7[linguagem CLU], de Barbara Liskov, para não termos que "escrever à mão" o código implementando iteradores.
 
 As próximas seções apresentam versões mais idiomáticas de `Sentence`.
 
@@ -524,7 +524,7 @@ Segue abaixo uma explicação completa das geradoras.
 
 ==== Como funciona uma geradora
 
-Qualquer((("generators", "yield keyword"))) função do Python contendo a instrução `yield` em seu corpo é uma função geradora: uma função que, quando invocada, devolve um objeto gerador. Em outras palavras, um função geradora é uma fábrica de geradores.
+Qualquer((("generators", "yield keyword"))) função de Python contendo a instrução `yield` em seu corpo é uma função geradora: uma função que, quando invocada, devolve um objeto gerador. Em outras palavras, um função geradora é uma fábrica de geradores.
 
 [role="man-height3"]
 [TIP]
@@ -575,7 +575,7 @@ StopIteration
 <7> Quando a função geradora retorna, o objeto gerador gera uma `StopIteration`.
 
 Uma função geradora cria um objeto gerador que encapsula o corpo da função.
-Quando invocamos `next()` no objeto gerador, 
+Quando invocamos `next()` no objeto gerador,
 a execução avança para o próximo `yield` no corpo da função,
 e a chamada a `next()` resulta no valor produzido quando o corpo da função é suspenso.
 Por fim, o objeto gerador externo criado  pelo Python gera uma `StopIteration` quando a função retorna, de acordo com o protocolo `Iterator`.
@@ -617,7 +617,7 @@ end.      <10>
 <5> O loop exibe `-->` e o valor devolvido por `next(g)`. Esse resultado só aparece após a saída das chamadas `print` dentro da função geradora.
 <6> O texto `start` vem de `print('start')` no corpo da geradora.
 <7> `yield 'A'` no corpo da geradora produz o valor 'A' consumido pelo loop `for`, que é atribuído à variável `c` e resulta na saída `--> A`.
-<8> A iteração continua com a segunda chamada a `next(g)`, avançando no corpo da geradora de 
+<8> A iteração continua com a segunda chamada a `next(g)`, avançando no corpo da geradora de
 `yield 'A'` para `yield 'B'`. O texto `continue` é gerado pelo segundo `print` no corpo da geradora.
 <9> `yield 'B'` produz o valor 'B' consumido pelo loop `for`, que é atribuído à variável `c` do loop, que então exibe `--> B`.
 <10> A iteração continua com uma terceira chamada a `next(it)`, avançando para o final do corpo da função. O texto `end.` é exibido por causa do terceiro `print` no corpo da geradora.
@@ -642,7 +642,7 @@ O oposto de preguiçosa é ávida: avaliação preguiçosa e ávida são termos 
 
 Até aqui, nossas implementações de `Sentence` não são preguiçosas, pois o `+__init__+` cria avidamemente uma lista com todas as palavras no texto, vinculando-as ao atributo `self.words`.
 Isso exige o processamento do texto inteiro, e a lista pode acabar usando tanta memória quanto o próprio texto (provavelmente mais: vai depender de quantos caracteres que não fazem parte de palavras existirem no texto).
-A maior parte desse trabalho será inútil se o usuário iterar apenas sobre as primeiras palavras. 
+A maior parte desse trabalho será inútil se o usuário iterar apenas sobre as primeiras palavras.
 Se você está se perguntado se "Existiria uma forma preguiçosa de fazer isso em Python?", a resposta muitas vezes é "Sim".
 
 A função `re.finditer` é uma versão preguiçosa de `re.findall`. Em vez de uma lista, `re.finditer` devolve uma geradora que produz instâncias de `re.MatchObject` sob demanda.
@@ -732,7 +732,7 @@ Expressões geradoras são "açúcar sintático": elas pode sempre ser substitu�
 === Quando usar expressões geradoras
 
 Eu((("generators", "when to use generator expressions")))((("generator expressions (genexps)"))) usei várias expressões geradoras quando implementamos a classe `Vector` no <<ex_vector_v5>>. Cada um destes métodos contém uma expressão geradora: `+__eq__+`, `+__hash__+`, `+__abs__+`, `angle`, `angles`, pass:[<span class="keep-together"><code>format</code></span>], `+__add__+`, e `+__mul__+`.
-//  has a generator expression. 
+//  has a generator expression.
 Em todos aqueles métodos, uma compreensão de lista também funcionaria, com um custo adicional de memória para armazenar os valores da lista intermediária.
 
 No <<ex_sentence4>>, vimos que uma expressão geradora é um atalho sintático para criar um gerador sem definir e invocar uma função.
@@ -769,12 +769,12 @@ Mas antes, um pequena discussão sonre os conceitos sobrepostos de _iterador_  e
 .Comparando iteradores e geradores
 ****
 
-Na((("iterators", "versus generators", secondary-sortas="generators")))((("generators", "versus iterators", secondary-sortas="iterators"))) documentação e na base de código oficiais do Python, a terminologia em torno de iteradores e geradores é inconsistente e está em evolução. 
+Na((("iterators", "versus generators", secondary-sortas="generators")))((("generators", "versus iterators", secondary-sortas="iterators"))) documentação e na base de código oficiais de Python, a terminologia em torno de iteradores e geradores é inconsistente e está em evolução.
 Adotei as seguintes definições:
 
 iterador::
     Termo geral para qualquer objeto que implementa um método `+__next__+`.
-    Iteradores são projetados para produzir dados a serem consumidos pelo código cliente, isto é, o código que controla o iterador através de um loop `for` ou outro mecanismo de iteração, ou chamando `next(it)` explicitamente no iterador—apesar desse uso explícito ser menos comum. 
+    Iteradores são projetados para produzir dados a serem consumidos pelo código cliente, isto é, o código que controla o iterador através de um loop `for` ou outro mecanismo de iteração, ou chamando `next(it)` explicitamente no iterador—apesar desse uso explícito ser menos comum.
     Na prática, a maioria dos iteradores que usamos no Python são _geradores_.
 
 gerador::
@@ -783,14 +783,14 @@ gerador::
     Em vez disso, usamos((("yield keyword")))((("keywords", "yield keyword"))) a palavra reservada `yield` para criar uma _função geradora_, que é uma fábrica de _objetos geradores_.
     Uma _expressão geradora_ é outra maneira de criar um objeto gerador.
     Objetos geradores fornecem `+__next__+`, então são iteradores.
-    Desde o Python 3.5, também temos _geradores assíncronos_, declarados com `async def`.
-    Vamos estudá-los no <<async_ch>>.
+    Desde Python 3.5, também temos _geradores assíncronos_, declarados com `async def`.
+    Vamos estudá-los no <<ch_async>>.
 
-O https://docs.python.org/pt-br/3/glossary.html[_Glossário do Python_]
-introduziu recentemente o termo 
+O https://docs.python.org/pt-br/3/glossary.html[_Glossário de Python_]
+introduziu recentemente o termo
 https://docs.python.org/pt-br/3/glossary.html#term-generator-iterator[iterador gerador]
 para se referir a objetos geradores criados por funções geradoras,
-enquanto o verbete para 
+enquanto o verbete para
 https://docs.python.org/pt-br/3/glossary.html#term-generator-expression[expressão geradora] diz que ela devolve um "iterador".
 
 
@@ -833,7 +833,7 @@ include::code/17-it-generator/aritprog_v1.py[tags=ARITPROG_CLASS_DEMO]
 ----
 ====
 
-Observe que o tipo dos números na progressão aritmética resultante segue o tipo de `begin + step`, de acordo com as regras de coerção numérica da aritmética do Python. No <<ap_class_demo>>, você pode ver listas de números `int`, `float`, `Fraction`, e `Decimal`.
+Observe que o tipo dos números na progressão aritmética resultante segue o tipo de `begin + step`, de acordo com as regras de coerção numérica da aritmética de Python. No <<ap_class_demo>>, você pode ver listas de números `int`, `float`, `Fraction`, e `Decimal`.
 O <<ex_ap_class>> mostra a implementação da classe `ArithmeticProgression`.
 
 [[ex_ap_class]]
@@ -913,7 +913,7 @@ Por exemplo, a função `itertools.count` devolve um gerador que produz números
 
 [WARNING]
 ====
-`itertools.count` nunca para, então se você chamar `list(count())`, o Python vai tentar criar uma `list` que preencheria todos os chips de memória já fabricados.
+`itertools.count` nunca para, então se você chamar `list(count())`, Python vai tentar criar uma `list` que preencheria todos os chips de memória já fabricados.
 Na prática, sua máquina vai ficar muito mal-humorada bem antes da chamada fracassar.
 ====
 
@@ -1273,7 +1273,7 @@ O último grupo de funções geradoras que vamos examinar nessa seção foram pr
 |=============================================================================================================================================================================================================================================================
 |Módulo|Função|Descrição
 |`itertools`|`groupby(it, key=None)`|Produz tuplas de 2 elementos na forma `(key, group)`, onde `key` é o critério de agrupamento e `group` é um gerador que produz os itens no grupo
-|(embutida)|`reversed(seq)`|Produz os itens de `seq` na ordem inversa, do último para o primeiro; `seq` deve ser uma sequência ou implementar o método especial `+__reversed__+` 
+|(embutida)|`reversed(seq)`|Produz os itens de `seq` na ordem inversa, do último para o primeiro; `seq` deve ser uma sequência ou implementar o método especial `+__reversed__+`
 |`itertools`|`tee(it, n=2)`|Produz uma tupla de _n_ geradores, cada um produzindo os itens do iterável de entrada de forma independente
 |=============================================================================================================================================================================================================================================================
 
@@ -1376,9 +1376,9 @@ Veja o último teste com `any` no <<all_any_demo>>.
 |Módulo|Função|Descrição
 |(embutida)|`all(it)`|Devolve `True` se todos os itens em `it` forem verdadeiros, `False` em caso contrário; `all([])` devolve `True`
 |(embutida)|`any(it)`|Devolve `True` se qualquer item em `it` for verdadeiro, `False` em caso contrário; `any([])` devolve `False`
-|(embutida)|`max(it, [key=,] [default=])`|Devolve o valor máximo entre os itens de `it`;footnote:[Pode também ser invocado na forma 
+|(embutida)|`max(it, [key=,] [default=])`|Devolve o valor máximo entre os itens de `it`;footnote:[Pode também ser invocado na forma
 `+max(arg1, arg2, …, [key=?])+`, devolvendo então o valor máximo entre os argumentos passados.] `key` é uma função de ordenação, como em `sorted`; `default` é devolvido se o iterável estiver vazio
-|(embutida)|`min(it, [key=,] [default=])`|Devolve o valor mínimo entre os itens de `it`.footnote:[Pode também ser invocado na forma 
+|(embutida)|`min(it, [key=,] [default=])`|Devolve o valor mínimo entre os itens de `it`.footnote:[Pode também ser invocado na forma
 `+min(arg1, arg2, …, [key=?])+`, devolvendo então o valor mínimo entre os argumentos passados.] `key` é uma função de ordenação, como em `sorted`; `default` é devolvido se o iterável estiver vazio
 |`functools`|`reduce(func, it, [initial])`|Devolve o resultado da aplicação de `func` consecutivamente ao primeiro par de itens, depois deste último resultado e o terceiro item, e assim por diante; se `initial` for passado, esse argumento formará o par inicial com o primeiro item
 |(embutida)|`sum(it, start=0)`|A soma de todos os itens em `it`, acrescida do valor opcional `start` (para uma precisão melhor na adição de números de ponto flutuante, use `math.fsum`)
@@ -1570,7 +1570,7 @@ Vamos então desenvolver um exemplo mais interessante.
 Nessa((("tree structures, traversing", id="treetravers17"))) seção, veremos `yield from` em um script para percorrer uma estrutura de árvore.
 Vou desenvolvê-lo bem devagar.
 
-A estrutura de árvore nesse exemplo é a https://docs.python.org/pt-br/3/library/exceptions.html#exception-hierarchy[hierarquia das exceções] do Python.
+A estrutura de árvore nesse exemplo é a https://docs.python.org/pt-br/3/library/exceptions.html#exception-hierarchy[hierarquia das exceções] de Python.
 Mas o padrão pode ser adaptado para exibir uma árvore de diretórios ou qualquer outra estrutura de árvore.
 
 Começando de `BaseException` no nível zero, a hierarquia de exceções tem cinco níveis de profundidade no Python 3.10. Nosso primeiro pequeno passo será exibir o nível zero.
@@ -1643,7 +1643,7 @@ Para percorrer uma árvore https://pt.wikipedia.org/wiki/Busca_em_profundidade[p
 Um loop `for` aninhado cuida disso, como no <<ex_tree_step3>>.
 
 [[ex_tree_step3]]
-.tree/step3/tree.py: `sub_tree` percorre os níveis 1 e 2, primeiro em profundidade 
+.tree/step3/tree.py: `sub_tree` percorre os níveis 1 e 2, primeiro em profundidade
 ====
 [source, py]
 ----
@@ -1714,7 +1714,7 @@ include::code/17-it-generator/tree/step5/tree.py[]
 ====
 
 O <<ex_tree_step5>> pode percorrer árvores de qualquer profundidade,
-limitado apenas pelo limite de recursão do Python.
+limitado apenas pelo limite de recursão de Python.
 O limite default permite 1.000 funções pendentes.
 
 Qualquer bom tutorial sobre recursão enfatizará a importância de ter um caso base,
@@ -1728,7 +1728,7 @@ e assim a chamada recursiva não ocorre.
 O caso base ocorre quando a classe `cls` não tem subclasses.
 Nesse caso, `sub_tree` não produz nada, apenas retorna.
 
-O <<ex_tree_step5>> funciona como planejado, 
+O <<ex_tree_step5>> funciona como planejado,
 mas podemos fazê-la mais concisa recordando do padrão que observamos quando
 alcançamos o nível 3 (no <<ex_tree_step4>>):
 produzimos uma subclasse de nível _N_, e então iniciamos um loop `for`
@@ -1754,9 +1754,9 @@ Após esse primeiro encontro com `yield from`, vamos olhar as dicas de tipo para
 [[generic_iterable_types_sec]]
 === Tipos iteráveis genéricos
 
-A((("generators", "generic iterable types")))((("iterators", "generic iterable types"))) bilbioteca padrão do Python contém muitas funções que aceitam argumentos iteráveis.
+A((("generators", "generic iterable types")))((("iterators", "generic iterable types"))) bilbioteca padrão de Python contém muitas funções que aceitam argumentos iteráveis.
 Em seu código, tais funções podem ser anotadas como a função `zip_replace`, vista no <<replacer_ex>>,
-usando `collections.abc.Iterable` (ou `typing.Iterable`, se você precisa suporta o Python 3.8 ou anterior, como explicado no <<legacy_deprecated_typing_box>>). Veja o <<replacer_iterable_ex>>.
+usando `collections.abc.Iterable` (ou `typing.Iterable`, se você precisa suporta Python 3.8 ou anterior, como explicado no <<legacy_deprecated_typing_box>>). Veja o <<replacer_iterable_ex>>.
 
 [[replacer_iterable_ex]]
 .replacer.py devolve um iterador de tuplas de strings
@@ -1767,7 +1767,7 @@ include::code/08-def-type-hints/replacer.py[tags=ZIP_REPLACE]
 ----
 ====
 <1> Define um apelido (_alias_) de tipo; isso não é obrigatório, mas torna a próxima dica de tipo mais legível.
-Desde o Python 3.10, `FromTo` deve ter uma dica de tipo de `typing.TypeAlias`, para esclarecer a razão para essa linha: `FromTo: TypeAlias = tuple[str, str]`.
+Desde Python 3.10, `FromTo` deve ter uma dica de tipo de `typing.TypeAlias`, para esclarecer a razão para essa linha: `FromTo: TypeAlias = tuple[str, str]`.
 <2> Anota `changes` para aceitar um `Iterable` de tuplas `FromTo`.
 
 Tipos `Iterator` não aparecem com a mesma frequência de tipos `Iterable`, mas eles também são simples de escrever.
@@ -1800,7 +1800,7 @@ O <<iter_gen_type_ex>>, quando verificado com o Mypy, revela que o tipo `Iterato
 include::code/17-it-generator/iter_gen_type.py[]
 ----
 ====
-<1> Uma expressão geradora que produz palavras reservadas do Python com menos de `5` caracteres.
+<1> Uma expressão geradora que produz palavras reservadas de Python com menos de `5` caracteres.
 <2> O Mypy infere: `typing.Generator[builtins.str*, None, None]`.footnote:[Na versão 0.910, a versão mais recente disponível quando escrevi este capítulo), o Mypy ainda utiliza os tipos descontinuados de `typing`.]
 <3> Isso também produz strings, mas acrescentei uma dica de tipo explícita.
 <4> Tipo revelado: `typing.Iterator[builtins.str]`.
@@ -1819,13 +1819,13 @@ Geradoras capazes de consumir e devolver valores são corrotinas, nosso próximo
 [NOTE]
 ====
 A https://fpy.li/pep342[PEP 342—Coroutines via Enhanced Generators (_Corrotinas via geradoras aprimoradas_)] introduziu `.send()` e outros recursos que tornaram possível usar geradoras como corrotinas. A PEP 342 usa a palavra "corrotina" (_coroutine_) no mesmo sentido que estou usando aqui.
-É lamentável que a documentação oficial do Python e da biblioteca padrão agora usem uma terminologia inconsistente para se referir a geradoras usadas como corrotinas, me obrigando a adotar o qualificador "corrotina clássica", para diferenciar estas últimas   com os novos objetos "corrotinas nativas".
+É lamentável que a documentação oficial de Python e da biblioteca padrão agora usem uma terminologia inconsistente para se referir a geradoras usadas como corrotinas, me obrigando a adotar o qualificador "corrotina clássica", para diferenciar estas últimas   com os novos objetos "corrotinas nativas".
 
-Após o lançamento do Python 3.5, a tendência é usar "corrotina" como sinônimo de "corrotina nativa". Mas a PEP 342 não está descontinuada, e as corrotinas clássicas ainda funcionam como originalmente projetadas, apesar de não serem mais suportadas por `asyncio`.
+Após o lançamento de Python 3.5, a tendência é usar "corrotina" como sinônimo de "corrotina nativa". Mas a PEP 342 não está descontinuada, e as corrotinas clássicas ainda funcionam como originalmente projetadas, apesar de não serem mais suportadas por `asyncio`.
 ====
 
 Entender as corrotinas clássicas((("coroutines", "understanding classic"))) no Python é mais confuso porque elas são, na verdade, geradoras usadas de uma forma diferente.
-Vamos então dar um passo atrás e examinar outro recurso do Python que pode ser usado de duas maneiras.
+Vamos então dar um passo atrás e examinar outro recurso de Python que pode ser usado de duas maneiras.
 
 Vimos na <<tuples_more_than_lists_sec>> que é possível usar instâncias de `tuple` como registros ou como sequências imutáveis.
 Quando usadas como um registro, se espera que uma tupla tenha um número específico de itens, e cada item pode ter um tipo diferente.
@@ -1860,7 +1860,7 @@ readings: Iterator[float]
 sim_taxi: Generator[Event, float, int]
 ----
 
-Para aumentar a confusão, os autores do módulo `typing` decidiram nomear 
+Para aumentar a confusão, os autores do módulo `typing` decidiram nomear
 aquele tipo `Generator`, quando ele de fato descreve a API de um
 objeto gerador projetado para ser usado como uma corrotina,
 enquanto geradoras são mais frequentemente usadas como iteradores simples.
@@ -1878,7 +1878,7 @@ Aquele parâmetro de tipo é o tipo de `x` na chamada `gen.send(x)`.
 É um erro invocar `.send()` em uma geradora escrita para se comportar como um iterador em vez de uma corrotina.
 Da mesma forma, `ReturnType` só faz sentido para anotar uma corrotina,
 pois iteradores não devolvem valores como funções regulares.
-A única operação razoável em uma geradora usada como um iterador é 
+A única operação razoável em uma geradora usada como um iterador é
 invocar `next(it)` direta ou indiretamente, via loops `for` e
 outras formas de iteração. O `YieldType` é o tipo do valor
 devolvido em uma chamada a `next(it)`.
@@ -1895,7 +1895,7 @@ https://fpy.li/typecoro[documentação de `typing.Coroutine`]
 diz literalmente:
 "A variância e a ordem das variáveis de tipo correspondem às de `Generator`."
 Mas `typing.Coroutine` (descontinuada)
-e `collections.abc.Coroutine` (genérica a partir do Python 3.9)
+e `collections.abc.Coroutine` (genérica a partir de Python 3.9)
 foram projetadas para anotar apenas corrotinas nativas, e não corrotinas clássicas.
 Se você quiser usar dicas de tipo com corrotinas clássicas,
 vai sofrer com a confusão advinda de anotá-las como
@@ -1918,7 +1918,7 @@ Vamos ver agora como as corrotinas clássicas funcionam.
 
 ==== Exemplo: Corrotina para computar uma média móvel
 
-Quando((("coroutines", "computing running averages", id="CRavg17")))((("running averages, computing", id="runavg17")))((("averages, computing", id="avg17"))) discutimos clausuras no <<closures_and_decorators>>,
+Quando((("coroutines", "computing running averages", id="CRavg17")))((("running averages, computing", id="runavg17")))((("averages, computing", id="avg17"))) discutimos clausuras no <<ch_closure_decorator>>,
 estudamos objetos para computar uma média móvel.
 O <<ex_average_oo>> mostra uma classe e o <<ex_average_fixed>> apresenta uma função de ordem superior devolvendo uma função que mantem as variáveis `total` e `count` entre invocações, em uma clausura.
 O <<ex_coroaverager>> mostra como fazer o mesmo com uma corrotina.footnote:[Este exemplo foi inspirado por um trecho enviado por Jacob Holm à lista Python-ideas, em uma mensagem intitulada https://fpy.li/17-20["Yield-From: Finalization guarantees" (_Yield-From: Garantias de finalização_)] (EN). Algumas variantes aparecem mais tarde na mesma thread, e Holm dá mais explicações sobre suas ideia em https://fpy.li/17-21[message 003912] (EN).]
@@ -1931,7 +1931,7 @@ O <<ex_coroaverager>> mostra como fazer o mesmo com uma corrotina.footnote:[Este
 include::code/17-it-generator/coroaverager.py[tags=CORO_AVERAGER]
 ----
 ====
-<1> Essa função devolve uma geradora que produz valores `float`, aceita 
+<1> Essa função devolve uma geradora que produz valores `float`, aceita
 valores `float` via `.send()`, e não devolve um valor útil.footnote:[Na verdade, ela nunca retorna, a menos que uma exceção interrompa o loop. O Mypy 0.910 aceita tanto `None` quanto pass:[<code>typing&#x200b;.NoReturn</code>] como parâmetro de tipo devolvido pela geradora—mas ele também aceita `str` naquela posição, então aparentemente o Mypy não consegue, neste momento, analisar completamente o código da corrotina.]
 <2> Esse loop infinito significa que a corrotina continuará produzindo médias enquanto o código cliente enviar valores.
 <3> O comando `yield` aqui suspende a corrotina, produz um resultado para o cliente e—mais tarde—recebe um valor enviado pelo código de invocação para a corrotina, iniciando outra iteração do loop infinito.
@@ -2000,7 +2000,7 @@ Em vez disso, ela devolve uma tupla com o número de termos e a média.
 Dividi a listagem em duas partes, no <<ex_returning_averager_top>> e no <<ex_returning_averager_coro>>.
 
 [[ex_returning_averager_top]]
-.coroaverager2.py: a primeira parte do arquivo 
+.coroaverager2.py: a primeira parte do arquivo
 ====
 [source, py]
 ----
@@ -2053,7 +2053,7 @@ Vamos ver agora como podemos usar essa corrotina, começando por um exemplo simp
 include::code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER_DEMO_1]
 ----
 ====
-<1> Lembre-se que `averager2` não produz resultados parciais. Ela produz `None`, que o console do Python omite.
+<1> Lembre-se que `averager2` não produz resultados parciais. Ela produz `None`, que o console de Python omite.
 <2> Invocar `.close()` nessa corrotina a faz parar, mas não devolve um resultado, pois a exceção `GeneratorExit` é gerada na linha `yield` da corrotina, então a instrução `return` nunca é alcançada.
 
 Vamos então fazê-la funcionar, no <<ex_coro_averager2_demo_2>>.
@@ -2070,13 +2070,13 @@ include::code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER_DEMO_2]
 <2> A instância de `StopIteration` tem um atributo `value` vinculado ao valor do comando `return` que encerrou a corrotina.
 <3> Acredite se quiser!
 
-Essa ideia de "contrabandear" o valor devolvido para fora de uma corrotina dentro de uma exceção `StopIteration` é um truque bizarro. Entretanto, esse truque é parte da   
+Essa ideia de "contrabandear" o valor devolvido para fora de uma corrotina dentro de uma exceção `StopIteration` é um truque bizarro. Entretanto, esse truque é parte da
 https://fpy.li/pep342[PEP 342—Coroutines via Enhanced Generators (_Corrotinas via geradoras aprimoradas_)] (EN), e está documentada com a https://docs.python.org/pt-br/3/library/exceptions.html#StopIteration[exceção `StopIteration`] e na seção https://docs.python.org/pt-br/3/reference/expressions.html#yield-expressions["Expressões yield"]
-do capítulo 6 de 
+do capítulo 6 de
 https://fpy.li/17-24[_A Referência da Linguagem Python_].
 
 
-Uma geradora delegante pode obter o valor devolvido por uma corrotina diretamente, usando a sintaxe 
+Uma geradora delegante pode obter o valor devolvido por uma corrotina diretamente, usando a sintaxe
 `yield from`, como demonstrado no <<ex_coro_averager2_demo_3>>.
 
 [[ex_coro_averager2_demo_3]]
@@ -2106,19 +2106,19 @@ Não vou tratar de `.throw()` nesse livro porque—como `.send()`—ele só é �
 
 [NOTE]
 ====
-Se você estiver interessado em um tratamento mais aprofundado de corrotinas clássicas—incluindo o método `.throw()`—por favor veja 
+Se você estiver interessado em um tratamento mais aprofundado de corrotinas clássicas—incluindo o método `.throw()`—por favor veja
 https://fpy.li/oldcoro["Classic Coroutines" (_Corrotinas Clássicas_)] (EN) no site que acompanha o livro, pass:[<a href="http://fluentpython.com" class="orm:hideurl"><em>fluentpython.com</em></a>].
 Aquele texto inclui pseudo-código similar ao Python detalhando como `yield from` controla geradoras e corrotinas, bem como uma pequena simulação de eventos discretos, demonstrando uma forma de concorrência usando corrotinas sem um framework de programação assíncrona.
 ====
 
-Na prática, realizar trabalho produtivo com corrotinas exige o suporte de um framework especializada. 
+Na prática, realizar trabalho produtivo com corrotinas exige o suporte de um framework especializada.
 É isso que `asyncio` oferecia para corrotinas clássicas lá atrás, no Python 3.3.
-Com o advento das corrotinas nativas no Python 3.5, os desenvolvedores principais do Python estão gradualmente eliminando o suporte a corrotinas clássicas no `asyncio`.
+Com o advento das corrotinas nativas no Python 3.5, os desenvolvedores principais de Python estão gradualmente eliminando o suporte a corrotinas clássicas no `asyncio`.
 Mas os mecanismos subjacentes são muito similares.
 A sintaxe `async def` torna a corrotinas nativas mais fáceis de identificar no código,
 um grande benefício por si só.
 Internamente, as corrotinas nativas usam `await` em vez de `yield from` para delegar a outras corrotinas.
-O <<async_ch>> é todo sobre esse assunto.
+O <<ch_async>> é todo sobre esse assunto.
 
 Vamos agora encerrar o capítulo com uma seção alucinante sobre co-variância e contra-variância em dicas de tipo para corrotinas.((("", startref="Cvalue17")))
 
@@ -2131,8 +2131,8 @@ mencionei `typing.Generator` como um dos poucos tipos da biblioteca padrão com 
 Agora que estudamos as corrotinas clássicas, estamos prontos para entender esse tipo genérico.
 
 É assim que `typing.Generator` era https://fpy.li/17-25[declarado]
-no módulo _typing.py_ do Python 3.6:footnote:[Desde o Python 3.7,
-`typing.Generator` e outros tipos que correspondem a ABCs em`collections.abc` foram refatorados e encapsulads em torno da ABC correspondente, então seus parâmetros genéricos não são visíveis no código-fonte de _typing.py_ . Por isso estou fazendo referência ao código-fonte do Python 3.6 aqui.]
+no módulo _typing.py_ de Python 3.6:footnote:[Desde Python 3.7,
+`typing.Generator` e outros tipos que correspondem a ABCs em`collections.abc` foram refatorados e encapsulads em torno da ABC correspondente, então seus parâmetros genéricos não são visíveis no código-fonte de _typing.py_ . Por isso estou fazendo referência ao código-fonte de Python 3.6 aqui.]
 
 [source, python3]
 ----
@@ -2205,12 +2205,12 @@ Essa alegre discussão sobre variância encerra o capítulo mais longo do livro.
 
 === Resumo do capítulo
 
-A iteração((("iterators", "overview of")))((("generators", "overview of")))((("coroutines", "overview of"))) está integrada tão profundamente à linguagem que eu gosto de dizer que o Python _groks_ iteradoresfootnote:[De acordo com o https://fpy.li/17-26[Jargon file] (EN), _to grok_ não é meramente aprender algo, mas absorver de uma forma que "aquilo se torna parte de você, parte de sua identidade".]
-A integração do padrão _Iterator_ na semântica do Python é um exemplo perfeito de como padrões de projeto não são aplicáveis a todas as linguagens de programação.
+A iteração((("iterators", "overview of")))((("generators", "overview of")))((("coroutines", "overview of"))) está integrada tão profundamente à linguagem que eu gosto de dizer que Python _groks_ iteradoresfootnote:[De acordo com o https://fpy.li/17-26[Jargon file] (EN), _to grok_ não é meramente aprender algo, mas absorver de uma forma que "aquilo se torna parte de você, parte de sua identidade".]
+A integração do padrão _Iterator_ na semântica de Python é um exemplo perfeito de como padrões de projeto não são aplicáveis a todas as linguagens de programação.
 No Python, um _Iterator_ clássico, implementado "à mão", como no <<ex_sentence1>>, não tem qualquer função prática, exceto como exemplo didático.
 
-Neste capítulo, criamos algumas versões de uma classe para iterar sobre palavras individuais em arquivos de texto (que podem ser muito grandes). 
-Vimos como o Python usa a função embutida `iter()` para criar iteradores a partir de objetos similares a sequências.
+Neste capítulo, criamos algumas versões de uma classe para iterar sobre palavras individuais em arquivos de texto (que podem ser muito grandes).
+Vimos como Python usa a função embutida `iter()` para criar iteradores a partir de objetos similares a sequências.
 Criamos um iterador clássico como uma classe com `+__next__()+`, e então usamos geradoras,
 para tornar cada refatoração sucessiva da classe `Sentence` mais concisa e legível.
 
@@ -2232,7 +2232,7 @@ A PEP onde as funções geradoras foram definidas é a https://fpy.li/pep255[PEP
 
 A pass:[<a href="https://docs.python.org/pt-br/3/library/itertools.html">documentação do módulo <code>itertools</code></a>] é excelente, especialmente por todos os exemplos incluídos. Apesar das funções daquele módulo serem implementadas em C, a documentação mostra como algumas delas poderiam ser escritas em Python, frequentemente se valendo de outras funções no módulo. Os exemplos de utilização também são ótimos; por exemplo, há um trecho mostrando como usar a função `accumulate` para amortizar um empréstimo com juros, dada uma lista de pagamentos ao longo do tempo. Há também a seção https://docs.python.org/pt-br/3/library/itertools.html#itertools-recipes["Receitas com itertools"], com funções adicionais de alto desempenho, usando as funções de `itertools` como base.
 
-Além da bilbioteca padrão do Python, recomendo o pacote https://fpy.li/17-30[More Itertools], que continua a bela tradição do `itertools`, oferecendo geradoras poderosas, acompanhadas de muitos exemplos e várias receitas úteis.
+Além da bilbioteca padrão de Python, recomendo o pacote https://fpy.li/17-30[More Itertools], que continua a bela tradição do `itertools`, oferecendo geradoras poderosas, acompanhadas de muitos exemplos e várias receitas úteis.
 
 "Iterators and Generators" (_Iteradores e Geradoras_), o capítulo 4 de _Python Cookbook_, 3ª ed., de David Beazley e Brian K. Jones (O'Reilly), traz 16 receitas sobre o assunto, de muitos ângulos diferentes, concentradas em aplicações práticas. O capítulo contém algumas receitas esclarecedoras com `yield from`.
 
@@ -2248,14 +2248,14 @@ O pass:[<em><a class="orm:hideurl" href="https://fpy.li/pycook3">Python Cookbook
 Os tutoriais de Beazley sobre esse tópico nas PyCon são famosos por sua profundidade e abrangência.
 O primeiro foi na PyCon US 2008:
 https://fpy.li/17-33["Generator Tricks for Systems Programmers" (_Truques com Geradoras para Programadores de Sistemas_)] (EN).
-A PyCon US 2009 assisitiu ao lendário 
+A PyCon US 2009 assisitiu ao lendário
 https://fpy.li/17-34["A Curious Course on Coroutines and Concurrency" (_Um Curioso Curso sobre Corrotinas e Concorrência_)] (EN)
 (links de vídeo difíceis de encontrar para todas as três partes:
 https://fpy.li/17-35[parte 1],
 https://fpy.li/17-36[parte 2], e
 https://fpy.li/17-37[parte 3]).
-Seu tutorial na PyCon 2014 em Montreal foi 
-https://fpy.li/17-38["Generators: The Final Frontier" (_Geradoras: A Fronteira Final_)], onde ele apresenta mais exemplos de concorrência—então é, na  verdade, mais relacionado aos tópicos do <<async_ch>>.
+Seu tutorial na PyCon 2014 em Montreal foi
+https://fpy.li/17-38["Generators: The Final Frontier" (_Geradoras: A Fronteira Final_)], onde ele apresenta mais exemplos de concorrência—então é, na  verdade, mais relacionado aos tópicos do <<ch_async>>.
 Dave não consegue deixar de explodir cérebros em suas aulas, então, na última parte de "A Fronteira Final", corrotinas substituem o padrão clássico _Visitor_ em um analisador de expressões aritméticas.
 
 Corrotinas permitem organizar o código de novas maneiras e, assim como a recursão e o polimorfismo (despacho dinâmico), demora um certo tempo para se acostumar com suas possibilidades.
@@ -2272,7 +2272,7 @@ Também reescrevi os testes como doctests, então você pode ver o resultados de
 ****
 
 [role="soapbox-title"]
-A interface Iterador minimalista do Python
+A interface Iterador minimalista de Python
 
 Na((("iterators", "Soapbox discussion")))((("generators", "Soapbox discussion")))((("coroutines", "Soapbox discussion")))((("Soapbox sidebars", "minimalistic iterator interface"))) seção "Implementação" do padrão _Iterator_,footnote:[Gamma et. al., _Design Patterns: Elements of Reusable Object-Oriented Software_, p. 261.], a Guange dos Quatro escreveu:
 
@@ -2288,7 +2288,7 @@ ____
 Podemos tornar essa interface ainda menor, fundindo Next, IsDone, e CurrentItem em uma única operação que avança para o próximo objeto e o devolve. Se a travessia estiver encerrada, essa operação daí devolve um valor especial (0, por exemplo), que marca o final da iteração.
 ____
 
-Isso é próximo do que temos em Python: um único método `+__next__+`, faz o serviço. Mas em vez de uma sentinela, que poderia passar desapercebida por enganoo ou distração, a exceção `StopIteration` sinaliza o final da iteração. Simples e correto: esse é o jeito do Python.
+Isso é próximo do que temos em Python: um único método `+__next__+`, faz o serviço. Mas em vez de uma sentinela, que poderia passar desapercebida por enganoo ou distração, a exceção `StopIteration` sinaliza o final da iteração. Simples e correto: esse é o jeito de Python.
 
 [role="soapbox-title"]
 Geradoras conectáveis
@@ -2307,7 +2307,7 @@ Como parte daquela pesquisa, escrevi um script Python para ler um arquivo CDS/IS
 
 Entretanto, por razões operacionais, foi considerado necessário que o _isis2json.py_ suportasse outro formato de dados do CDS/ISIS: os arquivos binários _.mst_, usados em produção na BIREME--para evitar uma exportação dispendiosa para ISO-2709. Agora eu tinha um problema: as bibliotecas usadas para ler arquivos ISO-2709 e _.mst_ tinham APIs muito diferentes. E o loop de escrita JSON já era complicado, pois o script aceitava, na linha de comando, muitas opções para reestruturar cada registro de saída. Ler dados usando duas APIs diferentes no mesmo loop `for` onde o JSON era produzido seria muito difícil de manejar.
 
-A solução foi isolar a lógica de leitura em um par de funções geradoras: uma para cada formato de entrada suportado. No fim, dividi o script _isis2json.py_ em quatro funções. Você pode ver o código-fonte em Python 2, com suas dependências, no repositório https://fpy.li/17-46[_fluentpython/isis2json_] no GitHub.footnote:[O código está em Python 2 porque uma de suas dependências opcionais é uma biblioteca Java chamada _Bruma_, que podemos importar quando executamos o script com o Jython—que ainda não suporta o Python 3.]
+A solução foi isolar a lógica de leitura em um par de funções geradoras: uma para cada formato de entrada suportado. No fim, dividi o script _isis2json.py_ em quatro funções. Você pode ver o código-fonte em Python 2, com suas dependências, no repositório https://fpy.li/17-46[_fluentpython/isis2json_] no GitHub.footnote:[O código está em Python 2 porque uma de suas dependências opcionais é uma biblioteca Java chamada _Bruma_, que podemos importar quando executamos o script com o Jython—que ainda não suporta Python 3.]
 
 Aqui está uma visão geral em alto nível de como o script está estruturado:
 

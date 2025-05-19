@@ -8,7 +8,7 @@
 :chapter-caption: Capítulo
 :part-caption: Parte
 
-[[user_defined_sequences]]
+[[ch_seq_methods]]
 == Métodos especiais para sequências
 
 [quote, Alex Martelli]
@@ -16,8 +16,8 @@ ____
 Não queira saber se aquilo _é_-um pato: veja se ele _grasna_-como-um pato, _anda_-como-um pato, etc., etc., dependendo de qual subconjunto exato de comportamentos de pato você precisa para usar em seus jogos de linguagem. (`comp.lang.python`, Jul. 26, 2000)
 ____
 
-Neste((("sequences, special methods for", "topics covered")))((("Vector class, multidimensional", "topics covered"))) capítulo, vamos criar uma classe `Vector`, para representar um vetor multidimensional—um avanço significativo sobre o `Vector2D` bidimensional do <<pythonic_objects>>.
-`Vector` vai se comportar como uma simples sequência imutável padrão do Python.
+Neste((("sequences, special methods for", "topics covered")))((("Vector class, multidimensional", "topics covered"))) capítulo, vamos criar uma classe `Vector`, para representar um vetor multidimensional—um avanço significativo sobre o `Vector2D` bidimensional do <<ch_pythonic_obj>>.
+`Vector` vai se comportar como uma simples sequência imutável padrão de Python.
 Seus elementos serão números de ponto flutuante, e ao final do capítulo a classe suportará o seguinte:
 
 * O protocolo de sequência básico: `+__len__+` e `+__getitem__+`
@@ -35,7 +35,7 @@ Nossa apresentação voltada para o código será interrompida por uma discussã
 Não((("sequences, special methods for", "significant changes to"))) ocorreu qualquer grande modificação neste capítulo. Há uma breve discussão nova sobre o `typing.Protocol` em um quadro de dicas, no final da <<protocol_duck_section>>.
 
 Na <<slice_aware_sec>>, a implementação do `+__getitem__+` no <<ex_vector_v2>> está mais concisa e robusta que o exemplo na primeira edição, graças ao _duck typing_ e ao `operator.index`.
-Essa mudança foi replicada para as implementações seguintes de `Vector` aqui e no <<operator_overloading>>.
+Essa mudança foi replicada para as implementações seguintes de `Vector` aqui e no <<ch_op_overload>>.
 
 Vamos começar.
 
@@ -49,7 +49,7 @@ Mas antes de implementar os métodos de sequência, vamos desenvolver uma implem
 ****
 Quem((("Vector class, multidimensional", "applications beyond three dimensions")))((("sequences, special methods for", "applications beyond three dimensions"))) precisa de vetores com 1.000 dimensões? Vetores N-dimensionais (com valores grandes de N) são bastante utilizados em recuperação de informação, onde documentos e consultas textuais são representados como vetores, com uma dimensão para cada palavra. Isso se chama https://fpy.li/12-1[Modelo de Espaço Vetorial] (EN). Nesse modelo, a métrica fundamental de relevância é a __similaridade de cosseno__—o cosseno do ângulo entre o vetor representando a consulta e o vetor representando o documento. Conforme o ângulo diminui, o valor do cosseno aumenta, indicando a relevância do documento para aquela consulta: cosseno próximo de 0 significa pouca relevância; próximo de 1 indica alta relevância.
 
-Dito isto, a classe `Vector` nesse capítulo é um exemplo didático. O objetivo é apenas demonstrar alguns métodos especiais do Python no contexto de um tipo sequência, sem grandes conceitos matemáticos.
+Dito isto, a classe `Vector` nesse capítulo é um exemplo didático. O objetivo é apenas demonstrar alguns métodos especiais de Python no contexto de um tipo sequência, sem grandes conceitos matemáticos.
 
 A NumPy e a SciPy são as ferramentas que você precisa para fazer cálculos vetoriais em aplicações reais. O pacote https://fpy.li/12-2[gensim] do PyPi, de Radim Řehůřek, implementa a modelagem de espaço vetorial para processamento de linguagem natural e recuperação de informação, usando a NumPy e a SciPy.
 ****
@@ -83,7 +83,7 @@ Quando um `Vector` tem mais de seis componentes, a string produzida por `repr()`
 `...`, como visto na última linha do <<ex_vector_demo>>. Isso é fundamental para qualquer tipo de coleção que possa conter um número grande de itens, pois `repr` é usado na depuração—e você não quer que um único objeto grande ocupe milhares de linhas em seu console ou arquivo de log. Use o módulo `reprlib` para produzir representações de tamanho limitado, como no <<ex_vector_v1>>. O módulo `reprlib` se chamava `repr` no Python 2.7.
 ====
 
-O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector` (esse exemplo usa como base o código mostrado no pass:[<a data-type="xref" href="#ex_vector2d_v0" data-xrefstyle="select: labelnumber">#ex_vector2d_v0</a>] e no pass:[<a data-type="xref" href="#ex_vector2d_v1" data-xrefstyle="select: labelnumber">#ex_vector2d_v1</a>] do <<pythonic_objects>>).
+O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector` (esse exemplo usa como base o código mostrado no pass:[<a data-type="xref" href="#ex_vector2d_v0" data-xrefstyle="select: labelnumber">#ex_vector2d_v0</a>] e no pass:[<a data-type="xref" href="#ex_vector2d_v1" data-xrefstyle="select: labelnumber">#ex_vector2d_v1</a>] do <<ch_pythonic_obj>>).
 
 [[ex_vector_v1]]
 .vector_v1.py: derived from vector2d_v1.py
@@ -94,11 +94,11 @@ include::code/12-seq-hacking/vector_v1.py[tags=VECTOR_V1]
 ----
 ====
 <1> O atributo de instância "protegido" `self._components` vai manter um `array` com os componentes do `Vector`.
-<2> Para permitir iteração, devolvemos um itereador sobre ++self._components++.footnote:[A função `iter()` é tratada no <<iterables2generators>>, juntamente com o  método `+__iter__+`.]
+<2> Para permitir iteração, devolvemos um itereador sobre ++self._components++.footnote:[A função `iter()` é tratada no <<ch_generators>>, juntamente com o  método `+__iter__+`.]
 <3> Usa `reprlib.repr()` para obter um representação de tamanho limitado de `self._components` (por exemplo, `array('d', [0.0, 1.0, 2.0, 3.0, 4.0, ...])`).
 <4> Remove o prefixo `array('d',` e o `)`  final, antes de inserir a string em uma chamada ao construtor de `Vector`.
 <5> Cria um objeto `bytes` diretamente de `self._components`.
-<6> Desde o Python 3.8, `math.hypot` aceita pontos N-dimensionais. Já usei a seguinte expressão antes: `math.sqrt(sum(x * x for x in self))`.
+<6> Desde Python 3.8, `math.hypot` aceita pontos N-dimensionais. Já usei a seguinte expressão antes: `math.sqrt(sum(x * x for x in self))`.
 <7> A única mudança necessária no `frombytes` anterior é na última linha: passamos a `memoryview` diretamente para o construtor, sem desempacotá-la com `*`, como fazíamos antes.
 
 O modo como usei `reprlib.repr` pede alguma elaboração. Essa função produz representações seguras de estruturas grandes ou recursivas, limitando a tamanho da string devolvida e marcando o corte com `'...'`. Eu queria que o `repr` de um `Vector` se parecesse com `Vector([3.0, 4.0, 5.0])` e não com `Vector(array('d', [3.0, 4.0, 5.0]))`, porque a existência de um `array` dentro de um `Vector` é um detalhe de implementação. Como essas chamadas ao construtor criam objetos `Vector` idênticos, preferi a sintaxe mais simples, usando um argumento `list`.
@@ -119,7 +119,7 @@ Aliás, poderíamos ter criado `Vector` como uma subclasse de `Vector2d`, mas es
 [[protocol_duck_section]]
 === Protocolos e o _duck typing_
 
-Já((("Vector class, multidimensional", "protocols and duck typing")))((("sequences, special methods for", "protocols and duck typing")))((("protocols", "duck typing and")))((("duck typing"))) no <<data_model>>, vimos que não é necessário herdar de qualquer classe em especial para criar um tipo sequência completamente funcional em Python; basta implementar os métodos que satisfazem o protocolo de sequência. Mas de que tipo de protocolo estamos falando?
+Já((("Vector class, multidimensional", "protocols and duck typing")))((("sequences, special methods for", "protocols and duck typing")))((("protocols", "duck typing and")))((("duck typing"))) no <<ch_data_model>>, vimos que não é necessário herdar de qualquer classe em especial para criar um tipo sequência completamente funcional em Python; basta implementar os métodos que satisfazem o protocolo de sequência. Mas de que tipo de protocolo estamos falando?
 
 No contexto da programação orientada a objetos, um protocolo é uma interface informal, definida apenas na documentação (e não no código). Por exemplo, o protocolo de sequência no Python implica apenas no métodos `+__len__+` e `+__getitem__+`. Qualquer classe `Spam`, que implemente esses métodos com a assinatura e a semântica padrões, pode ser usada em qualquer lugar onde uma sequência for esperada. É irrelevante se `Spam` é uma subclasse dessa ou daquela outra classe; tudo o que importa é que ela fornece os métodos necessários. Vimos isso no <<ex_pythonic_deck>>, reproduzido aqui no <<ex_pythonic_deck_rep>>.
 
@@ -132,7 +132,7 @@ include::code/01-data-model/frenchdeck.py[]
 ----
 ====
 
-A classe `FrenchDeck`, no <<ex_pythonic_deck_rep>>, pode tirar proveito de muitas facilidades do Python por implementar o protocolo de sequência, mesmo que isso não esteja declarado em qualquer ponto do código.
+A classe `FrenchDeck`, no <<ex_pythonic_deck_rep>>, pode tirar proveito de muitas facilidades de Python por implementar o protocolo de sequência, mesmo que isso não esteja declarado em qualquer ponto do código.
 Um programador Python experiente vai olhar para ela e entender que aquilo _é_ uma sequência, mesmo sendo apenas uma subclasse de `object`.
 Dizemos que ela _é_ uma sequênca porque ela _se comporta_ como uma sequência, e é isso que importa.
 
@@ -148,7 +148,7 @@ o Python((("protocol classes")))((("protocols", "static protocols"))) 3.8 suport
 que estudamos na <<protocols_in_fn>>.
 Esse novo uso da palavra protocolo no Python tem um significado relacionado, mas diferente. Quando preciso diferenciá-los, escrevo((("static protocols", "versus dynamic protocols", secondary-sortas="dynamic protocols"))) _protocolo estático_ para me referir aos protocolos formalizados em classes protocolo (subclasses de `typing.Protocol`), e((("dynamic protocols"))) _protocolos dinâmicos_ para o sentido tradicional.
 Uma diferença fundamental é que implementações de um protocolo estático precisam oferecer todos os métodos definidos na classe protocolo.
-A <<two_kinds_protocols_sec>> no <<ifaces_prot_abc>> traz maiores detalhes.
+A <<two_kinds_protocols_sec>> no <<ch_ifaces_prot_abc>> traz maiores detalhes.
 ====
 
 ////
@@ -197,7 +197,7 @@ Considere os tipos sequência embutidos: cada um deles, ao ser fatiado, produz u
 Para fazer `Vector` produzir fatias como instâncias de `Vector`, não podemos simplesmente delegar o fatiamento para `array`.
 Precisamos analisar os argumentos recebidos em `+__getitem__+` e fazer a coisa certa.
 
-Vejamos agora como o Python transforma a sintaxe `my_seq[1:3]` em argumentos para `+my_seq.__getitem__(...)+`.
+Vejamos agora como Python transforma a sintaxe `my_seq[1:3]` em argumentos para `+my_seq.__getitem__(...)+`.
 
 
 [[how_slicing_works]]
@@ -344,7 +344,7 @@ Aqui está a sintaxe alternativa que queremos oferecer para a leitura dos quatro
 No `Vector2d`, oferecemos acesso somente para leitura a `x` e `y` através do decorador `@property` (veja o <<ex_vector2d_v3>>). Poderíamos incluir quatro propriedades no `Vector`, mas isso seria tedioso. O método especial `+__getattr__+` nos fornece uma opção melhor.
 
 O método `+__getattr__+` é invocado pelo interpretador quando a busca por um atributo falha.
-Simplificando, dada a expressão `my_obj.x`, o Python verifica se a instância de `my_obj` tem um atributo chamado `x`;
+Simplificando, dada a expressão `my_obj.x`, Python verifica se a instância de `my_obj` tem um atributo chamado `x`;
 em caso negativo, a busca passa para a classe (`+my_obj.__class__+`) e depois sobe pelo diagrama de herança.footnote:[A pesquisa de atributos é mais complicada que isso; veremos todos detalhes macabros desse processo no <<metaprog_part>>. Por ora, essa explicação simplificada nos serve.] Se por fim o atributo `x` não for encontrado, o método `+__getattr__+`, definido na classe de `my_obj`, é chamado com `self` e o nome do atributo em formato de string (por exemplo, `'x'`).
 
 O <<ex_vector_v3_getattr>> lista nosso método `+__getattr__+`. Ele basicamente verifica se o atributo desejado é uma das letras `xyzt`. Em caso positivo, devolve o componente correspondente do vetor.
@@ -395,14 +395,14 @@ A razão é um pouco sutil, mas é um alicerce fundamental para entender grande 
 
 Após pensar um pouco sobre essa questão, siga em frente e leia a explicação para o que aconteceu.
 
-A inconsistência no <<ex_vector_v3_getattr_bug>> ocorre devido à forma como `+__getattr__+` funciona: o Python só chama esse método como último recurso, quando o objeto não contém o atributo nomeado. Entretanto, após atribuirmos `v.x = 10`, o objeto `v` agora contém um atributo `x`,
+A inconsistência no <<ex_vector_v3_getattr_bug>> ocorre devido à forma como `+__getattr__+` funciona: Python só chama esse método como último recurso, quando o objeto não contém o atributo nomeado. Entretanto, após atribuirmos `v.x = 10`, o objeto `v` agora contém um atributo `x`,
 e então `+__getattr__+` não será mais invocado para obter `v.x`: o interpretador vai apenas devolver o valor `10`, que agora está vinculado a `v.x`. Por outro lado, nossa implementação de
 `+__getattr__+` não leva em consideração qualquer atributo de instância diferente de
 `self._components`, de onde ele obtém os valores dos "atributos virtuais" listados em `+__match_args__+`.
 
 Para evitar essa inconsistência, precisamos modificar a lógica de definição de atributos em nossa classe `Vector`.
 
-Como você se lembra, nos nossos últimos exemplos de `Vector2d` no <<pythonic_objects>>, tentar atribuir valores aos atributos de instância `.x` ou `.y` gerava um `AttributeError`. Em `Vector`, queremos produzir a mesma exceção em resposta a tentativas de atribuição a qualquer nome de atributo com um única letra, só para evitar confusão. Para fazer isso, implementaremos `+__setattr__+`, como listado no <<ex_vector_v3_setattr>>.
+Como você se lembra, nos nossos últimos exemplos de `Vector2d` no <<ch_pythonic_obj>>, tentar atribuir valores aos atributos de instância `.x` ou `.y` gerava um `AttributeError`. Em `Vector`, queremos produzir a mesma exceção em resposta a tentativas de atribuição a qualquer nome de atributo com um única letra, só para evitar confusão. Para fazer isso, implementaremos `+__setattr__+`, como listado no <<ex_vector_v3_setattr>>.
 
 [[ex_vector_v3_setattr]]
 .Parte de vector_v3.py: o método `+__setattr__+` na classe `Vector`
@@ -421,7 +421,7 @@ include::code/12-seq-hacking/vector_v3.py[tags=VECTOR_V3_SETATTR]
 
 [TIP]
 ====
-A((("super() function")))((("functions", "super() function"))) função `super()` fornece uma maneira de acessar dinamicamente métodos de superclasses, uma necessidade em uma linguagem dinâmica que suporta herança múltipla, como o Python.  Ela é usada para delegar alguma tarefa de um método em uma subclasse para um método adequado em uma superclasse, como visto no <<ex_vector_v3_setattr>>. Falaremos mais sobre `super` na <<mro_section>>.
+A((("super() function")))((("functions", "super() function"))) função `super()` fornece uma maneira de acessar dinamicamente métodos de superclasses, uma necessidade em uma linguagem dinâmica que suporta herança múltipla, como Python.  Ela é usada para delegar alguma tarefa de um método em uma subclasse para um método adequado em uma superclasse, como visto no <<ex_vector_v3_setattr>>. Falaremos mais sobre `super` na <<mro_section>>.
 ====
 
 Ao escolher a menssagem de erro para mostrar com `AttributeError`, primeiro eu verifiquei o comportamento do tipo embutido `complex`, pois ele é imutável e tem um par de atributos de dados `real` and `imag`. Tentar mudar qualquer um dos dois em uma instância de `complex` gera um `AttributeError` com a mensagem `"can't set attribute"` ("não é possível [re]-definir o atributo"). Por outro lado, a tentativa de modificar um atributo protegido por uma propriedade, como fizemos no <<hashable_vector2d>>, produz a mensagem `"read-only attribute"` ("atributo apenas para leitura"). Eu me inspirei em ambas as frases para definir a string `error` em `+__setitem__+`, mas fui mais explícito sobre os atributos proibidos.
@@ -496,7 +496,7 @@ Voltando a nosso problema de _hash_, o <<ex_reduce_xor>> demonstra a ideia da co
 
 Das alternativas apresentadas no <<ex_reduce_xor>>, a última é minha favorita, e o loop `for` vem a seguir. Qual sua preferida?
 
-Como visto na <<operator_module_section>>, `operator` oferece a funcionalidade de todos os operadores infixos do Python em formato de função, diminuindo a necessidade do uso de `lambda`.
+Como visto na <<operator_module_section>>, `operator` oferece a funcionalidade de todos os operadores infixos de Python em formato de função, diminuindo a necessidade do uso de `lambda`.
 
 Para escrever `+Vector.__hash__+` no meu estilo preferido precisamos importar os módulos `functools` e `operator`. <<ex_vector_v4>> apresenta as modificações relevantes.
 
@@ -654,7 +654,7 @@ Ter um loop `for` que itera sobre itens sem perder tempo com variáveis de índi
 ====
 Escrevi na primeira edição deste livro que `zip` encerrar silenciosamente ao final do iterável mais curto era surpreendente—e não era uma boa característica em uma API.
 Ignorar parte dos dados de entrada sem qualquer alerta pode levar a bugs sutis.
-Em vez disso, `zip` deveria gerar um `ValueError` se os iteráveis não forem todos do mesmo tamanho, como acontece quando se desempacota um iterável para uma tupla de variáveis de tamanho diferente—alinhado à política de _falhar rápido_((("fail-fast philosophy"))) do Python.
+Em vez disso, `zip` deveria gerar um `ValueError` se os iteráveis não forem todos do mesmo tamanho, como acontece quando se desempacota um iterável para uma tupla de variáveis de tamanho diferente—alinhado à política de _falhar rápido_((("fail-fast philosophy"))) de Python.
 A https://fpy.li/pep618[PEP 618—Add Optional Length-Checking To zip] acrescentou um argumento opcional `strict` à função `zip`, para fazê-la de comportar dessa forma.
 Isso foi implementado no Python 3.10.
 ====
@@ -737,10 +737,10 @@ include::code/12-seq-hacking/vector_v5.py[tags=VECTOR_V5]
 
 [NOTE]
 ====
-Estamos fazendo uso intensivo de expressões geradoras em `+__format__+`, `angle`, e `angles`, mas nosso foco aqui é fornecer um `+__format__+` para levar `Vector` ao mesmo nível de implementação de `Vector2d`. Quando tratarmos de geradores, no <<iterables2generators>>, vamos usar parte do código de `Vector` nos exemplos, e lá os recursos dos geradores serão explicados em detalhes.
+Estamos fazendo uso intensivo de expressões geradoras em `+__format__+`, `angle`, e `angles`, mas nosso foco aqui é fornecer um `+__format__+` para levar `Vector` ao mesmo nível de implementação de `Vector2d`. Quando tratarmos de geradores, no <<ch_generators>>, vamos usar parte do código de `Vector` nos exemplos, e lá os recursos dos geradores serão explicados em detalhes.
 ====
 
-Isso conclui nossa missão nesse capítulo. A classe `Vector` será aperfeiçoada com operadores infixos no <<operator_overloading>>. Nosso objetivo aqui foi explorar técnicas para programação de métodos especiais que são úteis em uma grande variedade de classes de coleções.((("", startref="VCMformat12")))((("", startref="SSMformat12")))((("", startref="format12")))
+Isso conclui nossa missão nesse capítulo. A classe `Vector` será aperfeiçoada com operadores infixos no <<ch_op_overload>>. Nosso objetivo aqui foi explorar técnicas para programação de métodos especiais que são úteis em uma grande variedade de classes de coleções.((("", startref="VCMformat12")))((("", startref="SSMformat12")))((("", startref="format12")))
 
 
 === Resumo do capítulo
@@ -755,21 +755,21 @@ O próximo passo foi fornecer acesso somente para leitura aos primeiros componen
 
 Implementar a função `+__hash__+` nos deu um contexto perfeito para usar `functools.reduce`, pois precisávamos aplicar o operador xor (`^`) sucessivamente aos _hashes_ de todos os componentes de `Vector`, para produzir um código de _hash_ agregado referente a todo o `Vector`. Após aplicar `reduce` em `+__hash__+`, usamos a função embutida de redução `all`, para criar um método `+__eq__+` mais eficiente.
 
-O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+` de `Vector2d`, para suportar coordenadas esféricas como alternativa às coordenadas cartesianas default. Usamos bastante matemática e vários geradores para programar `+__format__+` e suas funções auxiliares, mas esses são detalhes de implementação—e voltaremos aos geradores no <<iterables2generators>>. O objetivo daquela última seção foi suportar um formato personalizado, cumprindo assim a promessa de um `Vector` capaz de fazer tudo que um `Vector2d` faz e algo mais.
+O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+` de `Vector2d`, para suportar coordenadas esféricas como alternativa às coordenadas cartesianas default. Usamos bastante matemática e vários geradores para programar `+__format__+` e suas funções auxiliares, mas esses são detalhes de implementação—e voltaremos aos geradores no <<ch_generators>>. O objetivo daquela última seção foi suportar um formato personalizado, cumprindo assim a promessa de um `Vector` capaz de fazer tudo que um `Vector2d` faz e algo mais.
 
-Como fizemos no <<pythonic_objects>>, muitas vezes aqui olhamos como os objetos padrão do Python se comportam, para emulá-los e dar a `Vector` uma aparência "pythônica".
+Como fizemos no <<ch_pythonic_obj>>, muitas vezes aqui olhamos como os objetos padrão de Python se comportam, para emulá-los e dar a `Vector` uma aparência "pythônica".
 
-No <<operator_overloading>> vamos implemenar vários operadores infixos em `Vector`. A matemática será muito mais simples que aquela no método `angle()` daqui, mas explorar como os operadores infixos funcionam no Python é uma grande lição sobre design orientado a objetos. Mas antes de chegar à sobrecarga de operadores, vamos parar um pouco de trabalhar com uma única classe e olhar para a organização de múltiplas classes com interfaces e herança, os assuntos dos capítulos pass:[<a data-type="xref" href="#ifaces_prot_abc" data-xrefstyle="select: labelnumber">#ifaces_prot_abc</a>] e pass:[<a data-type="xref" href="#inheritance" data-xrefstyle="select: labelnumber">#inheritance</a>].
+No <<ch_op_overload>> vamos implemenar vários operadores infixos em `Vector`. A matemática será muito mais simples que aquela no método `angle()` daqui, mas explorar como os operadores infixos funcionam no Python é uma grande lição sobre design orientado a objetos. Mas antes de chegar à sobrecarga de operadores, vamos parar um pouco de trabalhar com uma única classe e olhar para a organização de múltiplas classes com interfaces e herança, os assuntos dos capítulos pass:[<a data-type="xref" href="#ch_ifaces_prot_abc" data-xrefstyle="select: labelnumber">#ch_ifaces_prot_abc</a>] e pass:[<a data-type="xref" href="ch_inheritance" data-xrefstyle="select: labelnumber">ch_inheritance</a>].
 
 
 === Leitura complementar
 
-A((("Vector class, multidimensional", "further reading on")))((("sequences, special methods for", "further reading on"))) maioria dos métodos especiais tratados no exemplo de `Vector` também apareceram no exemplo do `Vector2d`, no <<pythonic_objects>>, então as referências na <<pythonic_further_reading>> ali são todas relevantes aqui também.
+A((("Vector class, multidimensional", "further reading on")))((("sequences, special methods for", "further reading on"))) maioria dos métodos especiais tratados no exemplo de `Vector` também apareceram no exemplo do `Vector2d`, no <<ch_pythonic_obj>>, então as referências na <<pythonic_further_reading>> ali são todas relevantes aqui também.
 
 A poderosa função de ordem superior `reduce` também é conhecida como _fold_ (dobrar), _accumulate_ (acumular), _aggregate_ (agregar), _compress_ (comprimir), e _inject_ (injetar).  Para mais informações, veja o https://fpy.li/12-5[artigo "Fold (higher-order function)" (_"Dobrar (função de ordem superior)"_)] (EN), que apresenta aplicações daquela função de ordem superior, com ênfase em programação funcional com estruturas de dados recursivas. O artigo também inclui uma tabela mostrando funções similares a _fold_ em dezenas de linguagens de programação.
 
 Em https://docs.python.org/2.5/whatsnew/pep-357.html["What's New in Python 2.5" (_Novidades no Python 2.5_)] (EN) há uma pequena explicação sobre `+__index__+`, projetado para suportar métodos `+__getitem__+`, como vimos na <<slice_aware_sec>>.
-A https://fpy.li/pep357[PEP 357—Allowing Any Object to be Used for Slicing (_Permitir que Qualquer Objeto seja Usado para Fatiamento_)] detalha a necessidade daquele método especial na perspectiva de um implementador de uma extensão em C—Travis Oliphant, o principal criador da NumPy. As muitas contribuições de Oliphant tornaram o Python uma importante linguagem para computação científica, que por sua vez posicionou a linguagem como a escolha preferencial para aplicações de aprendizagem de máquina.
+A https://fpy.li/pep357[PEP 357—Allowing Any Object to be Used for Slicing (_Permitir que Qualquer Objeto seja Usado para Fatiamento_)] detalha a necessidade daquele método especial na perspectiva de um implementador de uma extensão em C—Travis Oliphant, o principal criador da NumPy. As muitas contribuições de Oliphant tornaram Python uma importante linguagem para computação científica, que por sua vez posicionou a linguagem como a escolha preferencial para aplicações de aprendizagem de máquina.
 
 
 [[sequence_hacking_soapbox]]
@@ -779,13 +779,13 @@ A https://fpy.li/pep357[PEP 357—Allowing Any Object to be Used for Slicing (_P
 [role="soapbox-title"]
 Protocolos como interfaces informais
 
-Protocolos((("Soapbox sidebars", "protocols as informal interfaces")))((("sequences, special methods for", "Soapbox discussion", id="SSMsoap12")))((("protocols", "as informal interfaces", secondary-sortas="informal interfaces")))((("interfaces", "protocols as informal"))) não são uma invenção do Python. Os criadores do Smalltalk, que também cunharam a expressão "orientado a objetos", usavam "protocolo" como um sinônimo para aquilo que hoje chamamos de interfaces. Alguns ambientes de programação Smalltalk permitiam que os programadores marcassem um grupo de métodos como um protocolo, mas isso era meramente um artefato de documentação e navegação, e não era imposto pela linguagem. Por isso acredito que "interface informal" é uma explicação curta razoável para "protocolo" quando falo para uma audiência mais familiar com interfaces formais (e impostas pelo compilador).
+Protocolos((("Soapbox sidebars", "protocols as informal interfaces")))((("sequences, special methods for", "Soapbox discussion", id="SSMsoap12")))((("protocols", "as informal interfaces", secondary-sortas="informal interfaces")))((("interfaces", "protocols as informal"))) não são uma invenção de Python. Os criadores de Smalltalk, que também cunharam a expressão "orientado a objetos", usavam "protocolo" como um sinônimo para aquilo que hoje chamamos de interfaces. Alguns ambientes de programação Smalltalk permitiam que os programadores marcassem um grupo de métodos como um protocolo, mas isso era meramente um artefato de documentação e navegação, e não era imposto pela linguagem. Por isso acredito que "interface informal" é uma explicação curta razoável para "protocolo" quando falo para uma audiência mais familiar com interfaces formais (e impostas pelo compilador).
 
 Protocolos bem estabelecidos ou consagrados evoluem naturalmente em qualquer linguagem que usa tipagem dinâmica (isto é, quando a verificação de tipo acontece durante a execução), porque não há informação estática de tipo em assinaturas de métodos e em variáveis. Ruby é outra importante linguagem orientada a objetos que tem tipagem dinâmica e usa protocolos.
 
-Na documentação do Python, muitas vezes podemos perceber que um protocolo está sendo discutido pelo uso de linguagem como "um objeto similar a um arquivo". Isso é uma forma abreviada de dizer "algo que se comporta como um arquivo, implementando as partes da interface de arquivo relevantes ao contexto".
+Na documentação de Python, muitas vezes podemos perceber que um protocolo está sendo discutido pelo uso de linguagem como "um objeto similar a um arquivo". Isso é uma forma abreviada de dizer "algo que se comporta como um arquivo, implementando as partes da interface de arquivo relevantes ao contexto".
 
-Você poderia achar que implementar apenas parte de um protocolo é um desleixo, mas isso tem a vantagem de manter as coisas simples. A https://docs.python.org/pt-br/3/reference/datamodel.html#special-method-names[Seção 3.3] do capítulo "Modelo de Dados" na documentação do Python sugere que:
+Você poderia achar que implementar apenas parte de um protocolo é um desleixo, mas isso tem a vantagem de manter as coisas simples. A https://docs.python.org/pt-br/3/reference/datamodel.html#special-method-names[Seção 3.3] do capítulo "Modelo de Dados" na documentação de Python sugere que:
 
 [quote]
 ____
@@ -796,13 +796,13 @@ Quando((("KISS principle"))) não precisamos escrever métodos inúteis apenas p
 
 Por outro lado, se você quiser usar um verificador de tipo para checar suas implementações de protocolos, então uma definição mais estrita de "protocolo" é necessária. É isso que `typing.Protocol` nos fornece.
 
-Terei mais a dizer sobre protocolos e interfaces no <<ifaces_prot_abc>>, onde esses conceitos são o assunto principal.
+Terei mais a dizer sobre protocolos e interfaces no <<ch_ifaces_prot_abc>>, onde esses conceitos são o assunto principal.
 
 
 [role="soapbox-title"]
 As origens do _duck typing_
 
-Creio((("Soapbox sidebars", "duck typing")))((("duck typing"))) que a comunidade Ruby, mais que qualquer outra, ajudou a popularizar o termo "duck typing" (_tipagem pato_), ao pregar para as massas de usuários de Java. Mas a expressão já era usada nas discussões do Python muito antes do Ruby ou do Python se tornarem "populares". De acordo com a Wikipedia, um dos primeiros exemplos de uso da analogia do pato, no contexto da programação orientada a objetos, foi uma mensagem para https://fpy.li/12-11[Python-list] (EN), escrita por Alex Martelli e datada de 26 de julho de 2000: https://fpy.li/12-9["polymorphism (was Re: Type checking in python?)" (_polimorfismo (era Re: Verificação de tipo em python?_))]. Foi dali que veio a citação no início desse capítulo. Se você tiver curiosidade sobre as origens literárias do termo "duck typing", e a aplicação desse conceito de orientação a objetos em muitas linguagens, veja a página https://pt.wikipedia.org/wiki/Duck_typing["Duck typing"] na Wikipedia.
+Creio((("Soapbox sidebars", "duck typing")))((("duck typing"))) que a comunidade Ruby, mais que qualquer outra, ajudou a popularizar o termo "duck typing" (_tipagem pato_), ao pregar para as massas de usuários de Java. Mas a expressão já era usada nas discussões de Python muito antes de Ruby ou de Python se tornarem "populares". De acordo com a Wikipedia, um dos primeiros exemplos de uso da analogia do pato, no contexto da programação orientada a objetos, foi uma mensagem para https://fpy.li/12-11[Python-list] (EN), escrita por Alex Martelli e datada de 26 de julho de 2000: https://fpy.li/12-9["polymorphism (was Re: Type checking in python?)" (_polimorfismo (era Re: Verificação de tipo em python?_))]. Foi dali que veio a citação no início desse capítulo. Se você tiver curiosidade sobre as origens literárias do termo "duck typing", e a aplicação desse conceito de orientação a objetos em muitas linguagens, veja a página https://pt.wikipedia.org/wiki/Duck_typing["Duck typing"] na Wikipedia.
 
 
 [role="soapbox-title"]
@@ -892,17 +892,17 @@ E daí Alex Martelli voltou para sugerir:
 
 [quote]
 ____
-A soma é necessária com tanta frequência que eu não me importaria de forma alguma se o Python a tornasse uma função embutida. Mas "reduce(operator.add, ..." não é mesmo uma boa maneira de expressar isso, na minha opinião (e vejam que, como um antigo APListafootnote:[NT: Aqui Martelli está se referindo à linguagem https://pt.wikipedia.org/wiki/APL_(linguagem_de_programa%C3%A7%C3%A3o[APL]] e um apreciador da FPfootnote:[NT:E aqui à linguagem https://pt.wikipedia.org/wiki/FP_(linguagem_de_programa%C3%A7%C3%A3o[FP]], eu _deveria_ gostar daquilo, mas não gosto.).
+A soma é necessária com tanta frequência que eu não me importaria de forma alguma se Python a tornasse uma função embutida. Mas "reduce(operator.add, ..." não é mesmo uma boa maneira de expressar isso, na minha opinião (e vejam que, como um antigo APListafootnote:[NT: Aqui Martelli está se referindo à linguagem https://pt.wikipedia.org/wiki/APL_(linguagem_de_programa%C3%A7%C3%A3o[APL]] e um apreciador da FPfootnote:[NT:E aqui à linguagem https://pt.wikipedia.org/wiki/FP_(linguagem_de_programa%C3%A7%C3%A3o[FP]], eu _deveria_ gostar daquilo, mas não gosto.).
 ____
 
-Martelli então sugere uma função `sum()`, que ele mesmo programa e propõe para o Python. Ela se torna uma função embutida no Python 2.3, lançado apenas três meses após aquela conversa na lista. E a sintaxe preferida de Alex se torna a regra:
+Martelli então sugere uma função `sum()`, que ele mesmo programa e propõe para Python. Ela se torna uma função embutida no Python 2.3, lançado apenas três meses após aquela conversa na lista. E a sintaxe preferida de Alex se torna a regra:
 [source, pycon]
 ----
 >>> sum([sub[1] for sub in my_list])
 60
 ----
 
-No final do ano seguinte (novembro de 2004), o Python 2.4 foi lançado e incluía expressões geradoras, fornecendo o que agora é, na minha opinião, a resposta mais pythônica para a pergunta original de Guy Middleton:
+No final do ano seguinte (novembro de 2004), Python 2.4 foi lançado e incluía expressões geradoras, fornecendo o que agora é, na minha opinião, a resposta mais pythônica para a pergunta original de Guy Middleton:
 
 [source, pycon]
 ----
@@ -912,7 +912,7 @@ No final do ano seguinte (novembro de 2004), o Python 2.4 foi lançado e incluí
 
 Isso não só é mais legível que `reduce`, também evita a armadilha da sequência vazia: `sum([])` é `0`, simples assim.
 
-Na mesma conversa, Alex Martelli sugeriu que a função embutida `reduce` do Python 2 trazia mais problemas que soluções, porque encorajava idiomas de programação difíceis de explicar. Ele foi bastante convincente: a função foi rebaixada para o módulo `functools` no Python 3.
+Na mesma conversa, Alex Martelli sugeriu que a função embutida `reduce` de Python 2 trazia mais problemas que soluções, porque encorajava idiomas de programação difíceis de explicar. Ele foi bastante convincente: a função foi rebaixada para o módulo `functools` no Python 3.
 
 Ainda assim, `functools.reduce` tem seus usos. Ela resolveu o problema de nosso `+Vector.__hash__+` de uma forma que eu chamaria de pythônica.((("", startref="SSMsoap12")))((("", startref="SSpysum12")))((("", startref="pysum12")))
 
