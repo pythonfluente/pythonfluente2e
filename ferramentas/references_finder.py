@@ -41,7 +41,7 @@ def find_all_anchors():
 def find_all_xrefs(repeticao = "False"):
     """Procura as referências cruzadas e gera o arquivo xrefs_xparts.ini"""
     xrefs_ini = '''# Referências cruzadas para outras partes
-# Aqui só aparecem xrefs <<xxxx>> para outras partes do livro'''
+    # Aqui só aparecem xrefs <<xxxx>> para outras partes do livro'''
     anchors = configparser.ConfigParser()
     anchors.read('anchors.ini')
 

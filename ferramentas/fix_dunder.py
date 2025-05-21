@@ -23,7 +23,7 @@ def backup(filename: str) -> None:
         print(msg, file=sys.stderr)
         sys.exit(1)
 
-def replace(filename: str) -> str:
+def replace(filename: str) -> None:
     with open(filename) as fp:
         adoc = fp.read()
 
