@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import configparser
+import os
 import re
 import shutil
 import subprocess
@@ -87,13 +88,6 @@ def load_anchors():
     return result
 
 
-def expand_anchor(ref, anchors):
-    assert ref in anchors, f'Anchor {ref!r} not found in anchors dict'
-    ch_num, text = anchors[ref]
-    vol, _ = CHAPTERS_BY_NUMBER[ch_num]
-    return f'fpy.li/2p?{ref}[{text}] (vol. {vol}, cap. {ch_num})'
-
-
 def backup(filename: str) -> None:
     msg = ''
     copy_name = filename + '.bkp'
@@ -107,17 +101,26 @@ def backup(filename: str) -> None:
         print(msg, file=sys.stderr)
         sys.exit(1)
 
+
 def replace(subs, filename: str) -> None:
     with open(filename) as fp:
         adoc = fp.read()
 
     for ref, new_text in subs.items():
-        adoc.replace(ref, new_text)
+        adoc = adoc.replace(ref, new_text)
 
     with open(filename, 'w') as fp:
         fp.write(adoc)
 
-def build_substitutions(refs):
+
+def expand_anchor(ref, anchors):
+    assert ref in anchors, f'Anchor {ref!r} not found in anchors dict'
+    ch_num, text = anchors[ref]
+    vol, _ = CHAPTERS_BY_NUMBER[ch_num]
+    return f'fpy.li/2p?{ref}[{text}] (vol. {vol}, cap. {ch_num})'
+
+
+def build_substitutions(refs, anchors):
     subs = {}
     for ref in refs:
         key = f'<<{ref}>>'
@@ -127,14 +130,13 @@ def build_substitutions(refs):
             value = expand_anchor(ref, anchors)
         subs[key] = value
     
-    for key, value in subs.items():
-        print(f'{key}\t{value}')
     return subs
 
 
 def main():
     irefs = list_invalid_refs()
-    subs = build_substitutions(irefs)
+    anchors = load_anchors()
+    subs = build_substitutions(irefs, anchors)
     for filename in glob('1/*.adoc'):
         print('processing', filename)
         backup(filename)

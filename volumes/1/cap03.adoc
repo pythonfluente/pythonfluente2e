@@ -178,7 +178,7 @@ Agora vamos ver como o pattern matching se aplica aos mapeamentos.((("", startre
 === Pattern matching com mapeamentos
 
 A((("pattern matching", "with mappings", secondary-sortas="mappings", id="PMmap03")))((("mappings", "pattern matching with", id="Mpattern03")))((("match/case statement")))((("dictionaries and sets", "pattern matching with mappings", id="DASmap03"))) instrução `match/case` suporta sujeitos que sejam objetos mapeamento.
-Padrões para mapeamentos se parecem com literais `dict`, mas podem casar com instâncias de qualquer subclasse real ou virtual de `collections.abc.Mapping`.footnote:[Uma subclasse virtual é qualquer classe registrada com uma chamada ao método `.register()` de uma ABC, como explicado na <<virtual_subclass_sec>>. Um tipo implementado através da API Python/C também é aceitável, se um bit de marcação específico estiver acionado. Veja https://docs.python.org/pt-br/3.10/c-api/typeobj.html#Py_TPFLAGS_MAPPING[`Py_TPFLAGS_MAPPING`] (EN).]
+Padrões para mapeamentos se parecem com literais `dict`, mas podem casar com instâncias de qualquer subclasse real ou virtual de `collections.abc.Mapping`.footnote:[Uma subclasse virtual é qualquer classe registrada com uma chamada ao método `.register()` de uma ABC, como explicado na fpy.li/2p?virtual_subclass_sec[Uma subclasse virtual de uma ABC] (vol. 3, cap. 13). Um tipo implementado através da API Python/C também é aceitável, se um bit de marcação específico estiver acionado. Veja https://docs.python.org/pt-br/3.10/c-api/typeobj.html#Py_TPFLAGS_MAPPING[`Py_TPFLAGS_MAPPING`] (EN).]
 
 No <<ch_sequences>> nos concentramos apenas nos padrões de sequência, mas tipos diferentes de padrões podem ser combinados e aninhados.
 Graças à desestruturação, o pattern matching é uma ferramenta poderosa para processar registros estruturados como sequências e mapeamentos aninhados, que frequentemente precisamos ler de APIs JSON ou bancos de dados com schemas semi-estruturados, como o MongoDB, o EdgeDB, ou o PostgreSQL.
@@ -262,7 +262,7 @@ True
 
 [TIP]
 ====
-Usar `isinstance` com uma ABC é muitas vezes melhor que verificar se um argumento de função é do tipo concreto `dict`, porque daí tipos alternativos de mapeamentos podem ser usados. Vamos discutir isso em detalhes no <<ch_ifaces_prot_abc>>.
+Usar `isinstance` com uma ABC é muitas vezes melhor que verificar se um argumento de função é do tipo concreto `dict`, porque daí tipos alternativos de mapeamentos podem ser usados. Vamos discutir isso em detalhes no _{ch_ifaces_prot_abc}_.
 ====
 
 [[mapping_uml]]
@@ -400,7 +400,7 @@ include::code/03-dict-set/index0.py[tags=INDEX0]
 <1> Obtém a lista de ocorrências de `word`, ou `[]` se a palavra não for encontrada.
 <2> Acrescenta uma nova localização a `occurrences`.
 <3> Coloca a `occurrences` modificada no dict `index`; isso exige uma segunda busca em `index`.
-<4> Não estou chamando `str.upper` no argumento `key=` de `sorted`, apenas passando uma referência àquele método, para que a função `sorted` possa usá-lo para normalizar as palavras antes de ordená-las.footnote:[Isso é um exemplo do uso de um método como uma função de primeria classe, o assunto do <<ch_func_objects>>.]
+<4> Não estou chamando `str.upper` no argumento `key=` de `sorted`, apenas passando uma referência àquele método, para que a função `sorted` possa usá-lo para normalizar as palavras antes de ordená-las.footnote:[Isso é um exemplo do uso de um método como uma função de primeria classe, o assunto do _{ch_func_objects}_.]
 
 As três linhas tratando de `occurrences` no <<index0_ex>> podem ser substituídas por uma única linha usando `dict.setdefault`. O <<index_ex>> fica mais próximo do código apresentado por Alex Martelli.
 
@@ -646,7 +646,7 @@ import builtins
 pylookup = ChainMap(locals(), globals(), vars(builtins))
 ----
 
-O <<environment_class_ex>> mostra uma subclasse de `ChainMap` usada para implementar um interpretador parcial da linguagem de programação Scheme.
+O fpy.li/2p?environment_class_ex[_lis.py_: a classe `Environment`] (vol. 4, cap. 18) mostra uma subclasse de `ChainMap` usada para implementar um interpretador parcial da linguagem de programação Scheme.
 
 
 ==== collections.Counter
@@ -715,7 +715,7 @@ As classes `OrderedDict`, `ChainMap`, `Counter`, e `Shelf` podem ser usadas dire
 melhor criar um novo tipo de mapeamento estendendo `collections.UserDict` em vez de `dict`.
 Percebemos isso quando tentamos estender nosso `StrKeyDict0` do <<ex_strkeydict0>> para assegurar que qualquer chave adicionada ao mapeamento seja armazenada como `str`.
 
-A principal razão pela qual é melhor criar uma subclasse de `UserDict` em vez de `dict` é que o tipo embutido tem alguns atalhos de implementação, que acabam nos obrigando a sobrepor métodos que poderíamos apenas herdar de `UserDict` sem maiores problemas.footnote:[O problema exato de se criar subclasses de `dict` e de outros tipos embutidos é tratado na <<subclass_builtin_woes>>.]
+A principal razão pela qual é melhor criar uma subclasse de `UserDict` em vez de `dict` é que o tipo embutido tem alguns atalhos de implementação, que acabam nos obrigando a sobrepor métodos que poderíamos apenas herdar de `UserDict` sem maiores problemas.footnote:[O problema exato de se criar subclasses de `dict` e de outros tipos embutidos é tratado na fpy.li/2p?subclass_builtin_woes[É complicado criar subclasses de tipos embutidos] (vol. 3, cap. 14).]
 
 Observe que `UserDict` não herda de `dict`, mas usa uma composição:
 a classe tem uma instância interna de `dict`, chamada `data`, que mantém os itens propriamente ditos. Isso evita recursão indesejada quando escrevemos métodos especiais, como `+__setitem__+`, e simplifica a programação de `+__contains__+`, quando comparado com o <<ex_strkeydict0>>.
@@ -874,7 +874,7 @@ A((("dictionaries and sets", "consequences of how dict works"))) implementação
 * Apesar de seu novo layout compacto, os dicts apresentam, inevitavelmente, um uso adicional significativo de memória. A estrutura de dados interna mais compacta para um contêiner seria um array de ponteiros para os itens.footnote:[É assim que as tuplas são armazenadas.] Comparado a isso, uma tabela de hash precisa armazenar mais dados para cada entrada e, para manter a eficiência, Python precisa manter pelo menos um terço das linhas da tabela de hash vazias.
 * Para economizar memória, evite criar atributos de instância fora do método `+__init__+`.
 
-Essa última dica, sobre atributos de instância, é consequência do comportamento default de Python, de armazenar atributos de instância em um atributo `+__dict__+` especial, que é um `dict` vinculado a cada instância.footnote:[A menos que classe tenha umm atributo `+__slots__+`, como explicado na <<slots_section>>.]
+Essa última dica, sobre atributos de instância, é consequência do comportamento default de Python, de armazenar atributos de instância em um atributo `+__dict__+` especial, que é um `dict` vinculado a cada instância.footnote:[A menos que classe tenha umm atributo `+__slots__+`, como explicado na fpy.li/2p?slots_section[Economizando memória com pass:[__slots__]] (vol. 3, cap. 11).]
 Desde a implementação da https://fpy.li/pep412[PEP 412—Key-Sharing Dictionary (_Dicionário de Compartilhamento de Chaves_)] (EN), no Python 3.3,
 instâncias de uma classe podem compartilhar uma tabela de hash comum, armazenada com a classe.
 Essa tabela de hash comum é compartilhada pelo `+__dict__+` de cada nova instância que, quando `+__init__+` retorna, tenha os mesmos nomes de atributos que a primeira instância daquela classe a ser criada. O `+__dict__+` de cada instância então pode manter apenas seus próprios valores de atributos como uma simples array de ponteiros.
