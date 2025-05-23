@@ -26,8 +26,6 @@ VOLUME_MAP = {
         8 : 'ch_type_hints_def',
         9 : 'ch_closure_decorator',
         10 : 'ch_design_patterns',
-    },
-    3 : {
         11 : 'ch_pythonic_obj',
         12 : 'ch_seq_methods',
         13 : 'ch_ifaces_prot_abc',
@@ -35,14 +33,12 @@ VOLUME_MAP = {
         15 : 'ch_more_types',
         16 : 'ch_op_overload',
     },
-    4 : {
+    3 : {
         17 : 'ch_generators',
         18 : 'ch_with_match',
         19 : 'ch_concurrency_models',
         20 : 'ch_executors',
         21 : 'ch_async',
-    },
-    5 : {
         22 : 'ch_dynamic_attrs',
         23 : 'ch_descriptors',
         24 : 'ch_class_metaprog',
