@@ -15,7 +15,6 @@ def wanted(url):
     for regex in EXCLUDE:
         if regex.match(url):
             return False
-            break
     if 'fpy.li/' in url:
         return False
     if '$$' in url:
