@@ -11,9 +11,8 @@ class StatusURL(NamedTuple):
     status: int
     url: str
 
-async def check_url(client: httpx.AsyncClient, start_url: str) -> tuple[int, str, list[str]]:
+async def check_url(client: httpx.AsyncClient, start_url: str) -> list[StatusURL]:
     req = client.build_request("GET", start_url)
-    status = 0
     responses = []
     while req is not None:
         try:
@@ -28,8 +27,7 @@ async def check_url(client: httpx.AsyncClient, start_url: str) -> tuple[int, str
             responses.append(response)
         req = http_resp.next_request
     assert len(responses) > 0, 'NO RESPONSES: ' + start_url
-    final_url, *prior_urls = reversed(responses)
-    return status, final_url, prior_urls 
+    return responses
 
 
 async def main() -> None:
@@ -37,9 +35,10 @@ async def main() -> None:
     async with httpx.AsyncClient() as client:
         tasks = [check_url(client, url) for url in urls]
         async for task in asyncio.as_completed(tasks):
-            status, final_url, prior_urls = await task
-            if prior_urls:
-                print(status, final_url, f'\n\t{prior_urls}')
+            status_urls = await task
+            for n, status_url in enumerate(status_urls):
+                url = str(status_url.url)[:70]
+                print(f'{" "*4*n}{status_url.status} {url}')
 
 if __name__ == "__main__":
     asyncio.run(main())
