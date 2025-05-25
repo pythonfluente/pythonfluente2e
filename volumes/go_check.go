@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-func checkURL(url string, wg *sync.WaitGroup) {
+func checkURL(url string, ident int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	client := &http.Client{
@@ -22,14 +22,18 @@ func checkURL(url string, wg *sync.WaitGroup) {
 	for i := range 10 {
 		resp, err := client.Get(currentURL)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error connecting to %s: %v\n", currentURL, err)
+			// fmt.Fprintf(os.Stderr, ...
+			fmt.Printf("[%4d] Error connecting to %s: %v\n", ident, currentURL, err)
 			return
 		}
 		indent := strings.Repeat(" ", i*3)
-		fmt.Printf("%s%d %s\n", indent, resp.StatusCode, currentURL)
-
+		// Report only errors or redirects
+		if resp.StatusCode != http.StatusOK || i > 0 {
+			fmt.Printf("[%4d] %s%d %s\n", ident, indent, resp.StatusCode, currentURL)
+		}
 		// Check if this is a redirect
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			// TODO: preserve #anchor (a.k.a. fragment identifier)
 			location := resp.Header.Get("Location")
 			resp.Body.Close()
 
@@ -64,6 +68,7 @@ func main() {
 	var wg sync.WaitGroup
 	scanner := bufio.NewScanner(file)
 
+	ident := 1
 	for scanner.Scan() {
 		url := strings.TrimSpace(scanner.Text())
 		if url == "" {
@@ -71,7 +76,8 @@ func main() {
 		}
 
 		wg.Add(1)
-		go checkURL(url, &wg)
+		go checkURL(url, ident, &wg)
+		ident++
 	}
 
 	wg.Wait()
