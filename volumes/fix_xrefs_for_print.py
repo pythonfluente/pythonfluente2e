@@ -10,7 +10,7 @@ from glob import glob
 from pathlib import Path
 
 ANCHORS_PATH = Path('../ferramentas/anchors.ini')
-ANCHOR_RE = re.compile(r'\[(\[[\w-]+\])\]\n+(?:\[[\w=" -]+\]\n)?=* ?(.*)') 
+ANCHOR_RE = re.compile(r'\[(\[[\w-]+\])\]\n+(?:\[[\w=" -]+\]\n)?=* ?(.*)')
 
 VOLUME_MAP = {
     1 : {
@@ -49,7 +49,7 @@ CHAPTERS_BY_LABEL = {VOLUME_MAP[vo][ch] : (vo, ch) for vo in VOLUME_MAP for ch i
 CHAPTERS_BY_NUMBER = {CHAPTERS_BY_LABEL[label][1] : (CHAPTERS_BY_LABEL[label][0], label) for label in CHAPTERS_BY_LABEL}
 
 def list_invalid_refs():
-    command = 'asciidoctor -v vol-1.adoc'
+    command = 'asciidoctor -v vol1.adoc'
     output = subprocess.run(command, shell=True, stderr=subprocess.PIPE, text=True)
     assert output.returncode == 0
     res = set()
@@ -80,7 +80,7 @@ def load_anchors():
         for key, value in section.items():
             #print(f"  {key} = {value}")
             assert key not in result, f"Duplicate key {key!r}: {value!r}"
-            result[key] = (n, value)    
+            result[key] = (n, value)
     return result
 
 
@@ -125,7 +125,7 @@ def build_substitutions(refs, anchors):
         else:
             value = expand_anchor(ref, anchors)
         subs[key] = value
-    
+
     return subs
 
 

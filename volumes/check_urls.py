@@ -7,27 +7,28 @@ import sys
 
 from typing import NamedTuple
 
+
 class StatusURL(NamedTuple):
     status: int
     url: str
+    exception: Exception | None = None
+
 
 async def check_url(client: httpx.AsyncClient, start_url: str) -> list[StatusURL]:
     req = client.build_request("GET", start_url)
-    responses = []
+    results = []
     while req is not None:
         try:
             http_resp = await client.send(req)
-            response = StatusURL(http_resp.status_code, req.url)
+            result = StatusURL(http_resp.status_code, req.url)
         except httpx.HTTPError as e:
-            print(e)
-            print('URL:', req.url)
-            status = -1
-            break
+            result = StatusURL(0, req.url, e)
         else:
-            responses.append(response)
-        req = http_resp.next_request
-    assert len(responses) > 0, 'NO RESPONSES: ' + start_url
-    return responses
+            req = http_resp.next_request
+        results.append(result)
+
+    assert len(results) > 0, 'NO results: ' + start_url
+    return results
 
 
 async def main() -> None:
@@ -35,10 +36,10 @@ async def main() -> None:
     async with httpx.AsyncClient() as client:
         tasks = [check_url(client, url) for url in urls]
         async for task in asyncio.as_completed(tasks):
-            status_urls = await task
-            for n, status_url in enumerate(status_urls):
-                url = str(status_url.url)[:70]
-                print(f'{" "*4*n}{status_url.status} {url}')
+            results = await task
+            for n, result in enumerate(results):
+                url = str(result.url)[:70]
+                print(f'{" "*4*n}{result.status} {url}')
 
 if __name__ == "__main__":
     asyncio.run(main())

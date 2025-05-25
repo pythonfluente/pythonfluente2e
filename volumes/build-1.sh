@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e  # exit when any command fails
-asciidoctor -v vol-1.adoc -o vol-1.html
-open vol-1.html
+asciidoctor -v vol1.adoc -o vol1.html
+open vol1.html
