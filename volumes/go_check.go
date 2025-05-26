@@ -22,17 +22,15 @@ func CheckURL(rawURL string, taskId int, wg *sync.WaitGroup) {
 	}
 
 	parsedURL, err := url.Parse(rawURL) // parse URL to keep #fragment-id
-
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing URL %s: %v\n", rawURL, err)
 		return
 	}
-
 	currentURL := rawURL
 	redirectCount := 0
 	location := "" // preserve Location header to assert end of redirects
 	for redirectCount = range MaxRedirects {
-		resp, err := client.Head(currentURL)
+		resp, err := client.Get(currentURL)
 		if err != nil {
 			fmt.Printf("[%4d] *ERROR* %v\n", taskId, err)
 			break
@@ -43,7 +41,7 @@ func CheckURL(rawURL string, taskId int, wg *sync.WaitGroup) {
 		}
 		location = resp.Header.Get("Location")
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 { // got a redirect
-			if location == "" { // no location header, stop following
+			if location == "" { // empty location header, stop following
 				break
 			}
 			currentURL = location
@@ -54,8 +52,8 @@ func CheckURL(rawURL string, taskId int, wg *sync.WaitGroup) {
 			break
 		}
 	}
-	if location != "" {
-		panic(fmt.Sprintf("After %d redirects, Location header is still set: %s", redirectCount, location))
+	if location != "" { // location should be empty at end of redirect chain
+		fmt.Printf("[%4d] Location still set after %d redirects: %s\n", taskId, redirectCount, location)
 	}
 }
 
