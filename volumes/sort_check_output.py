@@ -3,15 +3,11 @@
 import fileinput
 import re
 
+TASK_RE = re.compile(r'\[\s*(\d+)\]')
+
 def extract_key(line):
-    match = re.search(r'\[\s*(\d+)\]', line)
+    match = TASK_RE.search(line)
     return int(match.group(1)) if match else 0
 
-lines = []
-for line in fileinput.input():
-    lines.append(line)
-
-sorted_lines = sorted(lines, key=extract_key)
-
-for line in sorted_lines:
+for line in sorted(fileinput.input(), key=extract_key):
     print(line, end='')
