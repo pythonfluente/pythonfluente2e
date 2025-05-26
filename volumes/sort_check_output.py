@@ -4,7 +4,7 @@ import fileinput
 import re
 
 def extract_key(line):
-    match = re.search(r'\[\s*(\d+)\s*\]', line)
+    match = re.search(r'\[\s*(\d+)\]', line)
     return int(match.group(1)) if match else 0
 
 lines = []
