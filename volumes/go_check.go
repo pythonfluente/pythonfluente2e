@@ -4,13 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
 )
 
-func checkURL(url string, ident int, wg *sync.WaitGroup) {
+func checkURL(rawURL string, taskId int, wg *sync.WaitGroup) {
 	defer wg.Done()
+
+	const maxRedirects = 10
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -18,36 +21,41 @@ func checkURL(url string, ident int, wg *sync.WaitGroup) {
 		},
 	}
 
-	currentURL := url
-	for i := range 10 {
-		resp, err := client.Get(currentURL)
+	parsedURL, err := url.Parse(rawURL) // parse URL to keep #fragment-id
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error parsing URL %s: %v\n", rawURL, err)
+		return
+	}
+
+	currentURL := rawURL
+	redirectCount := 0
+	location := "" // preserve Location header to assert end of redirects
+	for redirectCount = range maxRedirects {
+		resp, err := client.Head(currentURL)
 		if err != nil {
-			// fmt.Fprintf(os.Stderr, ...
-			fmt.Printf("[%4d] Error connecting to %s: %v\n", ident, currentURL, err)
-			return
+			fmt.Printf("[%4d] *ERROR* %v\n", taskId, err)
+			break
 		}
-		indent := strings.Repeat(" ", i*3)
-		// Report only errors or redirects
-		if resp.StatusCode != http.StatusOK || i > 0 {
-			fmt.Printf("[%4d] %s%d %s\n", ident, indent, resp.StatusCode, currentURL)
+		indent := strings.Repeat(" ", redirectCount*3)
+		if resp.StatusCode != http.StatusOK || redirectCount > 0 { // report only errors or redirects
+			fmt.Printf("[%4d] %s%d %s\n", taskId, indent, resp.StatusCode, currentURL)
 		}
-		// Check if this is a redirect
-		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			// TODO: preserve #anchor (a.k.a. fragment identifier)
-			location := resp.Header.Get("Location")
-			resp.Body.Close()
-
-			if location == "" {
-				// No location header, stop following
-				return
+		location = resp.Header.Get("Location")
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 { // got a redirect
+			if location == "" { // no location header, stop following
+				break
 			}
-
 			currentURL = location
-		} else {
-			// Not a redirect, we're done
-			resp.Body.Close()
-			return
+			if parsedURL.Fragment != "" {
+				currentURL += "#" + parsedURL.Fragment
+			}
+		} else { // not a redirect, we're done
+			break
 		}
+	}
+	if location != "" {
+		panic(fmt.Sprintf("After %d redirects, Location header is still set: %s", redirectCount, location))
 	}
 }
 
@@ -68,7 +76,7 @@ func main() {
 	var wg sync.WaitGroup
 	scanner := bufio.NewScanner(file)
 
-	ident := 1
+	taskId := 1
 	for scanner.Scan() {
 		url := strings.TrimSpace(scanner.Text())
 		if url == "" {
@@ -76,8 +84,8 @@ func main() {
 		}
 
 		wg.Add(1)
-		go checkURL(url, ident, &wg)
-		ident++
+		go checkURL(url, taskId, &wg)
+		taskId++
 	}
 
 	wg.Wait()
