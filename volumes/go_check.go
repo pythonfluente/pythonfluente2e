@@ -10,10 +10,10 @@ import (
 	"sync"
 )
 
-func checkURL(rawURL string, taskId int, wg *sync.WaitGroup) {
-	defer wg.Done()
+const MaxRedirects = 10
 
-	const maxRedirects = 10
+func CheckURL(rawURL string, taskId int, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -31,7 +31,7 @@ func checkURL(rawURL string, taskId int, wg *sync.WaitGroup) {
 	currentURL := rawURL
 	redirectCount := 0
 	location := "" // preserve Location header to assert end of redirects
-	for redirectCount = range maxRedirects {
+	for redirectCount = range MaxRedirects {
 		resp, err := client.Head(currentURL)
 		if err != nil {
 			fmt.Printf("[%4d] *ERROR* %v\n", taskId, err)
@@ -84,7 +84,7 @@ func main() {
 		}
 
 		wg.Add(1)
-		go checkURL(url, taskId, &wg)
+		go CheckURL(url, taskId, &wg)
 		taskId++
 	}
 
