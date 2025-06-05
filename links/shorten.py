@@ -16,28 +16,40 @@ import fileinput
 import itertools
 from collections.abc import Iterator
 from time import strftime
+from typing import NamedTuple
+from urllib.parse import urlparse, urlunparse
+from urllib.parse import ParseResult as Url
 
-HTACCESS_CUSTOM = 'custom.htaccess'
-HTACCESS_SHORT = 'short.htaccess'
+HTACCESS_CUSTOM = 'FPY.LI.custom.htaccess'
+HTACCESS_SHORT = 'FPY.LI.short.htaccess'
 HTACCESS_FILES = (HTACCESS_CUSTOM, HTACCESS_SHORT)
 BASE_DOMAIN = 'fpy.li'
 
+type ShortCode = str
+type RedirMap = dict[ShortCode, Url]
+type TargetMap = dict[Url, ShortCode]
 
-def load_redirects() -> tuple[dict, dict]:
-    redirects = {}
-    targets = {}
+class ShortPair(NamedTuple):
+    code = ShortCode
+    url = Url
+
+def load_redirects() -> tuple[RedirMap, TargetMap]:
+    redirects:RedirMap = {}
+    targets:TargetMap = {}
     for filename in HTACCESS_FILES:
         with open(filename) as fp:
             for line in fp:
                 if line.startswith('RedirectTemp'):
-                    _, short, long = line.split()
+                    _, short, field2, *_ = line.split()
                     short = short[1:]  # Remove leading slash
+                    long = urlparse(field2)
                     assert short not in redirects, f'{filename}: duplicate redirect from {short}'
-                    # htaccess.custom is live since 2022, we can't change it remove duplicate targets
+                    # htaccess.custom is live since 2022, I can't change it to remove duplicate targets
                     if filename != HTACCESS_CUSTOM:
                         assert long not in targets, f'{filename}: duplicate redirect to {long}'
                     redirects[short] = long
                     targets[long] = short
+
     return redirects, targets
 
 
@@ -60,7 +72,7 @@ def gen_unused_short(redirects: dict) -> Iterator[str]:
             yield short
 
 
-def shorten(urls: list[str]) -> list[tuple[str, str]]:
+def shorten(urls: list[str]) -> list[ShortPair]:
     """Return (short, long) pairs, appending directives to HTACCESS_SHORT as needed."""
     redirects, targets = load_redirects()
     iter_short = gen_unused_short(redirects)
@@ -68,18 +80,19 @@ def shorten(urls: list[str]) -> list[tuple[str, str]]:
     timestamp = strftime('%Y-%m-%d %H:%M:%S')
     with open(HTACCESS_SHORT, 'a') as fp:
         for long in urls:
+            url = urlparse(long)
             assert BASE_DOMAIN not in long, f'{long} is a {BASE_DOMAIN} URL'
-            if long in targets:
-                short = targets[long]
+            if url in targets:
+                short = targets[url]
             else:
                 short = next(iter_short)
-                redirects[short] = long
-                targets[long] = short
+                redirects[short] = url
+                targets[url] = short
                 if timestamp:
                     fp.write(f'\n# appended: {timestamp}\n')
                     timestamp = None
-                fp.write(f'RedirectTemp /{short} {long}\n')
-            pairs.append((short, long))
+                fp.write(f'RedirectTemp /{short} {urlunparse(url)}\n')
+            pairs.append((short, url))
 
     return pairs
 
@@ -88,7 +101,7 @@ def main() -> None:
     """read URLS from filename arguments or stdin"""
     urls = [line.strip() for line in fileinput.input(encoding='utf-8')]
     for short, long in shorten(urls):
-        print(f'{BASE_DOMAIN}/{short}\t{long}')
+        print(f'{BASE_DOMAIN}/{short}\t{urlunparse(long)}')
 
 
 if __name__ == '__main__':

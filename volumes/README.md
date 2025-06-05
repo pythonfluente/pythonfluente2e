@@ -4,12 +4,12 @@
 
 ### Nos arquivos da edição online:
 
-0. Eliminar duplicação de atributos entre cabeçalhos de `capN.adoc`, `atributos-pt_BR.adoc`, `Livro.adoc`, `Volume1.adoc`...
-1. Encurtar links já presentes
-2. Quebrar linhas longas (semantic linebreaks)
-3. Retirar inline pass macros[^1]
-4. Gerar PDF para impressão
-5. Revisar PDF, aplicar correções no `.adoc`
+1. Eliminar duplicação de atributos entre cabeçalhos de `capN.adoc`, `atributos-pt_BR.adoc`, `Livro.adoc`, `Volume1.adoc`...
+2. Encurtar links já presentes
+3. Quebrar linhas longas (semantic linebreaks)
+4. Retirar inline pass macros[^1]
+5. Gerar PDF para impressão
+6. Revisar PDF, aplicar correções no `.adoc`
 
 [^1]: https://docs.asciidoctor.org/asciidoc/latest/pass/pass-macro/
 
