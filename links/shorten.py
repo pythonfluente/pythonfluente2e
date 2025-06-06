@@ -30,8 +30,8 @@ type RedirMap = dict[ShortCode, Url]
 type TargetMap = dict[Url, ShortCode]
 
 class ShortPair(NamedTuple):
-    code = ShortCode
-    url = Url
+    code: ShortCode
+    url: Url
 
 def load_redirects() -> tuple[RedirMap, TargetMap]:
     redirects:RedirMap = {}
