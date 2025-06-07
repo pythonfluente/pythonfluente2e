@@ -16,8 +16,9 @@ and appends a new `RedirectTemp` directive to the `.htaccess` file.
 
 ## `.httaccess` file
 
-A file named `.htaccess` in this format is deployed to the web server
-at FPY.LI to redirect short URLs to target URLs (the longer ones).
+A file named `.htaccess` is deployed to the web server
+at FPY.LI to redirect short URLs to the original longer ones.
+Format of `.htaccess`:
 
 ```
 # added: 2025-05-26 16:01:24
