@@ -3,7 +3,8 @@
 import fileinput
 import re
 
-URL_RE = re.compile(r'''https?://[^\s[<>"']+''')
+URL_RE = re.compile(r"""https?://[^\s[<>"']+""")
+
 
 def find_urls(fpy=True, long=True):
     found = 0
@@ -11,12 +12,11 @@ def find_urls(fpy=True, long=True):
         if match := URL_RE.search(line):
             url = match.group()
             is_fpy = '://fpy.li/' in url
-            if ((is_fpy and not fpy) or 
-                (not is_fpy and not long)):
+            if (is_fpy and not fpy) or (not is_fpy and not long):
                 continue
             print(url)
             found += 1
-    # print('FOUND', found, 'URLs')     
+    # print('FOUND', found, 'URLs')
 
 
 if __name__ == '__main__':

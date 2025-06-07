@@ -28,13 +28,15 @@ type Url = str
 type RedirMap = dict[ShortCode, Url]
 type TargetMap = dict[Url, ShortCode]
 
+
 class ShortPair(NamedTuple):
     code: ShortCode
     url: Url
 
+
 def load_redirects() -> tuple[RedirMap, TargetMap]:
-    redirects:RedirMap = {}
-    targets:TargetMap = {}
+    redirects: RedirMap = {}
+    targets: TargetMap = {}
     for filename in HTACCESS_FILES:
         with open(filename) as fp:
             for line in fp:
@@ -43,8 +45,8 @@ def load_redirects() -> tuple[RedirMap, TargetMap]:
                     short = field1.encode('ascii')[1:]  # Remove leading slash
                     assert short not in redirects, f'{filename}: duplicate redirect from {short}'
                     # htaccess.custom is live since 2022, I can't change it to remove duplicate targets
-                    #if filename != HTACCESS_MAIN:
-                    #assert long not in targets, f'{filename}: duplicate redirect to {long}'
+                    # if filename != HTACCESS_MAIN:
+                    # assert long not in targets, f'{filename}: duplicate redirect to {long}'
                     if long in targets:
                         print(f'{filename}: duplicate redirect to {long}')
                     redirects[short] = long
@@ -56,7 +58,7 @@ def load_redirects() -> tuple[RedirMap, TargetMap]:
 SDIGITS = b'23456789abcdefghjkmnpqrstvwxyz'
 
 
-def gen_short(start_len=1) -> Iterator[ShortCode]:
+def gen_short(start_len=2) -> Iterator[ShortCode]:
     """Generate every possible sequence of SDIGITS, starting with start_len"""
     length = start_len
     while True:
@@ -65,9 +67,9 @@ def gen_short(start_len=1) -> Iterator[ShortCode]:
         length += 1
 
 
-def gen_unused_short(redirects: dict) -> Iterator[ShortCode]:
-    """Generate next available short URL of len >= 2."""
-    for short in gen_short(2):
+def gen_unused_short(redirects: dict, start_len=2) -> Iterator[ShortCode]:
+    """Generate next available short URL of len >= start_len."""
+    for short in gen_short(start_len):
         if short not in redirects:
             yield short
 
@@ -90,7 +92,7 @@ def shorten(urls: list[str]) -> list[ShortPair]:
                 if timestamp:
                     fp.write(f'\n# appended: {timestamp}\n')
                     timestamp = None
-                fp.write(f'RedirectTemp /{short.decode('ascii')} {long}\n')
+                fp.write(f'RedirectTemp /{short.decode("ascii")} {long}\n')
             pairs.append((short, long))
 
     return pairs
@@ -105,5 +107,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    #main()
+    # main()
     load_redirects()

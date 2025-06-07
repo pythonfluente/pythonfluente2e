@@ -4,37 +4,15 @@
 This script reads a `.htaccess` file and a plain text file with
 URLs (the target URLs).
 
-It outputs a list of target URLs and their corresponding short URLs,
-made from paths in the FPI.LI domain like `/2d`, `/2e`, etc.
+It outputs a list of target URLs and corresponding paths
+for short URLs in the FPI.LI domain like `/2d`, `/2e`, etc.
 This list is used to replace the target URLs with short URLs
 in the `.adoc` files where the target URLs are used.
 
 If a target URL is not in the `.htaccess` file,
 the script generates a new short URL
-and appends a new `RedirectTemp` directive to the `.htaccess` file.
-
-
-## `.httaccess` file
-
-A file named `.htaccess` in this format is deployed to the web server
-at FPY.LI to redirect short URLs to target URLs (the longer ones).
-
-```
-# added: 2025-05-26 16:01:24
-RedirectTemp /2d https://mitpress.mit.edu/9780262111584/the-art-of-the-metaobject-protocol/
-RedirectTemp /2e https://dabeaz.com/per.html
-RedirectTemp /2f https://pythonfluente.com/2/#iter_closer_look
-
-```
-
-When a user agent requests a URL like `https://fpy.li/2d`,
-the web server responds with a 302 redirect to the longer URL
-`https://mitpress.mit.edu/9780262111584/the-art-of-the-metaobject-protocol/`.
-
-A temporary redirect (code 302)
-tells user agents to come back to the same URL at FPY.LI later,
-and not update their bookmark.
-This allows me update the target URL, if needed.
+and adds a new `RedirectTemp` directive to the `.htaccess` file,
+appending it in place with a timestamp.
 
 ## Redirects in memory
 
@@ -48,7 +26,10 @@ It's also loaded from data in the `.htaccess` file,
 but the algorithm is more complicated.
 
 The same target URL can be mapped to multiple short paths
-due to past mistakes when updating the `.htaccess` file.
+in `.htaccess` when the same target URL was added more
+than once with different short paths by mistake.
+We cannot fix these mistakes because the redundant
+short paths are printed in Fluent Python Second Edition.
 
 When loading the `.htaccess` file,
 if a target URL is already in the `targets` dict,
@@ -56,7 +37,7 @@ we compare the existing short path with the new one
 and save the shorter one in the `targets` dict.
 
 That way, we ensure that the shortest path is used for each target URL
-in the list of replacements we output to apply to the `.adoc` files.
+in the list of replacements to apply to the `.adoc` files.
 
 
 ## Shortening URLs
@@ -65,31 +46,16 @@ The `targets` dict maps target URLs to short paths.
 
 To shorten a target URL, find it in the `targets` dict.
 If the target URL is found:
-    use the existing path.
+    use the existing short path.
 If the target URL is not found:
     generate a new short path;
     store target and path in both `targets` and `redirects` dicts;
     collect new short path and target URL in a `new_redirects` list
-    to be appended to the `.htaccess` file later.
-Targets in memory
-
-To avoid generating a new short URL for a target URL,
-
-
-
-the `shortener` module provides a way to generate new short URLs
-
-
-Procedure:
-
-0. create empty dicts named targets and redirects
-1. given a target_url, find it in targets;
-    1.1. if found, use the short_url stored there
-    1.2. if not, generate new short_url and store it in targets and redirects
+    to be appended to the `.htaccess` file at the end of the process.
 
 """
 
-
+import itertools
 from collections.abc import Iterable, Iterator
 
 
@@ -111,6 +77,7 @@ def choose(a: str, b: str) -> str:
         if len(parts) > 1:
             parts = [(f'z{p:>08}' if p.isnumeric() else p) for p in parts]
         return len(k), '-' in k, parts
+
     return min(a, b, key=key)
 
 
@@ -126,3 +93,22 @@ def load_redirects(pairs: Iterable[tuple[str, str]]) -> tuple[dict, dict]:
             targets[url] = choose(short_url, existing_short_url)
 
     return redirects, targets
+
+
+SDIGITS = '23456789abcdefghjkmnpqrstvwxyz'
+
+
+def gen_short(start_len=1) -> Iterator[str]:
+    """Generate every possible sequence of SDIGITS, starting with start_len"""
+    length = start_len
+    while True:
+        for digits in itertools.product(SDIGITS, repeat=length):
+            yield ''.join(digits)
+        length += 1
+
+
+def gen_unused_short(redirects: dict) -> Iterator[str]:
+    """Generate next available short URL of len >= 2."""
+    for short in gen_short(2):
+        if short not in redirects:
+            yield short
