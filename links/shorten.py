@@ -17,15 +17,14 @@ import itertools
 from collections.abc import Iterator
 from time import strftime
 from typing import NamedTuple
-from urllib.parse import urlparse, urlunparse
-from urllib.parse import ParseResult as Url
 
-HTACCESS_CUSTOM = 'FPY.LI.custom.htaccess'
+HTACCESS_MAIN = 'FPY.LI.htaccess'
 HTACCESS_SHORT = 'FPY.LI.short.htaccess'
-HTACCESS_FILES = (HTACCESS_CUSTOM, HTACCESS_SHORT)
+HTACCESS_FILES = (HTACCESS_MAIN, HTACCESS_SHORT)
 BASE_DOMAIN = 'fpy.li'
 
-type ShortCode = str
+type ShortCode = bytes
+type Url = str
 type RedirMap = dict[ShortCode, Url]
 type TargetMap = dict[Url, ShortCode]
 
@@ -40,32 +39,33 @@ def load_redirects() -> tuple[RedirMap, TargetMap]:
         with open(filename) as fp:
             for line in fp:
                 if line.startswith('RedirectTemp'):
-                    _, short, field2, *_ = line.split()
-                    short = short[1:]  # Remove leading slash
-                    long = urlparse(field2)
+                    _, field1, long, *_ = line.split()
+                    short = field1.encode('ascii')[1:]  # Remove leading slash
                     assert short not in redirects, f'{filename}: duplicate redirect from {short}'
                     # htaccess.custom is live since 2022, I can't change it to remove duplicate targets
-                    if filename != HTACCESS_CUSTOM:
-                        assert long not in targets, f'{filename}: duplicate redirect to {long}'
+                    #if filename != HTACCESS_MAIN:
+                    #assert long not in targets, f'{filename}: duplicate redirect to {long}'
+                    if long in targets:
+                        print(f'{filename}: duplicate redirect to {long}')
                     redirects[short] = long
                     targets[long] = short
 
     return redirects, targets
 
 
-SDIGITS = '23456789abcdefghjkmnpqrstvwxyz'
+SDIGITS = b'23456789abcdefghjkmnpqrstvwxyz'
 
 
-def gen_short(start_len=1) -> Iterator[str]:
+def gen_short(start_len=1) -> Iterator[ShortCode]:
     """Generate every possible sequence of SDIGITS, starting with start_len"""
     length = start_len
     while True:
         for short in itertools.product(SDIGITS, repeat=length):
-            yield ''.join(short)
+            yield bytes(short)
         length += 1
 
 
-def gen_unused_short(redirects: dict) -> Iterator[str]:
+def gen_unused_short(redirects: dict) -> Iterator[ShortCode]:
     """Generate next available short URL of len >= 2."""
     for short in gen_short(2):
         if short not in redirects:
@@ -80,19 +80,18 @@ def shorten(urls: list[str]) -> list[ShortPair]:
     timestamp = strftime('%Y-%m-%d %H:%M:%S')
     with open(HTACCESS_SHORT, 'a') as fp:
         for long in urls:
-            url = urlparse(long)
             assert BASE_DOMAIN not in long, f'{long} is a {BASE_DOMAIN} URL'
-            if url in targets:
-                short = targets[url]
+            if long in targets:
+                short = targets[long]
             else:
                 short = next(iter_short)
-                redirects[short] = url
-                targets[url] = short
+                redirects[short] = long
+                targets[long] = short
                 if timestamp:
                     fp.write(f'\n# appended: {timestamp}\n')
                     timestamp = None
-                fp.write(f'RedirectTemp /{short} {urlunparse(url)}\n')
-            pairs.append((short, url))
+                fp.write(f'RedirectTemp /{short.decode('ascii')} {long}\n')
+            pairs.append((short, long))
 
     return pairs
 
@@ -100,9 +99,11 @@ def shorten(urls: list[str]) -> list[ShortPair]:
 def main() -> None:
     """read URLS from filename arguments or stdin"""
     urls = [line.strip() for line in fileinput.input(encoding='utf-8')]
-    for short, long in shorten(urls):
-        print(f'{BASE_DOMAIN}/{short}\t{urlunparse(long)}')
+    for pair in shorten(urls):
+        short = pair.code.decode('ascii')
+        print(f'{BASE_DOMAIN}/{short}\t{pair.url}')
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    load_redirects()
