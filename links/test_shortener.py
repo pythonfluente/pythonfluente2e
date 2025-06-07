@@ -47,7 +47,7 @@ def test_load_redirects():
     expected = {
         'home': 'https://www.fluentpython.com/',
         '1-20': 'https://www.fluentpython.com/',
-        '2-10': 'http://example.com/', 
+        '2-10': 'http://example.com/',
         '10-2': 'http://example.com/',
         'book': 'https://www.oreilly.com/.../9781492056348/',
         'ora': 'https://www.oreilly.com/.../9781492056348/',
