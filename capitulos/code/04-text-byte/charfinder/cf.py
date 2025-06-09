@@ -2,7 +2,7 @@
 import sys
 import unicodedata
 
-START, END = ord(' '), sys.maxunicode + 1           # <1>
+START, END = ord(' '), sys.maxunicode + 1          # <1>
 
 def find(*query_words, start=START, end=END):       # <2>
     query = {w.upper() for w in query_words}        # <3>
