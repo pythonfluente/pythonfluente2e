@@ -22,11 +22,11 @@ It's loaded from data in the `.htaccess` file.
 ## Targets in memory
 
 The `targets` dict maps target URLs to short paths.
-It's also loaded from data in the `.htaccess` file,
+It's also computed from data in the `.htaccess` file,
 but the algorithm is more complicated.
 
 The same target URL can be mapped to multiple short paths
-in `.htaccess` when the same target URL was added more
+in `.htaccess` if the same target URL was added more
 than once with different short paths by mistake.
 We cannot fix these mistakes because the redundant
 short paths are printed in Fluent Python Second Edition.
@@ -57,6 +57,13 @@ If the target URL is not found:
 
 import itertools
 from collections.abc import Iterable, Iterator
+from typing import NamedTuple
+
+
+class ShortenResult(NamedTuple):
+    url: str
+    path: str
+    new: bool
 
 
 def parse_htaccess(text: str) -> Iterator[tuple[str, str]]:
@@ -93,6 +100,22 @@ def load_redirects(pairs: Iterable[tuple[str, str]]) -> tuple[dict, dict]:
             targets[url] = choose(short_url, existing_short_url)
 
     return redirects, targets
+
+
+NO_PATH = ''
+
+def shorten_one(target: str, path_gen: Iterator[str], redirects: dict, targets: dict) -> ShortenResult:
+    if path := targets.get(target, NO_PATH):
+        return ShortenResult(target, path, False)
+    path = next(path_gen)
+    redirects[path] = target
+    targets[target] = path
+    return ShortenResult(target, path, True)
+
+
+def update_htaccess(new_targets: list[ShortenResult]):
+
+    pass
 
 
 SDIGITS = '23456789abcdefghjkmnpqrstvwxyz'
