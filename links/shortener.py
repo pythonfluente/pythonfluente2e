@@ -69,13 +69,12 @@ class ShortenResult(NamedTuple):
 def parse_htaccess(text: str) -> Iterator[tuple[str, str]]:
     for line in text.splitlines():
         fields = line.split()
-        if len(fields) < 3 or fields[0] != 'RedirectTemp':
-            continue
-        path = fields[1]
-        assert path[0] == '/', f'Missing /: {path!r}'
-        path = path[1:]  # Remove leading slash
-        assert len(path) > 0, f'Root path in line {line!r}'
-        yield (path, fields[2])
+        if len(fields) >= 3 and fields[0] == 'RedirectTemp':
+            path = fields[1]
+            assert path[0] == '/', f'Missing /: {path!r}'
+            path = path[1:]  # Remove leading slash
+            assert len(path) > 0, f'Root path in line {line!r}'
+            yield (path, fields[2])
 
 
 def choose(a: str, b: str) -> str:
@@ -113,9 +112,14 @@ def shorten_one(target: str, path_gen: Iterator[str], redirects: dict, targets: 
     return ShortenResult(target, path, True)
 
 
-def update_htaccess(new_targets: list[ShortenResult]):
-
-    pass
+def update_htaccess(f: file, srs: list[ShortenResult]) -> int:
+    """append new redirects, returns count of new redirects"""
+    directives = [t for t in srs if t.new]
+    if directives:
+        # xxx write timestamp, then...
+        for url, path, _new in directives:
+            f.write(f'RedirectTemp /{path} {url}')
+    return len(directives)
 
 
 SDIGITS = '23456789abcdefghjkmnpqrstvwxyz'
