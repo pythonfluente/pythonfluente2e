@@ -57,16 +57,17 @@ If the target URL is not found:
 
 import itertools
 from collections.abc import Iterable, Iterator
-from typing import NamedTuple
+from typing import NamedTuple, TextIO
+from datetime import datetime
 
 
-class ShortenResult(NamedTuple):
-    url: str
+class PathURL(NamedTuple):
     path: str
-    new: bool
+    url: str
+    new: bool = False
 
 
-def parse_htaccess(text: str) -> Iterator[tuple[str, str]]:
+def parse_htaccess(text: str) -> Iterator[PathURL]:
     for line in text.splitlines():
         fields = line.split()
         if len(fields) >= 3 and fields[0] == 'RedirectTemp':
@@ -74,7 +75,7 @@ def parse_htaccess(text: str) -> Iterator[tuple[str, str]]:
             assert path[0] == '/', f'Missing /: {path!r}'
             path = path[1:]  # Remove leading slash
             assert len(path) > 0, f'Root path in line {line!r}'
-            yield (path, fields[2])
+            yield PathURL(path, fields[2])
 
 
 def choose(a: str, b: str) -> str:
@@ -87,38 +88,43 @@ def choose(a: str, b: str) -> str:
     return min(a, b, key=key)
 
 
-def load_redirects(pairs: Iterable[tuple[str, str]]) -> tuple[dict, dict]:
+def load_redirects(pairs: Iterable[PathURL]) -> tuple[dict, dict]:
     redirects = {}
     targets = {}
-    for short_url, url in pairs:
-        url = redirects.setdefault(short_url, url)
-        existing_short_url = targets.get(url)
-        if existing_short_url is None:
-            targets[url] = short_url
+    for path, url, _new in pairs:
+        url = redirects.setdefault(path, url)
+        existing_path = targets.get(url)
+        if existing_path is None:
+            targets[url] = path
         else:
-            targets[url] = choose(short_url, existing_short_url)
+            targets[url] = choose(path, existing_path)
 
     return redirects, targets
 
 
 NO_PATH = ''
 
-def shorten_one(target: str, path_gen: Iterator[str], redirects: dict, targets: dict) -> ShortenResult:
+
+def shorten_one(target: str, path_gen: Iterator[str], redirects: dict, targets: dict) -> PathURL:
     if path := targets.get(target, NO_PATH):
-        return ShortenResult(target, path, False)
+        return PathURL(path, target, False)
     path = next(path_gen)
     redirects[path] = target
     targets[target] = path
-    return ShortenResult(target, path, True)
+    return PathURL(path, target, True)
 
 
-def update_htaccess(f: file, srs: list[ShortenResult]) -> int:
+def timestamp():
+    return datetime.now().isoformat(sep=' ', timespec='seconds')
+
+
+def update_htaccess(f: TextIO, directives: list[PathURL]) -> int:
     """append new redirects, returns count of new redirects"""
-    directives = [t for t in srs if t.new]
+    directives = [d for d in directives if d.new]
     if directives:
-        # xxx write timestamp, then...
-        for url, path, _new in directives:
-            f.write(f'RedirectTemp /{path} {url}')
+        f.write(f'\n# appended {timestamp()}\n')
+        for path, url, _new in directives:
+            f.write(f'RedirectTemp /{path} {url}\n')
     return len(directives)
 
 

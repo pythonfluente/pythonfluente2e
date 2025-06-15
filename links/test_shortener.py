@@ -1,7 +1,12 @@
+import io
+from unittest import mock
+
 from pytest import mark
 
+import shortener  # for mocking timestamp()
 from shortener import parse_htaccess, choose, load_redirects
-from shortener import gen_short, gen_unused_short, shorten_one, ShortenResult
+from shortener import gen_short, gen_unused_short, shorten_one, PathURL
+from shortener import update_htaccess
 
 
 SAMPLE_HTACCESS = """
@@ -23,21 +28,24 @@ RedirectTemp /22    http://firstshortened.co
 
 FROZEN_TIME = '2025-06-07 01:02:03'
 
-UPDATED_SAMPLE_HTACCESS = SAMPLE_HTACCESS + f"""
-# appended: {FROZEN_TIME}
+UPDATED_SAMPLE_HTACCESS = (
+    SAMPLE_HTACCESS
+    + f"""
+# appended {FROZEN_TIME}
 RedirectTemp /23 https://new.site/
 RedirectTemp /24 https://other.new.site/
 """
+)
 
 
 PARSED_SAMPLE_HTACCESS = [
-    ('book', 'https://www.oreilly.com/.../9781492056348/'),
-    ('home', 'https://www.fluentpython.com/'),
-    ('1-20', 'https://www.fluentpython.com/'),
-    ('ora', 'https://www.oreilly.com/.../9781492056348/'),
-    ('2-10', 'http://example.com/'),
-    ('10-2', 'http://example.com/'),
-    ('22', 'http://firstshortened.co')
+    PathURL('book', 'https://www.oreilly.com/.../9781492056348/'),
+    PathURL('home', 'https://www.fluentpython.com/'),
+    PathURL('1-20', 'https://www.fluentpython.com/'),
+    PathURL('ora', 'https://www.oreilly.com/.../9781492056348/'),
+    PathURL('2-10', 'http://example.com/'),
+    PathURL('10-2', 'http://example.com/'),
+    PathURL('22', 'http://firstshortened.co'),
 ]
 
 # straightforward mapping of .htaccess; some targets may be duplicated.
@@ -58,7 +66,6 @@ SAMPLE_TARGETS = {
     'http://example.com/': '2-10',
     'http://firstshortened.co': '22',
 }
-
 
 
 def test_parse_htaccess():
@@ -83,8 +90,8 @@ def test_choose(a, b, expected):
 
 
 def test_load_redirects():
-   redirects, _ = load_redirects(PARSED_SAMPLE_HTACCESS)
-   assert redirects == SAMPLE_REDIRECTS
+    redirects, _ = load_redirects(PARSED_SAMPLE_HTACCESS)
+    assert redirects == SAMPLE_REDIRECTS
 
 
 def test_load_redirect_targets():
@@ -99,8 +106,8 @@ def test_load_redirect_targets():
         ('https://new.site/', '23', True),
     ],
 )
-def test_shorten(target, path, new):
-    expected = ShortenResult(target, path, new)
+def test_shorten_one(target, path, new):
+    expected = PathURL(path, target, new)
     redirects = dict(SAMPLE_REDIRECTS)
     targets = dict(SAMPLE_TARGETS)
     result = shorten_one(target, gen_unused_short(redirects), redirects, targets)
@@ -118,8 +125,23 @@ def test_shorten(target, path, new):
         assert targets == SAMPLE_TARGETS
 
 
+def test_timestamp():
+    with mock.patch('shortener.timestamp', return_value=FROZEN_TIME):
+        assert shortener.timestamp() == FROZEN_TIME
+
+
 def test_update_htaccess():
-    pass
+    directives = [
+        PathURL('home', 'https://www.fluentpython.com/', False),
+        PathURL('23', 'https://new.site/', True),
+        PathURL('24', 'https://other.new.site/', True)
+    ]
+    given = io.StringIO(SAMPLE_HTACCESS)
+    given.seek(0, io.SEEK_END)  # emulate append mode
+    with mock.patch('shortener.timestamp', return_value=FROZEN_TIME):
+        res = update_htaccess(given, directives)
+    assert res == 2
+    assert given.getvalue() == UPDATED_SAMPLE_HTACCESS
 
 
 def test_gen_short():
