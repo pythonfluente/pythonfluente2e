@@ -136,12 +136,12 @@ def test_update_htaccess():
         PathURL('23', 'https://new.site/', True),
         PathURL('24', 'https://other.new.site/', True)
     ]
-    given = io.StringIO(SAMPLE_HTACCESS)
-    given.seek(0, io.SEEK_END)  # emulate append mode
+    htac = io.StringIO(SAMPLE_HTACCESS)
+    htac.seek(0, io.SEEK_END)  # emulate append mode 'a+'
     with mock.patch('shortener.timestamp', return_value=FROZEN_TIME):
-        res = update_htaccess(given, directives)
+        res = update_htaccess(htac, directives)
     assert res == 2
-    assert given.getvalue() == UPDATED_SAMPLE_HTACCESS
+    assert htac.getvalue() == UPDATED_SAMPLE_HTACCESS
 
 
 def test_gen_short():
