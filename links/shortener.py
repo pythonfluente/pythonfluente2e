@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 # URL shortener for .htaccess redirects
 
@@ -56,6 +58,7 @@ If the target URL is not found:
 """
 
 import itertools
+import sys
 from collections.abc import Iterable, Iterator
 from typing import NamedTuple, TextIO
 from datetime import datetime
@@ -124,7 +127,7 @@ def update_htaccess(f: TextIO, directives: list[PathURL]) -> int:
     if directives:
         f.write(f'\n# appended {timestamp()}\n')
         for path, url, _new in directives:
-            f.write(f'RedirectTemp /{path} {url}\n')
+            f.write(f'RedirectTemp /{path}\t{url}\n')
     return len(directives)
 
 
@@ -145,3 +148,30 @@ def gen_unused_short(redirects: dict) -> Iterator[str]:
     for short in gen_short(2):
         if short not in redirects:
             yield short
+
+
+def main():
+    htaccess_path, urls_path = sys.argv[1:3]
+    with open(htaccess_path) as f:
+        hta = f.read()
+    assert 'RedirectTemp' in hta, 'No RedirecTemp in {htaccess_path}'
+    with open(urls_path) as f:
+        urls = [u.rstrip() for u in f.readlines()]
+    
+    redirects, targets = load_redirects(parse_htaccess(hta))
+    path_urls = []
+    path_gen = gen_unused_short(redirects)
+    for url in urls:
+        path_url = shorten_one(url, path_gen, redirects, targets)
+        path_urls.append(path_url)
+        path, url, new = path_url
+        flag = '*' if new else ' '
+        print(f'{flag} /{path}\t{url}')
+    
+    with open(htaccess_path, 'a') as f:
+        count = update_htaccess(f, path_urls)
+    print(f'{count} directives appended to {htaccess_path}', file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()
