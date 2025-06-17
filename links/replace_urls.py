@@ -20,13 +20,18 @@ def main():
 
     initial_adoc = adoc
 
+    replaced = set()
+
     for path, url in pairs:
+        if url in replaced:
+            continue
         assert url in adoc, f'{url} not found in {adoc_name}'
         print(path, url)
         short_url = 'https://fpy.li' + path
         adoc = adoc.replace(url, short_url)
+        replaced.add(url)
 
-    assert len(initial_adoc) < len(adoc), f'{adoc_name} not shortened'
+    assert len(initial_adoc) > len(adoc), f'{adoc_name}: {len(initial_adoc)=} {len(adoc)=}'
 
     with open(adoc_name, 'w') as fp:
         fp.write(adoc)
