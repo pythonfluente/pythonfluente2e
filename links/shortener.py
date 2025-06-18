@@ -165,7 +165,7 @@ def main():
         path_url = shorten_one(url, path_gen, redirects, targets)
         path_urls.append(path_url)
         path, url, new = path_url
-        flag = '*' if new else ' '
+        flag = '+' if new else '='
         print(f'{flag} /{path}\t{url}')
     
     with open(htaccess_path, 'a') as f:
