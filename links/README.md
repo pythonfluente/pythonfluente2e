@@ -38,15 +38,5 @@ Exceptions:
 - URLs with `oreilly` in them are unchanged;
 - `fluentpython.com` URL (with no path) is unchanged;
 
-The `custom.htaccess` file contains redirects with custom names
-plus numbered URLs generated from the links in each chapter in
-the Second Edition in English.
-
-`short.htaccess` has redirects made by `short.py`, starting
-with the Second Edition in Brazilian Portuguese.
-
-```shell
-cat custom.htaccess short.htaccess > FPY.LI.htaccess
-```
-
-`FPY.LI.htaccess` is deployed at the root folder in `http://fpy.li`.
+`FPY.LI.htaccess` is deployed at the root folder in `http://fpy.li`,
+renamed to `.htaccess`.

@@ -4,7 +4,7 @@
 
 ### Nos arquivos da edição online:
 
-✅ Eliminar duplicação de atributos entre cabeçalhos de `capN.adoc`, `atributos-pt_BR.adoc`, `Livro.adoc`, `Volume1.adoc`...
+1. Eliminar duplicação de atributos entre cabeçalhos de `capN.adoc`, `atributos-pt_BR.adoc`, `Livro.adoc`, `Volume1.adoc`...
 2. Encurtar links já presentes
 3. Quebrar linhas longas (semantic linebreaks)
 4. Retirar inline pass macros[^1]
@@ -15,6 +15,11 @@
 
 ## Cuidados ao automatizar mudanças
 
+### Encurtar somente URLs em links Asciidoc
+
+A sintaxe do link é `http://d.t[Texto]` portanto é bom usar
+o sinal `[` logo após a URL como parte da expressão regular.
+
 ### Não reformatar blocos
 
 Não reformatar ou encurtar URLs em:
@@ -22,7 +27,7 @@ Não reformatar ou encurtar URLs em:
 * blocos de código
 * tabelas
 
-### Proteger legendas de figuras
+### Não quebrar legendas de figuras
 
 Uma legenda de figura começa com `.` e não pode ser quebrada em várias linhas.
 

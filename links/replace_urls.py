@@ -27,8 +27,9 @@ def main():
             continue
         assert url in adoc, f'{url} not found in {adoc_name}'
         print(path, url)
-        short_url = 'https://fpy.li' + path
-        adoc = adoc.replace(url, short_url)
+        # append [ to get Asciidoc link syntax URLs, not explicit URLs in code etc.
+        short_url = f'https://fpy.li{path}['
+        adoc = adoc.replace(url + '[', short_url)
         replaced.add(url)
 
     assert len(initial_adoc) > len(adoc), f'{adoc_name}: {len(initial_adoc)=} {len(adoc)=}'
