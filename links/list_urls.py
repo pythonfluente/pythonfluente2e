@@ -3,14 +3,14 @@
 import fileinput
 import re
 
-URL_RE = re.compile(r"""https?://[^\s[<>"']+""")
+URL_RE = re.compile(r"""(https?://[^\s[<>"']+)\[""")
 
 
 def find_urls(fpy=True, long=True):
     found = 0
     for line in (l.rstrip() for l in fileinput.input()):
         if match := URL_RE.search(line):
-            url = match.group()
+            url = match.groups()[0]
             is_fpy = '://fpy.li/' in url
             if (is_fpy and not fpy) or (not is_fpy and not long):
                 continue
