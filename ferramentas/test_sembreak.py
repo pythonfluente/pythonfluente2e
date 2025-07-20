@@ -5,6 +5,7 @@ from sembreak import sembreak
 @pytest.mark.parametrize("given,expected", [
     ('aaa bbb.', 'aaa bbb.'),
     ('aaa bbb. Ccc', 'aaa bbb.\nCcc'),
+    ('Mr. A. Turing', 'Mr. A. Turing'),
     ('aaa bbb.  Ccc', 'aaa bbb.\nCcc'),
     ('aaa bbb. ccc', 'aaa bbb. ccc'),
 ])

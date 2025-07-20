@@ -4,7 +4,7 @@ import fileinput
 import re
 
 
-RE_PERIOD = re.compile(r'(\w\w)\. +([A-Z])')
+RE_PERIOD = re.compile(r'(\w\w\w)\. +([A-Z])')
 
 
 def sembreak(text):
