@@ -13,7 +13,7 @@ def sembreak(text):
 
 def main():
     for line in fileinput.input(encoding="utf-8"):
-        if line[0] != '.':
+        if line[0] not in '.| ':
             line = sembreak(line)
         print(line, end='')
 
