@@ -33,7 +33,7 @@ e mapeamentos, incluindo desempacotamento aumentado e _pattern matching_ (casame
 * Tratamento especial para chaves ausentes
 * Variantes de `dict` na biblioteca padrão
 * Os tipos `set` e `frozenset`
-* As implicações das tabelas de hash no comportamento de conjuntos e dicionários
+* As implicações das tabelas de hash no comportamento de conjuntos e dicionários.
 
 
 === Novidades nesse capítulo
@@ -52,8 +52,8 @@ a <<dictionary_views_sec>> e a <<set_ops_dict_views_sec>>.
 A implementação interna de `dict` e `set` ainda está alicerçada em tabelas de hash,
 mas o código de `dict` teve duas otimizações importantes,
 que economizam memória e preservam o ordem de inserção das chaves.
-As seções <<consequences_dict_internals>> e <<consequences_set_sec>>
-resumem o que você precisa saber sobre isso para usar bem as estruturas efetadas.
+A <<consequences_dict_internals>> e a <<consequences_set_sec>>
+resumem o que você precisa saber sobre isso para usar bem essas estruturas.
 
 [NOTE]
 ====
@@ -117,7 +117,7 @@ O <<example3-1>> mostra o uso de compreensões de `dict` para criar dois dicion�
 <2> ...aqui permutamos os pares: `country` é a chave, e `code` é o valor.
 <3> Ordenando `country_dial` por nome, revertendo novamente os pares, colocando os valores em maiúsculas e filtrando os itens com `code < 70`.
 
-Se você já está acostumada com as listcomps, as dictcomps são um próximo passo natural.
+Se você já usa listcomps, as dictcomps são um próximo passo natural.
 Caso contrário, a propagação da sintaxe de compreensão mostra que agora é mais valioso que nunca se tornar fluente nessa técnica.
 
 
@@ -222,7 +222,8 @@ No <<ch_sequences>> nos concentramos apenas nos padrões de sequência,
 mas tipos diferentes de padrões podem ser combinados e aninhados.
 Graças à desestruturação, o pattern matching é uma ferramenta poderosa para
 processar registros estruturados como sequências e mapeamentos aninhados,
-que frequentemente precisamos ler de APIs JSON ou bancos de dados com schemas semi-estruturados,
+que frequentemente precisamos ler de APIs JSON ou bancos de dados
+que suportam registros ou campos semi-estruturados,
 como o MongoDB, o EdgeDB, ou o PostgreSQL.
 O <<dict_match_ex>> demonstra isso.
 
@@ -339,7 +340,8 @@ Para implementar uma mapeamento customizado, é mais fácil estender `collection
 ou envolver um `dict` por composição, ao invés de criar uma subclasse dessas ABCs.
 A classe `collections.UserDict` e todas as classes concretas de mapeamentos da biblioteca padrão
 encapsulam o `dict` básico em suas implementações, que por sua vez é criado sobre uma tabela de hash.
-Assim, todas elas compartilham a mesma limitação, as((("keys", "hashability"))) chaves precisam ser _hashable_
+Assim, todas elas compartilham a mesma limitação:
+as((("keys", "hashability"))) chaves precisam ser _hashable_
 (os valores não precisam ser hashable, só as chaves).
 Se você precisa de uma recapitulação, a próxima seção explica isso.
 
@@ -352,7 +354,8 @@ https://fpy.li/32[_Glossário_ de Python]:
 [quote]
 ____
 Um objeto é hashable se tem um código de hash que nunca muda durante seu ciclo de vida
-(precisa ter um método __hash__()) e pode ser comparado com outros objetos (precisa ter um método __eq__()).
+(precisa ter um método `+__hash__+`) e pode ser comparado com outros objetos
+(precisa ter um método `+__eq__+`).
 Objetos hashable que são comparados como iguais devem ter o mesmo código de hash.footnote:[O
 verbete para "hashable" no
 https://fpy.li/32[_Glossário_ de Python]
@@ -404,8 +407,8 @@ Vamos agora revisar a API dos tipos de mapeamento mais comumente usado no Python
 ==== Revisão dos métodos mais comuns dos mapeamentos
 
 A((("defaultdict")))((("OrderedDict")))((("collections.abc module", "defaultdict and OrderedDict")))
-API básica para mapeamentos é muito variada.
-A <<mapping_methods_tbl>> mostra os métodos implementados por `dict` e por duas variantes populares:
+API básica para mapeamentos é bem completa.
+A <<mapping_methods_tbl>> mostra os métodos implementados por `dict` e pelas variantes mais usadas:
 `defaultdict` e `OrderedDict`, ambas classes definidas no módulo `collections`.
 
 [role="pagebreak-before less_space"]
@@ -415,30 +418,30 @@ A <<mapping_methods_tbl>> mostra os métodos implementados por `dict` e por duas
 |===========================================================================================================================================================================================================================================================================
 |                             |dict  |defaultdict  |OrderedDict  | &#xa0;
 |                 `d.clear()` |  ●   |      ●      |      ●      | Remove todos os itens.
-|         `+d.__contains__(k)+` |  ●   |      ●      |      ●      | `k in d`.
-|                  `d.copy()` |  ●   |      ●      |      ●      | Cópia rasa.
+|         `+d.__contains__(k)+` |  ●   |      ●      |      ●      | `k in d`
+|                  `d.copy()` |  ●   |      ●      |      ●      | Cópia rasa
 |              `+d.__copy__()+` |      |      ●      |             | Suporte a `copy.copy(d)`.
-|         `d.default_factory` |      |      ●      |             | Chamável invocado por  `+__missing__+` para definir valores ausentes.footnote:[`default_factory` não é um método, mas um atributo chamável definido pelo usuário quando um `defaultdict` é instanciado.]
+|         `d.default_factory` |      |      ●      |             | Chamável invocado por  `+__missing__+` para definir valores ausentesfootnote:[`default_factory` não é um método, mas um atributo chamável definido pelo usuário quando um `defaultdict` é instanciado.]
 |          `+d.__delitem__(k)+` |  ●   |      ●      |      ●      | `del d[k]`—remove item com chave `k`
-| `d.fromkeys(it, [initial])` |  ●   |      ●      |      ●      | Novo mapeamento com chaves no iterável `it`, com um valor inicial opcional (o default é `None`).
-|       `d.get(k, [default])` |  ●   |      ●      |      ●      | Obtém item com chave `k`, devolve `default` ou `None` se `k` não existir.
-|          `+d.__getitem__(k)+` |  ●   |      ●      |      ●      | ++d[k]++—obtém item com chave `k`.
-|                 `d.items()` |  ●   |      ●      |      ●      | Obtém uma _view_ dos itens—pares `(chave, valor)`.
-|              `+d.__iter__()+` |  ●   |      ●      |      ●      | Obtém iterador das chaves.
-|                  `d.keys()` |  ●   |      ●      |      ●      | Obtém _view_ das chaves.
-|               `+d.__len__()+` |  ●   |      ●      |      ●      | `len(d)`—número de itens.
-|          `+d.__missing__(k)+` |      |      ●      |             | Chamado quando `+__getitem__+` não consegue encontrar a chave.
+| `d.fromkeys(it, [initial])` |  ●   |      ●      |      ●      | Novo mapeamento com chaves no iterável `it`, com um valor inicial opcional (o default é `None`)
+|       `d.get(k, [default])` |  ●   |      ●      |      ●      | Obtém item com chave `k`, devolve `default` ou `None` se `k` não existir
+|          `+d.__getitem__(k)+` |  ●   |      ●      |      ●      | ++d[k]++—obtém item com chave `k`
+|                 `d.items()` |  ●   |      ●      |      ●      | Obtém uma _view_ dos itens—pares `(chave, valor)`
+|              `+d.__iter__()+` |  ●   |      ●      |      ●      | Obtém iterador das chaves
+|                  `d.keys()` |  ●   |      ●      |      ●      | Obtém _view_ das chaves
+|               `+d.__len__()+` |  ●   |      ●      |      ●      | `len(d)`—número de itens
+|          `+d.__missing__(k)+` |      |      ●      |             | Chamado quando `+__getitem__+` não consegue encontrar a chave
 |  `d.move_to_end(k, [last])` |      |             |      ●      | Move `k` para primeira ou última posição (`last` é `True` por default).
-|           `+d.__or__(other)+` |  ●   |      ●      |      ●      | Suporte a `d1 \| d2` para criar um novo \`dict`, fundindo `d1` e `d2` (Python ≥ 3.9).
-|          `+d.__ior__(other)+` |  ●   |      ●      |      ●      | Suporte a `d1 \|= d2` para atualizar `d1` com `d2` (Python ≥ 3.9).
-|       `d.pop(k, [default])` |  ●   |      ●      |      ●      | Remove e devolve valor em `k`, ou `default` ou `None`, se `k` não existir.
-|               `d.popitem()` |  ●   |      ●      |      ●      | Remove e devolve, na forma `(chave, valor)`, o último item inserido.footnote:[`OrderedDict.popitem(last=False)` remove o primeiro item inserido (FIFO). O argumento nomeado `last` não é suportado por `dict` ou `defaultdict`, pelo menos até Python 3.10b3.]
-|          `+d.__reversed__()+` |  ●   |      ●      |      ●      | Suporte a `reverse(d)`—devolve um iterador de chaves, da última para a primeira a serem inseridas.
+|           `+d.__or__(other)+` |  ●   |      ●      |      ●      | Suporte a `d1 \| d2` para criar um novo `dict`, fundindo `d1` e `d2` (Python ≥ 3.9)
+|          `+d.__ior__(other)+` |  ●   |      ●      |      ●      | Suporte a `d1 \|= d2` para atualizar `d1` com `d2` (Python ≥ 3.9)
+|       `d.pop(k, [default])` |  ●   |      ●      |      ●      | Remove e devolve valor em `k`, ou `default` ou `None`, se `k` não existir
+|               `d.popitem()` |  ●   |      ●      |      ●      | Remove e devolve, na forma `(chave, valor)`, o último item inseridofootnote:[`OrderedDict.popitem(last=False)` remove o primeiro item inserido (FIFO). O argumento nomeado `last` não é suportado por `dict` ou `defaultdict`, pelo menos até Python 3.10b3.]
+|          `+d.__reversed__()+` |  ●   |      ●      |      ●      | Suporte a `reverse(d)`—devolve um iterador de chaves, da última para a primeira a serem inseridas
 |          `+d.__ror__(other)+` |  ●   |      ●      |      ●      | Suporte a `other \| dd`—operador de união invertido (Python ≥ 3.9)footnote:[Operadores invertidos são tratados no <<ch_op_overload>>.]
-|`d.setdefault(k, [default])` |  ●   |      ●      |      ●      | Se `k in d`, devolve `d[k]`; senão, atribui `d[k] = default` e devolve isso.
+|`d.setdefault(k, [default])` |  ●   |      ●      |      ●      | Se `k in d`, devolve `d[k]`; senão, atribui `d[k] = default` e devolve isso
 |       `+d.__setitem__(k, v)+` |  ●   |      ●      |      ●      | `d[k] = v`—coloca `v` em `k`
-|   `d.update(m, [**kwargs])` |  ●   |      ●      |      ●      | Atualiza `d` com itens de um mapeamento ou iterável de pares `(chave, valor)`.
-|                `d.values()` |  ●   |      ●      |      ●      | Obtém uma _view_ dos valores.
+|   `d.update(m, [**kwargs])` |  ●   |      ●      |      ●      | Atualiza `d` com itens de um mapeamento ou iterável de pares `(chave, valor)`
+|                `d.values()` |  ●   |      ●      |      ●      | Obtém uma _view_ dos valores
 |===========================================================================================================================================================================================================================================================================
 
 A forma como `d.update(m)` lida com seu primeiro argumento, `m`,
@@ -467,7 +470,7 @@ Considere um script para indexar texto, produzindo um mapeamento no qual cada ch
 e o valor é uma lista das posições onde aquela palavra ocorre, como mostrado no <<index0_output_ex>>.
 
 [[index0_output_ex]]
-.Saída parcial do <<index0_ex>> processando o texto "Zen of Python"; cada linha mostra uma palavra e uma lista de ocorrências na forma de pares (`line_number`, `column_number`) (_número da linha_, _número da coluna)
+.Saída parcial do <<index0_ex>> processando o texto "Zen of Python"; cada linha mostra uma palavra e uma lista de ocorrências na forma de pares `(line_number, column_number)` (número da linha, número da coluna).
 ====
 [source, bash]
 ----
@@ -568,7 +571,7 @@ você fornece um chamável que produz um valor default sempre que `+__getitem__+
 Por exemplo, dado um `defaultdict` criado por `dd = defaultdict(list)`,
 se `'new-key'` não estiver em `dd`, a expressão `dd['new-key']` segue os seguintes passos:
 
-. Chama +list()+ para criar uma nova lista.
+. Chama `list()`` para criar uma nova lista.
 . Insere a lista em `dd` usando `'new-key'` como chave.
 . Devolve uma referência para aquela lista.
 
@@ -608,7 +611,7 @@ O mecanismo que faz `defaultdict` funcionar, chamando `default_factory`,
 
 Por((("&#x005F;&#x005F;missing&#x005F;&#x005F;", id="missing03"))) trás da forma como os mapeamentos
 lidam com chaves ausentes está o método muito apropriadamente chamado `+__missing__+`.footnote:[NT:
-"Missing" significa ausente, perdido ou desaparecido].
+"Missing" significa ausente, perdido ou desaparecido]
 Esse método não é definido na classe base `dict`, mas `dict` está ciente de sua possibilidade:
 se você criar uma subclasse de `dict` e incluir um método `+__missing__+`, o `+dict.__getitem__+`
 padrão vai chamar seu método sempre que uma chave não for encontrada, em vez de gerar um `KeyError`.
@@ -756,14 +759,14 @@ Agora((("collections.abc module", "defaultdict and OrderedDict")))((("OrderedDic
 também mantém as chaves ordenadas (desde Python 3.6),
 o motivo mais comum para usar `OrderedDict` é escrever código compatível com versões anteriores de Python.
 Dito isso, a documentação lista algumas diferenças entre `dict` e `OrderedDict` que
-ainda persistem e que cito aqui—apenas reordenando os itens conforme sua relevância no uso diário:
+ainda persistem e que cito aqui:
 
 * A operação de igualdade para `OrderedDict` verifica a igualdade da ordenação.
 * O método `popitem()` de `OrderedDict` tem uma assinatura diferente,
 que aceita um argumento opcional especificando qual item será devolvido.
 * `OrderedDict` tem um método `move_to_end()`, que reposiciona de um elemento para uma ponta do dicionário de forma eficiente.
 * O `dict` comum foi projetado para ser muito bom nas operações de mapeamento.
-Monitorar a ordem de inserção era uma preocupação secundária.
+Preservar a ordem de inserção era uma preocupação secundária.
 * `OrderedDict` foi projetado para ser bom em operações de reordenamento.
 Eficiência espacial, velocidade de iteração e o desempenho de operações de atualização eram preocupações secundárias.
 * Em termos do algoritmo, um `OrderedDict` lida melhor que um dict com operações frequentes de reordenamento.
@@ -825,9 +828,9 @@ um interpretador parcial da linguagem de programação Scheme.
 
 ==== collections.Counter
 
-Um((("collections.abc module", "Counter")))((("Counter"))) mapeamento que mantém uma contagem inteira para cada chave.
+Um((("collections.abc module", "Counter")))((("Counter"))) mapeamento que mantém uma contagem para cada chave.
 Atualizar uma chave existente adiciona à sua contagem.
-Isso pode ser usado para contar instâncias de objetos hashable ou como um _multiset_ ("conjunto múltiplo"),
+Isso pode ser usado para contar instâncias de objetos hashable ou como um _multiset_ (conjunto múltiplo),
 discutido adiante nessa seção.
 `Counter` implementa os operadores `+` e `-` para combinar contagens,
 e outros métodos úteis tal como o `most_common([n])`,
@@ -906,7 +909,7 @@ para assegurar que qualquer chave adicionada ao mapeamento seja armazenada como 
 
 A principal razão pela qual é melhor criar uma subclasse de `UserDict` em vez de `dict` é
 que o tipo embutido tem alguns atalhos de implementação,
-que acabam nos obrigando a sobrepor métodos que poderíamos apenas herdar de `UserDict`
+que acabam nos obrigando a sobrescrever métodos que poderíamos apenas herdar de `UserDict`
 sem maiores problemas.footnote:[O problema exato de se criar subclasses de `dict` e de outros tipos embutidos
 é tratado na <<subclass_builtin_woes>>.]
 
@@ -1026,15 +1029,15 @@ o construtor em uma subclasse concreta `Board` preencheria um mapeamento privado
 e o exporia aos clientes da API via um atributo público `.portas`, implementado como um `mappingproxy`.
 Dessa forma os clientes não poderiam acrescentar, remover ou modificar as portas por acidente.
 
-A seguir veremos _views_—que permitem operações de alto desempenho em um `dict`, sem cópias desnecessárias dos dados.
+A seguir estudaremos _views_—que permitem operações de alto desempenho em um `dict`, sem cópias desnecessárias dos dados.
 
 
 [[dictionary_views_sec]]
 [role="pagebreak-before less_space"]
 === Views de dicionários
 
-Os((("dictionaries and sets", "dictionary views", id="DASviews03"))) métodos de instância de `dict`
-`.keys()`, `.values()`, e `.items()` devolvem instâncias de classes chamadas
+Objetos `dict`((("dictionaries and sets", "dictionary views", id="DASviews03"))) implementam os métodos
+`.keys()`, `.values()`, e `.items()`, que devolvem instâncias de classes chamadas
 `dict_keys`, `dict_values`, e `dict_items`, respectivamente.
 Essas views de dicionário são projeções somente para leitura de estruturas de dados internas
 usadas na implemetação de `dict`.
@@ -1102,7 +1105,7 @@ A classe `dict_values` é a view de dicionário mais simples—ela implementa ap
 `+__len__+`, `+__iter__+`, e `+__reversed__+`.
 Além desses métodos, `dict_keys` e `dict_items` implementam vários métodos dos _sets_,
 quase tantos quanto a classe `frozenset`.
-Após vermos os conjuntos (_sets_), teremos mais a dizer sobre `dict_keys` e `dict_items`,
+Após vermos os conjuntos, voltaremos a estudar `dict_keys` e `dict_items`,
 na <<set_ops_dict_views_sec>>.
 
 Agora vamos ver algumas regras e dicas baseadas na forma como `dict` é
@@ -1139,16 +1142,16 @@ Desde a implementação da
 https://fpy.li/pep412[PEP 412—Key-Sharing Dictionary (_Dicionário de Compartilhamento de Chaves_)] (EN),
 no Python 3.3, instâncias de uma classe podem compartilhar uma tabela de hash comum, armazenada com a classe.
 Essa tabela de hash comum é compartilhada pelo `+__dict__+` de cada nova instância que,
-quando `+__init__+` retorna, tenha os mesmos nomes de atributos que a primeira instância daquela classe a ser criada.
+quando `+__init__+` retorna, tenha os mesmos nomes de atributos que a primeira instância a ser criada naquela classe.
 O `+__dict__+` de cada instância então pode manter apenas seus próprios valores de atributos como
 um array de ponteiros.
 Acrescentar um atributo de instância após o `+__init__+` obriga Python a criar uma nova tabela de hash
 só para o `+__dict__+` daquela instância (que era o comportamento default antes de Python 3.3).
 De acordo com a PEP 412, essa otimização reduz o uso da memória entre 10% e 20% em programas orientados as objetos.
 Os detalhes das otimizações do layout compacto e do compartilhamento de chaves são bastante complexos.
-Para saber mais, por favor leio o texto https://fpy.li/hashint["Internals of sets and dicts"] (EN).
+Para saber mais, leia https://fpy.li/hashint["Internals of sets and dicts"] (EN).
 
-Agora vamos estudar conjuntos(_sets_).
+Agora vamos estudar conjuntos.
 
 
 === Teoria dos conjuntos
@@ -1194,7 +1197,7 @@ Elementos de um conjunto devem ser _hashable_.
 O tipo `set` não é hashable, então não é possível criar um `set` com instâncias aninhadas de `set`.
 Mas `frozenset` é hashable, então você pode ter instâncias de `frozenset` dentro de um `set`.
 
-Além de impor a unicidade de cada elemento,
+Além de garantir que cada elemento é único,
 os tipos conjunto implementam muitas operações entre conjuntos como operadores infixos.
 Assim, dados dois conjuntos `a` e `b`, `a | b` devolve sua união,
 `a & b` calcula a intersecção, `a - b` a diferença, e `a ^ b` a diferença simétrica.
@@ -1257,7 +1260,7 @@ a alternativa no <<ex_set_ops_ex2>> pode ser mais barata que o <<ex_set_loop_ex>
 Qualquer dos exemplos acima é capaz de buscar 1000 elementos em um `haystack` de 10 milhões
 de itens em cerca de 0,3 milisegundos—isso é cerca de 0,3 microsegundos por elemento.
 
-Além do teste de existência extremamente rápido (graças à tabela de hash subjacente),
+Além do teste de existência extremamente rápido (graças à tabela de hash),
 os tipos embutidos `set` e `frozenset` oferecem uma rica API para criar novos conjuntos ou,
 no caso de `set`, para modificar conjuntos existentes.
 Vamos discutir essas operações em breve, após uma observação sobre sintaxe.((("", startref="Stheory03")))
@@ -1306,8 +1309,8 @@ e a use para inspecionar os bytecodes de um `set` literal—por exemplo
 
 Não há sintaxe especial para representar literais `frozenset`—eles só podem ser criados chamando seu construtor.
 Sua representação padrão como string no Python 3 se parece com uma chamada ao construtor
-de `frozenset` com um argumento `set``.
-Observe a saída na sessão de console a seguir:
+de `frozenset` com um argumento `set`.
+Observe a saída no console:
 
 [source, pycon]
 ----
@@ -1404,7 +1407,7 @@ https://fpy.li/pep448[PEP 448—Additional Unpacking Generalizations (_Generaliz
 image::images/flpy_0302.png[Diagrama de classe UML para `Set` e `MutableSet`]
 
 [[set_operators_tbl]]
-.Operações matemáticas com conjuntos: esses métodos ou produzem um novo conjunto ou atualizam o conjunto alvo no mesmo lugar, se ele for mutável
+.Operações matemáticas com conjuntos: esses métodos produzem um novo conjunto ou atualizam o conjunto alvo no mesmo lugar, se ele for mutável
 [options="header"]
 |=====================================================================================================================================================================================
 |Math symbol|Python operator| Method                           | Description
@@ -1413,19 +1416,16 @@ image::images/flpy_0302.png[Diagrama de classe UML para `Set` e `MutableSet`]
 |           |          |               `s.intersection(it, …)` | Intersecção de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 |           | `s &= z` |                       `+s.__iand__(z)+` | `s` atualizado com a intersecção de `s` e `z`
 |           |          |        `s.intersection_update(it, …)` | `s`  atualizado com a intersecção de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
-||||
 |   S ∪ Z   | `s \| z` |                         `+s.__or__(z)+` | União de `s` e `z`
 |           | `z \| s` |                        `+s.__ror__(z)+` | `\|` invertido
 |           |          |                      `s.union(it, …)` | União de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 |           | `s \|= z`|                        `+s.__ior__(z)+` | `s` atualizado com a união de `s` e `z`
 |           |          |                     `s.update(it, …)` | `s` atualizado com a união de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
-||||
 |  S \ Z    | `s - z`  |                        `+s.__sub__(z)+` | Complemento relativo ou diferença entre `s` e `z`
 |           | `z - s`  |                       `+s.__rsub__(z)+` | Operador `-` invertido
 |           |          |                 `s.difference(it, …)` | Diferença entre `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 |           | `s -= z` |                       `+s.__isub__(z)+` | `s` atualizado com a diferença entre `s` e `z`
 |           |          |          `s.difference_update(it, …)` | `s` atualizado com a diferença entre `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
-||||
 |   S ∆ Z   | `s ^ z`  |                        `+s.__xor__(z)+` | Diferença simétrica (o complemento da intersecção `s & z`)
 |           | `z ^ s`  |                       `+s.__rxor__(z)+` | Operador `^` invertido
 |           |          |          `s.symmetric_difference(it)` | Complemento de `s & set(it)`
@@ -1441,19 +1441,13 @@ A <<set_comparison_tbl>> lista predicados de conjuntos: operadores e métodos qu
 |===============================================================================================================
 |Math symbol|Python operator| Method              | Description
 | S ∩ Z = ∅ |               |   `s.isdisjoint(z)` | `s` e `z` são disjuntos (não tem elementos em comum)
-||||
 |   e ∈ S   | `e in s`      | `+s.__contains__(e)+` | Elemento `e` é membro de `s`
-||||
 |   S ⊆ Z   | `s \<= z`      |       `+s.__le__(z)+` | `s` é um subconjunto do conjunto `z`
 |           |               |    `s.issubset(it)` | `s` é um subconjunto do conjunto criado a partir do iterável `it`
-||||
 |   S ⊂ Z   | `s < z`       |       `+s.__lt__(z)+` | `s` é um subconjunto própriofootnote:[NT: Na teoria dos conjuntos, A é um _subconjunto próprio_ de B se A é subconjunto de B e A é diferente de B.] do conjunto `z`
-||||
 |   S ⊇ Z   | `s >= z`      |       `+s.__ge__(z)+` | `s` é um superconjunto do conjunto `z`
 |           |               |  `s.issuperset(it)` | `s` é um superconjunto do conjunto criado a partir do iterável `it`
-||||
 |   S ⊃ Z   | `s > z`       |       `+s.__gt__(z)+` | `s` é um superconjunto próprio do conjunto `z`
-||||
 |===============================================================================================================
 
 
@@ -1548,7 +1542,7 @@ Veja isso:
 ====
 Uma view obtida de `dict_items` só funciona como um conjunto se todos os valores naquele `dict` são hashable.
 Tentar executar operações de conjuntos sobre uma view devolvida por `dict_items` que
-contenha valores não-hashable gera um `TypeError: unhashable type 'T'`, sendo `T` o tipo do valor incorreto.
+contenha valores não-hashable gera um `TypeError: unhashable type 'T'`, sendo `T` o tipo do valor rejeitado.
 
 Por outro lado, uma view devolvida por `dict_keys` sempre pode ser usada como um conjunto,
 pois todas as chaves são hashable—por definição.
@@ -1565,7 +1559,7 @@ Com isso, encerramos esse capítulo.
 === Resumo do capítulo
 
 Dicionários((("dictionaries and sets", "overview of"))) são a pedra fundamental de Python.
-Ao longo dos anos, a sintaxe literal familiar, `{k1: v1, k2: v2}`,
+Ao longo dos anos, a sintaxe literal familiar `{k1: v1, k2: v2}`
 foi aperfeiçoada para suportar desempacotamento com `**` e pattern matching, bem como com compreensões de `dict`.
 
 Além do `dict` básico, a biblioteca padrão oferece mapeamentos práticos prontos para serem usados,
@@ -1592,7 +1586,7 @@ que permite customizar o que acontece quando uma chave não é encontrada ao se 
 que invoca `+__getitem__+`.
 
 O módulo `collections.abc` oferece as classes base abstratas `Mapping` e `MutableMapping` como interfaces padrão,
-muito úteis para checagem de tipo durante a execução.
+úteis para checagem de tipo durante a execução.
 O `MappingProxyType`, do módulo `types`,
 cria uma fachada imutável para um mapeamento que você precise proteger de modificações acidentais.
 Existem também ABCs para `Set` e `MutableSet`.
@@ -1630,7 +1624,7 @@ A https://fpy.li/pep3106[PEP 3106--Revamping dict.keys(), .values() and .items()
 (EN) foi onde Guido van Rossum apresentou o recurso de views de dicionário para Python 3.
 No resumo, ele afirma que a ideia veio da Java Collections Framework.
 
-O https://fpy.li/3-19[PyPy] foi o primeiro interpretador Python a implementar a proposta de Raymond Hettinger de dicts compactos,
+O https://fpy.li/3-19[PyPy] foi o primeiro interpretador Python a implementar a proposta de Raymond Hettinger para dicts compactos,
 e eles escreverem em seu blog sobre isso, em
 https://fpy.li/3-20["Faster, more memory efficient and more ordered dictionaries on PyPy" (_Dicionários mais rápidos, mais eficientes em termos de memória e mais ordenados no PyPy_)]
 (EN), reconhecendo que um layout similar foi adotado no PHP 7,
@@ -1696,8 +1690,8 @@ ____
 A sintaxe é a interface de usuário de uma linguagem de programação, então tem muita importância na prática.
 
 Antes de encontrar Python, fiz um pouco de programação para a web usando Perl e PHP.
-A sintaxe para mapeamentos nessas linguagens é muito útil,
-e eu tenho muita saudade dela sempre que tenho que usar Java ou C.
+A sintaxe para mapeamentos nessas linguagens é muito útil.
+Sinto muita falta dela quando tenho que usar Java ou C.
 
 Uma boa sintaxe para mapeamentos literais é muito conveniente para configuração,
 para implementações guiadas por tabelas, e para conter dados para prototipagem e testes.
@@ -1738,7 +1732,7 @@ Sua ideia básica:
 ----
 
 A sintaxe que todo mundo agora usa para trocar dados é a sintaxe de `dict` e `list` de Python.
-E então temos uma sintaxe agradável com a conveniência da preservação da ordem de inserção.
+Agora temos uma sintaxe agradável com a conveniência da preservação da ordem de inserção.
 
 Simples e correto.
 ****
