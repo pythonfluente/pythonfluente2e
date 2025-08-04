@@ -35,7 +35,7 @@ Goose typing (_tipagem ganso_)::
 Tipagem estática::
     A((("static typing"))) abordagem tradicional das linguagens de tipos estáticos como C e Java;
     suportada desde Python 3.5 pelo módulo `typing`,
-    e aplicada por verificadores de tipo externos compatíveis com a
+    e aplicada por checadores de tipos externos compatíveis com a
     https://fpy.li/pep484[PEP 484—Type Hints].
     Este não é o foco desse capítulo.
     A maior parte do <<ch_type_hints_def>> e do <<ch_more_types>>
@@ -43,7 +43,7 @@ Tipagem estática::
 Duck typing estática::
     Uma((("static duck typing"))) abordagem popularizada pela linguagem Go;
     suportada por subclasses de `typing.Protocol`—lançada no Python 3.8 e
-    também aplicada com o suporte de verificadores de tipo externos.
+    também aplicada com o suporte de checadores de tipos externos.
     Tratamos desse tema pela primeira vez em <<protocols_in_fn>> (<<ch_type_hints_def>>),
     e continuamos nesse capítulo.
 
@@ -82,7 +82,7 @@ Este((("interfaces", "significant changes to")))((("protocols", "significant cha
 * Os diagramas de classe de `collections.abc` nas Figuras pass:[<a href="#sequence_uml_repeat" data-type="xref" data-xrefstyle="select:labelnumber">#sequence_uml_repeat</a>], pass:[<a href="#mutablesequence_uml" data-type="xref" data-xrefstyle="select:labelnumber">#mutablesequence_uml</a>], and pass:[<a href="#collections_uml" data-type="xref" data-xrefstyle="select:labelnumber">#collections_uml</a>] foram atualizados para incluir a `Collection` ABC, de Python 3.6.
 
 A primeira edição de _Python Fluente_ tinha uma seção encorajando o uso das ABCs  `numbers` para goose typing.
-Na <<numbers_abc_proto_sec>> eu explico porque, em vez disso, você deve usar protocolos numéricos estáticos do módulo `typing` se você planeja usar verificadores de tipo estáticos, ou checagem durante a execução no estilo da goose typing.
+Na <<numbers_abc_proto_sec>> eu explico porque, em vez disso, você deve usar protocolos numéricos estáticos do módulo `typing` se você planeja usar checadores de tipos estáticos, ou checagem durante a execução no estilo da goose typing.
 
 
 [[two_kinds_protocols_sec]]
@@ -160,7 +160,7 @@ Protocolo estático::
 Há duas diferenças fundamentais entre eles:
 
 * Um objeto pode implementar apenas parte de um protocolo dinâmico e ainda assim ser útil; mas para satisfazer um protocolo estático, o objeto precisa oferecer todos os métodos declarados na classe do protocolo, mesmo se seu programa não precise de todos eles.
-* Protocolos estáticos podem ser inspecionados por verificadores de tipo estáticos, protocolos dinâmicos não.
+* Protocolos estáticos podem ser inspecionados por checadores de tipos estáticos, protocolos dinâmicos não.
 
 Os dois tipos de protocolo compartilham um característica essencial, uma classe nunca precisa declarar que suporta um protocolo pelo nome, isto é, por herança.
 
@@ -192,7 +192,7 @@ image::images/flpy_1302.png[UML class diagram for `Sequence`]
 [TIP]
 ====
 A maior parte das ABCs no módulo `collections.abc` existem para formalizar interfaces que são implementadas por objetos nativos e são implicitamente suportadas pelo interpretador - objetos e suporte que existem desde antes das próprias ABCs.
-As ABCs são úteis como pontos de partida para novas classes, e para permitir checagem de tipo explícita durante a execução (também conhecida como _goose typing_), bem como para servirem de dicas de tipo para verificadores de tipo estáticos.
+As ABCs são úteis como pontos de partida para novas classes, e para permitir checagem de tipo explícita durante a execução (também conhecida como _goose typing_), bem como para servirem de dicas de tipo para checadores de tipos estáticos.
 ====
 
 Estudando a <<sequence_uml_repeat>>, vemos que uma subclasse correta de `Sequence` deve implementar `+__getitem__+` e `+__len__+` (de `Sized`).
@@ -228,7 +228,7 @@ Eles não dependem dos métodos da ABC `Sequence`.
 Por exemplo, os métodos concretos `+__iter__+` e `+__contains__+` na classe `Sequence` emulam comportamentos internos do interpretador Python.
 Se tiver curiosidade, veja o código-fonte destes métodos em https://fpy.li/13-3[_Lib/_collections_abc.py_].
 
-Agora vamos estudar outro exemplo que enfatiza a natureza dinâmica dos protocolos - e mostra porque verificadores de tipo estáticos não tem como lidar com eles.((("", startref="Pseqit13")))((("", startref="seqpro13")))((("", startref="itpro13")))
+Agora vamos estudar outro exemplo que enfatiza a natureza dinâmica dos protocolos - e mostra porque checadores de tipos estáticos não tem como lidar com eles.((("", startref="Pseqit13")))((("", startref="seqpro13")))((("", startref="itpro13")))
 
 
 ==== Monkey patching: Implementando um Protocolo durante a Execução
@@ -429,7 +429,7 @@ ____
 Uma classe abstrata representa uma interface.footnote:[No original: "An abstract class represents an interface", Bjarne Stroustrup, _The Design and Evolution of {cpp}_ (Addison-Wesley, 1994), p. 278.]
 ____
 
-Python((("goose typing", "abstract base classes (ABCs)", id="GTabcs13")))((("ABCs (abstract base classes)", "goose typing and", id="ABCgoose13"))) não tem uma palavra-chave `interface`. Usamos classes base abstratas (ABCs) para definir interfaces passíveis de checagem explícita de tipo durante a execução - também suportado por verificadores de tipo estáticos.
+Python((("goose typing", "abstract base classes (ABCs)", id="GTabcs13")))((("ABCs (abstract base classes)", "goose typing and", id="ABCgoose13"))) não tem uma palavra-chave `interface`. Usamos classes base abstratas (ABCs) para definir interfaces passíveis de checagem explícita de tipo durante a execução - também suportado por checadores de tipos estáticos.
 
 
 O verbete para https://docs.python.org/pt-br/3/glossary.html#term-abstract-base-class[classe base abstrata] no Glossário da Documentação de Python tem uma boa explicação do valor dessas estruturas para linguagens que usam duck typing:
@@ -960,7 +960,7 @@ Isso é feito chamando um método de classe `register` da ABC, e será reconheci
 Subclasses virtuais não herdam da ABC na qual se registram,
 e sua conformidade com a interface da ABC nunca é checada,
 nem quando são instanciadas.
-E mais, neste momento verificadores de tipo estáticos não conseguem tratar subclasses virtuais.
+E mais, neste momento checadores de tipos estáticos não conseguem tratar subclasses virtuais.
 Mais detalhes em https://fpy.li/13-22[Mypy issue 2922—ABCMeta.register support].
 ====
 
@@ -1310,7 +1310,7 @@ True
 True
 ----
 
-Na primeira edição de _Python Fluente_ eu recomendava o uso das ABCs de `numbers`, mas agora esse não é mais um bom conselho, pois aquelas ABCs não são reconhecidas pelos verificadores de tipo estáticos, como veremos na <<numbers_abc_proto_sec>>.
+Na primeira edição de _Python Fluente_ eu recomendava o uso das ABCs de `numbers`, mas agora esse não é mais um bom conselho, pois aquelas ABCs não são reconhecidas pelos checadores de tipos estáticos, como veremos na <<numbers_abc_proto_sec>>.
 
 Nessa seção eu queria demonstrar que um protocolo verificável durante a execução funciona com `isinstance`, mas na verdade esse exemplo não é um caso de uso particularmente bom de `isinstance`, como a barra lateral <<duck_typing_friend_box>> explica.
 
@@ -1752,7 +1752,7 @@ Concluindo, apesar((("numeric types", "checking for convertibility"))) da impres
 a situação atual é a seguinte:
 as dicas de tipo da PEP 484
 https://fpy.li/cardxvi[evitam] (EN) a torre numérica
-e recomendam implicitamente que os verificadores de tipo codifiquem explicitamente as relações de tipo entre os `complex`, `float`, e `int` embutidos.
+e recomendam implicitamente que os checadores de tipos codifiquem explicitamente as relações de tipo entre os `complex`, `float`, e `int` embutidos.
 O Mypy faz isso, e também, [.keep-together]#pragmaticamente#, aceita que `int` e `float`
 são _consistente-com_ `SupportsComplex`, apesar deles não implementarem `+__complex__+`.
 
@@ -1795,7 +1795,7 @@ Finalizamos aquela seção vendo como o método especial `+__subclasshook__+` pe
 
 A última grande seção foi a <<static_protocols_sec>>,
 onde retomamos o estudo do duck typing estático, que havia começado no <<ch_type_hints_def>>, em <<protocols_in_fn>>.
-Vimos como o decorador `@runtime_checkable` também aproveita o `+__subclasshook__+` para suportar tipagem estrutural durante a execução - mesmo que o melhor uso dos protocolos estáticos seja com verificadores de tipo estáticos,
+Vimos como o decorador `@runtime_checkable` também aproveita o `+__subclasshook__+` para suportar tipagem estrutural durante a execução - mesmo que o melhor uso dos protocolos estáticos seja com checadores de tipos estáticos,
 que podem levar em consideração as dicas de tipo, tornando a tipagem estrutural mais confiável.
 Então falamos sobre o projeto e a codificação de um protocolo estático e como estendê-lo.
 O capítulo terminou com <<numbers_abc_proto_sec>>,
