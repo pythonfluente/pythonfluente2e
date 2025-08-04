@@ -301,12 +301,12 @@ O <<ex_format_t1>> implementa `+__format__+` para produzir as formatações vist
 <1> Usa a função embutida `format` para aplicar o `fmt_spec` a cada componente do vetor, criando um iterável de strings formatadas.
 <2> Insere as strings formatadas na fórmula `'(x, y)'`.
 
-Agora vamos acrescentar um código de formatação personalizado à nossa mini-linguagem: se o especificador de formato terminar com `'p'`, vamos exibir o vetor em coordenadas polares: `<r, θ>`,
+Agora vamos acrescentar um código de formatação customizado à nossa mini-linguagem: se o especificador de formato terminar com `'p'`, vamos exibir o vetor em coordenadas polares: `<r, θ>`,
 onde `r` é a magnitute e θ (theta) é o ângulo em radianos. O restante do especificador de formato (o que quer que venha antes do `'p'`) será usado como antes.
 
 [TIP]
 ====
-Ao escolher a letra para um código personalizado de formato, evitei  sobrescrever códigos usados por outros tipos. Na https://docs.python.org/pt-br/3/library/string.html#formatspec[Mini-Linguagem de Especificação de Formato] vemos que inteiros usam os códigos `'bcdoxXn'`, `floats` usam `'eEfFgGn%'` e strings usam `'s'`. Então escolhi `'p'` para coordenadas polares. Como cada classe interpreta esses códigos de forma independente, reutilizar uma letra em um formato personalizado para um novo tipo não é um erro, mas pode ser confuso para os usuários.
+Ao escolher a letra para um código customizado de formato, evitei  sobrescrever códigos usados por outros tipos. Na https://docs.python.org/pt-br/3/library/string.html#formatspec[Mini-Linguagem de Especificação de Formato] vemos que inteiros usam os códigos `'bcdoxXn'`, `floats` usam `'eEfFgGn%'` e strings usam `'s'`. Então escolhi `'p'` para coordenadas polares. Como cada classe interpreta esses códigos de forma independente, reutilizar uma letra em um formato customizado para um novo tipo não é um erro, mas pode ser confuso para os usuários.
 ====
 
 Para gerar coordenadas polares, já temos o método `+__abs__+` para a magnitude. Vamos então escrever um método `angle` simples, usando a função `math.atan2()`, para obter o ângulo. Eis o código:
@@ -742,7 +742,7 @@ O último tópico do capítulo trata da sobreposição de um atributo de classe 
 
 Um((("Pythonic objects", "overriding class attributes", id="POoverride11")))((("attributes", "overriding class attributes", id="Aover11"))) recurso característico de Python é a forma como atributos de classe podem ser usados como valores default para atributos de instância. `Vector2d` contém o atributo de classe `typecode`. Ele é usado duas vezes no método `+__bytes__+`, mas é lido intencionalmente como `self.typecode`. As instâncias de `Vector2d` são criadas sem um atributo `typecode` próprio, então `self.typecode` vai, por default, se referir ao atributo de classe `Vector2d.typecode`.
 
-Mas se incluirmos um atributo de instância que não existe, estamos criando um novo atributo de instância—por exemplo, um atributo de instância `typecode`—e o atributo de classe com o mesmo nome permanece intocado. Entretanto, daí em diante, sempre que algum código referente àquela instância contiver `self.typecode`, o `typecode` da instância será usado, na prática escondendo o atributo de classe de mesmo nome. Isso abre a possibilidade de personalizar uma instância individual com um `typecode` diferente.
+Mas se incluirmos um atributo de instância que não existe, estamos criando um novo atributo de instância—por exemplo, um atributo de instância `typecode`—e o atributo de classe com o mesmo nome permanece intocado. Entretanto, daí em diante, sempre que algum código referente àquela instância contiver `self.typecode`, o `typecode` da instância será usado, na prática escondendo o atributo de classe de mesmo nome. Isso abre a possibilidade de customizar uma instância individual com um `typecode` diferente.
 
 O `Vector2d.typecode` default é `'d'`: isso significa que cada componente do vetor será representado como um número de ponto flutuante de dupla precisão e 8 bytes de tamanho quando for exportado para `bytes`. Se definirmos o `typecode` de uma instância `Vector2d` como `'f'` antes da exportação, cada componente será exportado como um número de ponto flutuante de precisão simples e 4 bytes de tamanho.. O <<typecode_instance_demo>> demonstra isso.
 
@@ -787,7 +787,7 @@ Para modificar um atributo de classe, é preciso redefini-lo diretamente na clas
 ----
 >>> Vector2d.typecode = 'f'
 ----
-Porém, no Python, há uma maneira idiomática de obter um efeito mais permanente, e de ser mais explícito sobre a modificação. Como atributos de classe são públicos, eles são herdados por subclasses. Então é uma prática comum fazer a subclasse personalizar um atributo da classe. As views baseadas em classes do Django usam amplamente essa técnica. O <<typecode_subclass_demo>> mostra como se faz.
+Porém, no Python, há uma maneira idiomática de obter um efeito mais permanente, e de ser mais explícito sobre a modificação. Como atributos de classe são públicos, eles são herdados por subclasses. Então é uma prática comum fazer a subclasse customizar um atributo da classe. As views baseadas em classes do Django usam amplamente essa técnica. O <<typecode_subclass_demo>> mostra como se faz.
 
 [[typecode_subclass_demo]]
 .O `ShortVector2d` é uma subclasse de `Vector2d`, que apenas sobrepõe o `typecode` default
@@ -823,7 +823,7 @@ Esse exemplo também explica porque não escrevi explicitamente o `class_name` e
 
 Se eu tivesse escrito o `class_name` explicitamente, subclasses de `Vector2d` como `ShortVector2d` teriam que sobrescrever `+__repr__+` só para mudar o `class_name`. Lendo o nome do `type` da instância, tornei `+__repr__+` mais seguro de ser herdado.
 
-Aqui termina nossa conversa sobre a criação de uma classe simples, que se vale do modelo de dados para se adaptar bem ao restante de Python: oferecendo diferentes representações do objeto, fornecendo um código de formatação personalizado, expondo atributos somente para leitura e suportando `hash()` para se integrar a conjuntos e mapeamentos.((("", startref="Aover11")))((("", startref="POoverride11")))
+Aqui termina nossa conversa sobre a criação de uma classe simples, que se vale do modelo de dados para se adaptar bem ao restante de Python: oferecendo diferentes representações do objeto, fornecendo um código de formatação customizado, expondo atributos somente para leitura e suportando `hash()` para se integrar a conjuntos e mapeamentos.((("", startref="Aover11")))((("", startref="POoverride11")))
 
 
 === Resumo do capítulo
@@ -872,7 +872,7 @@ ____
 
 Este((("Pythonic objects", "further reading on"))) capítulo tratou de vários dos métodos especiais do modelo de dados, então naturalmente as referências primárias são as mesmas do <<ch_data_model>>, onde tivemos uma ideia geral do mesmo tópico. Por conveniência, vou repetir aquelas quatro recomendações anteriores aqui, e acrescentar algumas outras:
 
-O https://docs.python.org/pt-br/3/reference/datamodel.html[capítulo "Modelo de Dados"] em _A Referência da Linguagem Python_:: A maioria dos métodos usados nesse capítulo estão documentados em https://docs.python.org/pt-br/3/reference/datamodel.html#basic-customization["3.3.1. Personalização básica"].
+O https://docs.python.org/pt-br/3/reference/datamodel.html[capítulo "Modelo de Dados"] em _A Referência da Linguagem Python_:: A maioria dos métodos usados nesse capítulo estão documentados em https://docs.python.org/pt-br/3/reference/datamodel.html#basic-customization["3.3.1. Customização básica"].
 
 pass:[<a class="orm:hideurl" href="https://fpy.li/pynut3"><em>Python in a Nutshell</em>, 3ª ed.,</a>] de Alex Martelli, Anna Ravenscroft, e Steve Holden:: Trata com profundidade dos métodos especiais .
 

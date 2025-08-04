@@ -309,7 +309,7 @@ include::code/22-dyn-attr-prop/oscon/schedule_v1.py[tags=SCHEDULE1]
 ----
 ====
 <1> Isso é um atalho comum para construir uma instância com atributos criados a partir de argumentos nomeados (a explicação detalhada está abaixo) .
-<2> Usa o campo `serial` para criar a representação personalizada de `Record` exibida no <<ex_schedule_v1_demo>>.
+<2> Usa o campo `serial` para criar a representação customizada de `Record` exibida no <<ex_schedule_v1_demo>>.
 <3> `load` vai por fim devolver um `dict` de instâncias de `Record`.
 <4> Analisa o JSON, devolvendo objetos Python nativos: listas, dicts, strings, números, etc.
 <5> Itera sobre as quatro listas principais, chamadas `'conferences'`, `'events'`, `'speakers'`, e `'venues'`.
@@ -404,7 +404,7 @@ include::code/22-dyn-attr-prop/oscon/schedule_v2.py[tags=SCHEDULE2_EVENT]
 ====
 [role="pagebreak-before less_space"]
 <1> `Event` estende `Record`.
-<2> Se a instância tem um atributo `name`, esse atributo será usado para produzir uma representação personalizada.
+<2> Se a instância tem um atributo `name`, esse atributo será usado para produzir uma representação customizada.
 Caso contrário, delega para o `+__repr__+` de `Record`.
 <3> A propriedade `venue` cria uma `key` a partir do atributo `venue_serial`, e a passa para o método de classe `fetch`, herdado de `Record` (a razão para usar `+self.__class__+` logo ficará clara).
 
@@ -422,7 +422,7 @@ Esse é um bug sutil, e poderia facilmente escapar aos testes, pois depende do c
 Ao criar nomes de atributos de instância a partir de dados, sempre existe o risco de bugs causados pelo ocultamento de atributos de classe—tais como métodos—ou pela perda de dados por sobrescrita acidental de atributos de instância existentes. Esses problemas talvez expliquem, mais que qualquer outra coisa, porque os dicts de Python não são como objetos Javascript.
 ====
 
-Se a classe `Record` se comportasse mais como um mapeamento, implementando um `+__getitem__+` dinâmico em vez de um `+__getattr__+` dinâmico, não haveria risco de bugs por ocultamento ou sobrescrita. Um mapeamento personalizado seria provavelmente a forma pythônica de implementar `Record`. Mas se eu tivesse seguido por aquele caminho, não estaríamos estudando os truques e as armadilhas da programação dinâmica de atributos.
+Se a classe `Record` se comportasse mais como um mapeamento, implementando um `+__getitem__+` dinâmico em vez de um `+__getattr__+` dinâmico, não haveria risco de bugs por ocultamento ou sobrescrita. Um mapeamento customizado seria provavelmente a forma pythônica de implementar `Record`. Mas se eu tivesse seguido por aquele caminho, não estaríamos estudando os truques e as armadilhas da programação dinâmica de atributos.
 
 A parte final deste exemplo é a função `load` revisada, no <<ex_schedule_v2_load>>.
 
@@ -443,7 +443,7 @@ include::code/22-dyn-attr-prop/oscon/schedule_v2.py[tags=SCHEDULE2_LOAD]
 <7> O loop `for`, que cria a `key` e armazena os registros, é o mesmo de antes, exceto que...
 <8> ...o objeto armazenado em `records` é construído por `factory`, e pode ser `Record` ou uma subclasse, como `Event`, selecionada de acordo com o `record_type`.
 
-Observe que o único `record_type` que tem uma classe personalizada é `Event`, mas se classes chamadas `Speaker` ou `Venue` existirem, `load` vai automaticamente usar aquelas classes ao criar e armazenar registros, em vez da classe default `Record`.
+Observe que o único `record_type` que tem uma classe customizada é `Event`, mas se classes chamadas `Speaker` ou `Venue` existirem, `load` vai automaticamente usar aquelas classes ao criar e armazenar registros, em vez da classe default `Record`.
 
 Vamos agora aplicar a mesma ideia à nova propriedade `speakers`, na classe `Events`.((("", startref="CPlinked22")))
 
@@ -492,10 +492,10 @@ Vamos ver então, nos próximos exemplos, como fazer isso.
 Fazer((("computed properties", "property caching", id="CPpcach22"))) _caching_ de propriedades é uma necessidade comum, pois há a expectativa de que uma expressão como `event.venue` deveria ser pouco dispendiosa.footnote:[Isso é, na verdade, uma desvantagem do Princípio de Acesso Uniforme de Meyer, mencionada no início deste capítulo. Quem tiver interesse nessa discussão pode ler o <<properties_soapbox>> opcional.]
 Alguma forma de _caching_ poderia se tornar necessário caso o método `Record.fetch`, subjacente às propriedades de `Event`, precise consultar um banco de dados ou uma API web.
 
-Na primeira edição de _Python Fluente_, programei a lógica personalizada de _caching_ para o método `speakers`, como mostra o <<ex_schedule_v4_hasattr>>.
+Na primeira edição de _Python Fluente_, programei a lógica customizada de _caching_ para o método `speakers`, como mostra o <<ex_schedule_v4_hasattr>>.
 
 [[ex_schedule_v4_hasattr]]
-.A lógica de _caching_ personalizada usando `hasattr` desabilita a otimização de compartilhamento de chaves
+.A lógica de _caching_ customizada usando `hasattr` desabilita a otimização de compartilhamento de chaves
 ====
 [source, py]
 ----
@@ -886,8 +886,8 @@ Vamos((("dynamic attributes and properties", "coding property factories", id="DA
 include::code/22-dyn-attr-prop/bulkfood/bulkfood_v2prop.py[tags=LINEITEM_V2_PROP_CLASS]
 ----
 ====
-<1> Usa a fábrica para definir a primeira propriedade personalizada, `weight`, como um atributo de classe.
-<2> Essa segunda chamada cria outra propriedade personalizada, `price`.
+<1> Usa a fábrica para definir a primeira propriedade customizada, `weight`, como um atributo de classe.
+<2> Essa segunda chamada cria outra propriedade customizada, `price`.
 <3> Aqui a propriedade já está ativa, assegurando que um peso negativo ou `0` seja rejeitado.
 <4> As propriedades também são usadas aqui, para recuperar os valores armazenados na instância.
 
@@ -921,7 +921,7 @@ include::code/22-dyn-attr-prop/bulkfood/bulkfood_v2prop.py[tags=LINEITEM_V2_PROP
 <3> `qty_getter` se refere a `storage_name`, então ele será preservado na clausura desta função; o valor é obtido diretamente de `+instance.__dict__+`, para contornar a propriedade e evitar uma recursão infinita.
 <4> `qty_setter` é definido, e também recebe `instance` como primeiro argumento.
 <5> O `value` é armazenado diretamente no `+instance.__dict__+`, novamente contornando a propriedade.
-<6> Cria e devolve um objeto propriedade personalizado.
+<6> Cria e devolve um objeto propriedade customizado.
 
 As partes do <<lineitem_class_v2prop>> que merecem um estudo mais cuidadoso giram em torno da variável `storage_name`.
 
@@ -1046,7 +1046,7 @@ mas um conjunto de nomes "interessantes". `dir` pode inspecionar objetos impleme
 O próprio atributo `+__dict__+` não é exibido por `dir`, mas as chaves de `+__dict__+` são listadas.
 Vários atributos especiais de classes, tais como 
 
-`+__mro__+`, `+__bases__+` e `+__name__+`, também não são exibidos por `dir`. Você pode personalziar a saída de `dir` implementando o método especial `+__dir__+`, como vimos no <<ex_explore0>>. Se o argumento opcional `object` não for passado, `dir` lista os nomes no escopo corrente.
+`+__mro__+`, `+__bases__+` e `+__name__+`, também não são exibidos por `dir`. Você pode customizar a saída de `dir` implementando o método especial `+__dir__+`, como vimos no <<ex_explore0>>. Se o argumento opcional `object` não for passado, `dir` lista os nomes no escopo corrente.
 
 `getattr(object, name[, default])`:: Devolve((("functions", "getattr(object, name[, default]) function")))((("getattr(object, name[, default]) function"))) o atributo do `object` identificado pela string `name`. O principal caso de uso é obter atributos (ou métodos) cujos nomes não sabemos de antemão. Essa função pode recuperar um atributo da classe do objeto ou de uma superclasse. Se tal atributo não existir, `getattr` gera uma `AttributeError` ou devolve o valor `default`, se ele for passado.
 Um ótimo exemplo de uso de `gettatr` aparece no
@@ -1070,7 +1070,7 @@ A seção https://docs.python.org/pt-br/3.10/reference/datamodel.html#special-me
 
 [quote]
 ____
-Para classes personalizadas, as invocações implícitas de métodos especiais só têm garantia de funcionar corretamente se definidas em um tipo de objeto, não no dicionário de instância do objeto.
+Para classes customizadas, as invocações implícitas de métodos especiais só têm garantia de funcionar corretamente se definidas em um tipo de objeto, não no dicionário de instância do objeto.
 ____
 
 Em outras palavras, assuma que os métodos especiais serão acessados na própria classe, mesmo quando o alvo da ação é uma instância. Por essa razão, métodos especiais não são ocultados por atributos de instância de mesmo nome.

@@ -14,7 +14,7 @@ Seus elementos serão números de ponto flutuante, e ao final do capítulo a cla
 * Representação segura de instâncias com  muitos itens
 * Suporte adequado a fatiamento, produzindo novas instâncias de `Vector`
 * _Hashing_ agregado, levando em consideração o valor de cada elemento contido na sequência
-* Um extensão personalizada da linguagem de formatação
+* Um extensão customizada da linguagem de formatação
 
 Também vamos implementar, com `+__getattr__+`, o acesso dinâmico a atributos, como forma de substituir as propriedades apenas para leitura que usamos no `Vector2d`&#x2014;apesar disso não ser típico de tipos sequência.
 
@@ -482,7 +482,7 @@ Voltando a nosso problema de _hash_, o <<ex_reduce_xor>> demonstra a ideia da co
 ====
 <1> xor agregado com um loop `for` e uma variável de acumulação.
 <2> `functools.reduce` usando uma função anônima.
-<3> `functools.reduce` substituindo a `lambda` personalizada por `operator.xor`.
+<3> `functools.reduce` substituindo a `lambda` customizada por `operator.xor`.
 
 Das alternativas apresentadas no <<ex_reduce_xor>>, a última é minha favorita, e o loop `for` vem a seguir. Qual sua preferida?
 
@@ -679,7 +679,7 @@ Vamos encerrar esse capítulo trazendo de volta o método `+__format__+` do `Vec
 
 === Vector versão #5: Formatando
 
-O((("Vector class, multidimensional", "&#x005F;&#x005F;format&#x005F;&#x005F;", secondary-sortas="format", id="VCMformat12")))((("sequences, special methods for", "&#x005F;&#x005F;format&#x005F;&#x005F;", secondary-sortas="format", id="SSMformat12")))((("&#x005F;&#x005F;format&#x005F;&#x005F;", id="format12"))) método `+__format__+` de `Vector` será parecido com o mesmo método em `Vector2d`, mas em vez de fornecer uma exibição personalizada em coordenadas polares, `Vector` usará coordenadas esféricas—também conhecidas como coordendas "hiperesféricas", pois agora suportamos _n_ dimensões, e as esferas são "hiperesferas", em 4D e alémfootnote:[O website Wolfram Mathworld tem um artigo sobre https://fpy.li/12-4[hypersphere (_hiperesfera_)] (EN); na Wikipedia, "hypersphere" redireciona para  https://fpy.li/nsphere[a página “_n_-sphere” ] (EN)footnote:[NT: A Wikipedia tem uma página em português, https://pt.wikipedia.org/wiki/N-esfera["N-esfera"]. Entretanto, enquanto a versão em inglês traz uma extensa explicação matemática, dividida em 12 seções e inúmeras subseções, a versão em português se resume a um parágrafo curto. Preferimos então manter o link para a versão mais completa.]. Como consequência, mudaremos também o sufixo do formato personalizado de `'p'` para `'h'`.
+O((("Vector class, multidimensional", "&#x005F;&#x005F;format&#x005F;&#x005F;", secondary-sortas="format", id="VCMformat12")))((("sequences, special methods for", "&#x005F;&#x005F;format&#x005F;&#x005F;", secondary-sortas="format", id="SSMformat12")))((("&#x005F;&#x005F;format&#x005F;&#x005F;", id="format12"))) método `+__format__+` de `Vector` será parecido com o mesmo método em `Vector2d`, mas em vez de fornecer uma exibição customizada em coordenadas polares, `Vector` usará coordenadas esféricas—também conhecidas como coordendas "hiperesféricas", pois agora suportamos _n_ dimensões, e as esferas são "hiperesferas", em 4D e alémfootnote:[O website Wolfram Mathworld tem um artigo sobre https://fpy.li/12-4[hypersphere (_hiperesfera_)] (EN); na Wikipedia, "hypersphere" redireciona para  https://fpy.li/nsphere[a página “_n_-sphere” ] (EN)footnote:[NT: A Wikipedia tem uma página em português, https://pt.wikipedia.org/wiki/N-esfera["N-esfera"]. Entretanto, enquanto a versão em inglês traz uma extensa explicação matemática, dividida em 12 seções e inúmeras subseções, a versão em português se resume a um parágrafo curto. Preferimos então manter o link para a versão mais completa.]. Como consequência, mudaremos também o sufixo do formato customizado de `'p'` para `'h'`.
 
 ////
 PROD: unexpected indent in first line after page break
@@ -706,7 +706,7 @@ Aqui estão algumas amostras do formato de coordenadas esféricas em 4D, retirad
 
 Antes de podermos implementar as pequenas mudanças necessárias em `+__format__+`, precisamos escrever um par de métodos de apoio: `angle(n)`, para computar uma das coordenadas angulares (por exemplo, Φ₁), e `angles()`, para devolver um iterável com todas as coordenadas angulares. Não vou descrever a matemática aqui; se você tiver curiosidade, a página https://fpy.li/nsphere[“_n_-sphere”] (EN: ver Nota 6) da Wikipedia contém as fórmulas que usei para calcular coordenadas esféricas a partir das coordendas cartesianas no array de componentes de `Vector`.
 
-O <<ex_vector_v5>> é a listagem completa de _vector_v5.py_, consolidando tudo que implementamos desde a <<vector_take1_sec>>, e acrescentando a formatação personalizada
+O <<ex_vector_v5>> é a listagem completa de _vector_v5.py_, consolidando tudo que implementamos desde a <<vector_take1_sec>>, e acrescentando a formatação customizada
 
 [[ex_vector_v5]]
 .vector_v5.py: doctests e todo o código da versão final da classe `Vector`; as notas explicativas enfatizam os acréscimos necessários para suportar `+__format__+`
@@ -745,7 +745,7 @@ O próximo passo foi fornecer acesso somente para leitura aos primeiros componen
 
 Implementar a função `+__hash__+` nos deu um contexto perfeito para usar `functools.reduce`, pois precisávamos aplicar o operador xor (`^`) sucessivamente aos _hashes_ de todos os componentes de `Vector`, para produzir um código de _hash_ agregado referente a todo o `Vector`. Após aplicar `reduce` em `+__hash__+`, usamos a função embutida de redução `all`, para criar um método `+__eq__+` mais eficiente.
 
-O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+` de `Vector2d`, para suportar coordenadas esféricas como alternativa às coordenadas cartesianas default. Usamos bastante matemática e vários geradores para programar `+__format__+` e suas funções auxiliares, mas esses são detalhes de implementação—e voltaremos aos geradores no <<ch_generators>>. O objetivo daquela última seção foi suportar um formato personalizado, cumprindo assim a promessa de um `Vector` capaz de fazer tudo que um `Vector2d` faz e algo mais.
+O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+` de `Vector2d`, para suportar coordenadas esféricas como alternativa às coordenadas cartesianas default. Usamos bastante matemática e vários geradores para programar `+__format__+` e suas funções auxiliares, mas esses são detalhes de implementação—e voltaremos aos geradores no <<ch_generators>>. O objetivo daquela última seção foi suportar um formato customizado, cumprindo assim a promessa de um `Vector` capaz de fazer tudo que um `Vector2d` faz e algo mais.
 
 Como fizemos no <<ch_pythonic_obj>>, muitas vezes aqui olhamos como os objetos padrão de Python se comportam, para emulá-los e dar a `Vector` uma aparência "pythônica".
 
