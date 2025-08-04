@@ -424,7 +424,7 @@ De volta a nosso produto escalar, começamos novamente com os métodos `+__mul__
 
 Esses métodos funcionam, exceto quando recebem operandos incompatíveis. O argumento `scalar` precisa ser um número que, quando multiplicado por um `float`, produz outro `float` (porque nossa classe `Vector` usa, internamente, um `array` de números de ponto flutuante).
 Então um número `complex` não serve, mas o escalar pode ser um `int`, um `bool` (porque `bool` é subclasse  de `int`) ou mesmo uma instância de `fractions.Fraction`.
-No <<ex_vector_v7>>, o método `+__mul__+` não faz qualquer verificação de tipo explícita com `scalar`. Em vez disso, o converte em um `float`, e devolve `NotImplemented` se a conversão falha.
+No <<ex_vector_v7>>, o método `+__mul__+` não faz qualquer checagem de tipos explícita com `scalar`. Em vez disso, o converte em um `float`, e devolve `NotImplemented` se a conversão falha.
 Esse é um exemplo claro de _duck typing_.
 
 [[ex_vector_v7]]
@@ -676,7 +676,7 @@ ____
 
 Liberalidade excessiva na avaliação de operandos pode levar a resultados surpreendentes, e programadores odeiam surpresas.
 
-Buscando inspiração no próprio Python, vemos que `[1,2] == (1, 2)` é `False`. Então, vamos ser conservadores e executar alguma verificação de tipos. Se o segundo operando for uma instância de `Vector` (ou uma instância de uma subclasse de `Vector`), então usaremos a mesma lógica do
+Buscando inspiração no próprio Python, vemos que `[1,2] == (1, 2)` é `False`. Então, vamos ser conservadores e executar alguma checagem de tiposs. Se o segundo operando for uma instância de `Vector` (ou uma instância de uma subclasse de `Vector`), então usaremos a mesma lógica do
 `+__eq__+` atual. Caso contrário, devolvemos `NotImplemented` e deixamos Python cuidar do caso. Veja o <<ex_vector_v8_eq>>.
 
 [[ex_vector_v8_eq]]
@@ -904,7 +904,7 @@ Misturar operandos de mais de um tipo exige detectar os operandos que não podem
 
 De modo geral, bibliotecas deveriam tirar proveito do _duck typing_--abrindo a porta para objetos independente de seus tipos, desde que eles suportem as operações necessárias.
 Entretanto, o algoritmo de despacho de operadores de Python pode produzir mensagens de erro enganosas ou resultados inesperados quando combinado com o _duck typing_.
-Por essa razão, a disciplina da verificação de tipo com invocações de `isinstance` contra ABCs é muitas vezes útil quando escrevemos métodos especiais para sobrecarga de operadores.
+Por essa razão, a disciplina da checagem de tipos com invocações de `isinstance` contra ABCs é muitas vezes útil quando escrevemos métodos especiais para sobrecarga de operadores.
 Essa é a técnica batizada de _goose typing_ por Alex Martelli—como vimos na <<goose_typing_sec>>.
 A _goose typing_ é um bom compromisso entre a flexibilidade e a segurança, porque os tipos definidos pelo usuário, existentes ou futuros, podem ser declarados como subclasses reais ou virtuais de uma ABC.
 Além disso, se uma ABC implementa o `+__subclasshook__+`, objetos podem então passar por verificações com `isinstance` contra aquela ABC apenas fornecendo os métodos exigidos--sem necessidade de ser uma subclasse ou de se registrar com a ABC.

@@ -48,7 +48,7 @@ Vamos começar com uma revisão da enigmática função `super()`.
 
 O((("inheritance and subclassing", "super() function", id="IACsuper14")))((("super() function", id="super14")))((("functions", "super() function"))) uso consistente da função embutida `super()` é essencial na criação de programas Python orientados a objetos fáceis de manter.
 
-Quando uma subclasse sobrepõe um método de uma superclasse, esse novo método normalmente precisa invocar o método correspondente na superclasse.
+Quando uma subclasse sobrescreve um método de uma superclasse, esse novo método normalmente precisa invocar o método correspondente na superclasse.
 Aqui está o modo recomendado de fazer isso, tirado de um exemplo da documentação do módulo _collections_, na seção https://docs.python.org/pt-br/3/library/collections.html#ordereddict-examples-and-recipes["OrderedDict Examples and Recipes" (_OrderedDict: Exemplos e Receitas_)] (EN).:footnote:[Modifiquei apenas a docstring do exemplo, porque a original está errada. Ela diz: "Armazena itens na ordem das chaves adicionadas por último" (_"Store items in the order the keys were last added"_), mas não é isso o que faz a classe claramente batizada `LastUpdatedOrderedDict`.]
 
 [source, py]
@@ -61,7 +61,7 @@ class LastUpdatedOrderedDict(OrderedDict):
         self.move_to_end(key)
 ----
 
-Para executar sua tarefa, `LastUpdatedOrderedDict` sobrepõe `+__setitem__+` para:
+Para executar sua tarefa, `LastUpdatedOrderedDict` sobrescreve `+__setitem__+` para:
 
 . Usar `+super().__setitem__+`, invocando aquele método na superclasse e permitindo que ele insira ou atualize o par chave/valor.
 . Invocar `self.move_to_end`, para garantir que a `key` atualizada esteja na última posição.
@@ -332,7 +332,7 @@ https://fpy.li/14-10["The Python 2.3 Method Resolution Order" (_A Ordem de Resol
 A MRO determina apenas a ordem de ativação, mas se um método específico será ou não ativado em cada uma das classes vai depender de cada implementação chamar ou não `super()`.
 
 Considere o experimento com o método `pong`.
-A classe `Leaf` não sobrepõe aquele método, então a chamada `leaf1.pong()` ativa a implementação na próxima classe listada em `+Leaf.__mro__+`: a classe `A`.
+A classe `Leaf` não sobrescreve aquele método, então a chamada `leaf1.pong()` ativa a implementação na próxima classe listada em `+Leaf.__mro__+`: a classe `A`.
 O método `A.pong` chama `super().pong()`.
 A classe `B` class é e próxima na MRO, portanto `B.pong` é ativado.
 Mas aquele método não chama `super().pong()`, então a sequência de ativação termina ali.
@@ -578,7 +578,7 @@ class ThreadingMixIn:
 ----
 ====
 <1> `process_request_thread` não chama `super()` porque é um método novo, não uma sobreposição. Sua implementação chama três métodos de instância que `HTTPServer` oferece ou herda.
-<2> Isso sobrepõe o método `process_request`, que `HTTPServer` herda de `socketserver.BaseServer`,  iniciando uma thread e delegando o trabalho efetivo para a `process_request_thread` que roda naquela thread. O método não chama `super()`.
+<2> Isso sobrescreve o método `process_request`, que `HTTPServer` herda de `socketserver.BaseServer`,  iniciando uma thread e delegando o trabalho efetivo para a `process_request_thread` que roda naquela thread. O método não chama `super()`.
 <3> `server_close` chama `super().server_close()` para parar de receber requisições, e então espera que as threads iniciadas por `process_request` terminem sua execução.
 
 A `ThreadingMixIn` aparece junto com `ForkingMixIn` na documentação do módulo https://docs.python.org/pt-br/3/library/socketserver.html#socketserver.ForkingMixIn[`socketserver`].

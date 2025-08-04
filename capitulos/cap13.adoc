@@ -56,7 +56,7 @@ Não faz sentido descartar qualquer uma delas.
 
 [[type_systems_described]]
 .A metade superior descreve abordagens de checagem de tipo durante a execução usando apenas o interpretador Python; a metade inferior requer um verificador de tipo estático externo, como o Mypy ou um IDE como o PyCharm. Os quadrantes da esquerda se referem a tipagem baseada na estrutura do objeto - isto é, dos métodos oferecidos pelo objeto, independente do nome de sua classe ou superclasses; os quadrantes da direita dependem dos objetos terem tipos explicitamente nomeados: o nome da classe do objeto, ou o nome de suas superclasses.
-image::images/flpy_1301.png[Quatro abordagens para verificação de tipo]
+image::images/flpy_1301.png[Quatro abordagens para checagem de tipos]
 
 Cada uma dessas quatro abordagens dependem de interfaces para funcionarem,
 mas a tipagem estática pode ser implementada de forma limitada usando apenas tipos concretos em vez de abstrações de interfaces como protocolos e classes base abstratas.
@@ -679,7 +679,7 @@ Observe que iterator é subclasse de `Iterable`. Discutimos melhor isso adiante,
 
 `Callable`, `Hashable`::
 Essas não são coleções, mas `collections.abc` foi o primeiro pacote a definir ABCs na biblioteca padrão, e essas duas foram consideradas importante o suficiente para [.keep-together]#serem# incluídas.
-Elas suportam a verificação de tipo de objetos que precisam ser "chamáveis" ou [.keep-together]#hashable#.
+Elas suportam a checagem de tipos de objetos que precisam ser "chamáveis" ou [.keep-together]#hashable#.
 
 Para a detecção de 'callable', a função nativa `callable(obj)` é mais conveniente que `insinstance(obj, Callable)`.
 
@@ -1146,7 +1146,7 @@ Vimos algo sobre protocolos estáticos((("protocols", "static protocols", id="Ps
 em <<protocols_in_fn>> (<<ch_type_hints_def>>).
 Até considerei deixar toda a discussão sobre protocolos para esse capítulo,
 mas decidi que a apresentação inicial de dicas de tipo em funções precisava incluir protocolos, pois o duck typing é uma parte essencial de Python,
-e verificação de tipo estática sem protocolos não consegue lidar muito bem com as APIs pythônicas.
+e checagem de tipos estática sem protocolos não consegue lidar muito bem com as APIs pythônicas.
 ====
 
 Vamos encerrar esse capítulo ilustrando os protocolos estáticos com dois exemplos simples, e uma discussão sobre as ABCs numéricas e protocolos.
@@ -1324,7 +1324,7 @@ então o Mypy pode inferir que dentro do bloco `if`, o tipo do objeto `o` é _co
 [[duck_typing_friend_box]]
 .O Duck Typing É Seu Amigo
 ****
-Durante((("duck typing"))) a execução, muitas vezes o duck typing é a melhor abordagem para verificação de tipo:
+Durante((("duck typing"))) a execução, muitas vezes o duck typing é a melhor abordagem para checagem de tipos:
 em vez de chamar `isinstance` ou `hasattr`, apenas tente realizar as operações que você precisa com o objeto, e trate as exceções conforme necessário. Aqui está um exemplo concreto:
 
 Continuando a discussão anterior: dado um objeto `o` que eu preciso usar como número complexo,
@@ -1438,9 +1438,9 @@ O problema específico com o tipo `complex` foi resolvido no Python 3.10.0b4, co
 Mas o problema geral persiste:
 Verificações com `isinstance`/`issubclass` só olham para a presença ou ausência de métodos,
 sem checar sequer suas assinaturas, muito menos suas anotações de tipo.
-E isso não vai mudar tão cedo, porque este tipo de verificação de tipo durante a execução traria um custo de processamento inaceitável.footnote:[Agradeço a Ivan Levkivskyi,
+E isso não vai mudar tão cedo, porque este tipo de checagem de tipos durante a execução traria um custo de processamento inaceitável.footnote:[Agradeço a Ivan Levkivskyi,
 co-autor da https://fpy.li/pep544[PEP 544] (sobre Protocolos),
-por apontar que checagem de tipo não é apenas uma questão de verificar se o tipo de `x` é `T`: é sobre determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro. Não é de se espantar que o Mypy leve alguns segundos para fazer uma verificação de tipo, mesmo em scripts Python curtos.]
+por apontar que checagem de tipo não é apenas uma questão de verificar se o tipo de `x` é `T`: é sobre determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro. Não é de se espantar que o Mypy leve alguns segundos para fazer uma checagem de tipos, mesmo em scripts Python curtos.]
 ====
 
 Agora veremos como implementar um protocolo estático em uma classe definida pelo usuário.
@@ -1484,7 +1484,7 @@ True
 Vector2d(3.0, 4.0)
 ----
 
-Para verificação de tipo durante a execução, o <<ex_vector2d_complex_v4>> serve bem,
+Para checagem de tipos durante a execução, o <<ex_vector2d_complex_v4>> serve bem,
 mas para uma cobertura estática e relatório de erros melhores com o Mypy, os métodos
 `+__abs__+`, `+__complex__+`, e `fromcomplex` deveriam receber dicas de tipo, como mostrado no <<ex_vector2d_complex_v5>>.
 
@@ -1652,7 +1652,7 @@ Para encerrar o capítulo, vamos olhar as ABCs numéricas e sua possível substi
 [[numbers_abc_proto_sec]]
 ==== As ABCs em numbers e os novos protocolos numéricos
 
-Como((("static protocols", "numbers ABCS and numeric protocols", id="SPnumbers13")))((("numbers ABCs", id="number13")))((("numeric protocols", id="numpro13")))((("protocols", "numeric", id="Pnum13"))) vimos em <<numeric_tower_warning>>, as ABCs no pacote `numbers` da biblioteca padrão funcionam bem para verificação de tipo durante a execução.
+Como((("static protocols", "numbers ABCS and numeric protocols", id="SPnumbers13")))((("numbers ABCs", id="number13")))((("numeric protocols", id="numpro13")))((("protocols", "numeric", id="Pnum13"))) vimos em <<numeric_tower_warning>>, as ABCs no pacote `numbers` da biblioteca padrão funcionam bem para checagem de tipos durante a execução.
 
 Se você precisa verificar um inteiro, pode usar `isinstance(x, numbers.Integral)` para aceitar `int`, `bool` (que é subclasse de `int`) ou outros tipos inteiros oferecidos por bibliotecas externas que registram seus tipos como subclasses virtuais das ABCs de `numbers`.
 Por exemplo, o NumPy tem https://fpy.li/13-39[21 tipos inteiros] — bem como várias variações de tipos de ponto flutuante registrados como `numbers.Real`, e números complexos com várias amplitudes de bits, registrados como `numbers.Complex`.
@@ -1748,7 +1748,7 @@ No momento em que escrevo isso, o NumPy não tem dicas de tipo, então seus tipo
 Por outro lado, o Mypy de alguma maneira "sabe" que o `int` e o `float` embutidos podem ser convertidos para `complex`,
 apesar de, no _typeshed_, apenas a classe embutida `complex` ter o método `+__complex__+`.footnote:[Isso é uma mentira bem intencionada da parte do typeshed: a partir de Python 3.9, o tipo embutido `complex` na verdade não tem mais um método `+__complex__+`.]
 
-Concluindo, apesar((("numeric types", "checking for convertibility"))) da impressão que a verificação de tipo para tipos numéricos não deveria ser difícil,
+Concluindo, apesar((("numeric types", "checking for convertibility"))) da impressão que a checagem de tipos para tipos numéricos não deveria ser difícil,
 a situação atual é a seguinte:
 as dicas de tipo da PEP 484
 https://fpy.li/cardxvi[evitam] (EN) a torre numérica
@@ -1764,8 +1764,8 @@ Se você não usa números complexos, pode confiar naqueles protocolos em vez da
 
 As principais lições dessa seção são:
 
-* As ABCs de `numbers` são boas para verificação de tipo durante a execução, mas inadequadas para tipagem estática.
-* Os protocolos numéricos estáticos `SupportsComplex`, `SupportsFloat`, etc. funcionam bem para tipagem estática, mas são pouco confiáveis para verificação de tipo durante a execução se números complexos estiverem envolvidos.
+* As ABCs de `numbers` são boas para checagem de tipos durante a execução, mas inadequadas para tipagem estática.
+* Os protocolos numéricos estáticos `SupportsComplex`, `SupportsFloat`, etc. funcionam bem para tipagem estática, mas são pouco confiáveis para checagem de tipos durante a execução se números complexos estiverem envolvidos.
 
 Estamos agora prontos para uma rápida revisão do que vimos nesse capítulo.((("", startref="Pstatic13")))((("", startref="Pnum13")))((("", startref="numpro13")))((("", startref="number13")))((("", startref="SPnumbers13")))
 
@@ -1924,8 +1924,8 @@ A <<type_systems_languages>> é((("Soapbox sidebars", "typing map")))((("typing 
 com os nomes de algumas linguagem populares que suportam cada um dos modos de tipagem.
 
 [[type_systems_languages]]
-.Quatro abordagens para verificação de tipo e algumas linguagens que as usam.
-image::images/flpy_1308.png[Quatro abordagens para verificação de tipo e algumas linguagens que as usam.]
+.Quatro abordagens para checagem de tipos e algumas linguagens que as usam.
+image::images/flpy_1308.png[Quatro abordagens para checagem de tipos e algumas linguagens que as usam.]
 
 TypeScript e Python ≥ 3.8 são as únicas linguagem em minha pequena e arbitrária amostra que suportam todas as quatro abordagens.
 
