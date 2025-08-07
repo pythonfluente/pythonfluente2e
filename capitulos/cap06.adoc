@@ -22,7 +22,7 @@ um nome não é o objeto; o nome é outra coisa.
 Começamos o capítulo apresentando uma metáfora para variáveis em Python:
 variáveis são rótulos, não caixas.
 Se variáveis de referência não são novidade para você,
-a analogia pode ainda ser útil para ilustrar questões de aliasing (“apelidamento”)
+a analogia pode ainda ser útil para ilustrar questões de _aliasing_ (“apelidamento”)
 para alguém.
 
 Depois discutimos os conceitos de identidade, valor e apelidamento de objetos.
@@ -33,11 +33,12 @@ Referências e parâmetros de funções são o tema seguinte:
 o problema com parâmetros mutáveis por default e
 formas seguras de lidar com argumentos mutáveis passados para nossas funções por clientes.
 
-As últimas seções do capítulo tratam de coleta de lixo (“garbage collection”),
-a instrução `del` e de algumas peças que Python prega com objetos imutáveis.
+As últimas seções do capítulo tratam de coleta de lixo (_garbage collection_),
+a instrução `del` e de algumas otimizações com com objetos imutáveis em Python.
 
 É um capítulo bastante árido,
-mas os tópicos tratados podem causar muitos bugs sutis em programas reais em Python.
+mas os tópicos tratados podem explicar muitos bugs sutis em programas reais em Python,
+além de boas práticas para evitá-los.
 
 === Novidades nesse capítulo
 
@@ -71,13 +72,11 @@ apontou que a metáfora comum, de “variáveis como caixas”,
 na verdade atrapalha o entendimento de variáveis de
 referência em linguagens orientadas a objetos.
 As variáveis em Python são como variáveis de referência em Java;
-uma metáfora melhor é pensar em uma variável como um rótulo (ou etiqueta)
-que associa um nome a um objeto.
+uma metáfora melhor é pensar em uma variável como uma etiqueta
+que dá nome a um objeto.
 O exemplo e a figura a seguir ajudam a entender o motivo disso.
 
-<<ex_a_b_refs>> é uma interação simples que não pode ser explicada por “variáveis como caixas”.
-A <<var-boxes-x-labels>> ilustra o motivo de metáfora da caixa estar errada em Python,
-enquanto etiquetas apresentam uma imagem mais útil para entender como variáveis funcionam.
+O <<ex_a_b_refs>> é uma interação simples que não pode ser explicada por “variáveis como caixas”.
 
 [[ex_a_b_refs]]
 .As variáveis a e b mantém referências para a mesma lista, não cópias da lista.
@@ -98,9 +97,11 @@ enquanto etiquetas apresentam uma imagem mais útil para entender como variávei
 Se você pensar em `b` como uma caixa que guardava uma cópia de
 `[1, 2, 3]` da caixa `a`, este comportamento não faz sentido.
 
+A <<var-boxes-x-labels>> explica porque a metáfora da caixa está errada em Python,
+enquanto etiquetas apresentam uma imagem mais útil para entender como variáveis funcionam.
 
 [[var-boxes-x-labels]]
-.Se você imaginar variáveis como caixas, não é possível entender a atribuição em Python; por outro lado, pense em variáveis como etiquetas autocolantes e <<ex_a_b_refs>> é facilmente explicável.
+.Se você imaginar variáveis como caixas, não é possível entender a atribuição em Python; por outro lado, imagine variáveis como etiquetas autocolantes e o <<ex_a_b_refs>> é facilmente explicável.
 image::images/flpy_0601.png[Boxes and labels diagram]
 
 Assim, a instrução `b = a` não copia o conteúdo de uma caixa `a` para uma caixa `b`.
@@ -116,7 +117,7 @@ Afinal, o objeto é criado antes da atribuição.
 <<ex_var_assign_after>> prova que o lado direito de uma atribuição é processado primeiro.
 
 Já que o verbo “atribuir” é usado de diferentes maneiras,
-uma alternativa útil é “vincular”:
+uma “vincular” é uma alternativa melhor:
 a declaração de atribuição em Python `x = …` vincula o nome `x`
 ao objeto criado ou referenciado no lado direito.
 E o objeto precisa existir antes que um nome possa ser vinculado a ele,
@@ -315,7 +316,7 @@ def traverse(...):
 
 O operador `is` é mais rápido que `==`, pois não pode ser sobrecarregado.
 Daí Python não precisa encontrar e invocar métodos especiais para calcular seu resultado
-e o processamento é tão simples quanto comparar dois IDs inteiros.
+e o processamento é tão simples quanto comparar dois IDs, que são números inteiros.
 Por outro lado, `a == b` é açúcar sintático para `+a.__eq__(b)+`.
 O método `+__eq__+`, herdado de `object`, compara os IDs dos objetos,
 então produz o mesmo resultado de `is`.
@@ -347,12 +348,12 @@ planas de tipo único, como `str`, `byte` e `array.array`,
 que não contêm referências e sim seu conteúdo -- caracteres, bytes e números -- armazenado
 em um espaço contíguo de memória.]
 
-Se os itens referenciados forem mutáveis, eles poderão mudar, mesmo que tupla em si não mude.
+Se os itens referenciados forem mutáveis, eles podem mudar, mesmo que tupla em si não mude.
 Em outras palavras, a imutabilidade das tuplas, na verdade se refere ao conteúdo físico da
 estrutura de dados `tuple` (isto é, as referências que ela mantém),
 e não se estende aos objetos referenciados.
 
-<<ex_mutable_tuples>> ilustra uma situação em que o valor de uma tupla muda
+O <<ex_mutable_tuples>> ilustra uma situação em que o valor de uma tupla muda
 como resultado de mudanças em um objeto mutável ali referenciado.
 O que não pode nunca mudar em uma tupla é a identidade dos itens que ela contém.
 
@@ -558,8 +559,8 @@ então seu atributo `passengers` se refere a outra lista.
 Em geral, criar cópias profundas não é uma questão simples.
 Objetos podem conter referências cíclicas que fariam um algoritmo
 ingênuo entrar em um loop infinito.
-A função 'deepcopy' lembra dos objetos já copiados,
-tratando referências cíclicas corretamente.
+A função `deepcopy` memoriza os objetos já copiados,
+e trata referências cíclicas corretamente.
 Isso é demonstrado em  <<ex_cycle1>>.
 
 [[ex_cycle1]]
@@ -605,15 +606,15 @@ incluindo Javascript, Ruby e Java (em Java isso se aplica aos tipos de referênc
 tipos primitivos usam a chamada por valor).
 Chamada por compartilhamento significa que cada parâmetro formal
 da função recebe uma cópia de cada referência nos argumentos.
-Em outras palavras, os parâmetros dentro da função se tornam apelidos dos argumentos.
+Em outras palavras, os parâmetros dentro da função se tornam apelidos dos argumentos passados.
 
 O resultado desse esquema é que a função pode modificar qualquer objeto mutável
 passado a ela como parâmetro, mas não pode mudar a identidade daqueles objetos
 (isto é, ela não pode substituir integralmente um objeto por outro).
-<<ex_param_pass>> mostra uma função simples usando `+=` com um de seus parâmetros.
+O <<ex_param_pass>> mostra uma função simples usando `+=` com um de seus parâmetros.
 Quando passamos números, listas e tuplas para a função,
 os argumentos originais são afetados de maneiras diferentes.
-O próximo exemplo demonstra:
+Veja só:
 
 [[ex_param_pass]]
 .Uma função pode mudar qualquer objeto mutável que receba
@@ -658,10 +659,10 @@ discutida a seguir.
 Parâmetros opcionais((("mutable parameters", id="muttype06")))((("parameters", "mutable",
 id="Pmut06"))) com valores default são um ótimo recurso para definição de funções em Python,
 permitindo que nossas APIs evoluam mantendo a compatibilidade com versões anteriores.
-Entretanto, você deve evitar usar objetos mutáveis como valores default em parâmetros.
+Entretanto, evite usar objetos mutáveis como valores default em parâmetros.
 
-Para ilustrar esse ponto, em <<ex_haunted_bus>>,
-modificamos o método `+__init__+` da classe `Bus` de <<ex_bus1>> para criar `HauntedBus`.
+Para ilustrar porquê, no <<ex_haunted_bus>>,
+modificamos o método `+__init__+` da classe `Bus` do <<ex_bus1>> para criar `HauntedBus`.
 Tentamos ser espertos: em vez do valor default `passengers=None`,
 temos `passengers=[]`, para evitar o `if` do `+__init__+` anterior.
 Essa "esperteza" causa problemas.
@@ -674,8 +675,8 @@ Essa "esperteza" causa problemas.
 include::code/06-obj-ref/haunted_bus.py[tags=HAUNTED_BUS_CLASS]
 ----
 ====
-<1> Quando o argumento `passengers` não é passado,
-esse parâmetro é vinculado ao objeto lista default, que inicialmente está vazio.
+<1> Quando não passamos o argumento `passengers`,
+esse parâmetro é vinculado ao objeto lista default, que inicialmente está vazia.
 <2> Essa atribuição torna `self.passengers` um apelido de `passengers`,
 que por sua vez é um apelido para a lista default,
 quando um argumento `passengers` não é passado para a função.
@@ -725,7 +726,7 @@ O problema é que instâncias de `HauntedBus` que não recebem uma lista de pass
 inicial acabam todas compartilhando a mesma lista de passageiros entre si.
 
 Este tipo de bug pode ser muito sutil.
-Como <<demo_haunted_bus>> demonstra,
+Como o <<demo_haunted_bus>> demonstra,
 quando `HauntedBus` recebe uma lista com passageiros como parâmetro,
 ele funciona como esperado.
 Coisas estranhas acontecem somente quando `HauntedBus` começa vazio,
@@ -735,7 +736,7 @@ quando o módulo é carregado -- e os valores default se tornam atributos do obj
 Assim, se o valor default é um objeto mutável e você o altera,
 a alteração vai afetar todas as futuras chamadas da função.
 
-Após executar as linhas do exemplo em <<demo_haunted_bus>>,
+Após executar as linhas do <<demo_haunted_bus>>,
 você pode inspecionar o objeto `+HauntedBus.__init__+`
 e ver os estudantes fantasma assombrando o atributo `+__defaults__+`:
 
@@ -758,7 +759,7 @@ True
 
 O problema com defaults mutáveis explica porque `None` é normalmente usado como
 valor default para parâmetros que podem receber valores mutáveis.
-Em <<ex_bus1>>, `+__init__+` checa se o argumento `passengers` é `None`.
+No <<ex_bus1>>, `+__init__+` checa se o argumento `passengers` é `None`.
 Se for, `self.passengers` é vinculado a uma nova lista vazia.
 Se `passengers` não for `None`,
 a implementação correta vincula uma cópia daquele argumento a `self.passengers`.
@@ -800,7 +801,7 @@ perspectiva de um cliente daquela classe, em <<demo_twilight_bus>>.
 <3> O `bus` deixa uma estudante, depois outra.
 <4> As passageiras desembarcadas desapareceram do time de basquete!
 
-`TwilightBus` viola o "Princípio da Menor Surpresa Possível", uma boa prática do design de
+`TwilightBus` viola o "Princípio da Menor Surpresa", uma boa prática do design de
 interfaces.footnote:[Ver https://fpy.li/6-5[_Principle of least astonishment_] (EN).]
 Com certeza, é surpreendente que quando o ônibus deixa uma estudante,
 seu nome seja removido da escalação do time de basquete.
@@ -819,7 +820,7 @@ include::code/06-obj-ref/twilight_bus.py[tags=TWILIGHT_BUS_CLASS]
 [role="pagebreak-before less_space"]
 <1> Aqui nós cuidadosamente criamos uma lista vazia quando `passengers` é `None`.
 <2> Entretanto, esta atribuição transforma `self.passengers` em um apelido para `passengers`,
-que por sua vez é um apelido para o argumento efetivamente passado para `+__init__+`
+que por sua vez é um apelido para o argumento passado para `+__init__+`
 (i.e. `basketball_team` em <<demo_twilight_bus>>).
 <3> Quando os métodos `.remove()` e `.append()` são usados com `self.passengers`,
 estamos, na verdade, modificando a lista original recebida como argumento pelo construtor.
@@ -858,12 +859,12 @@ você deveria pensar bem antes de apelidar tal objeto e simplesmente vinculá-lo
 uma variável interna de sua classe.
 Quando em dúvida, crie uma cópia.
 Os clientes de sua classe ficarão mais felizes.
-Claro, criar uma cópia não é grátis: há um custo de processamento e uso de memória.
-Entretanto, uma API que causa bugs sutis é, em geral,
+Claro, criar uma cópia não é grátis: há custos de memória e processamento.
+Entretanto, uma API que causa bugs sutis é
 um problema bem maior que uma que seja um pouco mais lenta ou que use mais recursos.
 ====
 
-Agora vamos conversar sobre um dos comandos mais incompreendidos em Python:
+Agora vamos conversar sobre uma das instruções mais incompreendidas em Python:
 `del`.((("", startref="ORfparam06")))((("", startref="muttype06")))((("", startref="Pmut06")))
 
 [[del_sec]]
@@ -876,7 +877,7 @@ id="ORdel06")))((("garbage collection", id="garb06"))) nunca são destruídos ex
 no entanto, quando eles se tornam inacessíveis, eles podem ser coletados como lixo.
 ____
 
-A((("del statement", id="del06"))) primeira estranheza sobre `del` é ele não ser uma função,
+A((("del statement", id="del06"))) primeira surpresa de `del` é não ser uma função,
 mas uma instrução (_statement_).
 
 Escrevemos `del x` e não `del(x)` -- apesar dessa última forma funcionar também,
@@ -908,8 +909,8 @@ Agora o coletor de lixo pode descartar aquele objeto.
 [WARNING]
 ====
 Existe((("&#x005F;&#x005F;del&#x005F;&#x005F;"))) um método especial `+__del__+`,
-mas ele não causa a remoção de uma instância e não deve ser usado em seu código.
-`+__del__+` é invocado pelo interpretador Python quando a instância está prestes a ser destruída,
+mas ele não causa a remoção de uma instância e não deve ser invocado em seu código.
+O método `+__del__+` é invocado pelo interpretador Python quando a instância está prestes a ser destruída,
 para dar a ela a chance de liberar recursos externos.
 É muito raro ser preciso implementar `+__del__+` em seu código,
 mas ainda assim alguns programadores Python perdem tempo codando este método sem necessidade.
@@ -962,7 +963,7 @@ False
 ----
 ====
 <1> `s1` e `s2` são apelidos do mesmo conjunto, `{1, 2, 3}`.
-<2> Essa função não deve ser um método associado ao objeto prestes a ser destruído,
+<2> Para essa demonstração, a função `bye` não deve ser um método vinculado ao objeto prestes a ser destruído,
 nem manter uma referência para o objeto.
 <3> Registra o callback `bye` no objeto referenciado por `s1`.
 <4> O atributo `.alive` é `True` antes do objeto `finalize` ser chamado.
@@ -1004,7 +1005,7 @@ Entretanto, já vi muita gente tropeçar nesses casos laterais e daí passar a u
 operador `is` de forma incorreta, então acho que vale a pena mencionar esses detalhes.
 ====
 
-Eu((("tuples", "immutability and"))) fiquei surpreso em descobrir que, para uma tupla `t`,
+Fiquei((("tuples", "immutability and"))) surpreso ao descobrir que, dada uma tupla `t`,
 a chamada `t[:]` não cria uma cópia, mas devolve uma referência para o mesmo objeto.
 Da mesma forma, `tuple(t)` também retorna uma referência para a mesma
 tupla.footnote:[Isso está claramente documentado.
@@ -1032,7 +1033,7 @@ True
 <2> Assim como `t3`.
 
 O mesmo comportamento pode ser observado com instâncias de `str`, `bytes` e `frozenset`.
-Observe que `frozenset` não é uma sequência, então `fs[:]`
+Note que `frozenset` não é uma sequência, então `fs[:]`
 não funciona se `fs` é um `frozenset`.
 Mas `fs.copy()` tem o mesmo efeito: ele trapaceia e retorna uma referência ao mesmo objeto,
 e não uma cópia, como mostra <<ex_same_string>>.footnote:[Essa mentirinha inofensiva,
@@ -1098,16 +1099,15 @@ Se duas variáveis se referem a objetos imutáveis de igual valor (`a == b` is `
 na prática, dificilmente importa se elas se referem a cópias de mesmo valor
 ou são apelidos do mesmo objeto, porque o valor de objeto imutável não muda,
 com uma exceção.
-A exceção são as coleções imutáveis,
-como as tuplas: se uma coleção imutável contém referências para itens mutáveis,
-então seu valor pode de fato mudar quando o valor de um item mutável for modificado.
+A exceção são as tuplas: se ela contém referências para itens mutáveis,
+então seu valor mudará se o valor de um item mutável for alterado.
 Na prática, esse cenário não é tão comum.
 O que nunca muda numa coleção imutável são as identidades dos objetos mantidos ali.
 A classe `frozenset` não sofre desse problema,
-porque ela só pode manter elementos hashable,
-e o valor de um objeto hashable não pode mudar nunca, por definição.
+porque ela só pode conter elementos hashable,
+e o valor de um objeto hashable não pode mudar, por definição.
 
-O fato de variáveis manterem referências tem muitas consequências práticas
+O fato de variáveis conterem referências tem muitas consequências práticas
 para a programação em Python:
 
 * Uma atribuição simples não cria cópias.
@@ -1116,8 +1116,8 @@ a variável à esquerda da atribuição estiver vinculada a um objeto imutável,
 mas pode modificar um objeto mutável diretamente.
 * Atribuir um novo valor a uma variável existente não muda
 o objeto previamente vinculado à variável.
-Isso se chama reassociar (rebinding);
-a variável está agora associada a um objeto diferente.
+Isso se chama _rebinding_ (re-vinculação);
+a variável passa a se referir a um objeto diferente.
 Se aquela variável era a última referência ao objeto anterior,
 aquele objeto será eliminado pela coleta de lixo.
 
@@ -1129,18 +1129,19 @@ Não há como evitar isso, exceto criando cópias locais ou usando objetos imut�
 pois se os parâmetros forem modificados pela função, o default muda,
 afetando chamadas posteriores que usem o default.
 
-Em CPython, os objetos são descartados assim que o número de referências a eles chega a zero.
-Eles também podem ser descartados se formarem grupos com
+Em CPython, um objeto é descartado assim que o número de referências a ele chega a zero.
+Objetos também podem ser descartados se formarem grupos com
 referências cíclicas sem nenhuma referência externa ao grupo.
 
 Em algumas situações, pode ser útil manter uma referência para um objeto que
-não vai -- por si só -- manter o objeto vivo.
+não vai, por si só, manter o objeto vivo.
 Um exemplo é uma classe que queira manter o registro de todas as suas instâncias atuais.
 Isso pode ser feito com referências fracas,
-um mecanismo de baixo nível encontrado nas úteis coleções `WeakValueDictionary`,
+um mecanismo de baixo nível encontrado nas coleções `WeakValueDictionary`,
 `WeakKeyDictionary`, `WeakSet`, e na função `finalize` do módulo `weakref`.
 
-Para saber mais, leia https://fpy.li/weakref["Weak References" em _fluentpython.com_].
+Leia https://fpy.li/weakref["Weak References" em _fluentpython.com_]
+para mais detalhes sobre `weakref`.
 
 
 === Para saber mais
@@ -1211,7 +1212,7 @@ Python faz melhor.
 O operador `==` compara valores de objetos; `is` compara referências.
 E como Python permite sobrecarregar operadores,
 `==` funciona de forma sensata com todos os objetos na biblioteca padrão,
-incluindo `None`, que é um objeto de verdade, ao contrário do `Null` de Java.
+incluindo `None`, que é um objeto de verdade, ao contrário do `null` de Java.
 
 E claro, você pode definir `+__eq__+` nas suas próprias classes para controlar
 o que `==` significa para suas instâncias.
@@ -1232,7 +1233,7 @@ não faz diferença se as variáveis guardam os objetos em si ou referências pa
 Se `a == b` é verdade, e nenhum dos dois objetos pode mudar,
 eles podem perfeitamente ser o mesmo objeto.
 Por isso a internalização de strings é segura.
-A identidade dos objetos ser torna importante apenas quando esses objetos podem mudar.
+A identidade dos objetos so é importante quando esses objetos podem mudar.
 
 Em programação funcional "pura", todos os dados são imutáveis:
 concatenar algo a uma coleção, na verdade, cria uma nova coleção.
@@ -1261,10 +1262,11 @@ Naturalmente, eles escolheram tornar os dados imutáveis por default.
 [role="soapbox-title"]
 *Destruição de objetos e coleta de lixo*
 
-Não há((("Soapbox sidebars",
+Não existe((("Soapbox sidebars",
 "object destruction and garbage collection")))((("garbage collection")))
-qualquer mecanismo em Python para destruir um objeto diretamente, e essa omissão é,
-na verdade, uma grande qualidade: se você pudesse destruir um objeto a qualquer momento,
+em Python uma forma de destruir um objeto diretamente.
+E essa omissão é uma grande qualidade:
+se você pudesse destruir um objeto a qualquer momento,
 o que aconteceria com as referências que apontam para ele?
 
 A coleta de lixo em CPython é feita principalmente por contagem de referências,
@@ -1283,15 +1285,15 @@ Isso significa que, em CPython -- pelo menos por hora -- é seguro escrever:
 open('test.txt', 'wt', encoding='utf-8').write('1, 2, 3')
 ----
 
-Este código é seguro porque a contagem de referências do objeto file será zero
-após o método `write` retornar.
+Este código é seguro porque a contagem de referências do objeto arquivo será zero
+após o método `write` retornar, e o arquivo será fechado quando o objeto for descartado.
 Entretanto, a mesma linha não é segura em Jython ou IronPython,
 que usam o coletor de lixo dos runtimes de seus ambientes
 (a Java VM e a .NET CLR, respectivamente), que são mais sofisticados,
 mas não se baseiam em contagem de referências,
 e podem demorar mais para destruir o objeto e fechar o arquivo.
 Em todos os casos, incluindo em CPython, a melhor prática é fechar o arquivo explicitamente,
-e a forma mais confiável de fazer isso é usando o comando `with`,
+e a forma mais confiável de fazer isso é usando a instrução `with`,
 que garante o fechamento do arquivo mesmo se acontecerem
 exceções enquanto ele estiver aberto.
 Usando `with`, a linha anterior se torna:
@@ -1302,7 +1304,7 @@ with open('test.txt', 'wt', encoding='utf-8') as fp:
     fp.write('1, 2, 3')
 ----
 
-Se você estiver interessado no assunto de coletores de lixo,
+Se você tiver interesse no assunto de coletores de lixo,
 você talvez queira ler o artigo de Thomas Perl,
 https://fpy.li/6-17["Python Garbage Collector Implementations: CPython, PyPy and GaS"]
 (EN), onde eu aprendi esses detalhes sobre a segurança de `open().write()` em CPython.
@@ -1325,7 +1327,8 @@ Então o valor dos objetos referenciados podem ser alterados pela função,
 se eles forem mutáveis, mas sua identidade não.
 Além disso, como a função recebe uma cópia da referência em um argumento,
 reassociar essa referência no corpo da função não tem qualquer efeito fora da função.
-Adotei o termo _chamada por compartilhamento_ depois de ler sobre esse assunto em
+Adotei o termo _chamada por compartilhamento_ depois de
+encontrar a definição de _call by sharing_ no livro
 _Programming Language Pragmatics_, 3rd ed., de Michael L. Scott
 (Morgan Kaufmann), seção "8.3.1: Parameter Modes."
 
