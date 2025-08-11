@@ -506,14 +506,21 @@ Isso é mais flexível que a _tipagem nominal_, ao preço de permitir mais erros
 Tipagem nominal::
 É a ((("nominal typing"))) perspectiva adotada em {cpp}, Java, e C#, e suportada em Python anotado.
 Objetos e variáveis tem tipos.
-Mas objetos só existem durante a execução, e o verificador de tipo só se importa com o código-fonte, onde as variáveis (incluindo parâmetros de função) tem anotações com dicas de tipo.
+Mas objetos só existem durante a execução, e o verificador de tipo só se importa com o código-fonte,
+onde as variáveis (incluindo parâmetros de função) tem anotações com dicas de tipo.
 Se `Duck` é uma subclasse de `Bird`, você pode atribuir uma instância de `Duck` a um parâmetro anotado como `birdie: Bird`.
-Mas no corpo da função, o verificador considera a chamada `birdie.quack()` ilegal, pois `birdie` é nominalmente um `Bird`, e aquela classe não fornece o método `.quack()`.
-Não interessa que o argumento real, durante a execução, é um `Duck`, porque a tipagem nominal é aplicada de forma estática.
+Mas no corpo da função, o verificador considera a chamada `birdie.quack()` ilegal,
+pois `birdie` é nominalmente um `Bird`, e aquela classe não fornece o método `.quack()`.
+Não interessa que o argumento real, durante a execução, é um `Duck`,
+porque a tipagem nominal é aplicada de forma estática.
 O verificador de tipo não executa qualquer pedaço do programa, ele apenas lê o código-fonte.
-Isso é mais rígido que _duck typing_, com a vantagem de capturar alguns bugs durante o desenvolvimento, ou mesmo em tempo real, enquanto o código está sendo digitado em um IDE.
+Isso é mais rígido que _duck typing_,
+com a vantagem de capturar alguns bugs durante o desenvolvimento,
+ou mesmo em tempo real, enquanto o código está sendo digitado em um IDE.
 
-O <<birds_module_ex>> é um exemplo bobo que contrapõe duck typing e tipagem nominal, bem como checagem de tipos estática e comportamento durante a execução.footnote:[Muitas vezes a herança é sobreutilizada e difícil de justificar em exemplos que, apesar de realistas, são muito simples.
+O <<birds_module_ex>> é um exemplo bobo que contrapõe duck typing e tipagem nominal,
+bem como checagem de tipos estática e comportamento durante a execução.footnote:[Muitas
+vezes a herança é sobreutilizada e difícil de justificar em exemplos pequenos.
 Então por favor aceite esse exemplo com animais como uma rápida ilustração de sub-tipagem.]
 
 [[birds_module_ex]]
@@ -538,7 +545,9 @@ birds.py:16: error: "Bird" has no attribute "quack"
 Found 1 error in 1 file (checked 1 source file)
 ----
 
-Só de analisar o código fonte, Mypy percebe que `alert_bird` é problemático: a dica de tipo declara o parâmetro `birdie` como do tipo `Bird`, mas o corpo da função chama `birdie.quack()` — e a classe `Bird` não tem esse método.
+Só de analisar o código fonte, Mypy percebe que `alert_bird` é problemático:
+a dica de tipo declara o parâmetro `birdie` como do tipo `Bird`,
+mas o corpo da função chama `birdie.quack()` — e a classe `Bird` não tem esse método.
 
 Agora vamos tentar usar o módulo `birds` em _daffy.py_ no <<daffy_module_ex>>.
 
@@ -552,7 +561,8 @@ include::code/08-def-type-hints/birds/daffy.py[]
 ====
 <1> Chamada válida, pois `alert` não tem dicas de tipo.
 <2> Chamada válida, pois `alert_duck` recebe um argumento do tipo `Duck` e `daffy` é um `Duck`.
-<3> Chamada válida, pois `alert_bird` recebe um argumento do tipo `Bird`, e `daffy` também é um `Bird` — a superclasse de `Duck`.
+<3> Chamada válida, pois `alert_bird` recebe um argumento do tipo `Bird`,
+e `daffy` também é um `Bird` — a superclasse de `Duck`.
 
 Mypy reporta o mesmo erro em _daffy.py_, sobre a chamada a `quack` na função `alert_bird` definida em _birds.py_:
 
@@ -580,9 +590,11 @@ Funciona perfeitamente! Viva o duck typing!
 Durante a execução do programa, Python não se importa com os tipos declarados.
 Ele usa apenas duck typing.
 O Mypy apontou um erro em `alert_bird`, mas a chamada da função com `daffy` funciona corretamente quando executada.
-À primeira vista isso pode surpreender muitos pythonistas: um verificador de tipo estático muitas vezes encontra erros em código que sabemos que vai funcionar quanto executado.
+À primeira vista isso pode surpreender muitos pythonistas:
+um verificador de tipo estático muitas vezes encontra erros em código que sabemos que vai funcionar quanto executado.
 
-Entretanto, se daqui a alguns meses você for encarregado de estender o exemplo bobo do pássaro, você agradecerá ao Mypy.
+Entretanto, se daqui a alguns meses você for encarregado de estender o exemplo bobo do pássaro,
+você agradecerá ao Mypy.
 Observe esse módulo _woody.py_ module, que também usa `birds`, no <<woody_module_ex>>.
 
 [[woody_module_ex]]
@@ -606,11 +618,13 @@ Found 2 errors in 2 files (checked 1 source file)
 ----
 
 O primeiro erro é em _birds.py_: a chamada a `birdie.quack()` em `alert_bird`, que já vimos antes.
-O segundo erro é em _woody.py_: `woody` é uma instância de `Bird`, então a chamada `alert_duck(woody)` é inválida, pois aquela função exige um `Duck.`
+O segundo erro é em _woody.py_: `woody` é uma instância de `Bird`,
+então a chamada `alert_duck(woody)` é inválida, pois aquela função exige um `Duck.`
 Todo `Duck` é um `Bird`, mas nem todo `Bird` é um `Duck`.
 
 Durante a execução, nenhuma das duas chamadas em _woody.py_ funcionariam.
-A sucessão de falhas é melhor ilustrada em uma sessão no console, através das mensagens de erro, no <<birdie_errors_ex>>.
+A sucessão de falhas é melhor ilustrada em uma sessão no console,
+através das mensagens de erro, no <<birdie_errors_ex>>.
 
 [[birdie_errors_ex]]
 .Erros durante a execução e como o Mypy poderia ter ajudado
@@ -636,34 +650,51 @@ AttributeError: 'Bird' object has no attribute 'quack'
 ----
 ====
 <1> O Mypy não tinha como detectar esse erro, pois não há dicas de tipo em `alert`.
-<2> O Mypy avisou do problema: `Argument 1 to "alert_duck" has incompatible type "Bird"; expected "Duck"` (_Argumento 1 para `alert_duck` é do tipo incompatível "Bird"; argumento esperado era "Duck"_)
-<3> O Mypy está avisando desde o <<birds_module_ex>> que o corpo da função `alert_bird` está errado: `"Bird" has no attribute "quack"` (_Bird não tem um atributo "quack"_)
+<2> O Mypy avisou do problema: `Argument 1 to "alert_duck" has incompatible type "Bird";
+expected "Duck"` (_Argumento 1 para `alert_duck` é do tipo incompatível "Bird"; argumento esperado era "Duck"_)
+<3> O Mypy está avisando desde o <<birds_module_ex>> que o corpo da função `alert_bird` está errado:
+`"Bird" has no attribute "quack"` (_Bird não tem um atributo "quack"_)
 
-Este pequeno experimento mostra que o duck typing é mais fácil para o iniciante e mais flexível, mas permite que operações não suportadas causem erros durante a execução.
-A tipagem nominal detecta os erros antes da execução, mas algumas vezes rejeita código que seria executado sem erros - como a chamada a `alert_bird(daffy)` no <<daffy_module_ex>>.
+Este pequeno experimento mostra que o duck typing é mais fácil para o iniciante e mais flexível,
+mas permite que operações não suportadas causem erros durante a execução.
+A tipagem nominal detecta os erros antes da execução,
+mas algumas vezes rejeita código que seria executado sem erros—como
+a chamada a `alert_bird(daffy)` no <<daffy_module_ex>>.
 
-Mesmo que funcione algumas vezes, o nome da função `alert_bird` está incorreto: seu código exige um objeto que suporte o método `.quack()`, que não existe em `Bird`.
+Mesmo que funcione algumas vezes, o nome da função `alert_bird` está incorreto:
+seu código exige um objeto que suporte o método `.quack()`, que não existe em `Bird`.
 
 Nesse exemplo bobo, as funções tem uma linha apenas.
-Mas na vida real elas poderiam ser mais longas, e poderiam passar o argumento `birdie` para outras funções, e a origem daquele argumento poderia estar a muitas chamadas de função de distância, tornando difícil localizar a causa do erro durante a execução.
+Mas na vida real elas poderiam ser mais longas,
+e poderiam passar o argumento `birdie` para outras funções,
+e a origem daquele argumento poderia estar a muitas chamadas de função de distância,
+tornando difícil localizar a causa do erro durante a execução.
 O checador de tipos impede que muitos erros como esse aconteçam durante a execução de um programa.
 
 
 [NOTE]
 ====
 O valor das dicas de tipo é questionável em exemplos minúsculo que cabem em um livro.
-Os benefícios crescem conforme o tamanho da base de código afetada. É por essa razão que empresas com milhões de linhas de código em Python - como a Dropbox, o Google e o Facebook - investiram em equipes e ferramentas para promover a adoção global de dicas de tipo internamente, e hoje tem partes significativas e crescentes de sua base de código checadas para tipo em suas linhas (_pipeline_) de integração contínua.
+Os benefícios crescem conforme o tamanho da base de código afetada.
+É por essa razão que empresas com milhões de linhas de código em
+Python—como Dropbox, Google e Facebook—investiram em equipes e ferramentas para
+promover a adoção global de dicas de tipo internamente,
+e hoje tem partes significativas e crescentes de sua base de código checadas para tipo em suas linhas (_pipeline_) de integração contínua.
 ====
 
-Nessa seção exploramos as relações de tipos e operações no duck typing e na tipagem nominal, começando com a função simples `double()` — que deixamos sem dicas de tipo.
+Nessa seção exploramos as relações de tipos e operações no duck typing e na tipagem nominal,
+começando com a função simples `double()` — que deixamos sem dicas de tipo.
 Agora vamos dar uma olhada nos tipos mais importantes ao anotar funções.
 
-Vamos ver um bom modo de adicionar dicas de tipo a `double()` quando examinarmos <<protocols_in_fn>>. Mas antes disso, há tipos mais importantes para conhecer.((("", startref="FTHsupport08")))((("", startref="THsup08")))
+Vamos ver um bom modo de adicionar dicas de tipo a `double()` quando examinarmos <<protocols_in_fn>>.
+Mas antes disso, há tipos mais importantes para conhecer.((("", startref="FTHsupport08")))((("", startref="THsup08")))
 
 
 === Tipos próprios para anotações
 
-Quase((("functions, type hints in", "types usable in annotations", id="FTHusable08")))((("type hints (type annotations)", "types usable in", id="THTusable08"))) todos os tipos em Python podem ser usados em dicas de tipo, mas há restrições e recomendações.
+Quase((("functions, type hints in", "types usable in annotations",
+id="FTHusable08")))((("type hints (type annotations)", "types usable in", id="THTusable08")))
+todos os tipos em Python podem ser usados em dicas de tipo, mas há restrições e recomendações.
 Além disso, o((("typing module"))) módulo `typing` introduziu constructos especiais com uma semântica às vezes surpreendente.
 
 Essa seção trata de todos os principais tipos que você pode usar em anotações:
@@ -679,11 +710,14 @@ Essa seção trata de todos os principais tipos que você pode usar em anotaçõ
 * `typing.Callable`
 * `typing.NoReturn` — um bom modo de encerrar essa lista.
 
-Vamos falar de um de cada vez, começando por um tipo que é estranho, aparentemente inútil, mas de uma importância fundamental.
+Vamos falar de um de cada vez, começando por um tipo que é estranho,
+aparentemente inútil, mas de uma importância fundamental.
 
 ==== O tipo Any
 
-A((("Any type", id="anytype08")))((("dynamic type", id="dynamic08")))((("gradual type system", "Any type", id="GTSany08"))) pedra fundamental de qualquer sistema gradual de tipagem é o tipo `Any`, também conhecido como o _tipo dinâmico_.
+A((("Any type", id="anytype08")))((("dynamic type", id="dynamic08")))((("gradual type system", "Any type",
+id="GTSany08"))) pedra fundamental de qualquer sistema gradual de tipagem é o tipo `Any`,
+também conhecido como o _tipo dinâmico_.
 Quando um verificador de tipo vê um função sem tipo como esta:
 
 [source, python]
@@ -699,7 +733,8 @@ def double(x: Any) -> Any:
     return x * 2
 ----
 
-Isso significa que o argumento `x` e o valor de retorno podem ser de qualquer tipo, inclusive de tipos diferentes.
+Isso significa que o argumento `x` e o valor de retorno podem ser de qualquer tipo,
+inclusive de tipos diferentes.
 Assume-se que `Any` pode suportar qualquer operação possível.
 
 Compare `Any` com `object`. Considere essa assinatura:
@@ -731,15 +766,21 @@ que implementa menos operações que `abc.MutableSequence`,
 que por sua vez implementa menos operações que `list`.
 
 Mas `Any` é um tipo mágico que reside tanto no topo quanto na base da hierarquia de tipos.
-Ele é simultaneamente o tipo mais geral - então um argumento `n: Any` aceita valores de qualquer tipo - e o tipo mais especializado, suportando assim todas as operações possíveis.
+Ele é simultaneamente o tipo mais geral - então um argumento `n: Any` aceita valores de
+qualquer tipo—e o tipo mais especializado, suportando assim todas as operações possíveis.
 Pelo menos é assim que o verificador de tipo entende `Any`.
 
-Claro, nenhum tipo consegue suportar qualquer operação possível, então usar `Any` impede o verificador de tipo de cumprir sua missão primária: detectar operações potencialmente ilegais antes que seu programa falhe e levante uma exceção durante sua execução.((("", startref="GTSany08")))
+Claro, nenhum tipo consegue suportar qualquer operação possível,
+então usar `Any` impede o verificador de tipo de cumprir sua missão primária:
+detectar operações potencialmente ilegais antes que
+seu programa levante uma exceção durante a execução.((("", startref="GTSany08")))
 
 [[consistent_with_sec]]
 ===== Subtipo-de versus consistente-com
 
-Sistemas((("gradual type system", "subtype-of versus consistent-with relationships", id="GTSsub08")))((("subtype-of relationships"))) tradicionais de tipagem nominal orientados a objetos se baseiam na relação _subtipo-de_.
+Sistemas((("gradual type system", "subtype-of versus consistent-with relationships",
+id="GTSsub08")))((("subtype-of relationships")))
+tradicionais de tipagem nominal orientados a objetos se baseiam na relação _subtipo-de_.
 Dada uma classe `T1` e uma subclasse `T2`, então `T2` é _subtipo-de_ `T1`.
 
 Observe este código:
@@ -760,11 +801,14 @@ o2 = T2()
 f1(o2)  # OK
 ----
 
-A chamada `f1(o2)` é uma aplicação do Princípio de Substituição de Liskov (_Liskov Substitution Principle—LSP_).
+A chamada `f1(o2)` é uma aplicação do Princípio de Substituição de Liskov
+(_Liskov Substitution Principle—LSP_).
 
 Barbara Liskovfootnote:[Professora do MIT, designer de linguagens de programação e homenageada com o Turing Award em 2008.
-Wikipedia: https://pt.wikipedia.org/wiki/Barbara_Liskov[Barbara Liskov].] na verdade definiu _é subtipo-de_ em termos das operações suportadas.
-Se um objeto do tipo `T2` substitui um objeto do tipo `T1` e o programa continua se comportando de forma correta, então `T2` é _subtipo-de_ `T1`.
+Wikipedia: https://pt.wikipedia.org/wiki/Barbara_Liskov[Barbara Liskov].]
+na verdade definiu _é subtipo-de_ em termos das operações suportadas.
+Se um objeto do tipo `T2` substitui um objeto do tipo `T1` e
+o programa continua se comportando de forma correta, então `T2` é _subtipo-de_ `T1`.
 
 Seguindo com o código visto acima, essa parte mostra uma violação do LSP:
 
@@ -779,9 +823,19 @@ o1 = T1()
 f2(o1)  # type error
 ----
 
-Do ponto de vista das operações suportadas, faz todo sentido: como uma subclasse, `T2` herda e precisa suportar todas as operações suportadas por `T1`. Então uma instância de `T2` pode ser usada em qualquer lugar onde se espera uma instância de `T1`. Mas o contrário não é necessariamente verdadeiro: `T2` pode implementar métodos adicionais, então uma instância de `T1` não pode ser usada onde se espera uma instância de `T2`. Este((("behavioral subtyping"))) foco nas operações suportadas se reflete no nome https://fpy.li/8-15[_behavioral subtyping (subtipagem comportamental)] (EN), também usado para se referir ao LSP.
+Do ponto de vista das operações suportadas, faz todo sentido:
+como uma subclasse, `T2` herda e precisa suportar todas as operações suportadas por `T1`.
+Então uma instância de `T2` pode ser usada em qualquer lugar onde se espera uma instância de `T1`.
+Mas o contrário não é necessariamente verdadeiro:
+`T2` pode implementar métodos adicionais, então uma instância de `T1`
+não pode ser usada onde se espera uma instância de `T2`.
+Este((("behavioral subtyping"))) foco nas operações suportadas se reflete no nome
+https://fpy.li/8-15[_behavioral subtyping (subtipagem comportamental)] (EN),
+também usado para se referir ao LSP.
 
-Em((("consistent-with relationships"))) um sistema de tipagem gradual há outra relação, _consistente-com_ (_consistent-with_), que se aplica sempre que _subtipo-de_ puder ser aplicado, com disposições especiais para o tipo `Any`.
+Em((("consistent-with relationships"))) um sistema de tipagem gradual há outra relação,
+_consistente-com_ (_consistent-with_),
+que se aplica sempre que _subtipo-de_ puder ser aplicado, com regras especiais para o tipo `Any`.
 
 As regras para _consistente-com_ são:
 
@@ -789,7 +843,8 @@ As regras para _consistente-com_ são:
 . Todo tipo é _consistente-com_ `Any`: você pode passar objetos de qualquer tipo em um argumento declarado como de tipo `Any.
 . `Any` é _consistente-com_ todos os tipos: você sempre pode passar um objeto de tipo `Any` onde um argumento de outro tipo for esperado.
 
-Considerando as definições anteriores dos objetos `o1` e `o2`, aqui estão alguns exemplos de código válido, ilustrando as regras #2 e #3:
+Considerando as definições anteriores dos objetos `o1` e `o2`,
+aqui estão alguns exemplos de código válido, ilustrando as regras #2 e #3:
 
 [source, python]
 ----
@@ -819,7 +874,8 @@ Todo sistema de tipagem gradual precisa de um tipo coringa como `Any`
 [TIP]
 ====
 O verbo "inferir" é um sinônimo bonito para "adivinhar", quando usado no contexto da análise de tipos.
-Verificadores de tipo modernos, em Python e outras linguagens, não precisam de anotações de tipo em todo lugar porque conseguem inferir o tipo de muitas expressões.
+Verificadores de tipo modernos, em Python e outras linguagens,
+não precisam de anotações de tipo em todo lugar porque conseguem inferir o tipo de muitas expressões.
 Por exemplo, se eu escrever `x = len(s) * 10`, o verificador não precisa de uma declaração local explícita para saber que `x` é um `int`, desde que consiga encontrar dicas de tipo para `len` em algum lugar.
 ====
 
