@@ -852,7 +852,7 @@ Quando suportamos a conversão para `bytes`, também implementamos um construtor
 
 Vimos que a https://docs.python.org/pt-br/3/library/string.html#formatspec[Mini-Linguagem de Especificação de Formato] é extensível, ao implementarmos um método `+__format__+` que analisa uma `format_spec` fornecida à função embutida `format(obj, format_spec)` ou dentro de campos de substituição `'{:«format_spec»}'` em f-strings ou ainda strings usadas com o método `str.format()`.
 
-Para preparar a transformação de instâncias de `Vector2d` em _hashable_, fizemos um esforço para torná-las imutáveis, ao menos prevenindo modificações acidentais, programando os atributos `x` e `y` como privados, e expondo-os como propriedades apenas para leitura. Nós então implementamos
+Para preparar a transformação de instâncias de `Vector2d` em _hashable_, fizemos um esforço para torná-las imutáveis, ao menos prevenindo modificações acidentais, programando os atributos `x` e `y` como privados, e expondo-os como propriedades apenas para leitura. Então implementamos
 `+__hash__+` usando a técnica recomendada, aplicar o operador xor aos _hashes_ dos atributos da instância.
 
 Discutimos a seguir a economia de memória e as ressalvas de se declarar um atributo `+__slots__+` em `Vector2d`. Como o uso de `+__slots__+` tem efeitos colaterais, ele só faz real sentido quando é preciso processar um número muito grande de instâncias—pense em milhões de instâncias, não apenas milhares. Em muitos destes casos, usar a https://fpy.li/pandas[pandas] pode ser a melhor opção.
@@ -911,7 +911,11 @@ Nas((("attributes", "properties and up-front costs")))((("Pythonic objects", "So
 
 Quando sentimos a necessidade de evitar modificações acidentais dos atributos `x` e `y`, implementamos propriedades, mas nada mudou no restante do código ou na interface pública de `Vector2d`, como se verifica através dos doctests. Continuamos podendo acessar `my_vector.x` and `my_vector.y`.
 
-Isso mostra que podemos sempre iniciar o desenvolvimento de nossas classes da maneira mais simples possível, com atributos públicos, pois quando (ou se) nós mais tarde precisarmos impor mais controle, com _getters_ e _setters_, estes métodos podem ser implementados usando propriedades, sem mudar nada no código que já interage com nossos objetos através dos nomes que eram, inicialmente, simples atributos públicos (`x` e `y`, por exemplo).
+Isso mostra que podemos sempre iniciar o desenvolvimento de nossas classes da maneira mais simples possível,
+com atributos públicos, pois quando (ou se) for preciso impor mais depois, com _getters_ e _setters_,
+estes métodos podem ser implementados usando propriedades,
+sem mudar nada no código que já interage com nossos objetos através dos nomes que eram,
+inicialmente, simples atributos públicos (`x` e `y`, por exemplo).
 
 Essa abordagem é o oposto daquilo que é encorajado pela linguagem Java: um programador Java não pode começar com atributos públicos simples e apenas mais tarde, se necessário, implementar propriedades, porque elas não existem naquela linguagem. Portanto, escrever _getters_ e _setters_ é a regra em Java—mesmo quando esses métodos não fazem nada de útil—porque a API não pode evoluir de atributos públicos simples para _getters_ e _setters_ sem quebrar todo o código que já use aqueles atributos.
 

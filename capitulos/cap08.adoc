@@ -449,7 +449,7 @@ Por exemplo, não é possível, usando dicas de tipo,
 definir `Quantity` como um número inteiro entre 1 e 10000,
 ou `AirportCode` como uma sequência de 3 letras.
 O NumPy oferece `uint8`, `int16`, e outros tipos numéricos ligados à arquitetura do hardware,
-mas na biblioteca padrão de Python nós encontramos apenas
+mas na biblioteca padrão de Python encontramos apenas
 tipos com conjuntos muitos pequenos de valores (`NoneType`, `bool`)
 ou conjuntos muito grandes (`float`, `int`, `str`, todas as tuplas possíveis, etc.).]
 
@@ -876,20 +876,27 @@ Todo sistema de tipagem gradual precisa de um tipo coringa como `Any`
 O verbo "inferir" é um sinônimo bonito para "adivinhar", quando usado no contexto da análise de tipos.
 Verificadores de tipo modernos, em Python e outras linguagens,
 não precisam de anotações de tipo em todo lugar porque conseguem inferir o tipo de muitas expressões.
-Por exemplo, se eu escrever `x = len(s) * 10`, o verificador não precisa de uma declaração local explícita para saber que `x` é um `int`, desde que consiga encontrar dicas de tipo para `len` em algum lugar.
+Por exemplo, se eu escrever `x = len(s) * 10`,
+o verificador não precisa de uma declaração local explícita para saber que `x` é um `int`,
+desde que consiga encontrar dicas de tipo para `len` em algum lugar.
 ====
 
-Agora podemos explorar o restante dos tipos usados em anotações.((("", startref="GTSsub08")))((("", startref="dynamic08")))((("", startref="anytype08")))
+Agora podemos explorar o restante dos tipos usados em anotações.
+((("", startref="GTSsub08")))((("", startref="dynamic08")))((("", startref="anytype08")))
 
 ==== Tipos simples e classes
 
-Tipos simples((("gradual type system", "simple types and classes"))) como `int`, `float`, `str`, e `bytes` podem ser usados diretamente em dicas de tipo.
-Classes concretas da biblioteca padrão, de pacotes externos ou definidas pelo usuário — `FrenchDeck`, `Vector2d`, e `Duck` - também podem ser usadas em dicas de tipo.
+Tipos simples((("gradual type system", "simple types and classes")))
+como `int`, `float`, `str`, e `bytes` podem ser usados diretamente em dicas de tipo.
+Classes concretas da biblioteca padrão,
+de pacotes externos ou definidas pelo usuário (ex. `FrenchDeck`, `Vector2d`, e `Duck`)
+também podem ser usadas em dicas de tipo.
 
 Classes base abstratas também são úteis aqui.
 Voltaremos a elas quando formos estudar os tipos coleção, e em <<type_hint_abc_sec>>.
 
-Para classes, _consistente-com_ é definido como _subtipo_de_: uma subclasse é _consistente-com_ todas as suas superclasses.
+Para classes, _consistente-com_ é definido como _subtipo_de_:
+uma subclasse é _consistente-com_ todas as suas superclasses.
 
 Entretanto, "a praticidade se sobrepõe à pureza", então há uma exceção importante, discutida em seguida.
 
@@ -901,7 +908,7 @@ Não há nenhuma relação nominal de subtipo entre os tipo nativos `int`, `floa
 Mas a PEP 484 https://fpy.li/cardxvi[declara]
 que `int` é _consistente-com_ `float`, e `float` é _consistente-com_ `complex`.
 Na prática, faz sentido:
-`int` implementa todas as operações que `float` implementa, e `int` implementa operações adicionais também - operações binárias como `&`, `|`, `<<`, etc.
+`int` implementa todas as operações que `float` implementa, e `int` implementa operações adicionais também—operações binárias como `&`, `|`, `<<`, etc.
 O resultado final é o seguinte: `int` é _consistente-com_ `complex`.
 Para `i = 3`, `i.real` é `3` e `i.imag` é `0`.
 ====
@@ -909,7 +916,9 @@ Para `i = 3`, `i.real` é `3` e `i.imag` é `0`.
 
 ==== Os tipos Optional e Union
 
-Nós((("gradual type system", "Optional and Union types")))((("Union type")))((("Optional type"))) vimos o tipo especial `Optional` em <<dealing_with_none_sec>>. Ele resolve o problema de ter `None` como default, como no exemplo daquela seção:
+Vimos((("gradual type system", "Optional and Union types")))((("Union type")))((("Optional type")))
+o tipo especial `Optional` em <<dealing_with_none_sec>>.
+Ele resolve o problema de ter `None` como default, como no exemplo daquela seção:
 
 [source, py]
 ----
@@ -1730,7 +1739,7 @@ include::code/08-def-type-hints/comparable/comparable.py[]
 
 Um tipo `T` é _consistente-com_ um protocolo `P` se `T` implementa todos os métodos definido em `P`, com assinaturas de tipo correspondentes.
 
-Dado `SupportsLessThan`, nós agora podemos definir essa versão funcional de `top` no <<top_protocol_ex>>.
+Dado `SupportsLessThan`, agora podemos definir essa versão funcional de `top` no <<top_protocol_ex>>.
 
 [[top_protocol_ex]]
 ._top.py_: definição da função `top` usando uma `TypeVar` com `bound=SupportsLessThan`
@@ -2252,16 +2261,22 @@ Esse é um custo unitário.
 
 Mas há também um custo recorrente, eterno.
 
-Nós perdemos um pouco do poder expressivo de Python se insistimos que tudo precisa estar sob a checagem de tipos.
-Recursos maravilhosos como desempacotamento de argumentos — e.g., `config(**settings)`— estão além da capacidade de compreensão dos checadores de tipos.
+Perdemos parte do poder expressivo de Python se insistimos que tudo precisa estar sob a checagem de tipos.
+Recursos excelentes estão além da capacidade de compreensão dos checadores de tipos,
+por exemplo o desempacotamento de argumentos: `config(**settings)`.
 
-Se você quiser ter uma chamada como `config(**settings)` verificada quanto ao tipo, você precisa explicitar cada argumento.
+Se quiser ter uma chamada como `config(**settings)` verificada quanto ao tipo,
+precisa explicitar cada argumento.
 Isso me traz lembranças de programas em Turbo Pascal, que escrevi 35 anos atrás.
 
 Bibliotecas que usam metaprogramação são difíceis ou impossíveis de anotar.
-Claro que a metaprogramação pode ser mal usada, mas isso também é algo que torna muitos pacotes de Python divertidos [.keep-together]#de usar#.
+Claro que a metaprogramação pode ser mal usada,
+mas isso também é algo que torna muitos pacotes de Python divertidos de usar.
 
-Se dicas de tipo se tornarem obrigatórias sem exceções, por uma decisão superior em grande empresas, aposto que logo veremos pessoas usando geração de código para reduzir linhas de código padrão em programas Python - uma prática comum com linguagens menos dinâmicas.
+Se dicas de tipo se tornarem obrigatórias sem exceções,
+por uma decisão superior em grande empresas,
+aposto que logo veremos pessoas usando geração de código para reduzir a verbosidade em programas Python,
+uma prática comum com linguagens menos dinâmicas.
 
 Para alguns projetos e contextos, dicas de tipo simplesmente não fazem sentido.
 Mesmo em contextos onde elas fazer muito sentido, não fazem sentido o tempo todo.
@@ -2271,18 +2286,24 @@ Alan Kay, o recipiente do Turing Award que foi um dos pioneiros da programação
 
 [quote]
 ____
-Algumas pessoas são completamente religiosas no que diz respeito a sistemas de tipo, e como um matemático eu adoro a ideia de sistemas de tipos, mas ninguém até agora inventou um que tenha alcance o suficiente..footnote:[Fonte:
+Algumas pessoas são completamente religiosas no que diz respeito a sistemas de tipo,
+e como um matemático eu adoro a ideia de sistemas de tipos,
+mas ninguém até agora inventou um que tenha alcance o suficiente.footnote:[Fonte:
 https://fpy.li/8-54["A Conversation with Alan Kay"].]
 ____
 
 Obrigado, Guido, pela tipagem opcional.
-Vamos usá-la como foi pensada, e não tentar anotar tudo em conformidade estrita com um estilo de programação que se parece com Java 1.5.((("", startref="SStypehints08")))
+Vamos usá-la como foi pensada, e não tentar anotar tudo em conformidade estrita com
+um estilo de programação que se parece com Java 1.5.((("", startref="SStypehints08")))
 
 
 [role="soapbox-title"]
 Duck Typing FTW
 
-Duck typing((("Soapbox sidebars", "duck typing")))((("duck typing"))) encaixa bem no meu cérebro, e duck typing estático é um bom compromisso, permitindo checagem estática de tipo sem perder muito da flexibilidade que alguns sistemas de tipagem nominal só permitem ao custo de muita complexidade - isso quando permitem.
+Duck typing((("Soapbox sidebars", "duck typing")))((("duck typing")))
+encaixa bem no meu cérebro, e duck typing estático é um bom compromisso,
+permitindo checagem estática de tipo sem perder muito da flexibilidade que
+alguns sistemas de tipagem nominal só permitem ao custo de muita complexidade - isso quando permitem.
 
 Antes da PEP 544, toda essa ideia de dicas de tipo me parecia completamente não-pythônica,
 Fiquei muito feliz quando vi `typing.Protocol` surgir em Python.
@@ -2291,7 +2312,9 @@ Ele traz equilíbrio para a Força.
 [role="soapbox-title"]
 Genéricos ou Específicos?
 
-De((("Soapbox sidebars", "generic collections")))((("generic collections", "Soapbox discussion"))) uma perspectiva de Python, o uso do termo "genérico" na tipagem é um retrocesso.
+De((("Soapbox sidebars", "generic collections")))((("generic collections",
+"Soapbox discussion"))) uma perspectiva de Python,
+o uso do termo "genérico" na tipagem é um retrocesso.
 Os sentidos comuns do termo "genérico" são "aplicável integralmente a um grupo ou uma classe" ou "sem uma marca distintiva."
 
 Considere `list` versus `list[str]`. o primeiro é genérico: aceita qualquer objeto.
