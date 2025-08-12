@@ -1,18 +1,17 @@
 [[ch_type_hints_def]]
 == Dicas de tipo em funções
 
-++++
-<blockquote>
-<p>É preciso enfatizar que <strong>Python continuará sendo uma linguagem de tipagem dinâmica, e os autores não tem qualquer intenção de algum dia tornar dicas de tipo obrigatórias, mesmo que por <span class="keep-together">mera convenção</span>.</strong></p>
-<p data-type="attribution">Guido van Rossum&#44; Jukka Lehtosalo&#44; e Łukasz Langa, PEP 484—Type Hints<span data-type="footnote"><a href="https://fpy.li/8-1"> PEP 484—Type Hints</a> (EN), "Rationale and Goals"; negritos mantidos do original.</span></p>
-</blockquote>
-++++
-// [quote, Guido van Rossum&#44; Jukka Lehtosalo&#44; and Łukasz Langa, PEP 484—Type Hints]
-// ____
-// It should also be emphasized that *Python will remain a dynamically typed language, and the authors have no desire to ever make type hints mandatory, even by convention*.footnote:[https://fpy.li/8-1[PEP 484—Type Hints], section _Rationale and Goals_; bold emphasis retained from the original.]
-// ____
+[quote, Guido van Rossum&#44; Jukka Lehtosalo&#44; and Łukasz Langa, PEP 484—Type Hints]
+____
+É preciso enfatizar que *Python continuará sendo uma linguagem de tipagem dinâmica,
+e os autores não tem qualquer intenção de algum dia tornar dicas de tipo obrigatórias,
+mesmo por mera convenção*.footnote:[https://fpy.li/8-1[PEP 484—Type Hints], seção _Rationale and Goals_; negritos mantidos do original.]
+____
 
-Dicas de tipo((("functions, type hints in", "benefits and drawbacks of")))((("type hints (type annotations)", "benefits and drawbacks of"))) foram a maior mudança na história de Python desde https://fpy.li/descr101[a unificação de tipos e classes]
+Dicas de tipo((("functions, type hints in",
+"benefits and drawbacks of")))((("type hints (type annotations)", "benefits and drawbacks of")))
+foram a maior mudança na história de Python desde
+https://fpy.li/descr101[a unificação de tipos e classes]
 no Python 2.2, lançado em 2001.
 Entretanto, as dicas de tipo não beneficiam igualmente a todos as pessoas que usam Python.
 Por isso deverão ser sempre opcionais.
@@ -20,8 +19,8 @@ Por isso deverão ser sempre opcionais.
 A
 https://fpy.li/pep484[PEP 484—Type Hints] introduziu a sintaxe e a semântica para declarações explícitas de tipo
 em argumentos de funções, valores de retorno e variáveis.
-O objetivo é ajudar ferramentas de desenvolvimento a encontrarem bugs nas bases de código em Python
-através de análise estática, isto é, sem precisar efetivamente executar o código através de testes.
+O objetivo é ajudar ferramentas de desenvolvimento a encontrarem bugs no código-fonte de programas em Python
+através de análise estática, isto é, sem executar o código através de testes.
 
 Os maiores beneficiários são engenheiros de software profissionais que usam IDEs (_Ambientes de Desenvolvimento Integrados_)
 e CI (_Integração Contínua_).
@@ -29,10 +28,10 @@ A análise de custo-benefício que torna as dicas de tipo atrativas para esse gr
 
 A base de usuários de Python vai muito além dessa classe de profissionais.
 Ela inclui cientistas, comerciantes, jornalistas, artistas, inventores, analistas e estudantes de inúmeras áreas, entre outros.
-Para a maioria deles, o custo de aprender dicas de tipo será certamente maior--a menos que
-já conheçam uma outra linguagem com tipos estáticos, subtipos e tipos genéricos.
-Os benefícios serão menores para muitos desses usuários, dada a forma como que eles interagem com Python,
-o tamanho menor de suas bases de código e de suas equipes -- muitas vezes "equipes de um".
+Para a maioria dessas pessoas, o custo de aprender dicas de tipo será maior--exceto para
+a minoria que já conhece outra linguagem com tipos estáticos, subtipos e tipos genéricos.
+Os benefícios serão menores para muitas pessoas, dada a forma como que elas interagem com Python,
+o tamanho menor de suas bases de código e de suas equipes—muitas vezes "equipes solo".
 
 A tipagem dinâmica, default de Python, é mais simples e mais expressiva quando
 programamos para explorar dados e ideias, como é o caso em ciência de dados, computação criativa e para aprender.
@@ -45,9 +44,9 @@ tópicos mais importantes aqui são:
 
 * Uma introdução prática à tipagem gradual com Mypy
 * As perspectivas complementares da duck typing (_tipagem pato_) e da tipagem nominal
-* A revisão para principais categorias de tipos que podem surgir em anotações (cerca de 60% do capítulo)
-* Os parâmetros variádicos das dicas de tipo (`\*args`, `**kwargs`)
-* As limitações e desvantagens das dicas de tipo e da tipagem estática.
+* A revisão das principais categorias de tipos que podem surgir em anotações (cerca de 60% do capítulo)
+* Dicas de tipo em parâmetros variádicos (`\*args`, `**kwargs`)
+* Limitações e desvantagens das dicas de tipo e da tipagem estática.
 
 === Novidades nesse capítulo
 
@@ -61,12 +60,15 @@ Vamos começar definindo o que isso significa.
 
 === Sobre tipagem gradual
 
-A PEP 484((("functions, type hints in", "gr adual typing", id="FTHgrad08")))((("type hints (type  annotations)", "gradual typing", id="THgrad0 8")))((("gradual type system", "basics of"))) introduziu no Python um _sistema de tipagem gradual_.
-Outras linguagens com sistemas de tipagem gradual são o Typescript da Microsoft,
+A PEP 484((("functions, type hints in", "gr adual typing",
+id="FTHgrad08")))((("type hints (type  annotations)", "gradual typing",
+id="THgrad0 8")))((("gradual type system", "basics of")))
+introduziu no Python um _sistema de tipagem gradual_.
+Outras linguagens com sistemas de tipagem gradual são Typescript da Microsoft,
 Dart (a linguagem do SDK Flutter, criado pelo Google),
-e o Hack (um dialeto de PHP criado para uso na máquina virtual HHVM do Facebook).
+e Hack (um dialeto de PHP que é compilado para a máquina virtual HHVM do Facebook).
 O próprio verificador de tipo MyPy começou como uma linguagem:
-um dialeto de Python de tipagem gradual  com seu próprio interpretador.
+um dialeto de Python de tipagem gradual com seu próprio interpretador.
 Guido van Rossum convenceu o criador do MyPy, Jukka Lehtosalo,
 a transformá-lo em uma ferramenta para checar código Python anotado.
 
@@ -93,7 +95,7 @@ Não captura erros de tipagem durante a execução do código::
 Dicas de tipo são usadas por checadores de tipos, analisadores de código-fonte (_linters_) e IDEs para emitir avisos.
 Eles não evitam que valores inconsistentes sejam passados para funções ou atribuídos a variáveis durante a execução.
 Por exemplo, nada impede que alguém chame
-`tokenie(42)`, apesar da anotação de tipo do argumento `s: str`).
+`tokenize(42)`, apesar da anotação de tipo do argumento `s: str`.
 A chamada ocorrerá, e teremos um erro de execução no corpo da função.
 Não melhora o desempenho::
 Anotações de tipo fornecem dados que poderiam, em tese, permitir otimizações do bytecode gerado.
@@ -107,9 +109,11 @@ e gera código de máquina otimizado para aqueles tipos concretos.]
 O melhor aspecto de usabilidade da tipagem gradual é que as anotações são sempre opcionais.
 
 Nos sistemas de tipagem estáticos, a maioria das restrições de tipo são fáceis de expressar,
-muitas são desajeitadas, muitas são difíceis e algumas são impossíveis: Por exemplo, em julho de 2021,
-tipos recursivos não tinham suporte -- veja as questões https://fpy.li/8-2[#182, Define a JSON type] (EN)
-sobre o JSON e https://fpy.li/8-3[#731, Support recursive types] (EN) do MyPy.
+muitas são desajeitadas, muitas são difíceis e algumas são impossíveis.
+Por exemplo, em julho de 2021,
+tipos recursivos não tinham suporte—veja as questões
+https://fpy.li/8-2[#182, Define a JSON type] (EN)
+https://fpy.li/8-3[#731, Support recursive types] (EN) do MyPy.
 
 É perfeitamente possível que você escreva um ótimo programa Python,
 que consiga passar por uma boa cobertura de testes,
@@ -127,8 +131,8 @@ para que o checador de tipos ignore certas linhas do seu código.
 Tentar impor uma cobertura de 100% de dicas de tipo irá provavelmente estimular seu uso de forma impensada,
 apenas para satisfazer essa métrica.
 Isso também vai impedir equipes de aproveitarem da melhor forma possível o potencial e a flexibilidade de Python.
-Código sem dicas de tipo deveria ser aceito sem objeções quando anotações tornassem
-o uso de uma API menos amigável ou quando complicassem em demasia seu desenvolvimento.
+Código sem dicas de tipo deve ser aceito sem objeções quando anotações tornam
+o uso de uma API menos amigável ou quando complicam demais seu desenvolvimento.
 ====
 
 === Tipagem gradual na prática
@@ -193,7 +197,7 @@ E quando você estiver lendo essas linhas, talvez os resultados também sejam di
 Se a assinatura de uma função não tem anotações, Mypy a ignora por default—a menos que seja configurado de outra forma.
 
 O <<msgs_test_no_hints>> também inclui testes de unidade do `pytest`.
-Este é código de _messages_test.py_.
+Este é o código de _messages_test.py_:
 
 [[msgs_test_no_hints]]
 ._messages_test.py_ sem dicas de tipo.
@@ -226,9 +230,9 @@ Found 3 errors in 2 files (checked 1 source file)
 
 Nas primeiras etapas da tipagem gradual, prefiro usar outra opção:
 
-`--disallow-incomplete-defs`.
+`--disallow-incomplete-defs`
 
-Inicialmente o Mypy não me dá nenhuma nova informação:
+Com ela, o Mypy não me dá nenhuma nova informação num primeiro momento:
 
 [source]
 ----
@@ -236,7 +240,7 @@ Inicialmente o Mypy não me dá nenhuma nova informação:
 Success: no issues found in 1 source file
 ----
 
-Agora vou acrescentar apenas o tipo do retorno a `show_count` em _messages.py_:
+Agora acrescento apenas o tipo do retorno a `show_count` em _messages.py_:
 
 [source]
 ----
@@ -495,12 +499,17 @@ Por outro lado, Mypy vai marcar `x * 2` como um erro quando analisar o código-f
 Em um sistema de tipagem gradual, acontece uma interação entre duas perspectivas diferentes de tipo:
 
 Duck typing ("tipagem pato")::
-A ((("duck typing"))) perspectiva adotada pelo Smalltalk — a primeira linguagem orientada a objetos — bem como em Python, JavaScript, e Ruby.
-Objetos tem tipo, mas variáveis (incluindo parâmetros) não.
+A ((("duck typing"))) perspectiva adotada pelo Smalltalk—a primeira linguagem orientada a objetos—bem
+como em Python, JavaScript, e Ruby.
+Objetos tem tipo, mas variáveis (incluindo parâmetros) não tem.
 Na prática, não importa qual o tipo declarado de um objeto, importam apenas as operações que ele efetivamente suporta.
 Se eu posso invocar `birdie.quack()` então, nesse contexto, `birdie` é um pato.
 Por definição, duck typing só é aplicada durante a execução, quando se tenta aplicar operações sobre os objetos.
-Isso é mais flexível que a _tipagem nominal_, ao preço de permitir mais erros durante a execução.footnote:[Duck typing é uma forma implícita de _tipagem estrutural_, que Python passou a suportar após a versão 3.8, com a introdução de `typing.Protocol`. Vamos falar disso mais adiante nesse capítulo - em <<protocols_in_fn>> — e com mais [.keep-together]#detalhes em# <<ch_ifaces_prot_abc>>.]
+Isso é mais flexível que a _tipagem nominal_,
+ao preço de permitir mais erros durante a execução.footnote:[Duck typing é uma forma implícita de
+_tipagem estrutural_, que as anotações de tipo passaram a suportar explicitamente após a versão 3.8,
+com a introdução de `typing.Protocol`.
+Vamos falar disso mais adiante nesse capítulo, em <<protocols_in_fn>>, e com mais detalhes no <<ch_ifaces_prot_abc>>.]
 
 
 Tipagem nominal::
@@ -508,12 +517,13 @@ Tipagem nominal::
 Objetos e variáveis tem tipos.
 Mas objetos só existem durante a execução, e o verificador de tipo só se importa com o código-fonte,
 onde as variáveis (incluindo parâmetros de função) tem anotações com dicas de tipo.
-Se `Duck` é uma subclasse de `Bird`, você pode atribuir uma instância de `Duck` a um parâmetro anotado como `birdie: Bird`.
+Se `Duck` é uma subclasse de `Bird`,
+você pode atribuir uma instância de `Duck` a um parâmetro anotado como `birdie: Bird`.
 Mas no corpo da função, o verificador considera a chamada `birdie.quack()` ilegal,
 pois `birdie` é nominalmente um `Bird`, e aquela classe não fornece o método `.quack()`.
 Não interessa que o argumento real, durante a execução, é um `Duck`,
-porque a tipagem nominal é aplicada de forma estática.
-O verificador de tipo não executa qualquer pedaço do programa, ele apenas lê o código-fonte.
+porque a tipagem nominal é verificada estaticamente.
+O verificador de tipo não executa qualquer pedaço do programa, ele apenas analisa o código-fonte.
 Isso é mais rígido que _duck typing_,
 com a vantagem de capturar alguns bugs durante o desenvolvimento,
 ou mesmo em tempo real, enquanto o código está sendo digitado em um IDE.
@@ -629,7 +639,7 @@ através das mensagens de erro, no <<birdie_errors_ex>>.
 [[birdie_errors_ex]]
 .Erros durante a execução e como o Mypy poderia ter ajudado
 ====
-[source, py]
+[source, pycon]
 ----
 >>> from birds import *
 >>> woody = Bird()
@@ -656,7 +666,7 @@ expected "Duck"` (_Argumento 1 para `alert_duck` é do tipo incompatível "Bird"
 `"Bird" has no attribute "quack"` (_Bird não tem um atributo "quack"_)
 
 Este pequeno experimento mostra que o duck typing é mais fácil para o iniciante e mais flexível,
-mas permite que operações não suportadas causem erros durante a execução.
+porém permite que operações não suportadas causem erros durante a execução.
 A tipagem nominal detecta os erros antes da execução,
 mas algumas vezes rejeita código que seria executado sem erros—como
 a chamada a `alert_bird(daffy)` no <<daffy_module_ex>>.
@@ -674,12 +684,13 @@ O checador de tipos impede que muitos erros como esse aconteçam durante a execu
 
 [NOTE]
 ====
-O valor das dicas de tipo é questionável em exemplos minúsculo que cabem em um livro.
-Os benefícios crescem conforme o tamanho da base de código afetada.
+O valor das dicas de tipo é questionável nos pequenos exemplos que cabem em um livro.
+Os benefícios crescem com o tamanho da base de código.
 É por essa razão que empresas com milhões de linhas de código em
 Python—como Dropbox, Google e Facebook—investiram em equipes e ferramentas para
 promover a adoção global de dicas de tipo internamente,
-e hoje tem partes significativas e crescentes de sua base de código checadas para tipo em suas linhas (_pipeline_) de integração contínua.
+e hoje tem partes significativas e crescentes de sua base de código com
+anotações de tipo sendo verificadas em suas _pipelines_ de integração contínua.
 ====
 
 Nessa seção exploramos as relações de tipos e operações no duck typing e na tipagem nominal,
