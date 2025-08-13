@@ -91,7 +91,7 @@ include::code/12-seq-hacking/vector_v1.py[tags=VECTOR_V1]
 <6> Desde Python 3.8, `math.hypot` aceita pontos N-dimensionais. Já usei a seguinte expressão antes: `math.sqrt(sum(x * x for x in self))`.
 <7> A única mudança necessária no `frombytes` anterior é na última linha: passamos a `memoryview` diretamente para o construtor, sem desempacotá-la com `*`, como fazíamos antes.
 
-O modo como usei `reprlib.repr` pede alguma elaboração. Essa função produz representações seguras de estruturas grandes ou recursivas, limitando a tamanho da string devolvida e marcando o corte com `'...'`. Eu queria que o `repr` de um `Vector` se parecesse com `Vector([3.0, 4.0, 5.0])` e não com `Vector(array('d', [3.0, 4.0, 5.0]))`, porque a existência de um `array` dentro de um `Vector` é um detalhe de implementação. Como essas chamadas ao construtor criam objetos `Vector` idênticos, preferi a sintaxe mais simples, usando um argumento `list`.
+O modo como usei `reprlib.repr` pede alguma elaboração. Essa função produz representações seguras de estruturas grandes ou recursivas, limitando a tamanho da string devolvida e marcando o corte com `'\...'`. Eu queria que o `repr` de um `Vector` se parecesse com `Vector([3.0, 4.0, 5.0])` e não com `Vector(array('d', [3.0, 4.0, 5.0]))`, porque a existência de um `array` dentro de um `Vector` é um detalhe de implementação. Como essas chamadas ao construtor criam objetos `Vector` idênticos, preferi a sintaxe mais simples, usando um argumento `list`.
 
 Ao escrever o `+__repr__+`, poderia ter produzido uma versão para exibição simplificada de `components` com essa expressão: `reprlib.repr(list(self._components))`. Isso, entretanto, geraria algum desperdício, pois eu estaria copiando cada item de `self._components` para uma `list` apenas para usar a `list` no `repr`. Em vez disso, decidi aplicar `reprlib.repr` diretamente no array `self._components`, e então remover os caracteres fora dos `[]`. É isso o que faz a segunda linha do
 `+__repr__+` no <<ex_vector_v1>>.
@@ -882,7 +882,7 @@ E daí Alex Martelli voltou para sugerir:
 
 [quote]
 ____
-A soma é necessária com tanta frequência que eu não me importaria de forma alguma se Python a tornasse uma função embutida. Mas "reduce(operator.add, ..." não é mesmo uma boa maneira de expressar isso, na minha opinião (e vejam que, como um antigo APListafootnote:[NT: Aqui Martelli está se referindo à linguagem https://pt.wikipedia.org/wiki/APL_(linguagem_de_programa%C3%A7%C3%A3o[APL]] e um apreciador da FPfootnote:[NT:E aqui à linguagem https://pt.wikipedia.org/wiki/FP_(linguagem_de_programa%C3%A7%C3%A3o[FP]], eu _deveria_ gostar daquilo, mas não gosto.).
+A soma é necessária com tanta frequência que eu não me importaria de forma alguma se Python a tornasse uma função embutida. Mas `reduce(operator.add, \...)` não é mesmo uma boa maneira de expressar isso, na minha opinião (e vejam que, como um antigo APListafootnote:[NT: Aqui Martelli está se referindo à linguagem https://pt.wikipedia.org/wiki/APL_(linguagem_de_programa%C3%A7%C3%A3o[APL]] e um apreciador da FPfootnote:[NT:E aqui à linguagem https://pt.wikipedia.org/wiki/FP_(linguagem_de_programa%C3%A7%C3%A3o[FP]], eu _deveria_ gostar daquilo, mas não gosto).
 ____
 
 Martelli então sugere uma função `sum()`, que ele mesmo programa e propõe para Python. Ela se torna uma função embutida no Python 2.3, lançado apenas três meses após aquela conversa na lista. E a sintaxe preferida de Alex se torna a regra:
