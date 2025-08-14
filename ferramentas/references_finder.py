@@ -2,10 +2,15 @@
 
 import re
 import configparser
+from pathlib import Path 
 
 
-book_dir = '../capitulos/' 
-FILES = [book_dir+"/cap%02d.adoc"%i for i in range(1,25)]
+book_dir = Path('../online') 
+FILES = [(book_dir / f'cap{i:02d}.adoc') for i in range(1,25)]
+
+print(book_dir)
+for file in FILES:
+     print(repr(file))
 
 def find_anchors(file):
     """Encontra todas as âncoras em um capítulo"""
@@ -56,23 +61,26 @@ def find_all_xrefs(repeticao = "False"):
     for file in FILES:
         with open(file,"r",encoding="utf-8") as fp:
             f = fp.read()
-        actual_chap = re.search(r'\[\[[\w-]+\]\]', f).group(0)[2:-2]
-        xrefs_ini += f'\n[{actual_chap}]\n'  # Escreve o nome do capítulo no arquivo
+        match = re.search(r'\[\[[\w-]+\]\]', f)
+        if match is None:
+            continue
+        current_chap = match.group(0)[2:-2]
+        xrefs_ini += f'\n[{current_chap}]\n'  # Escreve o nome do capítulo no arquivo
         xrefs_chap = dict() #  {xref, parte}
         refs = find_refs(f)
         for ref in refs:
             if ref in xrefs_chap and repeticao:  
                 continue  # Pula caso a referência encontrada já esteja listada
-            elif ref in anchors[actual_chap]:
+            elif ref in anchors[current_chap]:
                 continue  # Pula caso a referência encontrada esteja no próprio capítulo
-            elif ref in chapters and parte[ref] != parte[actual_chap]:
+            elif ref in chapters and parte[ref] != parte[current_chap]:
                 # A referência encontrada é um capítulo
                 xrefs_chap[ref] = f'{parte[ref]}'
             else:
                 for chapter in chapters:  # Procura em cada cap pela âncora
                     if ref in anchors[chapter]:
                         # A referência encontrada é uma âncora dentro de um capítulo
-                        if parte[chapter] != parte[actual_chap]:
+                        if parte[chapter] != parte[current_chap]:
                             xrefs_chap[ref] = f'do capítulo [[{chapter}]] da {parte[chapter]}'
                     break
                 else:
