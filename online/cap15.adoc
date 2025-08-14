@@ -1,0 +1,1586 @@
+[[ch_more_types]]
+== Mais dicas de tipo
+
+[quote, Guido van Rossum, um fã do Monty Python]
+____
+Aprendi uma dolorosa lição: para programas pequenos, a tipagem dinâmica é ótima.
+Para programas grandes é necessária uma abordagem mais disciplinada.
+E ajuda se a linguagem der a você aquela disciplina, ao invés de dizer "Bem, faça o que quiser".footnote:[De um vídeo no YouTube da
+_A Language Creators' Conversation: Guido van Rossum, James Gosling, Larry Wall & Anders Hejlsberg_ ("Uma Conversa entre Criadores de Linguagens: Guido van Rossum, James Gosling, Larry Wall & Anders Hejlsberg), transmitido em 2 de abril de 2019. A citação (editada por brevidade) começa em https://fpy.li/15-1[1:32:05].
+A transcrição completa está disponível em https://github.com/fluentpython/language-creators (EN).]
+____
+
+
+Esse((("gradual type system", "topics covered"))) capítulo é uma continuação do <<ch_type_hints_def>>, e fala mais sobre o sistema de tipagem gradual de Python.
+Os tópicos principais são:
+
+* Assinaturas de funções sobrepostas
+* `typing.TypedDict`: dando dicas de tipos para `dicts` usados como registros
+* Coerção de tipo
+* Acesso a dicas de tipo durante a execução
+* Tipos genéricos
+** Declarando uma classe genérica
+** Variância: tipos invariantes, covariantes e contravariantes
+** Protocolos estáticos genéricos
+
+=== Novidades nesse capítulo
+
+Esse((("gradual type system", "significant changes to"))) capítulo é inteiramente novo, escrito para essa segunda edição de _Python Fluente_. Vamos começar com sobreposições.
+
+[[overload_sec]]
+=== Assinaturas sobrepostas
+
+No Python, funções((("gradual type system", "overloaded signatures", id="GTSoverload15")))((("overloaded signatures", id="overlaodsig15")))((("@typing.overload decorator", id="attyping15"))) podem aceitar diferentes combinações de argumentos.
+
+O decorador `@typing.overload` permite anotar tais combinações. Isso é particularmente importante quando o tipo devolvido pela função depende do tipo de dois ou mais parâmetros.
+
+Considere a função embutida `sum`. Esse é o texto de `help(sum)`.footnote:[NT: Texto original em inglês: "Return the sum of a 'start' value (default: 0) plus an iterable of numbers
+When the iterable is empty, return the start value.
+This function is intended specifically for use with numeric values and may reject non-numeric types"]:
+
+[source]
+----
+>>> help(sum)
+sum(iterable, /, start=0)
+    Devolve a soma de um valor 'start' (default: 0) mais a soma dos números de um iterável
+
+    Quando o iterável é vazio, devolve o valor inicial ('start').
+    Essa função é direcionada especificamente para uso com valores numéricos e pode rejeitar tipos não-numéricos.
+----
+
+A função embutida `sum` é escrita em C, mas o _typeshed_ tem dicas de tipos sobrepostas para ela, em https://fpy.li/15-2[_builtins.pyi_]:
+
+[source, python3]
+----
+@overload
+def sum(__iterable: Iterable[_T]) -> Union[_T, int]: ...
+@overload
+def sum(__iterable: Iterable[_T], start: _S) -> Union[_T, _S]: ...
+----
+
+Primeiro, vamos olhar a sintaxe geral das sobreposições.
+Esse acima é todo o código sobre `sum` que você encontrará no arquivo stub (_.pyi_).
+A implementação estará em um arquivo diferente.
+As reticências (`\...`) não tem qualquer função além de cumprir a exigência sintática para um corpo de função, como no caso de `pass`.
+Assim os arquivos _.pyi_ são arquivos Python válidos.
+
+Como mencionado na <<arbitrary_arguments_sec>>, os dois sublinhados prefixando `+__iterable+` são a convenção da PEP 484 para argumentos apenas posicionais, que é verificada pelo Mypy.
+Isso significa que você pode invocar `sum(my_list)`, mas não `sum(__iterable = my_list)`.
+
+O verificador de tipo tenta fazer a correspondência entre os argumentos dados com cada assinatura sobreposta, em ordem.
+A chamada `sum(range(100), 1000)` não casa com a primeira sobreposição, pois aquela assinatura tem apenas um parâmetro. Mas casa com a segunda.
+
+Você pode também usar `@overload` em um modulo Python regular, colocando as assinaturas sobrepostas logo antes da assinatura real da função e de sua implementação.
+O <<sum_overload_ex>> mostra como `sum` apareceria anotada e implementada em um módulo Python.
+
+[[sum_overload_ex]]
+._mysum.py_: definição da função `sum` com assinaturaas sobrepostas
+====
+[source, python3]
+----
+include::../code/15-more-types/mysum.py[]
+----
+====
+<1> Precisamos deste segundo `TypeVar` na segunda assinatura.
+<2> Essa assinatura é para o caso simples: `sum(my_iterable)`.
+O tipo do resultado pode ser `T`—o tipo dos elementos que `my_iterable` produz—ou pode ser `int`, se o iterável for vazio, pois o valor default do parâmetro `start` é `0`.
+<3> Quando `start` é dado, ele pode ser de qualquer tipo `S`, então o tipo do resultado
+é `Union[T, S]`.
+É por isso que precisamos de `S`. Se `T` fosse reutilizado aqui, então o tipo de `start` teria que ser do mesmo tipo dos elementos de `Iterable[T]`.
+<4> A assinatura da implementação efetiva da função não tem dicas de tipo.
+
+São muitas linhas para anotar uma função de uma única linha.
+Sim, eu sei, provavelmente isso é excessivo.
+Mas pelo menos a função do exemplo não é `foo`.
+
+Se você quiser aprender sobre `@overload` lendo código, o _typeshed_ tem centenas de exemplos.
+Quando escrevo esse capítulo, o https://fpy.li/15-3[arquivo stub] do _typeshed_ para as funções embutidas de Python tem 186 sobreposições—mais que qualquer outro na biblioteca padrão.
+
+.Aproveite a tipagem gradual
+[TIP]
+====
+Tentar produzir código 100% anotado pode  levar a dicas de tipo que acrescentam muito ruído e pouco valor agregado. Refatoração para simplificar as dicas de tipo pode levar a APIs pesadas.
+Algumas vezes é melhor ser pragmático, e deixar parte do código sem dicas de tipo.
+====
+
+As APIs convenientes e práticas que consideramos pythônicas são muitas vezes difíceis de anotar.
+Na próxima seção veremos um exemplo:
+são necessárias seis sobreposições para anotar adequadamente a flexível função embutida `max`.
+
+
+[[max_overload_sec]]
+==== Sobreposição máxima
+
+É((("max() function", id="maxfunc15")))((("functions", "max() function"))) difícil acrescentar dicas de tipo a funções que usam os poderosos recursos dinâmicos de Python.
+
+Quando estudava o typeshed, enconterei o relatório de bug https://fpy.li/shed4051[#4051] (EN):
+Mypy não avisou que é ilegal passar `None` como um dos argumentos para a função embutida `max()`, ou passar um iterável que em algum momento produz `None`.
+Nos dois casos, você recebe uma exceção como a seguinte durante a execução:
+
+----
+TypeError: '>' not supported between instances of 'int' and 'NoneType'
+
+[NT: TypeError: '>' não é suportado entre instâncias de 'int' e 'NoneType']
+----
+
+A documentação de `max` começa com a seguinte sentença:
+
+[quote]
+____
+Devolve o maior item em um iterável ou o maior de dois ou mais argumentos.
+____
+
+Para mim, essa é uma descrição bastante intuitiva.
+
+Mas se eu for anotar uma função descrita nesses termos, tenho que perguntar: qual dos dois? Um iterável ou dois ou mais argumentos?
+
+A realidade é mais complicada, porque `max` também pode receber dois argumentos opcionais:
+`key` e `default`.
+
+Escrevi `max` em Python para tornar mais fácil ver a relação entre o funcionamento da função e as anotações sobrepostas (a função embutida original é escrita em C); veja o <<mymax_ex>>.
+
+[[mymax_ex]]
+._mymax.py_: Versão da funcão `max` em Python
+====
+[source, python3]
+----
+# imports and definitions omitted, see next listing
+
+MISSING = object()
+EMPTY_MSG = 'max() arg is an empty sequence'
+
+# overloaded type hints omitted, see next listing
+
+include::../code/15-more-types/protocol/mymax/mymax.py[tags=MYMAX]
+----
+====
+
+O foco desse exemplo não é a lógica de `max`, então não vou perder tempo com a implementação, exceto para explicar `MISSING`.
+A constante `MISSING` é uma instância única de `object`, usada como sentinela.
+É o valor default para o argumento nomeado `default=`, de modo que `max` pode aceitar `default=None` e ainda assim distinguir entre duas situações.
+
+Quando `first` é um iterável vazio...
+
+. O usuário não forneceu um argumento para `default=`, então ele é `MISSING`, e `max` gera um `ValueError`.
+. O usuário forneceu um valor para `default=`, incluindo `None`, e então `max` devolve o valor de `default`.
+
+Para consertar o https://fpy.li/shed4051[issue #4051], escrevi o código no <<mymax_types_ex>>.footnote:[Agradeço a Jelle Zijlstra—um mantenedor do _typeshed_—que me ensinou várias coisas, incluindo como reduzir minhas nove sobreposições originais para seis.]
+
+[[mymax_types_ex]]
+._mymax.py_: início do módulo, com importações, definições e sobreposições
+====
+[source, python3]
+----
+include::../code/15-more-types/protocol/mymax/mymax.py[tags=MYMAX_TYPES]
+----
+====
+
+Minha implementação de `max` em Python tem mais ou menos o mesmo tamanho daquelas importações e declarações de tipo.
+Graças ao _duck typing_, meu código não tem nenhuma verificação usando `isinstance`, e fornece a mesma verificação de erro daquelas dicas de tipo—mas apenas durante a execução, claro.
+
+Um benefício fundamental de `@overload` é declarar o tipo devolvido da forma mais precisa possível, de acordo com os tipos dos argumentos recebidos.
+Veremos esse benefício a seguir, estudando as sobreposições de `max`, em grupos de duas ou três por vez.
+
+===== Argumentos implementando SupportsLessThan, mas key e default não são fornecidos
+
+[source, python3]
+----
+@overload
+def max(__arg1: LT, __arg2: LT, *_args: LT, key: None = ...) -> LT:
+    ...
+# ... lines omitted ...
+@overload
+def max(__iterable: Iterable[LT], *, key: None = ...) -> LT:
+    ...
+----
+
+Nesses casos, as entradas são ou argumentos separados do tipo `LT` que implementam `SupportsLessThan`, ou um `Iterable` de itens desse tipo.
+O tipo devolvido por `max` é do mesmo tipo dos argumentos ou itens reais, como vimos na <<bounded_typevar_sec>>.
+
+Amostras de chamadas que casam com essas sobreposições:
+
+[source, python3]
+----
+max(1, 2, -3)  # returns 2
+max(['Go', 'Python', 'Rust'])  # returns 'Rust'
+----
+
+===== Argumento key fornecido, mas default não
+
+[source, python3]
+----
+@overload
+def max(__arg1: T, __arg2: T, *_args: T, key: Callable[[T], LT]) -> T:
+    ...
+# ... lines omitted ...
+@overload
+def max(__iterable: Iterable[T], *, key: Callable[[T], LT]) -> T:
+    ...
+----
+
+As entradas podem ser item separados de qualquer tipo `T` ou um único
+`Iterable[T]`, e `key=` deve ser um invocável que recebe um argumento do mesmo tipo `T`, e devolve um valor que implementa `SupportsLessThan`.
+O tipo devolvido por `max` é o mesmo dos argumentos reais.
+
+Amostras de chamadas que casam com essas sobreposições:
+
+[source, python3]
+----
+max(1, 2, -3, key=abs)  # returns -3
+max(['Go', 'Python', 'Rust'], key=len)  # returns 'Python'
+----
+
+===== Argumento default fornecido, key não
+
+[source, python3]
+----
+@overload
+def max(__iterable: Iterable[LT], *, key: None = ...,
+        default: DT) -> Union[LT, DT]:
+    ...
+----
+
+A entrada é um iterável de itens do tipo `LT` que implemente `SupportsLessThan`.
+O argumento `default=` é o valor devolvido quando `Iterable` é vazio.
+Assim, o tipo devolvido por `max` deve ser uma `Union` do tipo `LT` e do tipo do argumento `default`.
+
+Amostras de chamadas que casam com essas sobreposições:
+
+[source, python3]
+----
+max([1, 2, -3], default=0)  # returns 2
+max([], default=None)  # returns None
+----
+
+
+===== Argumentos key e default fornecidos
+
+[source, python3]
+----
+@overload
+def max(__iterable: Iterable[T], *, key: Callable[[T], LT],
+        default: DT) -> Union[T, DT]:
+    ...
+----
+
+As entradas são:
+
+* Um `Iterable` de itens de qualquer tipo `T`
+* Invocável que recebe um argumento do tipo `T` e devolve um valor do tipo `LT`, que implementa `SupportsLessThan`
+* Um valor default de qualquer tipo `DT`
+
+O tipo devolvido por `max` deve ser uma `Union` do tipo `T` e do tipo do argumento `default`:
+
+
+[source, python3]
+----
+max([1, 2, -3], key=abs, default=None)  # returns -3
+max([], key=abs, default=None)  # returns None
+----
+
+
+
+==== Lições da sobreposição de max
+
+
+Dicas de tipo permitem ao Mypy marcar uma chamada como `max([None, None])` com essa mensagem de erro:
+
+----
+mymax_demo.py:109: error: Value of type variable "_LT" of "max"
+  cannot be "None"
+----
+
+Por outro lado, ter de escrever tantas linhas para suportar o verificador de tipo pode desencorajar a criação de funções convenientes e flexíveis como `max`.
+Se eu precisasse reinventar também a função `min`, poderia refatorar e reutilizar a maior parte da implementação de `max`.
+Mas teria que copiar e colar todas as declarações de sobreposição—apesar delas serem idênticas para `min`, exceto pelo nome da função.
+
+Meu amigo João S. O. Bueno—um dos desenvolvedores Python mais inteligentes que conheço—escreveu o seguinte https://fpy.li/15-4[tweet]:
+
+____
+Apesar de ser difícil expressar a assinatura de `max`—ela se encaixa muito facilmente em nossa estrutura mental. Considero a expressividade das marcas de anotação muito limitadas, se comparadas à de Python.
+____
+
+Vamos agora examinar o elemento de tipagem `TypedDict`.
+Ele não é tão útil quanto imaginei inicialmente, mas tem seus usos.
+Experimentar com `TypedDict` demonstra as limitações da tipagem estática para lidar com estruturas dinâmicas, como dados em formato JSON.((("", startref="maxfunc15")))((("", startref="overlaodsig15")))((("", startref="attyping15")))((("", startref="GTSoverload15")))
+
+
+[[typeddict_sec]]
+=== TypedDict
+
+[WARNING]
+====
+É((("gradual type system", "TypedDict", id="GTStypeddict15")))((("TypedDict", id="typeddict15"))) tentador usar `TypedDict` para se proteger contra erros ao tratar estruturas de dados dinâmicas como as respostas da API JSON.
+Mas os exemplos aqui deixam claro que o tratamento correto do JSON precisa acontecer durante a execução, e não com verificação estática de tipo.
+Para verificar estruturas similares a JSON usando dicas de tipo durante a execução, dê uma olhada no pacote https://fpy.li/15-5[_pydantic_] no PyPI.
+====
+
+Algumas vezes os dicionários de Python são usados como registros, as chaves interpretadas como nomes de campos e os valores como valores dos campos de diferentes tipos. Considere, por exemplo, um registro descrevendo um livro, em JSON ou Python:
+
+
+
+[source, javascript]
+----
+{"isbn": "0134757599",
+ "title": "Refactoring, 2e",
+ "authors": ["Martin Fowler", "Kent Beck"],
+ "pagecount": 478}
+----
+
+Antes de Python 3.8, não havia uma boa maneira de anotar um registro como esse, pois os tipos de mapeamento que vimos na <<mapping_type_sec>> limitam os valores a um mesmo tipo.
+
+Aqui estão duas tentativas ruins de anotar um registro como o objeto JSON acima:
+
+`Dict[str, Any]`::
+Os valores podem ser de qualquer tipo.
+
+`Dict[str, Union[str, int, List[str]]]`::
+Difícil de ler, e não preserva a relação entre os nomes dos campos e seus respectivos tipos: `title` deve ser uma `str`, ele não pode ser um `int` ou uma `List[str]`.
+
+A https://fpy.li/pep589[PEP 589—TypedDict: Type Hints for Dictionaries with a Fixed Set of Keys (_TypedDict: Dicas de Tipo para Dicionários com um Conjunto Fixo de Chaves_)] enfrenta esse problema. O <<bookdict_ex>> mostra um `TypedDict` simples.
+
+[[bookdict_ex]]
+._books.py_: a definição de `BookDict`
+====
+[source, py]
+----
+include::../code/15-more-types/typeddict/books.py[tags=BOOKDICT]
+----
+====
+À primeira vista, `typing.TypedDict` pode parecer uma fábrica de classes de dados, similar a `typing.NamedTuple`—tratada no <<ch_dataclass>>.
+
+A similaridade sintática é enganosa. `TypedDict` é muito diferente.
+Ele existe apenas para o benefício de checadores de tipos, e não tem qualquer efeito durante a execução.
+
+`TypedDict` fornece duas coisas:
+
+* Uma sintaxe similar à de classe para anotar uma `dict` com dicas de tipo para os valores de cada "campo".
+* Um construtor que informa ao verificador de tipo para esperar um `dict` com chaves e valores como especificados.
+
+Durante a execução, um construtor de `TypedDict` como `BookDict` é um placebo:
+ele tem o mesmo efeito de uma chamada ao construtor de `dict` com os mesmos  argumentos.
+
+O fato de `BookDict` criar um `dict` simples também significa que:
+
+* Os "campos" na definiçao da pseudoclasse não criam atributos de instância.
+* Não é possível escrever inicializadores com valores default para os "campos".
+* Definições de métodos não são permitidas.
+
+Vamos explorar o comportamento de um `BookDict` durante a execução (no <<bookdict_first_use_ex>>).
+
+[[bookdict_first_use_ex]]
+.Usando um `BookDict`, mas não exatamente como planejado
+====
+[source, pycon]
+----
+>>> from books import BookDict
+>>> pp = BookDict(title='Programming Pearls',  # <1>
+...               authors='Jon Bentley',  # <2>
+...               isbn='0201657880',
+...               pagecount=256)
+>>> pp  # <3>
+{'title': 'Programming Pearls', 'authors': 'Jon Bentley', 'isbn': '0201657880',
+ 'pagecount': 256}
+>>> type(pp)
+<class 'dict'>
+>>> pp.title  # <4>
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'dict' object has no attribute 'title'
+>>> pp['title']
+'Programming Pearls'
+>>> BookDict.__annotations__  # <5>
+{'isbn': <class 'str'>, 'title': <class 'str'>, 'authors': typing.List[str],
+ 'pagecount': <class 'int'>}
+----
+====
+<1> É possível invocar `BookDict` como um construtor de `dict`, com argumentos nomeados, ou passando um argumento `dict`—incluindo um literal `dict`.
+<2> Oops...Esqueci que `authors` deve ser uma lista. Mas tipagem gradual significa que não há checagem de tipo durante a execução.
+<3> O resultado da chamada a `BookDict` é um `dict` simples...
+<4> ...assim não é possível ler os campos usando a notação `objeto.campo`.
+<5> As dicas de tipo estão em `+BookDict.__annotations__+`, e não em `pp`.
+
+Sem um verificador de tipo, `TypedDict` é tão útil quanto comentários em um programa:
+pode ajudar a documentar o código, mas só isso.
+As fábricas de classes do <<ch_dataclass>>, por outro lado,
+são úteis mesmo se você não usar um verificador de tipo,
+porque durante a execução elas geram uma classe customizada que pode ser instanciada.
+Elas também fornecem vários métodos ou funções úteis,
+listadas na <<builders_compared_tbl>> do <<ch_dataclass>>.
+
+O <<bookdict_demo_ex>> cria um `BookDict` válido e tenta executar algumas operações com ele.
+A seguir, o <<bookdict_demo_check>> mostra  como `TypedDict` permite que o Mypy encontre erros.
+
+[[bookdict_demo_ex]]
+._demo_books.py_: operações legais e ilegais em um `BookDict`
+====
+[source, py]
+----
+include::../code/15-more-types/typeddict/demo_books.py[]
+----
+====
+<1> Lembre-se de adicionar o tipo devolvido, assim o Mypy não ignora a função.
+<2> Este é um `BookDict` válido: todas as chaves estão presentes, com valores do tipo correto.
+<3> O Mypy vai inferir o tipo de `authors` a partir da anotação na chave `'authors'` em `BookDict`.
+<4> `typing.TYPE_CHECKING` só é `True` quando os tipos no programa estão sendo verificados. Durante a execução ele é sempre falso.
+<5> O `if` anterior evita que `reveal_type(authors)` seja chamado durante a execução.
+`reveal_type` não é uma função de Python disponível durante a execução, mas sim um instrumento de depuração fornecido pelo Mypy.
+Por isso não há um `import` para ela.
+Veja sua saída no <<bookdict_demo_check>>.
+<6> As últimas três linhas da função `demo` são ilegais.
+Elas vão causar mensagens de erro no <<bookdict_demo_check>>.
+
+Verificando a tipagem em _demo_books.py_, do <<bookdict_demo_ex>>, obtemos o <<bookdict_demo_check>>.
+
+[[bookdict_demo_check]]
+.Verificando os tipos em _demo_books.py_
+====
+[source]
+----
+…/typeddict/ $ mypy demo_books.py
+demo_books.py:13: note: Revealed type is 'built-ins.list[built-ins.str]'  <1>
+demo_books.py:14: error: Incompatible types in assignment
+                  (expression has type "str", variable has type "List[str]")  <2>
+demo_books.py:15: error: TypedDict "BookDict" has no key 'weight'  <3>
+demo_books.py:16: error: Key 'title' of TypedDict "BookDict" cannot be deleted  <4>
+Found 3 errors in 1 file (checked 1 source file)
+----
+====
+[role="pagebreak-before less_space"]
+<1> Essa observação é o resultado de `reveal_type(authors)`.
+<2> O tipo da variável `authors` foi inferido a partir do tipo da expressão que a inicializou, `book['authors']`.
+Você não pode atribuir uma `str` para uma variável do tipo `List[str]`.
+Verificadores de tipo em geral não permitem que o tipo de uma variável mude.footnote:[Em maio de 2020, o pytype ainda permite isso.
+Mas seu https://fpy.li/15-6[FAQ] (EN) diz que tal operação será proibida no futuro.
+Veja a pergunta "Why didn’t pytype catch that I changed the type of an annotated variable?" (_Por que o pytype não avisou quando eu mudei o tipo de uma variável anotada?_) no https://fpy.li/15-6[FAQ] (EN) do pytype.]
+<3> Não é permitido atribuir a uma chave que não é parte da definição de `BookDict`.
+<4> Não se pode apagar uma chave que é parte da definição de `BookDict`.
+
+Vejamos agora `BookDict` sendo usado em assinaturas de função, para checar o tipo em chamadas de função.
+
+Imagine que você precisa gerar XML a partir de registros de livros como esse:
+
+[source, xml]
+----
+<BOOK>
+  <ISBN>0134757599</ISBN>
+  <TITLE>Refactoring, 2e</TITLE>
+  <AUTHOR>Martin Fowler</AUTHOR>
+  <AUTHOR>Kent Beck</AUTHOR>
+  <PAGECOUNT>478</PAGECOUNT>
+</BOOK>
+----
+
+Se você estivesse escrevendo o código em MicroPython, para ser integrado a um pequeno microcontrolador, poderia escrever uma função parecida com a que aparece no <<to_xml_ex>>.footnote:[Prefiro usar o pacote https://fpy.li/15-8[lxml] (EN) para gerar e interpretar XML: ele é fácil de começar a usar, completo e rápido. Infelizmente, nem o lxml nem o https://docs.python.org/pt-br/3/library/xml.etree.elementtree.html[_ElementTree_] do próprio Python cabem na RAM limitada de meu microcontrolador hipotético.]
+
+[[to_xml_ex]]
+._books.py_: a função `to_xml`
+====
+[source, py]
+----
+include::../code/15-more-types/typeddict/books.py[tags=TOXML]
+----
+====
+<1> O principal objetivo do exemplo: usar `BookDict` em uma assinatura de função.
+<2> Se a coleção começa vazia, o Mypy não tem inferir o tipo dos elementos.
+Por isso a anotação de tipo é necessária aqui.footnote:[A documentação do Mypy discute isso na seção https://fpy.li/15-11["Types of empty collections" (_Tipos de coleções vazias_)] (EN) da página https://fpy.li/15-10["Common issues and solutions" (_Problemas comuns e suas soluções_)] (EN).]
+<3> O Mypy entende testes com `isinstance`, e trata `value` como uma `list` neste bloco.
+<4> Quando usei `key == 'authors'` como condição do `if` que guarda esse bloco,
+o Mypy encontrou um erro nessa linha: `"object" has no attribute "++__iter__++"` (_"object" não tem um atributo "+__iter__+"_ ), porque inferiu o tipo de `value` devolvido por `book.items()` como `object`, que não suporta o método `+__iter__+` exigido pela expressão geradora.
+O teste com `isinstance` funciona porque garante que `value` é uma `list` nesse bloco.
+
+O <<from_json_any_ex>> mostra uma função que interpreta uma `str` JSON e devolve um `BookDict`.
+
+[[from_json_any_ex]]
+.books_any.py: a função `from_json`
+====
+[source, py]
+----
+include::../code/15-more-types/typeddict/books_any.py[tags=FROMJSON]
+----
+====
+<1> O tipo devolvido por `json.loads()` é `Any`.footnote:[Brett Cannon, Guido van Rossum e outros vem discutindo como escrever dicas de tipo para `json.loads()` desde 2016, em
+https://fpy.li/15-12[Mypy issue #182: Define a JSON type (_Definir um tipo JSON_)] (EN).]
+<2> Posso devolver `whatever`—de tipo `Any`—porque `Any` é _consistente-com_ todos os tipos, incluindo o tipo declarado do valor devolvido, `BookDict`.
+
+O segundo ponto do <<from_json_any_ex>> é muito importante de ter em mente:
+O Mypy não vai apontar qualquer problema nesse código, mas durante a execução o valor em `whatever` pode não se adequar à estrutura de `BookDict`—na verdade, pode nem mesmo ser um `dict`!
+
+Se você rodar o Mypy com `--disallow-any-expr`, ele vai reclamar sobre as duas linhas no corpo de `from_json`:
+
+[source]
+----
+…/typeddict/ $ mypy books_any.py --disallow-any-expr
+books_any.py:30: error: Expression has type "Any"
+books_any.py:31: error: Expression has type "Any"
+Found 2 errors in 1 file (checked 1 source file)
+----
+
+As linhas 30 e 31 mencionadas no trecho acima são o corpo da função `from_json`.
+Podemos silenciar o erro de tipo acrescentando uma dica de tipo à inicialização da variável `whatever`, como no <<from_json_ex>>.
+
+[[from_json_ex]]
+.books.py: a função `from_json` com uma anotação de variável
+====
+[source, py]
+----
+include::../code/15-more-types/typeddict/books.py[tags=FROMJSON]
+----
+====
+<1> `--disallow-any-expr` não gera erros quando uma expressão de tipo `Any` é imediatamente atribuída a uma variável com uma dica de tipo.
+<2> Agora `whatever` é do tipo `BookDict`, o tipo declarado do valor devolvido.
+
+[WARNING]
+====
+Não se deixe enganar por uma falsa sensação de tipagem segura com o <<from_json_ex>>!
+Olhando o código estático, o verificador de tipo não tem como prever se `json.loads()` irá devolver qualquer coisa parecida com um `BookDict`.
+Apenas a validação durante a execução pode garantir isso.
+====
+
+A checagem de tipos estática é incapaz de prevenir erros cm código inerentemente dinâmico, como `json.loads()`, que cria objetos Python de tipos diferentes durante a execução. O <<bookdict_demo_not_book_ex>>, o <<bookdict_demo_not_book_check>> e o <<bookdict_demo_not_book_run>> demonstram isso.
+
+[[bookdict_demo_not_book_ex]]
+.demo_not_book.py: `from_json` devolve um `BookDict` inválido, e `to_xml` o aceita
+====
+[source, py]
+----
+include::../code/15-more-types/typeddict/demo_not_book.py[]
+----
+====
+<1> Essa linha não produz um `BookDict` válido—veja o conteúdo de `NOT_BOOK_JSON`.
+<2> Vamos deixar o Mypy revelar alguns tipos.
+<3> Isso não deve causar problemas: `print` consegue lidar com `object` e com qualquer outro tipo.
+<4> `BookDict` não tem uma chave `'flavor'`, mas o fonte JSON tem...o que vai acontecer??
+<5> Lembre-se da assinatura: `def to_xml(book: BookDict) -> str:`.
+<6> Como será a saída XML?
+
+Agora verificamos _demo_not_book.py_ com o Mypy (no <<bookdict_demo_not_book_check>>).
+
+[[bookdict_demo_not_book_check]]
+.Relatório do Mypy para _demo_not_book.py_, reformatado por legibilidade
+====
+[source]
+----
+…/typeddict/ $ mypy demo_not_book.py
+demo_not_book.py:12: note: Revealed type is
+   'TypedDict('books.BookDict', {'isbn': built-ins.str,
+                                 'title': built-ins.str,
+                                 'authors': built-ins.list[built-ins.str],
+                                 'pagecount': built-ins.int})'  <1>
+demo_not_book.py:13: note: Revealed type is 'built-ins.list[built-ins.str]'  <2>
+demo_not_book.py:16: error: TypedDict "BookDict" has no key 'flavor'  <3>
+Found 1 error in 1 file (checked 1 source file)
+----
+====
+<1> O tipo revelado é o tipo nominal, não o conteúdo de `not_book` durante a execução.
+<2> De novo, este é o tipo nominal de `not_book['authors']`, como definido em `BookDict`. Não o tipo durante a execução.
+<3> Esse erro é para a linha `print(not_book['flavor'])`: essa chave não existe no tipo nominal.
+
+Agora vamos executar _demo_not_book.py_, mostrando o resultado no <<bookdict_demo_not_book_run>>.
+
+[[bookdict_demo_not_book_run]]
+.Resultado da execução de `demo_not_book.py`
+====
+[source]
+----
+…/typeddict/ $ python3 demo_not_book.py
+{'title': 'Andromeda Strain', 'flavor': 'pistachio', 'authors': True}  <1>
+pistachio  <2>
+<BOOK>  <3>
+        <TITLE>Andromeda Strain</TITLE>
+        <FLAVOR>pistachio</FLAVOR>
+        <AUTHORS>True</AUTHORS>
+</BOOK>
+----
+====
+<1> Isso não é um `BookDict` de verdade.
+<2> O valor de `not_book['flavor']`.
+<3> `to_xml` recebe um argumento `BookDict`, mas não há qualquer verificação durante a execução: entra lixo, sai lixo.
+
+O <<bookdict_demo_not_book_run>> mostra que _demo_not_book.py_ devolve bobagens, mas não há qualquer erro durante a execução.
+Usar um `TypedDict` ao tratar dados em formato JSON não resultou em uma tipagem segura.
+
+Olhando o código de `to_xml` no <<to_xml_ex>> através das lentes do _duck typing_, o argumento `book` deve fornecer um método `.items()` que devolve um iterável de tuplas na forma `(chave, valor)`, onde:
+
+* `chave` deve ter um método `.upper()`
+* `valor` pode ser qualquer coisa
+
+A conclusão desta demonstração: quando estamos lidando com dados de estrutura dinâmica, tal como JSON ou XML, `TypedDict` não é, de forma alguma, um substituto para a validaçào de dados durante a execução. Para isso, use o https://fpy.li/15-5[_pydantic_] (EN).
+
+`TypedDict` tem mais recursos, incluindo suporte a chaves opcionais, uma forma limitada de herança e uma sintaxe de declaração alternativa. Para saber mais sobre ele, revise a
+https://fpy.li/pep589[PEP 589—TypedDict: Type Hints for Dictionaries with a Fixed Set of Keys (_TypedDict: Dicas de Tipo para Dicionários com um Conjunto Fixo de Chaves_)] (EN).
+
+Vamos agora voltar nossas atenções para uma função que é melhor evitar, mas que algumas vezes é inevitável: `typing.cast`.((("", startref="typeddict15")))((("", startref="typeddict15")))
+
+
+[[type_casting_sec]]
+=== Coerção de Tipo
+
+Nenhum((("gradual type system", "type casting", id="GTStypecast15")))((("type casting", id="typecast15"))) sistema de tipos é perfeito, nem tampouco os verificadores estáticos de tipo, as dicas de tipo no projeto _typeshed_ ou as dicas de tipo em pacotes de terceiros que as oferecem.
+
+A função especial `typing.cast()` fornece uma forma de lidar com defeitos ou incorreções nas dicas de tipo em código que não podemos consertar.
+A https://fpy.li/15-14[documentação do Mypy 0.930] (EN) explica:
+
+[quote]
+____
+Coerções são usadas para silenciar avisos espúrios do checador de tipos, e dão uma ajuda ao verificador quando ele não consegue entender direito o que está acontecendo.
+____
+
+Durante a execução, `typing.cast` não faz absolutamente nada. Essa é sua
+https://fpy.li/15-15[implementação]:
+
+[source, python]
+----
+def cast(typ, val):
+    """Cast a value to a type.
+    This returns the value unchanged.  To the type checker this
+    signals that the return value has the designated type, but at
+    runtime we intentionally don't check anything (we want this
+    to be as fast as possible).
+    """
+    return val
+----
+
+A PEP 484 exige que os checadores de tipos "acreditem cegamente" em `cast`.
+A https://fpy.li/15-16[seção "Casts" (_Coerções_) da PEP 484] mostra um exemplo onde o verificador precisa da orientação de `cast`:
+
+[source, python]
+----
+include::../code/15-more-types/cast/find.py[tags=CAST]
+----
+
+A chamada `next()` na expressão geradora vai devolver ou o índice de um item `str` ou gerar `StopIteration`. Assim, `find_first_str` vai sempre devolver uma `str` se não for gerada uma exceção, e `str` é o tipo declarado do valor devolvido.
+
+Mas se a última linha for apenas `return a[index]`, o Mypy inferiria o tipo devolvido como `object`, porque o argumento `a` é declarado como `list[object]`.
+Então `cast()` é necessário para guiar o Mypy.footnote:[O uso de `enumerate` no exemplo serve para confundir intencionalmente o verificador de tipo. Uma implementação mais simples, produzindo strings diretamente, sem passar pelo índice de `enumerate`, seria corretamente analisada pelo Mypy, e o `cast()` não seria necessário.]
+
+Aqui está outro exemplo com `cast`, desta vez para corrigir uma dica de tipo desatualizada na biblioteca padrão de Python.
+No <<tcp_mojifinder_main>>, criei um objeto _asyncio_ , `Server`, e queria obter o endereço que o servidor estava ouvindo.
+Escrevi essa linha de código:
+
+[source, python]
+----
+addr = server.sockets[0].getsockname()
+----
+
+Mas o Mypy informou o seguinte erro:
+
+----
+Value of type "Optional[List[socket]]" is not indexable
+----
+
+A dica de tipo para `Server.sockets` no _typeshed_, em maio de 2021, é válida para Python 3.6, onde o atributo `sockets` podia ser `None`.
+Mas no Python 3.7, `sockets` se tornou uma propriedade, com um _getter_ que sempre devolve uma `list`—que pode ser vazia, se o servidor não tiver um _socket_.
+E desde Python 3.8, esse _getter_ devolve uma `tuple` (usada como uma sequência imutável).
+
+Já que não posso consertar o _typeshed_ nesse instante,footnote:[Relatei o problema em
+https://fpy.li/15-17[issue #5535] no _typeshed_,
+"Dica de tipo errada para o atributo `sockets` em asyncio.base_events.Server sockets attribute.", e ele foi rapidamente resolvido por Sebastian Rittau. Mas decidi manter o exemplo, pois ele ilustra um caso de uso comum para `cast`, e o `cast` que escrevi é inofensivo.] acrescentei um `cast`, assim:
+
+[source, python]
+----
+include::../code/15-more-types/cast/tcp_echo.py[tags=CAST_IMPORTS]
+
+# ... muitas linhas omitidas ...
+
+include::../code/15-more-types/cast/tcp_echo.py[tags=CAST_USE]
+----
+
+////
+PROD: Whitespace at page end, and wrong indenation after page break
+////
+
+Usar `cast` nesse caso exigiu algumas horas para entender o problema e ler o código-fonte de  _asyncio_, para encontrar o tipo correto para _sockets_:
+a classe `TransportSocket` do módulo não-documentado `asyncio.trsock`.
+Também precisei adicionar duas instruções `import` e mais uma linha de código para melhorar a legibilidade.footnote:[Para ser franco, originalmente eu anexei um comentário `# type: ignore` às linhas com +`server.sockets[0]`+ porque, após pesquisar um pouco, encontrei linhas similares na https://docs.python.org/pt-br/3/library/asyncio-stream.html#tcp-echo-server-using-streams[documentação] do _asyncio_ e em um https://fpy.li/15-19[caso de teste] (EN), e aí comecei a suspeitar que o problema não estava em meu código.] Mas agora o código está mais seguro.
+
+O leitor atento pode ser notado que `sockets[0]` poderia gerar um `IndexError`
+se `sockets` estiver vazio.
+Entretanto, até onde entendo o `asyncio`, isso não pode acontecer no <<tcp_mojifinder_main>>, pois no momento em que leio o atributo `sockets`, o `server` já está pronto para aceitar conexões , portanto o atributo não estará vazio. E, de qualquer forma, `IndexError` ocorre durante a execução. O Mypy não consegue localizar esse problema nem mesmo em um caso trivial como `print([][0])`.
+
+[WARNING]
+====
+Não fique muito confortável usando `cast` para silenciar o Mypy, porque normalmente o Mypy está certo quando aponta um erro.
+Se você estiver usando `cast` com frequência, isso é um https://fpy.li/15-20[code smell (_cheiro no código_)] (EN).
+Sua equipe pode estar fazendo um mau uso das dicas de tipo, ou sua base de código pode ter dependências de baixa qualidaade.
+====
+
+Apesar de suas desvantagens, há usos válidos para `cast`.
+Eis algo que Guido van Rossum escreveu sobre isso:
+
+[quote]
+____
+O que está errado com uma chamada a  `cast()` ou um comentário `# type: ignore` ocasionais?footnote:[https://fpy.li/15-21[Mensagem de 18 de maio de 2020] para a lista de email typing-sig.]
+____
+
+[role="pagebreak-before less_space"]
+É insensato banir inteiramente o uso de `cast`, principalmente porque as alternativas para contornar esses problemas são piores:
+
+* `# type: ignore` é menos informativo.footnote:[A sintaxe
++`# type: ignore[code]`+ permite especificar qual erro do Mypy está sendo silenciado, mas os códigos nem sempre são fáceis de interpretar.
+Veja a página https://fpy.li/15-22["Error codes"] na documentação do Mypy.]
+* Usar `Any` é contagioso: já que `Any` é _consistente-com_ todos os tipos, seu abuso pode produzir efeitos em cascata através da inferência de tipo, minando a capacidade do verificador de tipo para detectar erros em outras partes do código.
+
+Claro, nem todos os contratempos de tipagem podem ser resolvidos com `cast`.
+Algumas vezes precisamos de `# type: ignore`, do `Any` ocasional, ou mesmo deixar uma função sem dicas de tipo.
+
+A seguir, vamos falar sobre o uso de anotações durante a execução.((("", startref="typecast15")))((("", startref="GTStypecast15")))
+
+
+[[runtime_annot_sec]]
+=== Lendo dicas de tipo durante a execução
+
+Durante((("gradual type system", "reading hints at runtime", id="GTSruntime15"))) a importação, Python lê as dicas de tipo em funções, classes e módulos, e as armazena em atributos chamados `+__annotations__+`.
+Considere, por exemplo, a função `clip` function no <<ex_clip_annot>>.footnote:[Não vou entrar nos detalhes da implementação de `clip`, mas se você tiver curiosidade, pode ler o módulo completo em
+https://fpy.li/15-23[_clip_annot.py_].]
+
+
+[[ex_clip_annot]]
+.clipannot.py: a assinatura anotada da função `clip`
+====
+[source, py]
+----
+def clip(text: str, max_len: int = 80) -> str:
+----
+====
+
+As dicas de tipo são armazenadas em um `dict` no atributo `+__annotations__+` da função:
+
+[source, pycon]
+----
+>>> from clip_annot import clip
+>>> clip.__annotations__
+{'text': <class 'str'>, 'max_len': <class 'int'>, 'return': <class 'str'>}
+----
+
+A chave `'return'` está mapeada para a dica do tipo devolvido após o símbolo `->` no <<ex_clip_annot>>.
+
+Observe que as anotações são avaliadas pelo interpretador no momento da importação, ao mesmo tempo em que os valores default dos parâmetros são avaliados.
+Por isso os valores nas anotações são as classes Python `str` e `int`,
+e não as strings `'str'` and `'int'`.
+A avaliação das anotações no momento da importação é o padrão desde Python 3.10,
+mas isso pode mudar se a https://fpy.li/pep563[PEP 563] ou a https://fpy.li/pep649[PEP 649] se tornarem o comportamento padrão.
+
+[role="pagebreak-before less_space"]
+[[problems_annot_runtime_sec]]
+==== Problemas com anotações durante a execução
+
+O aumento do uso de dicas de tipo gerou dois problemas:
+
+* Importar módulos usa mais CPU e memória quando são usadas muitas dicas de tipo.
+* Referências a tipos ainda não definidos exigem o uso de strings em vez do tipos reais.
+
+As duas questões são relevantes.
+A primeira pelo que acabamos de ver: anotações são avaliadas pelo interpretador durante a importação e armazenadas no atributo `+__annotations__+`.
+Vamos nos concentrar agora no segundo problema.
+
+Armazenar anotações((("forward reference problem"))) como string é necessário algumas vezes, por causa do problema da "referência adiantada" (_forward reference_): quando uma dica de tipo precisa se referir a uma classe definida mais adiante no mesmo módulo.
+Entretanto uma manifestação comum desse problema no código-fonte não se parece de forma alguma com uma referência adiantada:
+quando um método devolve um novo objeto da mesma classe.
+Já que o objeto classe não está definido até Python terminar a avaliação do corpo da classe, as dicas de tipo precisam usar o nome da classe como string.
+Eis um exemplo:
+
+[source, py]
+----
+class Rectangle:
+    # ... lines omitted ...
+    def stretch(self, factor: float) -> 'Rectangle':
+        return Rectangle(width=self.width * factor)
+----
+
+Escrever dicas de tipo com referências adiantadas como strings é a prática padrão e exigida no Python 3.10. Os checadores de tipos estáticos foram projetados desde o início para lidar com esse problema.
+
+Mas durante a execução, se você escrever código para ler a anotação `return` de `stretch`, vai receber a string `'Rectangle'` em vez de uma referência ao tipo real, a classe `Rectangle`.
+E aí seu código precisa descobrir o que aquela string significa.
+
+O módulo `typing` inclui três funções e uma classe categorizadas
+https://docs.python.org/pt-br/3/library/typing.html#introspection-helpers[Introspection helpers (Auxiliares de introspecção)],
+a mais importantes delas sendo `typing.get_type_hints`.
+Parte de sua documentação afirma:
+
+`get_type_hints(obj, globals=None, locals=None, include_extras=False)`::
+  [...] Isso é muitas vezes igual a `+obj.__annotations__+`. Além disso, referências adiantadas codificadas como strings literais são tratadas por sua avaliação nos espaços de nomes `globals` e `locals`. [...]
+
+[WARNING]
+====
+Desde Python 3.10, a nova função https://fpy.li/15-25[`inspect.get_annotations(…)`] deve ser usada, em vez de pass:[<code>typing.&#x200b;get_&#x200b;type_&#x200b;hints</code>].
+Entretanto, alguns leitores podem ainda não estar trabalhando com Python 3.10, então usarei a pass:[<code>typing.&#x200b;get_&#x200b;type_&#x200b;hints</code>] nos exemplos, pois essa função está disponível desde a adição do módulo `typing`, no Python 3.5.
+====
+
+A https://fpy.li/pep563[PEP 563—Postponed Evaluation of Annotations (_Avaliação Adiada de Anotações)] (EN) foi aprovada para tornar desnecessário escrever anotações como strings, e para reduzir o custo das dicas de tipo durante a execução.
+A ideia principal está descrita nessas duas sentenças do https://fpy.li/15-26["Abstract"] (EN):
+
+[quote]
+____
+Esta PEP propõe modificar as anotações de funções e de variáveis, de forma que elas não mais sejam avaliadas no momento da definição da função. Em vez disso, elas são preservadas em +__annotations__+ na forma de strings..
+____
+
+A partir de Python 3.7, é assim que anotações são tratadas em qualquer módulo que comece com a seguinte instrução `import`:
+
+[source, py]
+----
+from __future__ import annotations
+----
+
+Para demonstrar seu efeito, coloquei a mesma função `clip` do <<ex_clip_annot>> em um módulo  _clip_annot_post.py_ com aquela linha de importação `+__future__+` no início.
+
+No console, esse é o resultado de importar aquele módulo e ler as anotações de `clip`:
+
+[source, pycon]
+----
+>>> from clip_annot_post import clip
+>>> clip.__annotations__
+{'text': 'str', 'max_len': 'int', 'return': 'str'}
+----
+
+Como se vê, todas as dicas de tipo são agora strings simples, apesar de não terem sido escritas como strings na definição de `clip` (no <<ex_clip_annot>>).
+
+A função `typing.get_type_hints` consegue resolver muitas dicas de tipo, incluindo essas de `clip`:
+
+[source, pycon]
+----
+>>> from clip_annot_post import clip
+>>> from typing import get_type_hints
+>>> get_type_hints(clip)
+{'text': <class 'str'>, 'max_len': <class 'int'>, 'return': <class 'str'>}
+----
+
+A chamada a `get_type_hints` nos dá os tipos reais — mesmo em alguns casos onde a dica de tipo original foi escrita como uma string.
+Essa é a maneira recomendada de ler dicas de tipo durante a execução.
+
+O comportamento prescrito na PEP 563 estava previsto para se tornar o default no Python
+3.10, tornando a importação com `+__future__+` desnecessária.
+Entretanto, os mantenedores da _FastAPI_ e do _pydantic_ soaram o alarme, essa mudança quebraria seu código, que se baseia em dicas de tipo durante a execução e não podem usar `get_type_hints` de forma confiável.
+
+Na discussão que se seguiu na lista de email python-dev, Łukasz Langa—autor da PEP 563—descreveu algumas limitações daquela função:
+
+[quote]
+____
+[...] a verdade é que `typing.get_type_hints()` tem limites que tornam seu uso geral custoso durante a execução e, mais importante, insuficiente para resolver todos os tipos. O exemplo mais comum se refere a contextos não-globais nos quais tipos são gerados (isto é, classes aninhadas, classes dentro de funções, etc.).
+Mas um dos principais exemplos de referências adiantadas,
+classes com métodos aceitando ou devolvendo objetos de seu próprio tipo, também não é tratado de forma apropriada por `typing.get_type_hints()` se um gerador de classes for usado.
+Há alguns truques que podemos usar para ligar os pontos mas, de uma forma geral, isso não é bom.footnote:[Mensagem
+https://fpy.li/15-27["PEP 563 in light of PEP 649" (_PEP 563 à luz da PEP 649_)], publicado em 16 de abril de 2021.]
+____
+
+O Steering Council de Python decidiu adiar a elevação da PEP 563 a comportamento padrão até Python 3.11 ou posterior, dando mais tempo aos desenvolvedores para criar uma solução para os problemas que a PEP 563 tentou resolver, sem quebrar o uso dissseminado das dicas de tipo durante a execução.
+A https://fpy.li/pep649[PEP 649—Deferred Evaluation Of Annotations Using Descriptors (_Avaliação Adiada de Anotações Usando Descritores_)] (EN) está sendo considerada como uma possível solução, mas algum outro acordo ainda pode ser alcançado.
+
+Resumindo: ler dicas de tipo durante a execução não é 100% confiável no Python 3.10 e provavelmente mudará em alguma futura versão.
+
+[NOTE]
+====
+Empresas usando Python em escala muito ampla desejam os benefícios da tipagem estática,
+mas não querem pagar o preço da avaliação de dicas de tipo no momento da importação.
+A checagem estática acontece nas estações de trabalho dos desenvolvedores e em servidores de integração contínua dedicados,
+mas o carregamento de módulos acontece em uma frequência e um volume mais altos,
+em servidores de produção, e esse custo não é desprezível em grande escala.
+
+Isso cria uma tensão na comunidade Python, entre aqueles que querem as dicas de tipo armazenadas apenas como strings—para reduzir os custos de carregamento—versus aqueles que também querem usar as dicas de tipo durante a execução, como os criadores e os usuários do _pydantic_ e da _FastAPI_, para quem seria mais fácil acessar diretamente os tipos,
+ao invés de precisarem analisar strings nas anotações, uma tarefa desafiadora.
+====
+
+==== Lidando com o problema
+
+Dada a instabilidade da situação atual, se você precisar ler anotações durante a execução, recomendo o seguinte:
+
+* Evite ler `+__annotations__+` diretamente; em vez disso, use `inspect.get_annotations` (desde Python 3.10) ou `typing.get_type_hints` (desde Python 3.5).
+* Escreva uma função customizada própria, como um invólucro para
+pass:[<code>in&#x200b;spect&#x200b;.get_annotations</code>] ou `typing.get_type_hints`, e faça o restante de sua base de código chamar aquela função, de forma que mudanças futuras fiquem restritas a um único local.
+
+Para demonstrar esse segundo ponto, aqui estão as primeiras linhas da classe `Checked`, definida no
+<<checked_class_top_ex>>, classe que estudaremos no <<ch_class_metaprog>>:
+
+[source, py]
+----
+class Checked:
+    @classmethod
+    def _fields(cls) -> dict[str, type]:
+        return get_type_hints(cls)
+    # ... more lines ...
+----
+
+O método de `Checked._fields` evita que outras partes do módulo dependam diretamente de
+`typing.get_type_hints`. Se `get_type_hints` mudar no futuro, exigindo lógica adicional, ou se eu quiser substituí-la por `inspect.get_annotations`, a mudança estará limitada a `Checked._fields` e não afetará o restante do programa.
+
+[WARNING]
+====
+Dadas as discussões correntes e as mudanças propostas para a inspeção de dicas de tipo durante a execução, a página da documentação oficial https://docs.python.org/pt-br/3.10/howto/annotations.html["Boas Práticas de Anotação"] é uma leitura obrigatória, e a página deve ser atualizada até o lançamento de Python 3.11.
+Aquele _how-to_ foi escrito por Larry Hastings, autor da
+https://fpy.li/pep649[PEP 649—Deferred Evaluation Of Annotations Using Descriptors (_Avaliação Adiada de Anotações Usando Descritores_)] (EN), uma proposta alternativa para tratar os problemas gerados durante a execução pela https://fpy.li/pep563[PEP 563—Postponed Evaluation of Annotations (_Avaliação Adiada de Anotações)] (EN).
+====
+
+As seções restantes desse capítulo cobrem tipos genéricos, começando pela forma de definir uma classe genérica, que pode ser parametrizada por seus usuários.((("", startref="GTSruntime15")))
+
+
+[[impl_generic_class_sec]]
+=== Implementando uma classe genérica
+
+No((("gradual type system", "implementing generic classes", id="GTSgeneric15")))((("classes", "implementing generic classes", id="CAPgeneric15")))((("generic classes, implementing", id="genclasimp15"))) <<ex_tombola_abc>>, definimos a ABC `Tombola`: uma interface para classes que funcionam como um recipiente para sorteio de bingo. A classe `LottoBlower` do  <<ex_lotto>> é uma implementação concreta.
+Vamos agora estudar uma versão genérica de `LottoBlower`, usada da forma que aparece no <<ex_generic_lotto_demo>>.
+
+
+[[ex_generic_lotto_demo]]
+.generic_lotto_demo.py: usando uma classe genérica de sorteio de bingo
+====
+[source, py]
+----
+include::../code/15-more-types/lotto/generic_lotto_demo.py[tags=LOTTO_USE]
+----
+====
+<1> Para instanciar uma classe genérica, passamos a ela um parâmetro de tipo concreto, como `int` aqui.
+<2> O Mypy irá inferir corretamente que `first` é um `int`...
+<3> ... e que `remain` é uma `tuple` de inteiros.
+
+Além disso, o Mypy aponta violações do tipo parametrizado com mensagens úteis, como ilustrado no <<ex_generic_lotto_errors>>.
+
+[[ex_generic_lotto_errors]]
+.generic_lotto_errors.py: erros apontados pelo Mypy
+====
+[source, py]
+----
+include::../code/15-more-types/lotto/generic_lotto_errors.py[]
+----
+====
+<1> Na instanciação de `LottoBlower[int]`, o Mypy marca o `float`.
+<2> Na chamada `.load('ABC')`, o Mypy explica porque uma `str` não serve: `+str.__iter__+` devolve um `Iterator[str]`, mas `LottoBlower[int]` exige um `Iterator[int]`.
+
+
+O <<ex_generic_lotto>> é a implementação.
+
+
+[[ex_generic_lotto]]
+.generic_lotto.py: uma classe genérica de sorteador de bingo
+====
+[source, py]
+----
+include::../code/15-more-types/lotto/generic_lotto.py[]
+----
+====
+<1> Declarações de classes genéricas muitas vezes usam herança múltipla, porque precisamos de uma subclasse de `Generic` para declarar os parâmetros de tipo formais—nesse caso, `T`.
+<2> O argumento `items` em `+__init__+` é do tipo `Iterable[T]`, que se torna `Iterable[int]` quando uma instância é declarada como `LottoBlower[int]`.
+<3> O método `load` é igualmente restrito.
+<4> O tipo do valor devolvido `T` agora se torna `int` em um `LottoBlower[int]`.
+<5> Nenhuma variável de tipo aqui.
+<6> Por fim, `T` define o tipo dos itens na `tuple` devolvida.
+
+
+[TIP]
+====
+A seção https://docs.python.org/pt-br/3/library/typing.html#user-defined-generic-types["User-defined generic types" (_Tipos genéricos definidos pelo usuário_)] (EN), na documentação do módulo `typing`, é curta, inclui bons exemplos e fornece alguns detalhes que não menciono aqui.
+====
+
+Agora que vimos como implementar um classe genérica, vamos definir a terminologia para falar sobre tipos genéricos.
+
+[role="pagebreak-before less_space"]
+==== Jargão básico para tipos genéricos
+
+Aqui estão algumas definições que encontrei estudando genéricos:footnote:[Os termos são do livro clássico de Joshua Bloch, _Java Efetivo_, 3rd ed. (Alta Books). As definições e exemplos são meus.]
+
+Tipo genérico::
+Um tipo declarado com uma ou mais variáveis de tipo. +
+Exemplos: `LottoBlower[T]`, `abc.Mapping[KT, VT]`
+
+Parâmetro de tipo formal::
+As((("formal type parameters"))) variáveis de tipo que aparecem em um declaração de tipo genérica. +
+Exemplo: `KT` e `VT` no último exemplo: `abc.Mapping[KT, VT]`
+
+Tipo parametrizado::
+Um((("parameterized types"))) tipo declarado com os parâmetros de tipo reais. +
+Exemplos: `LottoBlower[int]`, `abc.Mapping[str, float]`
+
+Parâmetro de tipo real::
+Os((("actual type parameters"))) tipos reais passados como parâmetros quando um tipo parametrizado   é declarado. +
+Exemplo: o `int` em `LottoBlower[int]`
+
+O próximo tópico é sobre como tornar os tipos genéricos mais flexíveis, introduzindo os conceitos de covariância, contravariância e invariância.((("", startref="genclasimp15")))((("", startref="CAPgeneric15")))((("", startref="GTSgeneric15")))
+
+[[variance_sec]]
+=== Variância
+
+[NOTE]
+====
+Dependendo((("gradual type system", "variance and", id="GTSvar15")))((("variance", "relevance of"))) de sua experiência com genéricos em outras linguagens, essa pode ser a parte mais difícil do livro.
+O conceito de variância é abstrato, e uma apresentação rigorosa faria essa seção se parecer com páginas tiradas de um livro de matemática.
+
+Na prática, a variância é mais relevante para autores de bibliotecas que querem suportar novos tipos de contêineres genéricos ou fornecer uma API baseada em _callbacks_.
+Mesmo nesses casos, é possível evitar muita complexidade suportando apenas contêineres invariantes—que é quase só o que temos hoje na biblioteca padrão.
+Então, em uma primeira leitura você pode pular toda essa seção, ou ler apenas as partes sobre tipos invariantes.
+====
+
+Já vimos o conceito de _variância_ na <<callable_variance_sec>>, aplicado a tipos genéricos `Callable` parametrizados. Aqui vamos expandir o conceito para abarcar tipo genéricos de coleções, usando uma analogia do "mundo real" para tornar mais concreto esse conceito abstrato.
+
+Imagine uma cantina escolar que tenha como regra que apenas máquinas servindo sucos podem ser instaladas ali.footnote:[A primeira vez que vi a analogia da cantina para variância foi no prefácio de Erik Meijer para o livro _The Dart Programming Language_ ("A Linguagem de Programação Dart"), de Gilad Bracha (Addison-Wesley).]
+Máquinas de bebida genéricas não são permitidas, pois podem servir refrigerantes, que foram banidos pela direção da escola.footnote:[Muito melhor que banir livros!]
+
+
+==== Uma máquina de bebida invariante
+
+Vamos((("variance", "invariant types"))) tentar modelar o cenário da cantina com uma classe genérica `BeverageDispenser`, que pode ser parametrizada com o tipo de bebida..
+Veja o <<invariant_dispenser_types_ex>>.
+
+[[invariant_dispenser_types_ex]]
+.invariant.py: definições de tipo e função `install`
+====
+[source, py]
+----
+include::../code/15-more-types/cafeteria/invariant.py[tags=BEVERAGE_TYPES]
+----
+====
+<1> `Beverage`, `Juice`, e `OrangeJuice` formam uma hierarquia de tipos.
+<2> Uma declaração `TypeVar` simples.
+<3> `BeverageDispenser` é parametrizada pelo tipo de bebida.
+<4> `install` é uma função global do módulo. Sua dica de tipo faz valer a regra de que apenas máquinas de suco são aceitáveis.
+
+Dadas as definições no <<invariant_dispenser_types_ex>>, o seguinte código é legal:
+
+
+[source, py]
+----
+include::../code/15-more-types/cafeteria/invariant.py[tags=INSTALL_JUICE_DISPENSER]
+----
+
+Entretanto, isso não é legal:
+
+[source, py]
+----
+include::../code/15-more-types/cafeteria/invariant.py[tags=INSTALL_BEVERAGE_DISPENSER]
+----
+
+Uma máquina que serve qualquer `Beverage` não é aceitável, pois a cantina exige uma máquina especializada em `Juice`.
+
+De forma um tanto surpreendente, este código também é ilegal:
+
+[source, py]
+----
+include::../code/15-more-types/cafeteria/invariant.py[tags=INSTALL_ORANGE_JUICE_DISPENSER]
+----
+
+Uma máquina especializada em `OrangeJuice` também não é permitida.
+Apenas `BeverageDispenser[Juice]` serve.
+No jargão da tipagem, dizemos que `BeverageDispenser(Generic[T])` é invariante quando `BeverageDispenser[OrangeJuice]` não é compatível com `BeverageDispenser[Juice]`—apesar do fato de `OrangeJuice` ser um _subtipo-de_ `Juice`.
+
+Os tipos de coleções mutáveis de Python—tal como `list` e `set`—são invariantes.
+A classe `LottoBlower` do <<ex_generic_lotto>> também é invariante.
+
+
+==== Uma máquina de bebida covariante
+
+Se((("variance", "covariant types"))) quisermos ser mais flexíveis, e modelar as máquinas de bebida como uma classe genérica que aceite alguma bebida e também seus subtipos, precisamos tornar a classe covariante.
+O <<covariant_dispenser_types_ex>> mostra como declararíamos `BeverageDispenser`.
+
+[[covariant_dispenser_types_ex]]
+._covariant.py_: type definitions and `install` function
+====
+[source, py]
+----
+include::../code/15-more-types/cafeteria/covariant.py[tags=BEVERAGE_TYPES]
+----
+====
+<1> Define `covariant=True` ao declarar a variável de tipo; `+_co+` é o sufixo convencional para parâmetros de tipo covariantes no _typeshed_.
+<2> Usa `T_co` para parametrizar a classe especial `Generic`.
+<3> As dicas de tipo para `install` são as mesmas do <<invariant_dispenser_types_ex>>.
+
+O código abaixo funciona porque tanto a máquina de `Juice` quanto a de `OrangeJuice` são válidas em uma `BeverageDispenser` covariante:
+
+[source, py]
+----
+include::../code/15-more-types/cafeteria/covariant.py[tags=INSTALL_JUICE_DISPENSERS]
+----
+
+mas uma máquina de uma `Beverage` arbitrária não é aceitável:
+
+[source, py]
+----
+include::../code/15-more-types/cafeteria/covariant.py[tags=INSTALL_BEVERAGE_DISPENSER]
+----
+
+Isso é uma covariância:
+a relação de subtipo das máquinas parametrizadas varia na mesma direção da relação de subtipo dos parâmetros de tipo.
+
+
+==== Uma lata de lixo contravariante
+
+Vamos((("variance", "contravariant types"))) agora modelar a regra da cantina para a instalação de uma lata de lixo.
+Vamos supor que a comida e a bebida são servidas em recipientes biodegradáveis, e as sobras e utensílios descartáveis também são biodegradáveis.
+As latas de lixo devem ser adequadas para resíduos biodegradáveis.
+
+[NOTE]
+====
+Neste exemplo didático, vamos fazer algumas suposições e classificar o lixo em uma hierarquia simplificada:
+
+* `Refuse` (_Resíduo_) é o tipo mais geral de lixo. Todo lixo é resíduo.
+
+* `Biodegradable` (_Biodegradável_) é um tipo de lixo que é decomposto por microrganismos ao longo do tempo.
+Parte do `Refuse` não é `Biodegradable`.
+
+* `Compostable` (_Compostável_) é um tipo específico de lixo `Biodegradable` que pode ser transformado de em fertilizante orgânico,
+em um processo de compostagem. Na nossa definição, nem todo lixo `Biodegradable` é `Compostable`.
+====
+
+Para modelar a regra descrevendo uma lata de lixo aceitável na cantina,
+precisamos introduzir o conceito de "contravariância" através de um exemplo, apresentado no <<contravariant_trash_ex>>.
+
+[[contravariant_trash_ex]]
+._contravariant.py_: definições de tipo e a função `install`
+====
+[source, py]
+----
+include::../code/15-more-types/cafeteria/contravariant.py[tags=TRASH_TYPES]
+----
+====
+<1> Uma hierarquia de tipos para resíduos: `Refuse` é o tipo mais geral, `Compostable` o mais específico.
+<2> `T_contra` é o nome convencional para uma variável de tipo contravariante.
+<3> `TrashCan` é contravariante ao tipo de resíduo.
+<4> A função `deploy` exige uma lata de lixo compatível com `TrashCan[Biodegradable]`.
+
+Dadas essas definições, os seguintes tipos de lata de lixo são aceitáveis:
+
+[source, py]
+----
+include::../code/15-more-types/cafeteria/contravariant.py[tags=DEPLOY_TRASH_CANS]
+----
+
+A função `deploy` aceita uma `TrashCan[Refuse]`, pois ela pode receber qualquer tipo de resíduo, incluindo `Biodegradable`.
+Entretanto, uma `TrashCan[Compostable]` não serve, pois ela não pode receber `Biodegradable`:
+
+[source, py]
+----
+include::../code/15-more-types/cafeteria/contravariant.py[tags=DEPLOY_NOT_VALID]
+----
+
+Vamos resumir os conceitos vistos até aqui.
+
+
+==== Revisão da variância
+
+A variância((("variance", "overview of"))) é uma propriedade sutil. As próximas seções recapitulam o conceito de tipos invariantes, covariantes e contravariantes, e fornecem algumas regras gerais para pensar sobre eles.
+
+===== Tipos invariantes
+
+Um tipo genérico `L` é invariante quando não há nenhuma relação de supertipo ou subtipo entre dois tipos parametrizados, independente da relação que possa existir entre os parâmetros concretos.
+Em outras palavras, se `L` é invariante, então `L[A]` não é supertipo ou subtipo de `L[B]`.
+Eles são inconsistentes em ambos os sentidos.
+
+Como mencionado, as coleções mutáveis de Python são invariantes por default.
+O tipo `list` é um bom exemplo:
+`list[int]` não é _consistente-com_ `list[float]`, e vice-versa.
+
+Em geral, se um parâmetro de tipo formal aparece em dicas de tipo de argumentos a métodos, e o mesmo parâmetro aparece nos tipos devolvidos pelo método, aquele parâmetro deve ser invariante, para garantir a segurança de tipo na atualização e leitura da coleção.
+
+Por exemplo, aqui está parte das dicas de tipo para o tipo embutido `list` no
+https://fpy.li/15-30[_typeshed_]:
+
+[source, py]
+----
+class list(MutableSequence[_T], Generic[_T]):
+    @overload
+    def __init__(self) -> None: ...
+    @overload
+    def __init__(self, iterable: Iterable[_T]) -> None: ...
+    # ... lines omitted ...
+    def append(self, __object: _T) -> None: ...
+    def extend(self, __iterable: Iterable[_T]) -> None: ...
+    def pop(self, __index: int = ...) -> _T: ...
+    # etc...
+----
+
+Veja que `_T` aparece entre os argumentos de `+__init__+`, `append` e `extend`,
+e como tipo devolvido por `pop`.
+Não há como tornar segura a tipagem dessa classe se ela for covariante ou contravariante em `_T`.
+
+
+[[covariant_types_sec]]
+===== Tipos covariantes
+
+Considere dois tipos `A` e `B`, onde `B` é _consistente-com_ `A`, e nenhum deles é `Any`.
+Alguns autores usam os símbolos `<:` e `:>` para indicar relações de tipos como essas:
+
+`A :> B`:: `A` é um _supertipo-de_ ou igual a `B`.
+
+`B <: A`:: `B` é um _subtipo-de_ ou igual a `A`.
+
+Dado `A :> B`, um tipo genérico `C` é covariante quando `C[A] :> C[B]`.
+
+Observe que a direção da seta no símbolo `:>` é a mesma nos dois casos em que `A` está à esquerda de `B`.
+Tipos genéricos covariantes seguem a relação de subtipo do tipo real dos parâmetros.
+
+Contêineres imutáveis podem ser covariantes.
+Por exemplo, é assim que a classe `typing.FrozenSet` está
+https://docs.python.org/pt-br/3.10/library/typing.html#typing.FrozenSet[documentada] como covariante com uma variável de tipo usando o nome convencional `T_co`:
+
+[source, py]
+----
+class FrozenSet(frozenset, AbstractSet[T_co]):
+----
+
+Aplicando a notação `:>` a tipos parametrizados, temos:
+
+[source]
+----
+           float :> int
+frozenset[float] :> frozenset[int]
+----
+
+Iteradores são outro exemplo de genéricos covariantes:
+eles não são coleções apenas para leitura como um `frozenset`,
+mas apenas produzem saídas.
+Qualquer código que espere um `abc.Iterator[float]` que produz números de ponto flutuante pode usar com segurança um `abc.Iterator[int]` que produz inteiros.
+Tipos `Callable` são covariantes no tipo devolvido por uma razão similar.
+
+[[contravariant_types_sec]]
+===== Tipos contravariantes
+
+Dado `A :> B`, um tipo genérico `K` é contravariante se `K[A] <: K[B]`.
+
+Tipos genéricos contravariantes revertem a relação de subtipo dos tipos reais dos parâmetros .
+
+A classe `TrashCan` exemplifica isso:
+
+[source]
+----
+          Refuse :> Biodegradable
+TrashCan[Refuse] <: TrashCan[Biodegradable]
+----
+
+Um contêiner contravariante normalmente é uma estrutura de dados só para escrita, também conhecida como "coletor" ("sink").
+Não há exemplos de coleções desse tipo na biblioteca padrão, mas existem alguns tipos com parâmetros de tipo contravariantes.
+
+`Callable[[ParamType, …], ReturnType]` é contravariante nos tipos dos parâmetros, mas covariante no  `ReturnType`, como vimos na <<callable_variance_sec>>.
+Além disso,
+https://fpy.li/15-32[`Generator`],
+https://fpy.li/typecoro[`Coroutine`], e
+https://fpy.li/15-33[`AsyncGenerator`]
+têm um parâmetro de tipo contravariante.
+O tipo `Generator` está descrito na <<generic_classic_coroutine_types_sec>>;
+`Coroutine` e `AsyncGenerator` são descritos no <<ch_async>>.
+
+Para efeito da presente discussão sobre variância,
+o ponto principal é que parâmetros formais contravariantes definem o tipo dos argumentos usados para invocar ou enviar dados para o objeto, enquanto parâmetros formais covariantes definem os tipos de saídas produzidos pelo objeto—o tipo devolvido por uma função
+ou produzido por um gerador.
+Os significados de "enviar" e "produzir" são explicados na <<classic_coroutines_sec>>.
+
+Dessas observações sobre saídas covariantes e entradas contravariantes podemos derivar algumas orientações úteis.
+
+[[variance_rules_sec]]
+===== Regras gerais de variância
+
+Por fim, aqui((("variance", "rules of thumb"))) estão algumas regras gerais a considerar quando estamos pensando sobre variância:
+
+* Se um parâmetro de tipo formal define um tipo para dados que saem de um objeto, ele pode ser covariante.
+
+* Se um parâmetro de tipo formal define um tipo para dados que entram em um objeto, ele pode ser contravariante.
+
+* Se um parâmetro de tipo formal define um tipo para dados que saem de um objeto e o mesmo parâmetro define um tipo para dados que entram em um objeto, ele deve ser invariante.
+
+* Na dúvida, use parâmetros de tipo formais invariantes. Não haverá prejuízo se no futuro precisar usar parâmetros de tipo covariantes ou contravariantes, pois nestes casos a tipagem é mais aberta e não quebrará códigos existentes.
+
+`Callable[[ParamType, …], ReturnType]` demonstra as regras #1 e #2:
+O `ReturnType` é covariante, e cada `ParamType` é contravariante.
+
+Por default, `TypeVar` cria parâmetros formais invariantes, e é assim que as coleções mutáveis na biblioteca padrão são anotadas.
+
+Nossa discussão sobre variância continua na <<generic_classic_coroutine_types_sec>>.
+
+A seguir, vamos ver como definir protocolos estáticos genéricos, aplicando a ideia de covariância a alguns novos exemplos.((("", startref="GTSvar15")))
+
+
+[[implementing_generic_static_proto_sec]]
+=== Implementando um protocolo estático genérico
+
+A((("gradual type system", "implementing generic static protocols", id="GTSgenstatpro15")))((("generic static protocols", id="genstatpro15")))((("protocols", "implementing generic static protocols", id="Pgenstatpro15")))((("static protocols", "implementing generic static protocols", id="SPgenstatpro15"))) biblioteca padrão de Python 3.10 fornece alguns protocolos estáticos genéricos.
+Um deles é `SupportsAbs`, implementado assim no
+https://fpy.li/15-34[módulo _typing_]:
+
+[source, python3]
+----
+@runtime_checkable
+class SupportsAbs(Protocol[T_co]):
+    """An ABC with one abstract method __abs__ that is covariant in its
+        return type."""
+    __slots__ = ()
+
+    @abstractmethod
+    def __abs__(self) -> T_co:
+        pass
+----
+
+`T_co` é declarado de acordo com a convenção de nomenclatura:
+
+[source, python3]
+----
+T_co = TypeVar('T_co', covariant=True)
+----
+
+Graças a `SupportsAbs`, o Mypy considera válido o seguinte código, como visto no <<ex_abs_demo>>.
+
+[[ex_abs_demo]]
+._abs_demo.py_: uso do protocolo genérico `SupportsAbs`
+====
+[source, python3]
+----
+include::../code/15-more-types/protocol/abs_demo.py[]
+----
+====
+<1> Definir `+__abs__+` torna `Vector2d` _consistente-com_ `SupportsAbs`.
+<2> Parametrizar `SupportsAbs` com `float` assegura...
+<3> ...que o Mypy aceite `abs(v)` como primeiro argumento para `math.isclose`.
+<4> Graças a `@runtime_checkable` na definição de `SupportsAbs`, essa é uma asserção válida durante a execução.
+<5> Todo o restante do código passa pelas verificações do Mypy e pelas asserções durante a execução.
+<6> O tipo `int` também é _consistente-com_ `SupportsAbs`.
+De acordo com o https://fpy.li/15-35[_typeshed_],
+`+int.__abs__+` devolve um `int`, o que é _consistente-com_ o parametro de tipo `float` declarado na dica de tipo `is_unit` para o argumento `v`.
+
+De forma similar, podemos escrever uma versão genérica do protocolo `RandomPicker`, apresentado na <<ex_randompick_protocol>>, que foi definido com um único método `pick` devolvendo `Any`.
+
+O <<ex_generic_randompick_protocol>> mostra como criar um `RandomPicker` genérico, covariante no tipo devolvido por `pick`.
+
+[[ex_generic_randompick_protocol]]
+._generic_randompick.py_: definição do `RandomPicker` genérico
+====
+[source, python3]
+----
+include::../code/15-more-types/protocol/random/generic_randompick.py[]
+----
+====
+<1> Declara `T_co` como `covariante`.
+<2> Isso torna `RandomPicker` genérico, com um parâmetro de tipo formal covariante.
+<3> Usa `T_co` como tipo do valor devolvido.
+
+[role="pagebreak-before less_space"]
+O protocolo genérico `RandomPicker` pode ser covariante porque seu único parâmetro formal é usado em um tipo de saída.
+
+Com isso, podemos dizer que temos um capítulo.((("", startref="GTSgenstatpro15")))((("", startref="genstatpro15")))((("", startref="Pgenstatpro15")))((("", startref="SPgenstatpro15")))
+
+
+=== Resumo do capítulo
+
+Começamos((("gradual type system", "overview of"))) com um exemplo simples de uso de `@overload`, seguido por um exemplo mais complexo, que estudamos em detalhes:
+as assinaturas sobrecarregadas exigidas para anotar corretamente a função embutida `max`.
+
+A seguir veio o artefato especial da linguagem `typing.TypedDict`.
+Escolhi tratar dele aqui e não no <<ch_dataclass>>, onde vimos `typing.NamedTuple`, porque `TypedDict` não é uma fábrica de classes; ele é meramente uma forma de acrescentar dicas de tipo a uma variável ou a um argumento que exige um `dict` com um conjunto específico de chaves do tipo string, e tipos específicos para cada chave—algo que acontece quando usamos um `dict` como registro, muitas vezes no contexto do tratamento de dados JSON.
+Aquela seção foi um pouco mais longa porque usar `TypedDict` pode levar a um falso sentimento de segurança, e queria mostrar como as verificações durante a execução e o tratamento de erros são inevitáveis quando tentamos criar registros estruturados estaticamente a partir de mapeamentos, que por natureza são dinâmicos.
+
+Então falamos sobre `typing.cast`, uma função projetada para nos permitir guiar o trabalho do checador de tipos. É importante considerar cuidadosamente quando usar `cast`, porque seu uso excessivo atrapalha o checador de tipos.
+
+O acesso a dicas de tipo durante a execução veio em seguida. O ponto principal era usar pass:[<code>typing.&#x200b;get_type_hints</code>] em vez de ler o atributo `+__annotations__+` diretamente. Entretanto, aquela função pode não ser confiável para algumas anotações, e vimos que os desenvolvedores principais de Python ainda estão discutindo uma forma de tornar as dicas de tipo usáveis durante a execução, e ao mesmo tempo reduzir seu impacto sobre o uso de CPU e memória.
+
+A última seção foi sobre genéricos, começando com a classe genérica `LottoBlower`—que mais tarde aprendemos ser uma classe genérica invariante.
+Aquele exemplo foi seguido pelas definições de quatro termos básicos:
+tipo genérico, parâmetro de tipo formal, tipo parametrizado e parâmetro de tipo real.
+
+Continuamos pelo grande tópico da variância, usando máquinas bebidas para uma cantina e latas de lixo como exemplos da "vida real" para tipos genéricos invariantes, covariantes e contravariantes.
+Então revisamos, formalizamos e aplicamos aqueles conceitos a exemplos na biblioteca padrão de Python.
+
+Por fim, vimos como é definido um protocolo estático genérico, primeiro considerando o protocolo `typing.SupportsAbs`, e então aplicando a mesma ideia ao exemplo do `RandomPicker`, tornando-o mais rigoroso que o protocolo original do <<ch_ifaces_prot_abc>>.
+
+[NOTE]
+====
+O sistema de tipos de Python é um campo imenso e em rápida evolução. Este capítulo não é abrangente. Escolhi me concentrar em tópicos que são ou amplamente aplicáveis, ou particularmente complexos ou conceitualmente importantes, e que assim provavelmente se manterão relevantes por um longo tempo.
+====
+
+
+[[more_type_hints_further_sec]]
+=== Leitura complementar
+
+O((("gradual type system", "further reading on"))) sistema de tipagem estática de Python
+já era complexo quando foi originalmente projetado, e tem se tornado mais complexo a cada ano.
+A <<typing_peps_tbl>> lista todas as PEPs que encontrei até maio de 2021.
+Seria necessário um livro inteiro para cobrir tudo.
+
+[[typing_peps_tbl]]
+.PEPs sobre dicas de tipo, com links nos títulos. PEPs com números marcados com * são importantes o suficiente para serem mencionadas no parágrafo de abertura da https://docs.python.org/pt-br/3/library/typing.html[documentação de `typing`]. Pontos de interrogação na coluna Python indica PEPs em discussão ou ainda não implementadas; "n/a" aparece em PEPs informacionais sem relação com uma versão específica de Python. Todos os textos das PEPs estão em inglês. Dados coletados em maio 2021.
+[options="header"]
+|=================================================================================================================================
+|PEP |Title                                                                                                           |Python|Year
+|3107|https://fpy.li/pep3107[Function Annotations (_Anotações de Função_)]                                                 |3.0   |2006
+|483*|https://fpy.li/pep483[The Theory of Type Hints (A Teoria das Dicas de Tipo_)]                                             |n/a   |2014
+|484*|https://fpy.li/pep484[Type Hints (_Dicas de Tipo_)]                                                           |3.5   |2014
+|482 |https://fpy.li/pep482[Literature Overview for Type Hints (_Revisão da Literatura sobre Dicas de Tipo_)]                                   |n/a   |2015
+|526*|https://fpy.li/pep526[Syntax for Variable Annotations (_Sintaxe para Anotações de Variáveis_)]                                      |3.6   |2016
+|544*|https://fpy.li/pep544[Protocols: Structural subtyping (static duck typing) (_Protocolos: subtipagem estrutural (duck typing estático_))]                 |3.8   |2017
+|557 |https://fpy.li/pep557[Data Classes (_Classes de Dados_)]                                                         |3.7   |2017
+|560 |https://fpy.li/pep560[Core support for typing module and generic types (_Suporte nativo para tipagem de módulos e tipos genéricos_)]                     |3.7   |2017
+|561 |https://fpy.li/pep561[Distributing and Packaging Type Information (Distribuindo e Empacotando Informação de Tipo_)]                          |3.7   |2017
+|563 |https://fpy.li/pep563[Postponed Evaluation of Annotations (_Avaliação Adiada de Anotações_)]                                  |3.7   |2017
+|586*|https://fpy.li/pep586[Literal Types (_Tipos Literais_)]                                                        |3.8   |2018
+|585 |https://fpy.li/pep585[Type Hinting Generics In Standard Collections (_Dicas de Tipo para Genéricos nas Coleções Padrão_)]                        |3.9   |2019
+|589*|https://fpy.li/pep589[TypedDict: Type Hints for Dictionaries with a Fixed Set of Keys (_TypedDict: Dicas de Tipo para Dicionários com um Conjunto Fixo de Chaves_)]      |3.8   |2019
+|591*|https://fpy.li/pep591[Adding a final qualifier to typing (_Acrescentando um qualificador final à tipagem_)]                                   |3.8   |2019
+|593 |https://fpy.li/pep593[Flexible function and variable annotations (_Anotações flexíveis para funções e variáveis_)]                           |?     |2019
+|604 |https://fpy.li/pep604[Allow writing union types as X &#x7c; Y (_Permitir a definição de tipos de união como_ X &#x7c; Y  )]                              |3.10  |2019
+|612 |https://fpy.li/pep612[Parameter Specification Variables (_Variáveis de Especificação de Parâmetros_)]                                    |3.10  |2019
+|613 |https://fpy.li/pep613[Explicit Type Aliases (_Aliases de Tipo Explícitos_)]                                                |3.10  |2020
+|645 |https://fpy.li/pep645[Allow writing optional types as x? (_Permitir a definição de tipos opcionais como_ x? )]                                   |?     |2020
+|646 |https://fpy.li/pep646[Variadic Generics (_Genéricos Variádicos_)]                                                    |?     |2020
+|647 |https://fpy.li/pep647[User-Defined Type Guards (_Guardas de Tipos Definidos pelo Usuário_)]                                             |3.10  |2021
+|649 |https://fpy.li/pep649[Deferred Evaluation Of Annotations Using Descriptors (_Avaliação Adiada de Anotações Usando Descritores_)]                 |?     |2021
+|655 |https://fpy.li/pep655[Marking individual TypedDict items as required or potentially-missing (_Marcando itens TypedDict individuais como obrigatórios ou potencialmente ausentes_)]|?     |2021
+|=================================================================================================================================
+
+A documentação oficial de Python mal consegue acompanhar tudo aquilo, então https://fpy.li/mypy[a documentação do Mypy] (EN) é uma referência essencial.
+pass:[<a href="https://fpy.li/15-36" class="orm:hideurl"><em>Robust Python</em></a>] (EN),
+de Patrick Viafore (O'Reilly), é o primeiro livro com um tratamento abrangente do sistema de tipagem estática de Python que conheço, publicado em agosto de 2021. Você pode estar lendo o segundo livro sobre o assunto nesse exato instante.
+
+O sutil tópico da variância tem sua própria https://fpy.li/15-37[seção na PEP 484] (EN), e também é abordado na página https://fpy.li/15-38["Generics" (_Genéricos_)] (EN) do Mypy, bem como em sua inestimável página https://fpy.li/15-39["Common Issues" (_Problemas Comuns_)].
+
+A https://fpy.li/pep362[PEP 362—Function Signature Object (_O Objeto Assinatura de Função_)]
+vale a pena ler se você pretende usar o módulo `inspect`, que complementa a função `typing.get_type_hints`.
+
+Se tiver interesse na história de Python, pode gostar de saber que Guido van Rossum publicou https://fpy.li/15-40["Adding Optional Static Typing to Python" (_Acrescentando Tipagem Estática Opcional ao Python_)] em 23 de dezembro de 2004.
+
+https://fpy.li/15-41["Python 3 Types in the Wild: A Tale of Two Type Systems" (_Os Tipos de Python 3 na Natureza: Um Conto de Dois Sistemas de Tipo_)] (EN) é um artigo científico de Ingkarat Rak-amnouykit e outros, do Rensselaer Polytechnic Institute e do IBM TJ Watson Research Center.
+O artigo avalia o uso de dicas de tipo em projetos de código aberto no GitHub, mostrando que a maioria dos projetos não as usam , e também que a maioria dos projetos que incluem dicas de tipo aparentemente não usam um checador de tipos.
+Achei particularmente interessante a discussão das semânticas diferentes do Mypy e do _pytype_ do
+Google, onde os autores concluem que eles são "essencialmente dois sistemas de tipos diferentes."
+
+Dois artigos fundamentais sobre tipagem gradual são https://fpy.li/15-42["Pluggable Type Systems" (_Sistemas de Tipo Conectáveis_)] (EN), de Gilad Bracha, e
+https://fpy.li/15-43["Static Typing Where Possible, Dynamic Typing When Needed: The End of the Cold War Between Programming Languages" (_Tipagem Estática Quando Possível, Tipagem Dinâmica Quando Necessário: O Fim da Guerra Fria Entre Linguagens de Programação_)] (EN),
+de Eric Meijer e Peter Drayton.footnote:[O leitor de notas de rodapé se lembrará que dei o crédito a Erik Meijer pela analogia da cantina para explicar variância.]
+
+Aprendi muito lendo as partes relevantes de alguns livros sobre outras linguagens que implementam algumas das mesmas ideias:
+
+* https://fpy.li/15-44[_Atomic Kotlin_] (EN), de Bruce Eckel e Svetlana Isakova
+[.keep-together]#(Mindview)#
+* https://fpy.li/15-45[_Effective Java_, 3rd ed.,] (EN), de Joshua Bloch (Addison-Wesley)
+* https://fpy.li/15-46[_Programming with Types: TypeScript Examples_] (EN), de Vlad Riscutia (Manning)
+
+* https://fpy.li/15-47[_Programming TypeScript_] (EN), de Boris Cherny (O'Reilly)
+* https://fpy.li/15-48[_The Dart Programming Language_] (EN) de Gilad Bracha (Addison-Wesley).footnote:[Esse livro foi escrito para o Dart 1. Há mudanças significativas no Dart 2, inclusive no sistema de tipos. Mesmo assim, Bracha é um pesquisador importante na área de design de linguagens de programação, e achei o livro valioso por sya perspectiva sobre o design do Dart.]
+
+
+Para algumas visões críticas sobre os sistemas de tipagem, recomendo os posts de Victor Youdaiken
+https://fpy.li/15-49["Bad ideas in type theory" (_Más ideias na teoria dos tipos_)] (EN)
+e https://fpy.li/15-50["Types considered harmful II" (_Tipos considerados nocivos II_)] (EN).
+
+Por fim, me surpreeendi ao encontrar https://fpy.li/15-51["Generics Considered Harmful" (_Genéricos Considerados Nocivos_)], de Ken Arnold,
+um desenvolvedor principal de Java desde o início, bem como co-autor das primeiras quatro edições do livro oficial
+_The Java Programming Language_ (Addison-Wesley)—junto com James Gosling,
+o principal criador de Java.
+
+Infelizmente, as críticas de Arnold também se aplicam ao sistema de tipagem estática de Python.
+Quando leio as muitas regras e casos especiais das PEPs de tipagem, sou constantemente lembrado dessa passagem do post de Arnold:
+
+[quote]
+____
+O que nos traz ao problema que sempre cito para o {cpp}:
+eu a chamo de "exceção de enésima ordem à regra de exceção".
+Ela soa assim: "Você pode fazer x, exceto no caso y, a menos que y faça z, caso em que você pode se..."
+____
+
+Felizmente, Python tem uma vantagem crítica sobre o Java e o {cpp}:
+um sistema de tipagem opcional.
+Podemos silenciar os checadores de tipos e omitir as dicas de tipo quando se tornam muito incômodos.
+
+[[type_hints_in_classes_soapbox]]
+.Ponto de Vista
+****
+
+[role="soapbox-title"]
+As tocas de coelho da tipagem
+
+Quando((("gradual type system", "Soapbox discussion")))((("Soapbox sidebars", "undocumented classes")))((("classes", "undocumented classes")))((("undocumented classes"))) usamos um verificador de tipo, algumas vezes somos obrigados a descobrir e importar classes que não precisávamos conhecer, e que nosso código não precisa usar—exceto para escrever dicas de tipo.
+Tais classes não são documentadas, provavelmente porque são consideradas detalhes de implementação pelos autores dos pacotes. Aqui estão dois exemplos da biblioteca padrão.
+
+Tive que vasculhar a imensa documentação do _asyncio_,
+e depois navegar o código-fonte de vários módulos daquele pacote para descobrir a classe não-documentada
+`TransportSocket` no módulo igualmente não documentado `asyncio.trsock`
+só para usar `cast()` no exemplo do `server.sockets`, na <<type_casting_sec>>.
+Usar `socket.socket` em vez de `TransportSocket` seria incorreto, pois esse último não é subtipo do primeiro, como explicitado em uma
+https://fpy.li/15-52[docstring] (EN) no código-fonte.
+
+
+Caí em uma toca de coelho similar quando acrescentei dicas de tipo ao
+<<primes_procs_top_ex>>, uma demonstração simples de `multiprocessing`.
+Aquele exemplo usa objetos `SimpleQueue`,
+obtidos invocando `multiprocessing.SimpleQueue()`.
+Entretanto, não pude usar aquele nome em uma dica de tipo,
+porque `multiprocessing.SimpleQueue` não é uma classe!
+É um método vinculado da classe não documentada `multiprocessing.BaseContext`,
+que cria e devolve uma instância da classe `SimpleQueue`,
+definida no módulo não-documentado `multiprocessing.queues`.
+
+Em cada um desses casos, tive que gastar algumas horas até encontrar a
+classe não-documentada correta para importar, só para escrever uma única dica de tipo.
+Esse tipo de pesquisa é parte do trabalho quando você está escrevendo um livro.
+Mas se eu estivesse criando o código para uma aplicação,
+provavelmente evitaria tais caças ao tesouro por causa de uma única linha,
+e simplesmente colocaria `# type: ignore`.
+Algumas vezes essa é a única solução com custo-benefício positivo.
+
+[role="soapbox-title"]
+Notação de variância em outras linguagens
+
+A variância((("Soapbox sidebars", "variance notation in other classes")))((("variance", "variance notation in other classes"))) é um tópico complicado, e a sintaxe das dicas de tipo de Python não é tão boa quanto poderia ser.
+Essa citação direta da PEP 484 evidencia isso:
+
+[quote]
+____
+Covariância ou contravariância não são propriedaades de uma variável de tipo,
+mas sim uma propriedade da classe genérica definida usando essa variável.footnote:[Veja o último parágrafo da seção https://fpy.li/15-37["Covariance and Contravariance" (_Covariância e Contravariância_)] (EN) na PEP 484.]
+____
+
+Se esse é o caso, por que a covariância e a contravarância são declaradas com `TypeVar`
+e não na classe genérica?
+
+Os autores da PEP 484 trabalharam sob a severa restrição auto-imposta de suportar dicas de tipo sem fazer qualquer modificação no interpretador.
+Isso exigiu a introdução de `TypeVar` para definir variáveis de tipo,
+e também levou ao abuso de `[]` para fornecer a sintaxe `Klass[T]` para genéricos—em vez da notação `Klass<T>` usada em outras linguagens populares, incluindo C#, Java, Kotlin e TypeScript.
+Nenhuma dessas linguagens exige que variáveis de tipo seja declaradas antes de serem usadas.
+
+Além disso, a sintaxe do Kotlin e do C# torna claro se um parâmetro de tipo é covariante,
+contravariante ou invariante exatamente onde isso faz sentido: na declaração de classe ou interface.
+
+Em Kotlin, poderíamos declarar a `BeverageDispenser` assim:
+
+[source, kotlin]
+----
+class BeverageDispenser<out T> {
+    // etc...
+}
+----
+
+O modificador `out` no parâmetro de tipo formal significa que `T` é um tipo de
+_output_ (saída)), e portanto `BeverageDispenser` é covariante.
+
+[role="pagebreak-before less_space"]
+Você provavelmente consegue adivinhar como `TrashCan` seria declarada:
+
+[source, kotlin]
+----
+class TrashCan<in T> {
+    // etc...
+}
+----
+
+Dado `T` como um parâmetro de tipo formal de _input_ (entrada),
+segue que `TrashCan` é contravariante.
+
+Se nem `in` nem `out` aparecem, então a classe é invariante naquele parâmetro.
+
+É fácil lembrar das <<variance_rules_sec>> quando `out` e `in` são usado nos parâmetros de tipo formais.
+
+Isso sugere que uma boa convenção para nomenclatura de variáveis de tipo covariante e
+contravariantes no Python seria:
+
+[source, python3]
+----
+T_out = TypeVar('T_out', covariant=True)
+T_in = TypeVar('T_in', contravariant=True)
+----
+
+Aí poderíamos definir as classes assim:
+
+[source, python3]
+----
+class BeverageDispenser(Generic[T_out]):
+    ...
+
+class TrashCan(Generic[T_in]):
+    ...
+----
+
+Será que é tarde demais para modificar a convenção de nomenclatura definida na PEP 484?
+
+****

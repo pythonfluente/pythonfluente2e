@@ -1,4 +1,4 @@
-# Procedimentos para preparar .adoc para revisão
+# Procedimentos para preparar volumes para impressão
 
 ## Operações
 
@@ -13,25 +13,17 @@
 
 [^1]: https://docs.asciidoctor.org/asciidoc/latest/pass/pass-macro/
 
-## Cuidados ao automatizar mudanças
+### Nos arquivos separados por volume
 
-### Encurtar somente URLs em links Asciidoc
+1. Trocar xrefs para outros volumes: _Título do alvo (v2:c8 fpy.li/xy)_
+2. Gerar PDF para impressão
+3. Revisar PDF, aplicar correções no `.adoc`
 
-A sintaxe do link é `http://d.t[Texto]` portanto é bom usar
-o sinal `[` logo após a URL como parte da expressão regular.
+## Semantic line breaks
 
-### Não reformatar blocos
+Atenção: legendas de figuras tem que ter apenas uma linha lógica.
 
-Não reformatar ou encurtar URLs em:
-
-* blocos de código
-* tabelas
-
-### Não quebrar legendas de figuras
-
-Uma legenda de figura começa com `.` e não pode ser quebrada em várias linhas.
-
-Exemplo:
+A legenda começa com . e não pode ser quebrada em várias linhas. Exemplo:
 
 ```
 [[vectors_fig]]

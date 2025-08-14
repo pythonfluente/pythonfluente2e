@@ -1,0 +1,1890 @@
+[[ch_dataclass]]
+== Fábricas de classes de dados
+
+// [quote, Martin Fowler and Kent Beck]
+// ____
+// Data classes are like children. They are okay as a starting point, but to participate as a grownup object, they need to take some responsibility.footnote:[From _Refactoring, First Edition_, chapter 3, _Bad Smells in Code_, _Data Class_ section, page 87.]
+// ____
+
+++++
+<blockquote>
+<p>Classes de dados são como crianças. São um bom ponto de partida mas,
+para participarem como um objeto adulto, precisam assumir alguma responsabilidade.</p>
+<p data-type="attribution">Martin Fowler and Kent Beck <span data-type="footnote">em <em>Refactoring</em>,
+primeira edição, Capítulo 3, seção "Bad Smells in Code, Data Class"
+<em>(Mau cheiro no código, classe de dados)</em>, página 87 (Addison-Wesley).</span></p>
+</blockquote>
+++++
+
+Python oferece algumas formas de criar uma classe simples,
+apenas uma coleção de campos, com pouca ou nenhuma funcionalidade adicional.
+Esse padrão é conhecido como "classe de dados"—e `dataclasses` é um dos pacotes que suporta tal modelo.
+Este((("data class builders", "topics covered")))
+capítulo trata de três diferentes fábricas de classes que
+podem ser utilizadas como atalhos para escrever classes de dados:
+
+`collections.namedtuple`:: A forma mais simples—disponível desde Python 2.6.
+`typing.NamedTuple`:: Uma alternativa que requer dicas de tipo nos campos—desde Python 3.5,
+com a sintaxe `class` adicionada no 3.6.
+`@dataclasses.dataclass`:: Um decorador de classe que permite mais customização
+que as alternativas anteriores, acrescentando várias opções e,
+potencialmente, mais complexidade—desde Python 3.7.
+
+Após falar sobre essas fábricas de classes, vamos discutir o motivo de _classe de dados_
+ser também o nome um((("code smells"))) _code smell_:
+um padrão de programação que pode ser um sintoma de um design orientado a objetos ruim.
+
+[NOTE]
+====
+A classe `typing.TypedDict` pode((("TypedDict")))
+parecer apenas outra fábrica de classes de dados.
+Ela usa uma sintaxe similar, e é descrita pouco após `typing.NamedTuple` na
+https://fpy.li/3n[documentação do módulo `typing`] (EN) de Python 3.11.
+
+Entretanto, `TypedDict` não cria classes concretas que possam ser instanciadas.
+Ela é apenas a sintaxe para escrever dicas de tipo para parâmetros de função e
+variáveis que aceitarão valores de mapeamentos como registros,
+enquanto suas chaves serão os nomes dos campos.
+Veremos mais sobre isso na <<typeddict_sec>> do <<ch_more_types>>.
+====
+
+
+=== Novidades nesse capítulo
+
+Este((("data class builders", "significant changes to"))) capítulo é novo,
+aparece nessa segunda edição do _Python Fluente_.
+A <<classic_named_tuples_sec>> era parte do capítulo 2 da primeira edição,
+mas o restante do capítulo é inteiramente inédito.
+
+Vamos começar por uma visão geral, por alto, das três fábricas de classes.
+
+[[data_class_overview_sec]]
+=== Visão geral das fábricas de classes de dados
+
+Considere((("data class builders", "overview of", id="DCBover05"))) uma classe simples,
+representando um par de coordenadas geográficas, como aquela no <<coord_class_ex>>.
+
+[[coord_class_ex]]
+._class/coordinates.py_
+====
+[source, py3]
+----
+include::../code/05-data-classes/class/coordinates.py[tags=COORDINATE]
+----
+====
+
+A tarefa da classe `Coordinate` é manter os atributos latitude e longitude.
+Escrever o `+__init__+` padrão fica cansativo muito rápido,
+especialmente se sua classe tiver mais que alguns poucos atributos:
+cada um deles é mencionado três vezes!
+E aquele código repetitivo não nos dá sequer os recursos básicos
+que esperamos de um objeto Python:
+
+[source, pycon]
+----
+>>> from coordinates import Coordinate
+>>> moscow = Coordinate(55.76, 37.62)
+>>> moscow
+<coordinates.Coordinate object at 0x107142f10>  <1>
+>>> location = Coordinate(55.76, 37.62)
+>>> location == moscow  <2>
+False
+>>> (location.lat, location.lon) == (moscow.lat, moscow.lon)  <3>
+True
+----
+<1> O `+__repr__+` herdado de `object` não é muito útil.
+<2> O `==` não faz sentido; o método `+__eq__+` herdado de `object` compara os IDs dos objetos.
+<3> Comparar duas coordenadas exige a comparação explícita de cada atributo.
+
+As fábricas de classes de dados tratadas nesse capítulo fornecem automaticamente
+os métodos `+__init__+`, `+__repr__+`, e `+__eq__+` necessários, além alguns outros recursos úteis.
+
+[NOTE]
+====
+Nenhuma das fábricas de classes discutidas aqui depende de herança para funcionar.
+Tanto `collections.namedtuple` quanto `typing.NamedTuple` criam subclasses de `tuple`.
+O `@dataclass` é um decorador de classe, não afeta de forma alguma a hierarquia de classes.
+Cada um deles utiliza técnicas diferentes de metaprogramação para
+injetar métodos e atributos de dados na classe em construção.
+====
+
+Aqui está uma classe `Coordinate` criada com uma `namedtuple`—uma função fábrica
+que cria uma subclasse de `tuple` com o nome e os campos especificados:
+
+[source, pycon]
+----
+>>> from collections import namedtuple
+>>> Coordinate = namedtuple('Coordinate', 'lat lon')
+>>> issubclass(Coordinate, tuple)
+True
+>>> moscow = Coordinate(55.756, 37.617)
+>>> moscow
+Coordinate(lat=55.756, lon=37.617)  <1>
+>>> moscow == Coordinate(lat=55.756, lon=37.617)  <2>
+True
+----
+<1> Um `+__repr__+` útil.
+<2> Um `+__eq__+` que faz sentido.
+
+A `typing.NamedTuple`, mais recente, oferece a mesma funcionalidade e
+acrescenta anotações de tipo a cada campo:
+
+[source, pycon]
+----
+>>> import typing
+>>> Coordinate = typing.NamedTuple('Coordinate',
+...     [('lat', float), ('lon', float)])
+>>> issubclass(Coordinate, tuple)
+True
+>>> typing.get_type_hints(Coordinate)
+{'lat': <class 'float'>, 'lon': <class 'float'>}
+----
+
+[TIP]
+====
+Uma tupla nomeada e com dicas de tipo pode também ser construída passando
+os campos como argumentos nomeados, assim:
+
+[source, pycon]
+----
+Coordinate = typing.NamedTuple('Coordinate', lat=float, lon=float)
+----
+
+Além de ser mais legível, essa forma permite fornecer o mapeamento de campos e
+tipos como `**fields_and_types`.
+====
+
+Desde Python 3.6, `typing.NamedTuple` pode também ser usada em uma instrução `class`,
+com as anotações de tipo escritas como descrito na
+https://fpy.li/pep526[PEP 526—Syntax for Variable Annotations (_Sintaxe para Anotações de Variáveis_)] (EN).
+É mais legível, e torna fácil  sobrescrever métodos ou acrescentar métodos novos.
+O <<coord_tuple_ex>> é a mesma classe `Coordinate`, com um par de atributos `float`
+e um `+__str__+` customizado, para mostrar a coordenada no formato 55.8°N, 37.6°E.
+//  as shown in <<coord_tuple_ex>>.
+
+[[coord_tuple_ex]]
+._typing_namedtuple/coordinates.py_
+====
+[source, py]
+----
+include::../code/05-data-classes/typing_namedtuple/coordinates.py[tags=COORDINATE]
+----
+====
+
+[WARNING]
+====
+Apesar de `NamedTuple` aparecer na declaração `class` como uma superclasse, ela não é.
+`typing.NamedTuple` usa a funcionalidade avançada de uma
+metaclassefootnote:[As metaclasses são um dos assuntos tratados no
+<<ch_class_metaprog>>.] para customizar a criação da classe do usuário.
+Confira isso:
+
+[source, pycon]
+----
+>>> issubclass(Coordinate, typing.NamedTuple)
+False
+>>> issubclass(Coordinate, tuple)
+True
+----
+
+====
+
+No método `+__init__+` gerado por `typing.NamedTuple`,
+os campos aparecem como parâmetros e na mesma ordem em que aparecem na declaração `class`.
+
+Assim como `typing.NamedTuple`, o decorador `dataclass` suporta a sintaxe da
+https://fpy.li/pep526[PEP 526] (EN) para declarar atributos de instância.
+O decorador lê as anotações das variáveis e gera métodos automaticamente para sua classe.
+Como comparação, veja a classe `Coordinate`
+equivante escrita com a ajuda do decorador `dataclass`, como mostra o <<coord_dataclass_ex>>.
+
+[[coord_dataclass_ex]]
+._dataclass/coordinates.py_
+====
+[source, py]
+----
+include::../code/05-data-classes/dataclass/coordinates.py[tags=COORDINATE]
+----
+====
+
+Observe que o corpo das classes no <<coord_tuple_ex>> e no <<coord_dataclass_ex>>
+são idênticos—a diferença está na própria declaração `class`.
+O decorador `@dataclass` não depende de herança ou de uma metaclasse,
+então não deve interferir no uso desses mecanismos pelo
+usuário.footnote:[Decoradores de classe são discutidos no <<ch_class_metaprog>>,
+na seção "Metaprogramação de classes", junto com as metaclasses.
+Ambos são formas de customizar o comportamento de uma classe além do que seria possível com herança.]
+A classe `Coordinate` no <<coord_dataclass_ex>> é uma subclasse de
+`object`.((("", startref="DCBover05")))
+
+[[dc_main_features_sec]]
+==== Principais recursos
+
+As((("data class builders", "main features", id="DCBmain05"))) diferentes fábricas de classes de dados
+tem muito em comum, como resume a <<builders_compared_tbl>>.
+
+[[builders_compared_tbl]]
+.Recursos selecionados, comparando as três fábricas de classes de dados; `x` é uma instância de uma classe de dados daquele tipo
+[options="header"]
+|==============================================================================================================================
+|                           | namedtuple        | NamedTuple        | dataclass
+| instâncias mutáveis         | NÃO                | NÃO                | SIM
+| sintaxe de declaração de classe    | NÃO                | SIM               | SIM
+| criar um dict            | x._asdict()       | x._asdict()       | dataclasses.asdict(x)
+| obter nomes dos campos           | x._fields         | x._fields         | [f.name for f in dataclasses.fields(x)]
+| obter defaults              | x._field_defaults | x._field_defaults | [f.default for f in dataclasses.fields(x)]
+| obter tipos dos campos           | N/A               | x.&#x5f;&#x5f;annotations&#x5f;&#x5f; | x.&#x5f;&#x5f;annotations&#x5f;&#x5f;
+| nova instância com modificações | x._replace(…)     | x._replace(…)     | dataclasses.replace(x, …)
+| nova classe durante a execução      | namedtuple(…)     | NamedTuple(…)     | dataclasses.make_dataclass(…)
+|==============================================================================================================================
+
+[WARNING]
+====
+As classes criadas por `typing.NamedTuple` e `@dataclass` tem um atributo `+__annotations__+`,
+contendo as dicas de tipo para os campos.
+Entretanto, ler diretamente de `+__annotations__+` não é recomendado.
+Em vez disso, a melhor prática recomendada para obter tal informação é chamar
+https://fpy.li/3p[`inspect.get_annotations(MyClass)`] (a partir de Python 3.10—EN) ou
+pass:[<a href="https://fpy.li/3z"><code>typing.&#x200b;get_&#x200b;type_&#x200b;hints(MyClass)</code></a>]
+(Python 3.5 a 3.9).
+Isso porque tais funções fornecem serviços adicionais,
+como a resolução de referências futuras nas dicas de tipo.
+Voltaremos a isso bem mais tarde neste livro, na <<problems_annot_runtime_sec>>.
+====
+
+Vamos agora detalhar aqueles recursos principais.
+
+
+===== Instâncias mutáveis
+
+A diferença fundamental entre essas três fábricas de classes é que
+`collections.namedtuple` e `typing.NamedTuple` criam subclasses de `tuple`,
+e portanto as instâncias são imutáveis.
+Por default, `@dataclass` produz classes mutáveis.
+Mas o decorador aceita o argumento nomeado `frozen`—que aparece no <<coord_dataclass_ex>>.
+Quando `frozen=True`, a classe vai gerar uma exceção
+se você tentar atribuir um valor a um campo após a instância ter sido inicializada.
+
+
+[[class_syntax_feature]]
+===== Sintaxe de declaração de classe
+
+Apenas `typing.NamedTuple` e `dataclass` suportam a sintaxe normal de declaração de `class`,
+tornando mais fácil acrescentar métodos e docstrings à classe que está sendo criada.
+
+===== Construir um dict
+
+As duas variantes de tuplas nomeadas fornecem um método de instância (`._asdict`),
+para construir um objeto `dict` a partir dos campos de uma instância de classe de dados.
+O módulo `dataclasses` fornece uma função para fazer o mesmo: `dataclasses.asdict`.
+
+===== Obter nomes dos campos e valores default
+
+Todas as três fábricas de classes permitem que você obtenha os nomes dos campos e
+os valores default (que podem ser configurados para cada campo).
+Nas classes de tuplas nomeadas, aqueles metadados estão nos
+atributos de classe `._fields` e `._fields_defaults`.
+Você pode obter os mesmos metadados em uma classe decorada com `dataclass` usando
+a função `fields` do módulo `dataclasses`.
+Ela devolve uma tupla de objetos `Field` com vários atributos, incluindo `name` e `default`.
+
+
+===== Obter os tipos dos campos
+
+Classes definidas com a ajuda de `typing.NamedTuple` e `@dataclass`
+contêm um mapeamento dos nomes dos campos para seus tipos, o atributo de classe `+__annotations__+`.
+Como já mencionado, use a função `typing.get_type_hints` em vez de ler diretamente de
+`+__annotations__+`.
+
+
+===== Nova instância com modificações
+
+Dada uma instância de tupla nomeada `x`, a chamada `+x._replace(**kwargs)+`
+devolve uma nova instância com os valores de alguns atributos modificados, 
+de acordo com os argumentos nomeados incluídos na chamada.
+A função de módulo `dataclasses.replace(x, **kwargs)`
+faz o mesmo para uma instância de uma classe decorada com `dataclass`.
+
+
+===== Nova classe durante a execução
+
+Apesar da sintaxe de declaração de classe ser mais legível, ela é fixa no código.
+Um framework pode ter a necessidade de criar classes de dados durante a execução.
+Para tanto, podemos usar a sintaxe default de chamada de função de `collections.namedtuple`,
+que também é suportada por `typing.NamedTuple`.
+O módulo `dataclasses` oferece a função `make_dataclass`, com o mesmo propósito.
+
+Após essa visão geral dos principais recursos das fábricas de classes de dados,
+vamos examinar cada uma delas mais de perto, começando pela mais simples.((("", startref="DCBmain05")))
+
+
+[[classic_named_tuples_sec]]
+=== Tuplas nomeadas clássicas
+
+A((("data class builders", "classic named tuples", id="DCBnamedt05")))((("tuples",
+"classic named tuples", id="Tclassic05")))((("collections.namedtuple",
+id="colnamedt05")))((("namedtuple", id="namedt05")))
+função `collections.namedtuple` é uma fábrica que cria subclasses de `tuple`,
+acrescidas de nomes de campos, um nome de classe, e um `+__repr__+` informativo.
+Classes criadas com `namedtuple` podem ser usadas onde quer que uma tupla seja necessária.
+Na verdade, muitas funções da biblioteca padrão, que antes devolviam tuplas simples agora devolvem,
+tuplas nomeadas, sem afetar de forma alguma o código do usuário.
+
+[TIP]
+====
+Cada instância de uma classe criada por `namedtuple` usa exatamente
+a mesma quantidade de memória usada por uma tupla, pois os nomes dos campos são armazenados na classe.
+====
+
+O <<ex_named_tuple_1>> mostra como poderíamos definir
+uma tupla nomeada para manter informações sobre uma cidade.
+
+[[ex_named_tuple_1]]
+.Definindo e usando um tipo tupla nomeada
+====
+[source, pycon]
+----
+>>> from collections import namedtuple
+>>> City = namedtuple('City', 'name country population coordinates')  <1>
+>>> tokyo = City('Tokyo', 'JP', 36.933, (35.689722, 139.691667))  <2>
+>>> tokyo
+City(name='Tokyo', country='JP', population=36.933, coordinates=(35.689722,
+139.691667))
+>>> tokyo.population  <3>
+36.933
+>>> tokyo.coordinates
+(35.689722, 139.691667)
+>>> tokyo[1]
+'JP'
+----
+====
+<1> São necessários dois parâmetros para criar uma tupla nomeada:
+um nome de classe e uma lista de nomes de campos,
+que podem ser passados como um iterável de strings ou
+como uma única string com os nomes delimitados por espaços.
+<2> Na inicialização de uma instância, os valores dos campos devem ser passados
+como argumentos posicionais separados (uma `tuple`, por outro lado, é inicializada com um único iterável)
+<3> É possível acessar os campos por nome ou por posição.
+
+Como uma subclasse de `tuple`, `City` herda métodos úteis, tal como `+__eq__+`
+e os métodos especiais para operadores de comparação—incluindo `+__lt__+`,
+que permite ordenar listas de instâncias de `City`.
+
+Uma tupla nomeada oferece alguns atributos e métodos além daqueles herdados de `tuple`.
+O <<ex_named_tuple_2>> demonstra os mais úteis dentre eles: o atributo de classe `_fields`,
+o método de classe `_make(iterable)`, e o método de instância `_asdict()`.
+
+[[ex_named_tuple_2]]
+.Atributos e métodos das tuplas nomeadas (continuando do exenplo anterior)
+====
+[source, pycon]
+----
+>>> City._fields  <1>
+('name', 'country', 'population', 'location')
+>>> Coordinate = namedtuple('Coordinate', 'lat lon')
+>>> delhi_data = ('Delhi NCR', 'IN', 21.935, Coordinate(28.613889, 77.208889))
+>>> delhi = City._make(delhi_data)  <2>
+>>> delhi._asdict()  <3>
+{'name': 'Delhi NCR', 'country': 'IN', 'population': 21.935,
+'location': Coordinate(lat=28.613889, lon=77.208889)}
+>>> import json
+>>> json.dumps(delhi._asdict())  <4>
+'{"name": "Delhi NCR", "country": "IN", "population": 21.935,
+"location": [28.613889, 77.208889]}'
+----
+====
+<1> `._fields` é uma tupla com os nomes dos campos da classe.
+<2> `._make()` cria uma `City` a partir de um iterável; `City(*delhi_data)` faria o mesmo.
+<3> `._asdict()` devolve um `dict` criado a partir da instância de tupla nomeada.
+<4> `._asdict()` é útil para serializar os dados no formato JSON, por exemplo.
+
+[WARNING]
+=====
+Até Python 3.7, o método `_asdict` devolvia um `OrderedDict`.
+Desde Python 3.8, ele devolve um `dict` simples—o que não causa qualquer problema,
+agora que podemos confiar na ordem de inserção das chaves.
+Se você precisar de um `OrderedDict`, a
+https://fpy.li/3q[documentação do `_asdict`] (EN)
+recomenda criar um com o resultado: `OrderedDict(x._asdict())`.
+=====
+
+Desde Python 3.7, a `namedtuple` aceita o argumento nomeado `defaults`,
+fornecendo um iterável de N valores default para cada um dos N campos mais à direita na definição da classe.
+O <<ex_coord_tuple_default>> mostra como definir uma tupla nomeada
+`Coordinate` com um valor default para o campo `reference`.
+
+[[ex_coord_tuple_default]]
+.Atributos e métodos das tuplas nomeadas, continuando do <<ex_named_tuple_2>>
+====
+[source, pycon]
+----
+>>> Coordinate = namedtuple('Coordinate', 'lat lon reference', defaults=['WGS84'])
+>>> Coordinate(0, 0)
+Coordinate(lat=0, lon=0, reference='WGS84')
+>>> Coordinate._field_defaults
+{'reference': 'WGS84'}
+----
+====
+
+Na <<class_syntax_feature>>, mencionei que é mais fácil programar métodos com
+a sintaxe de classe suportada por `typing.NamedTuple` and `@dataclass`.
+Você também pode acrescentar métodos a uma `namedtuple`, mas é um remendo.
+Pule a próxima caixinha se você não estiver interessada em gambiarras.
+
+[[hacking_namedtuple_box]]
+.Remendando uma tupla nomeada para injetar um método
+****
+
+Lembre como criamos a classe `Card` class no <<ex_pythonic_deck>> do <<ch_data_model>>:
+
+[source, py3]
+----
+Card = collections.namedtuple('Card', ['rank', 'suit'])
+----
+
+Mas tarde no <<ch_data_model>>, escrevi uma função `spades_high`, para ordenação.
+Seria bom que aquela lógica estivesse encapsulada em um método de `Card`,
+mas acrescentar `spades_high` a `Card` sem usar uma declaração `class` exige um remendo rápido:
+definir a função e então atribuí-la a um atributo de classe. O <<ranked_card_ex>> mostra como isso é feito:
+
+
+[[ranked_card_ex]]
+.frenchdeck.doctest: Acrescentando um atributo de classe e um método a `Card`, a `namedtuple` da <<pythonic_card_deck>>
+====
+[source, pycon]
+----
+include::../code/05-data-classes/frenchdeck.doctest[tags=SPADES_HIGH]
+----
+<1> Acrescenta um atributo de classe com valores para cada naipe.
+<2> A função `spades_high` vai se tornar um  método; o primeiro argumento não precisa ser chamado de `self`.
+Como um método, ela de qualquer forma terá acesso à instância que recebe a chamada.
+<3> Anexa a função à classe `Card` como um método chamado `overall_rank`.
+<4> Funciona!
+====
+
+Para uma melhor legibilidade e para ajudar na manutenção futura,
+é muito melhor programar métodos dentro de uma declaração `class`.
+Mas é bom saber que essa gambiarra é possível, pois às vezes pode ser
+útil.footnote:[Se você conhece Ruby, sabe que injetar métodos é uma técnica bastante conhecida,
+apesar de controversa, entre _rubystas_.
+Em Python isso não é tão comum, pois não funciona com nenhum dos tipos embutidos—`str`, `list`, etc.
+Considero essa limitação de Python uma benção.]
+
+Isso foi apenas um pequeno desvio para demonstrar o poder de uma linguagem dinâmica.
+****
+
+Agora vamos ver a variante `typing.NamedTuple`.((("", startref="DCBnamedt05")))((("",
+startref="Tclassic05")))((("", startref="colnamedt05")))((("", startref="namedt05")))
+
+
+[[typed_named_tuples_sec]]
+=== Tuplas nomeadas com tipo
+
+A((("typing.NamedTuple")))((("tuples", "typing.NamedTuple")))((("data class builders", "typed named tuples")))
+classe `Coordinate` com um campo default, do <<ex_coord_tuple_default>>,
+pode ser escrita usando `typing.NamedTuple`, como se vê no <<coord_tuple_default_ex>>.
+
+[[coord_tuple_default_ex]]
+._typing_namedtuple/coordinates2.py_
+====
+[source, py]
+----
+include::../code/05-data-classes/typing_namedtuple/coordinates2.py[tags=COORDINATE]
+----
+<1> Todo campo de instância precisa ter uma anotação de tipo.
+<2> O campo de instância `reference` é anotado com um tipo e um valor default.
+====
+
+As classes criadas por `typing.NamedTuple` não tem qualquer método
+além daqueles que `collections.namedtuple` também gera—e aquele herdados de `tuple`.
+A única diferença é a presença do atributo de classe `+__annotations__+`—que
+Python ignora completamente durante a execução do programa.
+
+Dado que o principal recurso de `typing.NamedTuple` são as anotações de tipo,
+vamos dar uma rápida olhada nisso antes de continuar nossa exploração das fábricas de classes de dados.
+
+
+=== Introdução às dicas de tipo
+
+Dicas((("data class builders", "type hints", id="DCBhint05")))((("type hints (type annotations)",
+"basics of", id="typehint05"))) de tipo—também chamadas anotações de tipo—são formas de
+declarar o tipo esperado dos argumentos, dos valores devolvidos, das variáveis e dos atributos de funções.
+
+A primeira coisa que você precisa saber sobre dicas de tipo é que elas não são impostas de forma alguma
+pelo compilador de bytecode ou pelo interpretador de Python.
+
+[NOTE]
+====
+Essa é uma introdução muito breve sobre dicas de tipo,
+suficiente apenas para que a sintaxe e o propósito das anotações usadas
+nas declarações de `typing.NamedTuple` e `@dataclass` façam sentido.
+Vamos trata de anotações de tipo nas assinaturas de função no <<ch_type_hints_def>>
+e de anotações mais avançadas no <<ch_more_types>>.
+Aqui vamos ver principalmente dicas com tipos embutidos simples, como `str`, `int`, e `float`,
+que são provavelmente os tipos mais comuns usados para anotar campos em classes de dados.
+====
+
+[[no_runtime_effect_sec]]
+==== Nenhum efeito durante a execução
+
+Pense nas dicas de tipo de Python como
+"documentação que pode ser verificada por IDEs e checadores de tipos".
+
+Isso porque as dicas de tipo não tem qualquer impacto sobre o comportamento
+de programas em Python durante a execução. Veja o <<no_runtime_check_ex>>.
+
+[[no_runtime_check_ex]]
+.Python não exige dicas de tipo durante a execução de um programa
+====
+[source, py]
+----
+>>> import typing
+>>> class Coordinate(typing.NamedTuple):
+...     lat: float
+...     lon: float
+...
+>>> trash = Coordinate('Ni!', None)
+>>> print(trash)
+Coordinate(lat='Ni!', lon=None)    # <1>
+----
+====
+<1> Eu avisei: não há checagem de tipos durante a execução!
+
+Se você incluir o código do <<no_runtime_check_ex>> em um módulo de Python,
+ela vai rodar e exibir uma `Coordinate` sem sentido, e sem gerar qualquer erro ou aviso:
+
+[source, bash]
+----
+$ python3 nocheck_demo.py
+Coordinate(lat='Ni!', lon=None)
+----
+
+O objetivo primário das dicas de tipo é ajudar os checadores de tipos externos,
+como o https://fpy.li/mypy[Mypy] ou o verificador de tipo embutido do
+https://fpy.li/5-5[PyCharm IDE].
+Essas são ferramentas de análise estática: elas verificam código-fonte Python "parado",
+não código em execução.
+
+Para observar o efeito das dicas de tipo, é necessário executar alguma dessas
+ferramentas sobre seu código—como um linter (_analisador de código_).
+Por exemplo, eis o quê o Mypy tem a dizer sobre o exemplo anterior:
+
+[source, bash]
+----
+$ mypy nocheck_demo.py
+nocheck_demo.py:8: error: Argument 1 to "Coordinate" has
+incompatible type "str"; expected "float"
+nocheck_demo.py:8: error: Argument 2 to "Coordinate" has
+incompatible type "None"; expected "float"
+----
+
+Como se vê, dada a definição de `Coordinate`,
+o Mypy percebe que os dois argumentos para criar um instância devem ser do tipo `float`,
+mas atribuição a `trash` usa uma `str` e `None`.footnote:[No contexto das dicas de tipo,
+`None` não é o singleton `NoneType`, mas um apelido para o próprio `NoneType`.
+Se pararmos para pensar, isso é estranho,
+mas agrada nossa intuição e torna as anotações de valores devolvidos por uma função mais fáceis de ler,
+no caso comum de funções que devolvem `None`.]
+
+Vamos falar agora sobre a sintaxe e o significado das dicas de tipo.
+
+[[var_annotation_syntax]]
+==== Sintaxe de anotação de variáveis
+
+Tanto((("variable annotations", "syntax of"))) `typing.NamedTuple` quanto `@dataclass`
+usam a sintaxe de anotações de variáveis definida na https://fpy.li/pep526[PEP 526] (EN).
+Vamos ver aqui uma pequena introdução àquela sintaxe,
+no contexto da definição de atributos em declarações `class`.
+
+A sintaxe básica da anotação de variáveis é :
+
+[source, py3]
+----
+var_name: some_type
+----
+
+A seção https://fpy.li/5-6["Acceptable type hints" (_Dicas de tipo aceitáveis)], na PEP 484,
+explica o que são tipo aceitáveis.
+Porém, no contexto da definição de uma classe de dados, os tipos mais úteis geralmente serão os seguintes:
+
+* Uma classe concreta, por exemplo `str` ou `FrenchDeck`.
+* Um tipo de coleção parametrizada, como `list[int]`, `tuple[str, float]`, etc.
+* `typing.Optional`, por exemplo `Optional[str]`—para declarar um campo que pode ser uma `str` ou `None`.
+
+Você também pode inicializar uma variável com um valor.
+Em uma declaração de `typing.NamedTuple` ou `@dataclass`,
+aquele valor se tornará o default daquele atributo quando
+o argumento correspondente for omitido na chamada de inicialização:
+
+[source, py3]
+----
+var_name: some_type = a_value
+----
+
+==== O significado das anotações de variáveis
+
+Vimos((("variable annotations", "meaning of", id="VAmean05"))), no tópico <<no_runtime_effect_sec>>,
+que dicas de tipo não tem qualquer efeito durante a execução de um programa.
+Mas no momento da importação—quando um módulo é carregado—o Python as lê para construir
+o dicionário `+__annotations__+`, que `typing.NamedTuple` e `@dataclass` então usam para aprimorar a classe.
+
+Vamos começar essa exploração no <<ex_demo_plain>>, com uma classe simples,
+para mais tarde ver que recursos adicionais são acrescentados por `typing.NamedTuple` e `@dataclass`.
+
+[[ex_demo_plain]]
+.meaning/demo_plain.py: uma classe básica com dicas de tipo
+====
+[source, python3]
+----
+include::../code/05-data-classes/meaning/demo_plain.py[]
+----
+====
+<1> `a` se torna um registro em `+__annotations__+`, mas é então descartada:
+nenhum atributo chamado  `a` é criado na classe.
+<2> `b` é salvo como uma anotação, e também se torna um atributo de classe com o valor `1.1`.
+<3> `c` é só um bom e velho atributo de classe básico, sem uma anotação.
+
+Podemos checar isso no console, primeiro lendo o `+__annotations__+` da `DemoPlainClass`,
+e daí tentando obter os atributos chamados `a`, `b`, e `c`:
+
+[source, pycon]
+----
+>>> from demo_plain import DemoPlainClass
+>>> DemoPlainClass.__annotations__
+{'a': <class 'int'>, 'b': <class 'float'>}
+>>> DemoPlainClass.a
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: type object 'DemoPlainClass' has no attribute 'a'
+>>> DemoPlainClass.b
+1.1
+>>> DemoPlainClass.c
+'spam'
+----
+
+Observe que o atributo especial `+__annotations__+` é criado pelo interpretador
+para registrar dicas de tipo que aparecem no código-fonte—mesmo em uma classe básica.
+
+O `a` sobrevive apenas como uma anotação, não se torna um atributo da classe,
+porque nenhum valor é atribuído a
+ele.footnote:[O conceito de _undefined_, um dos erros mais tolos no design de Javascript,
+não existe no Python. Obrigado, Guido!]
+O `b` e o `c` são armazenados como atributos de classe porque são vinculados a valores.
+
+Nenhum desses três atributos estará em uma nova instância de `DemoPlainClass`.
+Se você criar um objeto `o = DemoPlainClass()`, `o.a` vai gerar um `AttributeError`,
+enquanto `o.b` e `o.c` vão obter os atributos de classe com os valores
+`1.1` e `'spam'`—que é apenas o comportamento normal de um objeto Python.
+
+===== Inspecionando uma typing.NamedTuple
+
+Agora vamos examinar uma classe criada com `typing.NamedTuple` (<<ex_demo_nt>>),
+usando os mesmos atributos e anotações da `DemoPlainClass` do <<ex_demo_plain>>.
+
+[[ex_demo_nt]]
+.meaning/demo_nt.py: uma classe criada com `typing.NamedTuple`
+====
+[source, python3]
+----
+include::../code/05-data-classes/meaning/demo_nt.py[]
+----
+====
+<1> `a` se torna uma anotação e também um atributo de instância.
+<2> `b` é outra anotação, mas também se torna um atributo de instância com o valor default `1.1`.
+<3> `c` é só um bom e  velho atributo de classe comum; não será mencionado em nenhuma anotação.
+
+Inspecionando a `DemoNTClass`, temos o seguinte:
+
+[source, pycon]
+----
+>>> from demo_nt import DemoNTClass
+>>> DemoNTClass.__annotations__
+{'a': <class 'int'>, 'b': <class 'float'>}
+>>> DemoNTClass.a
+<_collections._tuplegetter object at 0x101f0f940>
+>>> DemoNTClass.b
+<_collections._tuplegetter object at 0x101f0f8b0>
+>>> DemoNTClass.c
+'spam'
+----
+
+Aqui vemos as mesmas anotações para `a` e `b` que vimos no <<ex_demo_plain>>.
+Mas `typing.NamedTuple` cria os atributos de classe `a` e `b`.
+O atributo c é apenas um atributo de classe simples, com o valor `'spam'`.
+
+Os atributos de classe `a` e `b` são((("descriptors"))) descritores
+(_descriptors_)—um recurso avançado tratado no <<ch_descriptors>>.
+Por ora, pense neles como similares a um _getter_ de propriedades do
+objetofootnote:[NT: Um _getter_ é um método que devolve o valor um atributo do objeto.
+Para propriedades mutáveis, o _getter_ vem geralmente acompanhado por um _setter_,
+que modifica a mesma propriedade.
+Os nomes derivam dos verbos em inglês _get_ (obter, receber) e _set_ (definir, estabelecer).]:
+métodos que não exigem o operador explícito de chamada `()` para obter um atributo de instância.
+Na prática, isso significa que `a` e `b` vão funcionar como atributos de instância
+somente para leitura—o que faz sentido, se lembrarmos que instâncias de `DemoNTClass`
+são apenas tuplas chiques, e tuplas são imutáveis.
+
+A `DemoNTClass` também recebe uma docstring customizada:
+
+[source, pycon]
+----
+>>> DemoNTClass.__doc__
+'DemoNTClass(a, b)'
+----
+
+Vamos examinar uma instância de `DemoNTClass`:
+
+[source, pycon]
+----
+>>> nt = DemoNTClass(8)
+>>> nt.a
+8
+>>> nt.b
+1.1
+>>> nt.c
+'spam'
+----
+
+Para criar `nt`, precisamos passar pelo menos o argumento `a` para `DemoNTClass`.
+O construtor também aceita um argumento `b`,
+mas como este último tem um valor default (de `1.1`), ele é opcional.
+Como esperado, o objeto `nt` possui os atributos `a` e `b`;
+ele não tem um atributo `c`, mas Python obtém `c` da classe, como de hábito.
+
+Se você tentar atribuir valores para `nt.a`, `nt.b`, `nt.c`, ou mesmo para `nt.z`,
+vai gerar uma exceção `AttributeError`, com mensagens de erro sutilmente diferentes.
+Tente fazer isso, e reflita sobre as mensagens.
+
+
+[[inspecting_dataclass_sec]]
+===== Inspecionando uma classe decorada com dataclass
+
+Vamos agora examinar o <<ex_demo_dc>>.
+
+[[ex_demo_dc]]
+.meaning/demo_dc.py: uma classe decorada com `@dataclass`
+====
+[source, python3]
+----
+include::../code/05-data-classes/meaning/demo_dc.py[]
+----
+====
+<1> `a` se torna uma anotação, e também um atributo de instância controlado por um descritor.
+<2> `b` é outra anotação, e também se torna um atributo de instância
+com um descritor e um valor default de `1.1`.
+<3> `c` é apenas um atributo de classe comum; nenhuma anotação se refere a ele.
+
+Podemos então verificar o `+__annotations__+`, o `+__doc__+`,
+e os atributos `a`, `b`, `c` no pass:[<code>Demo&#x200b;DataClass</code>]:
+
+[source, pycon]
+----
+>>> from demo_dc import DemoDataClass
+>>> DemoDataClass.__annotations__
+{'a': <class 'int'>, 'b': <class 'float'>}
+>>> DemoDataClass.__doc__
+'DemoDataClass(a: int, b: float = 1.1)'
+>>> DemoDataClass.a
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: type object 'DemoDataClass' has no attribute 'a'
+>>> DemoDataClass.b
+1.1
+>>> DemoDataClass.c
+'spam'
+----
+
+O `+__annotations__+` e o `+__doc__+` não guardam surpresas.
+Entretanto, não há um atributo chamado `a` em `DemoDataClass`—diferente
+do que ocorre na `DemoNTClass` do <<ex_demo_nt>>,
+que inclui um descritor para obter `a` das instâncias da classe,
+como atributos somente para leitura (aquele misterioso `<_collections._tuplegetter_>`).
+Isso ocorre porque o atributo `a` só existirá nas instâncias de `DemoDataClass`.
+Será um atributo público, que poderemos obter e definir, a menos que a classe seja _frozen_.
+Mas `b` e `c` existem como atributos de classe,
+com `b` contendo o valor default para o atributo de instância `b`,
+enquanto `c` é apenas um atributo de classe que não será vinculado a instâncias.
+
+Vejamos como se parece uma instância de `DemoDataClass`:
+
+[source, pycon]
+----
+>>> dc = DemoDataClass(9)
+>>> dc.a
+9
+>>> dc.b
+1.1
+>>> dc.c
+'spam'
+----
+
+Novamente, `a` e `b` são atributos de instância,
+e `c` é um atributo de classe obtido através da instância.
+
+Como mencionado, instâncias de `DemoDataClass` são mutáveis—e
+nenhuma checagem de tipos é realizada durante a execução:
+
+[source, pycon]
+----
+>>> dc.a = 10
+>>> dc.b = 'oops'
+----
+
+Podemos fazer atribuições ainda mais ridículas:
+
+[source, pycon]
+----
+>>> dc.c = 'whatever'
+>>> dc.z = 'secret stash'
+----
+
+Agora a instância `dc` tem um atributo `c`—mas isso não muda o atributo de classe `c`.
+E podemos adicionar um novo atributo `z`.
+Isso é o comportamento normal de Python: instâncias podem ter seus próprios atributos,
+que não aparecem na classe.footnote:[Definir um atributo após o `+__init__+`
+prejudica a otimização de uso de memória com o compartilhamento das chaves do `+__dict__+`,
+mencionada na
+<<consequences_dict_internals>>.]((("", startref="VAmean05")))((("", startref="typehint05")))((("", startref="DCBhint05")))
+
+
+=== Mais detalhes sobre @dataclass
+
+Até((("data class builders", "@dataclass", id="DCBatdataclass05")))((("@dataclass",
+"keyword parameters accepted by"))) agora, só vimos exemplos simples do uso de `@dataclass`.
+Esse decorador aceita vários argumentos nomeados. Esta é sua assinatura:
+
+[source, py3]
+----
+@dataclass(*, init=True, repr=True, eq=True, order=False,
+              unsafe_hash=False, frozen=False)
+----
+
+O `*` na primeira posição significa que os parâmetros restantes são todos parâmetros nomeados.
+A <<dataclass_options_tbl>> os descreve.
+
+[[dataclass_options_tbl]]
+.Parâmetros nomeados aceitos pelo decorador `@dataclass`
+[options="header"]
+|====================================================================================================================================================================
+| Option      | Meaning                                         | Default | Notes
+| `init`        | Gera o `+__init__+`                             | `True`    | Ignorado se o
+`+__init__+` for implementado pelo usuário.
+| `repr`        | Gera o `+__repr__+`                             | `True`    | Ignorado se o
+`+__repr__+` for implementado pelo usuário.
+| `eq`          | Gera o `+__eq__+`                               | `True`    | Ignorado se o
+`+__eq__+` for implementado pelo usuário.
+| `order`       | Gera `+__lt__+`, `+__le__+`, `+__gt__+`, `+__ge__+` | `False`   | Se `True`,
+causa uma exceção se `eq=False`, ou se qualquer dos métodos de comparação que seriam gerados estiver definido ou for herdado.
+| `unsafe_hash` | Gera o `+__hash__+`                             | `False`   | Semântica complexa e várias restrições—veja a: https://fpy.li/3r[documentação de dataclass].
+| `frozen`      | Cria instâncias "imutáveis"                      | `False`   | As instâncias estarão razoavelmente protegidas contra mudanças acidentais, mas não serão realmente imutáveis.footnote:[O `@dataclass` emula a imutabilidade criando um `+__setattr__+` e um `+__delattr__+`
+que geram um `dataclass.FrozenInstanceError`—uma subclasse de `AttributeError`—quando o usuário tenta definir ou apagar o valor de um campo.]
+|====================================================================================================================================================================
+
+
+Os((("@dataclass", "default settings"))) defaults são, de fato,
+as configurações mais úteis para os casos de uso mais comuns.
+As opções mais prováveis de serem modificadas de seus defaults são:
+
+`frozen=True`:: Protege as instâncias da classe de modificações acidentais.
+`order=True`:: Permite ordenar as instâncias da classe de dados.
+
+Dada a natureza dinâmica de objetos Python,
+não é muito difícil para um programador curioso contornar a proteção oferecida por `frozen=True`.
+Mas os truques necessários são fáceis de perceber em uma revisão do código.
+
+Se((("@dataclass", "&#x005F;&#x005F;hash&#x005F;&#x005F; method")))((("&#x005F;&#x005F;hash&#x005F;&#x005F;")))
+tanto o argumento `eq` quanto o `frozen` forem `True`, `@dataclass` produz um método
+`+__hash__+` adequado, e daí as instâncias serão _hashable_.
+O `+__hash__+` gerado usará dados de todos os campos que não forem
+individualmente excluídos usando uma opção de campo, que veremos na <<field_options_sec>>.
+Se `frozen=False` (o default), `@dataclass` definirá `+__hash__+` como `None`,
+sinalizando que as instâncias não são hashable, e portanto sobrescrevendo o `+__hash__+` de qualquer superclasse.
+
+A https://fpy.li/pep557[PEP 557—Data Classes (_Classe de Dados_)] (EN) diz o seguinte sobre `unsafe_hash`:
+
+[quote]
+____
+Apesar de não ser recomendado, você pode forçar `@dataclass` a criar um método
+`+__hash__+`  com `unsafe_hash=True`.
+Pode ser esse o caso, se sua classe for logicamente imutável e mesmo assim possa ser modificada.
+Este é um caso de uso especializado e deve ser considerado com cuidado.
+____
+
+Deixo o `unsafe_hash` por aqui.
+Se você achar que precisa usar essa opção, leia a
+https://fpy.li/3r[documentação de `dataclasses.dataclass`].
+
+
+Outras customizações da classe de dados gerada podem ser feitas no nível dos campos.
+
+[[field_options_sec]]
+==== Opções de campo
+
+Já((("@dataclass", "field options", id="atdatafield05"))) vimos a opção de campo mais básica:
+fornecer (ou não) um valor default junto com a dica de tipo.
+Os campos de instância declarados se tornarão parâmetros no `+__init__+` gerado.
+Python não permite parâmetros sem um default após parâmetros com defaults.
+Então, após declarar um campo com um valor default,
+cada um dos campos seguintes deve também ter um default.
+
+Valores default mutáveis são a fonte mais comum de bugs entre desenvolvedores Python iniciantes.
+Em definições de função, um valor default mutável é facilmente corrompido,
+quando uma invocação da função modifica o default,
+mudando o comportamento nas invocações posteriores—um tópico que
+vamos explorar na <<mutable_default_parameter_sec>> (no <<ch_refs_mut_mem>>).
+Atributos de classe são frequentemente usados como valores default de atributos para instâncias,
+inclusive em classes de dados.
+E o `@dataclass` usa os valores default nas dicas de tipo para gerar parâmetros com defaults no
+`+__init__+`.
+Para prevenir bugs, o `@dataclass` rejeita a definição de classe que aparece no <<club_wrong_ex>>.
+
+[[club_wrong_ex]]
+._dataclass/club_wrong.py_: essa classe gera um `ValueError`
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/club_wrong.py[tags=CLUBMEMBER]
+----
+====
+
+Se você carregar o módulo com aquela classe `ClubMember`, o resultado será esse:
+
+[source, bash]
+----
+$ python3 club_wrong.py
+Traceback (most recent call last):
+  File "club_wrong.py", line 4, in <module>
+    class ClubMember:
+  ...several lines omitted...
+ValueError: mutable default <class 'list'> for field guests is not allowed:
+use default_factory
+----
+
+A mensagem do `ValueError` explica o problema e sugere uma solução: usar a `default_factory`.
+O <<club_ex>> mostra como corrigir a `ClubMember`.
+
+[[club_ex]]
+._dataclass/club.py_: essa definição de `ClubMember` funciona
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/club.py[]
+----
+====
+
+No campo `guests` do <<club_ex>>, em vez de uma lista literal,
+o valor default é definido chamando a função `dataclasses.field` com `default_factory=list`.
+
+O parâmetro `default_factory` permite que você forneça uma função,
+classe ou qualquer outro invocável, que será chamado com zero argumentos,
+para gerar um valor default a cada vez que uma instância da classe de dados for criada.
+Dessa forma, cada instância de `ClubMember` terá sua própria `list`—ao invés de
+todas as instâncias compartilharem a mesma `list` da classe,
+que raramente é o que queremos, e muitas vezes é um bug.
+
+[WARNING]
+====
+É bom que `@dataclass` rejeite definições de classe com uma `list` default em um campo.
+Entretanto, entenda que isso é uma solução parcial, que se aplica apenas a `list`, `dict` e `set`.
+Outros valores mutáveis usados como default não serão apontados por `@dataclass`.
+É sua responsabilidade entender o problema e se lembrar de usar uma _factory_
+default para definir valores default mutáveis.
+====
+
+Se você estudar a documentação do módulo https://fpy.li/3s[`dataclasses`],
+verá um campo `list` definido com uma sintaxe nova, como no <<club_generic_ex>>.
+
+[[club_generic_ex]]
+._dataclass/club_generic.py_: essa definição de `ClubMember` é mais precisa
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/club_generic.py[]
+----
+====
+<1> `list[str]` significa "uma lista de str."
+
+A nova sintaxe `list[str]` é um tipo genérico parametrizado: desde Python 3.9,
+o tipo embutido `list` aceita aquela notação com colchetes para especificar o tipo dos itens da lista.
+
+[WARNING]
+====
+Antes de Python 3.9, as coleções embutidas não suportavam a notação de tipagem genérica.
+Como uma solução temporária, há tipos correspondentes de coleções no módulo `typing`.
+Se você precisa de uma dica de tipo para uma `list` parametrizada no Python 3.8 ou anterior,
+você tem que importar e usar o tipo `List` de `typing`: `List[str]`.
+Leia mais sobre isso na caixa <<legacy_deprecated_typing_box>>.
+====
+
+Vamos tratar dos tipos genéricos no <<ch_type_hints_def>>.
+Por ora, observe que o  <<club_ex>> e o <<club_generic_ex>> estão ambos corretos,
+e que o verificador de tipagem Mypy não reclama de nenhuma das duas definições de classe.
+
+A diferença é que aquele `guests: list` significa que `guests` pode ser uma `list`
+de objetos de qualquer tipo, enquanto `guests: list[str]`
+diz que `guests` deve ser uma `list` na qual cada item é uma `str`.
+Isso permite que o checador de tipos encontre (alguns)
+bugs em código que insira itens inválidos na lista, ou que leia itens dali.
+
+A `default_factory` é possivelmente a opção mais comum da função `field`,
+mas há várias outras, listadas na <<field_options_tbl>>.
+
+[[field_options_tbl]]
+.Argumentos nomeados aceitos pela função `field`
+[options="header"]
+|====================================================================================================================================================================
+| Option  | Meaning | Default
+| `default` | Valor default para o campo | `_MISSING_TYPE` footnote:[`dataclass._MISSING_TYPE` é um valor sentinela, indicando que a opção não foi fornecida. Ele existe para que se possa definir `None` como um valor default efetivo, um caso de uso comum.]
+| `default_factory` | função com 0 parâmetros usada para produzir um valor default | `_MISSING_TYPE`
+| `init` | Incluir o campo nos parâmetros de `+__init__+` | `True`
+| `repr` | Incluir o campo em `+__repr__+` | `True`
+| `compare` | Usar o campo nos métodos de comparação `+__eq__+`, `+__lt__+`, etc. | `True`
+| `hash` | Incluir o campo no cálculo de `+__hash__+` | ++None++footnote:[A opção `hash=None` significa que o campo será usado em `+__hash__+` apenas se `compare=True`.]
+| `metadata` | Mapeamento com dados definidos pelo usuário; ignorado por `@dataclass` | `None`
+|====================================================================================================================================================================
+
+A opção `default` existe porque a chamada a `field` toma o lugar do valor default na anotação do campo.
+Se você quisesse criar um campo `athlete` com o valor default `False`,
+e também omitir aquele campo do método `+__repr__+`, escreveria o seguinte:
+
+[source, py3]
+----
+@dataclass
+class ClubMember:
+    name: str
+    guests: list = field(default_factory=list)
+    athlete: bool = field(default=False, repr=False)
+----
+
+
+==== Processamento pós-inicialização
+
+O((("@dataclass", "post-init processing",
+id="atdatapost05")))((("&#x005F;&#x005F;init&#x005F;&#x005F;")))((("&#x005F;&#x005F;post_init&#x005F;&#x005F;")))
+método `+__init__+` gerado por `@dataclass` apenas recebe os argumentos passados e
+os atribui—ou seus valores default, se o argumento não estiver presente—aos atributos de instância,
+que são campos da instância.
+Mas pode ser necessário fazer mais que isso para inicializar a instância.
+Se for esse o caso, você pode fornecer um método `+__post_init__+`.
+Quando esse método existir, `@dataclass` acrescentará código ao `+__init__+` gerado para invocar
+`+__post_init__+` como o último passo da inicialização.
+
+Casos de uso comuns para `+__post_init__+` são validação e
+o cálculo de valores de campos baseado em outros campos.
+Vamos estudar um exemplo simples, que usa `+__post_init__+` pelos dois motivos.
+
+Primeiro, dê uma olhada no comportamento esperado de uma subclasse de `ClubMember`,
+chamada `HackerClubMember`,
+como descrito por doctests no <<hackerclub_doctests_ex>>.
+
+[[hackerclub_doctests_ex]]
+._dataclass/hackerclub.py_: doctests para `HackerClubMember`
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/hackerclub.py[tags=DOCTESTS]
+----
+====
+
+Observe que precisamos fornecer `handle` como um argumento nomeado,
+pois `HackerClubMember` herda `name` e `guests` de `ClubMember`,
+e acrescenta o campo `handle`. A docstring gerada para `HackerClubMember`
+mostra a ordem dos campos na chamada de inicialização:
+
+[source, pycon]
+----
+>>> HackerClubMember.__doc__
+"HackerClubMember(name: str, guests: list = <factory>, handle: str = '')"
+----
+
+Aqui `<factory>` é um caminho mais curto para dizer que algum invocável vai produzir
+o valor default para `guests` (no nosso caso, a fábrica é a classe `list`).
+O ponto é o seguinte: para fornecer um `handle` mas não um `guests`,
+precisamos passar `handle` como um argumento nomeado.
+
+A seção https://fpy.li/3t["Herança] na documentação do módulo `dataclasses`
+explica como a ordem dos campos é analisada quando existem vários níveis de herança.
+
+[NOTE]
+====
+No <<ch_inheritance>> vamos falar sobre o uso indevido da herança,
+especialmente quando as superclasses não são abstratas.
+Criar uma hierarquia de classes de dados é, em geral, uma má ideia,
+mas nos serviu bem aqui para tornar o <<hackerclub_ex>> mais curto,
+e permitir que nos concentrássemos na declaração do campo `handle` e na validação com
+`+__post_init__+`.
+====
+
+O <<hackerclub_ex>> mostra a implementação.
+
+[[hackerclub_ex]]
+._dataclass/hackerclub.py_: código para `HackerClubMember`
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/hackerclub.py[tags=HACKERCLUB]
+----
+====
+<1> `HackerClubMember` estende `ClubMember`.
+<2> `all_handles` é um atributo de classe.
+<3> `handle` é um campo de instância do tipo `str`,
+com uma string vazia como valor default; isso o torna opcional.
+<4> Obtém a classe da instância.
+<5> Se `self.handle` é a string vazia, a define como a primeira parte de `name`.
+<6> Se `self.handle` está em `cls.all_handles`, gera um `ValueError`.
+<7> Insere o novo `handle` em `cls.all_handles`.
+
+
+O <<hackerclub_ex>> funciona como esperado, mas não é satisfatório pra um verificador estático de tipos.
+A seguir veremos a razão disso, e como resolver o problema.((("", startref="atdatapost05")))
+
+==== Atributos de classe tipados
+
+Se((("@dataclass", "typed class attributes"))) verificarmos os tipos de <<hackerclub_ex>> com o Mypy,
+seremos repreendidos:
+
+[source]
+----
+$ mypy hackerclub.py
+hackerclub.py:37: error: Need type annotation for "all_handles"
+(hint: "all_handles: Set[<type>] = ...")
+Found 1 error in 1 file (checked 1 source file)
+----
+
+Infelizmente, a dica fornecida pelo Mypy (versão 0.910 quando essa seção foi revisada)
+não é muito útil no contexto do uso de `@dataclass`.
+Primeiro, ele sugere usar `Set`, mas desde Python 3.9 podemos usar
+`set`—sem a necessidade de importar `Set` de `typing`.
+E mais importante, se acrescentarmos uma dica de tipo como `set[…]`
+a `all_handles`, `@dataclass` vai encontrar essa anotação e
+transformar `all_handles` em um campo de instância.
+Vimos isso acontecer na <<inspecting_dataclass_sec>>.
+
+A forma de contornar esse problema definida na
+https://fpy.li/5-11[PEP 526—Syntax for Variable Annotations (_Sintaxe para Anotações de Variáveis_)] (EN)
+é horrível.
+Para criar uma variável de classe com uma dica de tipo, precisamos usar um pseudo-tipo
+chamado `typing.ClassVar`,
+que aproveita a notação de tipos genéricos (`[]`) para definir o tipo da variável
+e também para declará-la como um atributo de classe.
+
+Para fazer felizes tanto o checador de tipos quando o `@dataclass`,
+deveríamos declarar o `all_handles` do <<hackerclub_ex>> assim:
+
+[source, py3]
+----
+    all_handles: ClassVar[set[str]] = set()
+----
+
+Aquela dica de tipo está dizendo o seguinte:
+
+[quote]
+____
+`all_handles` é um atributo de classe do tipo ++set++-de-++str++, com um `set` vazio como valor default.
+____
+
+Para escrever aquela anotação precisamos também importar `ClassVar` do módulo `typing`.
+
+O decorador `@dataclass` não se importa com os tipos nas anotações,
+exceto em dois casos, e este é um deles: se o tipo for `ClassVar`,
+um campo de instância não será gerado para aquele atributo.
+
+O outro caso onde o tipo de um campo é relevante para `@dataclass`
+é quando declaramos _variáveis apenas de inicialização_, nosso próximo tópico.
+
+
+==== Variáveis de inicialização que não são campos
+
+Algumas((("@dataclass", "init-only variables")))((("variables", "init-only variables")))
+vezes pode ser necessário passar para `+__init__+` argumentos que não são campos de instância.
+Tais argumentos são chamados "argumentos apenas de inicialização" (_init-only variables_) pela
+https://fpy.li/3v[documentação de `dataclasses`].
+Para declarar um argumento desses, o módulo `dataclasses` oferece o pseudo-tipo `InitVar`,
+que usa a mesma sintaxe de `typing.ClassVar`.
+O exemplo dado na documentação é uma classe de dados com um campo inicializado
+a partir de um banco de dados, e o objeto banco de dados precisa ser passado para o `+__init__+`.
+
+O <<initvar_ex>> mostra o código que ilustra a seção https://fpy.li/3v["Variáveis de inicialização apenas"].
+
+[[initvar_ex]]
+.Exemplo da documentação do módulo https://fpy.li/3v[`dataclasses`]
+====
+[source, py3]
+----
+@dataclass
+class C:
+    i: int
+    j: int | None = None
+    database: InitVar[DatabaseType | None] = None
+
+    def __post_init__(self, database):
+        if self.j is None and database is not None:
+            self.j = database.lookup('j')
+
+c = C(10, database=my_database)
+----
+====
+
+Veja como o atributo `database` é declarado.
+`InitVar` vai evitar que `@dataclass` trate `database` como um campo regular.
+Ele não será definido como um atributo de instância, e a função `dataclasses.fields` não vai listá-lo.
+Entretanto, `database` será um dos argumentos aceitos pelo `+__init__+` gerado,
+e também será passado para o `+__post_init__+`.
+Ao escrever aquele método é preciso adicionar o argumento correspondente à sua assinatura,
+como mostra o <<initvar_ex>>.
+
+Esse longo tratamento de `@dataclass` cobriu os recursos mais importantes desse
+decorador—alguns deles apareceram em seções anteriores,
+como na <<dc_main_features_sec>>, onde falamos em paralelo das três fábricas de classes de dados.
+A https://fpy.li/3v[documentação de `dataclasses`] e a
+https://fpy.li/pep526[PEP 526--Syntax for Variable Annotations (_Sintaxe para Anotações de Variáveis_)]
+(EN) têm todos os detalhes.
+
+Na próxima seção apresento um exemplo mais completo com o `@dataclass`.
+
+
+[[dc_resource_sec]]
+==== Exemplo de @dataclass: o registro de recursos do Dublin Core
+
+Frequentemente as classes((("@dataclass", "example using", id="atdataexample05")))((("Dublin Core Schema")))
+criadas com o `@dataclass` vão ter mais campos que os exemplos muito curtos apresentados até aqui.
+O https://fpy.li/5-12[Dublin Core] (EN) oferece a fundação para um exemplo mais típico de `@dataclass`.
+
+[quote, Dublin Core na Wikipedia]
+____
+O Dublin Core é um esquema de metadados que visa descrever objetos digitais,
+como videos, sons, imagens, textos e sites na web.
+Aplicações de Dublin Core utilizam XML e o RDF
+(Resource Description Framework).footnote:[Fonte: O artigo https://fpy.li/3w[Dublin Core] na Wikipedia.]
+____
+
+O padrão define 15 campos opcionais; a classe `Resource`, no <<resource_ex>>, usa 8 deles.
+
+[[resource_ex]]
+._dataclass/resource.py_: código de `Resource`, uma classe baseada nos termos do Dublin Core
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/resource.py[tags=DATACLASS]
+----
+====
+<1> Esse `Enum` vai fornecer valores de um tipo seguro para o campo `Resource.type`.
+<2> `identifier` é o único campo obrigatório.
+<3> `title` é o primeiro campo com um default. Isso obriga todos os campos abaixo dele a fornecerem defaults.
+<4> O valor de `date` pode ser uma instância de `datetime.date` ou `None`.
+<5> O default do campo `type` é `ResourceType.BOOK`.
+
+
+O <<resource_doctest_ex>> mostra um doctest, para demonstrar como um registro `Resource` aparece no código.
+
+[[resource_doctest_ex]]
+._dataclass/resource.py_: código de `Resource`, uma classe baseada nos termos do Dublin Core
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/resource.py[tags=DOCTEST]
+----
+====
+
+O `+__repr__+` gerado pelo `@dataclass` é razoável,
+mas podemos torná-lo mais legível.
+Esse é o formato que queremos para `repr(book)`:
+
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/resource_repr.py[tags=DOCTEST]
+----
+
+O <<resource_repr_ex>> é o código para o `+__repr__+`, produzindo o formato que aparece no trecho anterior.
+Esse exemplo usa `dataclass.fields` para obter os nomes dos campos da classe de dados.
+
+
+[[resource_repr_ex]]
+.`dataclass/resource_repr.py`: código para o método `+__repr__+`, implementado na classe `Resource` do <<resource_ex>>
+====
+[source, py3]
+----
+include::../code/05-data-classes/dataclass/resource_repr.py[tags=REPR]
+----
+====
+<1> Dá início à lista `res`, para criar a string de saída com o nome da classe e o parênteses abrindo.
+<2> Para cada campo `f` na classe...
+<3> ...obtém o atributo nomeado da instância.
+<4> Anexa uma linha indentada com o nome do campo e `repr(value)`—é isso que o `!r` faz.
+<5> Acrescenta um parênteses fechando.
+<6> Cria uma string de múltiplas linhas a partir de `res`, e devolve essa string.
+
+Com esse exemplo, inspirado pelo espírito de Dublin, Ohio,
+concluímos nosso passeio pelas fábricas de classes de dados de Python.
+
+Classes de dados são úteis, mas podem estar sendo usadas de forma excessiva em seu projeto.
+A próxima seção explica isso.((("", startref="atdataexample05")))((("", startref="DCBatdataclass05")))
+
+[[dataclass_code_smell_sec]]
+=== A classe de dados como _cheiro no código_
+
+Independente((("data class builders", "data class as code smell", id="DCBsmell05")))((("code smells",
+id="codesmells05"))) de você implementar uma classe de dados escrevendo todo o código ou
+aproveitando as facilidades oferecidas por alguma das fábricas de classes descritas nesse capítulo,
+fique alerta: isso pode sinalizar um problema em seu design.
+
+No pass:[<a href="https://fpy.li/42" class="orm:hideurl"><em>Refactoring:
+Improving the Design of Existing Code</em> (<em>Refatorando: Melhorando o Design de Código Existente</em>), 2nd ed.</a>]
+(Addison-Wesley), Martin Fowler e Kent Beck apresentam um catálogo de
+"_cheiros no código_"footnote:[NT: _Code smell_ em geral não é traduzido na literatura em
+português—uma tradução quase literal seria "fedor no código".
+Uma tradução mais gentil pode ser "cheiro no código", adotado aqui.
+Mais gentil e menos enviesada: um "cheiro no código" nem sempre é indicação de um problema.]—padrões
+no código que podem indicar a necessidade de refatoração. O verbete entitulado "Data Class"
+(_Classe de Dados_) começa assim:
+
+[quote]
+____
+Essas são classes que tem campos, métodos para obter e definir os campos, e nada mais.
+Tais classes são recipientes burros de dados,
+e muitas vezes são manipuladas de forma excessivamente detalhada por outras classes.
+____
+
+No site pessoal de Fowler, há um post muito esclarecedor chamado
+https://fpy.li/5-14["Code Smell" (_Cheiro no Código_)] (EN).
+Esse texto é muito relevante para nossa discussão, pois o autor usa a _classe de dados_
+como um exemplo de _cheiro no código_, e sugere alternativas para lidar com ele.
+Abaixo está a tradução integral daquele artigo.footnote:[Tenho a felicidade de ter
+Martin Fowler como colega de trabalho na Thoughtworks, estão precisei de apenas 20 minutos para obter sua permissão.]
+
+
+[[code_smell_essay]]
+.Cheiros no Código
+****
+
+*De Martin Fowler*
+
+Um cheiro no código é um indicação superficial que frequentemente corresponde a um problema mais profundo no sistema.
+O termo foi inventado por Kent Beck, enquanto ele me ajudava com meu livro, https://fpy.li/5-15[_Refactoring_].
+
+A rápida definição acima contém um par de detalhes sutis.
+Primeiro, um cheiro é, por definição, algo rápido de detectar—é "cheiroso", como eu disse recentemente.
+Um método longo é um bom exemplo disso—basta olhar o código e ver mais de uma dúzia de linhas de Java para meu nariz se contrair.
+
+O segundo detalhe é que cheiros nem sempre indicam um problema. Alguns métodos longos são bons.
+É preciso ir mais fundo para ver se há um problema subjacente ali.
+Cheiros não são inerentemente ruins por si só—eles frequentemente são o indicador de um problema,
+não o problema propriamente dito.
+
+Os melhores cheiros são algo fácil de detectar e que, na maioria das vezes, leva a problemas realmente interessantes.
+Classes de dados (classes contendo só dados e nenhum comportamento [próprio]) são um bom exemplo.
+Você olha para elas e se pergunta que comportamento deveria fazer parte daquela classe.
+Então você começa a refatorar, para incluir ali aquele comportamento.
+Muitas vezes, algumas perguntas simples e essas refatorações iniciais são
+um passo vital para transformar um objeto anêmico em alguma coisa que realmente tenha classe.
+
+Uma coisa boa sobre cheiros é sua facilidade de detecção por pessoas inexperientes,
+mesmo aquelas pessoas que não conhecem o suficiente para avaliar se há mesmo um problema
+ou, se existir, para corrigi-lo. 
+Soube de um líder de uma equipe de desenvolvimento que elege um "cheiro da semana",
+e pede às pessoas que procurem aquele cheiro e o apresentem para colegas mais experientes.
+Fazer isso com um cheiro por vez é uma ótima maneira de ensinar gradualmente
+os membros da equipe a serem programadores melhores.
+
+****
+
+A principal ideia da programação orientada a objetos é manter o comportamento e os dados juntos,
+na mesma unidade de código: uma classe.
+Se uma classe é largamente utilizada mas não tem qualquer comportamento próprio significativo,
+é bem provável que o código que interage com as instâncias dessa classe esteja espalhado
+(ou mesmo duplicado) em métodos e funções ao longo de todo
+o sistema—uma receita para dores de cabeça na manutenção.
+Por isso, as refatorações de Fowler para lidar com uma classe de dados envolvem
+trazer responsabilidades de volta para a classe.
+
+Levando o que foi dito acima em consideração,
+há alguns cenários comuns onde faz sentido ter um classe de dados com pouco ou nenhum comportamento.
+
+==== A classe de dados como um esboço
+
+Nesse cenário, a classe de dados é uma implementação simplista inicial de uma classe,
+para dar início a um novo projeto ou módulo. Com o tempo, a classe deve ganhar seus próprios métodos,
+deixando de depender de métodos de outras classes para operar sobre suas instâncias.
+O esboço é temporário; ao final do processo,
+sua classe pode se tornar totalmente independente da fábrica usada inicialmente para criá-la.
+
+Python também é muito usado para resolução rápida de problemas e para experimentaçào,
+e nesses casos é aceitável deixar o esboço pronto para uso.
+
+==== A classe de dados como representação intermediária
+
+Uma classe de dados pode ser útil para criar registros que serão exportados para o JSON
+ou algum outro formato de intercomunicação, ou para manter dados que acabaram de ser importados,
+cruzando alguma fronteira do sistema.
+Todas as fábricas de classes de dados de Python oferecem um método ou função
+para converter uma instância em um `dict` simples,
+e você sempre pode invocar o construtor com um `dict`,
+usado para passar argumentos nomeados expandidos com `**`.
+Um `dict` assim é muito similar a um registro JSON.
+
+Nesse cenário, as instâncias da classe de dados devem ser tratadas como objetos
+imutáveis—mesmo que os campos sejam mutáveis,
+não deveriam ser modificados nessa forma intermediária.
+Mudá-los significa perder o principal benefício de manter os dados e o comportamento próximos.
+Quando o processo de importação/exportação exigir mudança nos valores,
+você deve implementar seus próprios métodos de fábrica,
+em vez de usar os métodos "as dict" existentes ou os construtores padrão.
+
+Vamos agora mudar de assunto e aprender como escrever padrões que "casam"
+com instâncias de classes arbitrárias,
+não apenas com as sequências e mapeamentos que vimos nas seções
+<<sequence_patterns_sec>> e
+<<pattern_matching_mappings_sec>>.((("", startref="DCBsmell05")))((("", startref="codesmells05")))
+
+[[pattern_instances_sec]]
+=== Pattern Matching com instâncias de classes
+
+Padrões de classe((("data class builders", "pattern matching class instances",
+id="DCBpattern05")))((("pattern matching", "pattern matching class instances", id="PMpattern05")))
+são projetados para "casar" com instâncias de classes por tipo e—opcionalmente—por atributos.
+O sujeito de um padrão de classe pode ser uma instância de qualquer classe,
+não apenas instâncias de classes de dados.footnote:[Trato desse conteúdo aqui por ser o
+primeiro capítulo sobre classes definidas pelo usuário, e acho que _pattern matching_ com classes
+é um assunto muito importante para esperar até a <<function_objects_part>> do livro.
+Minha filosofia: é mais importante saber como usar classes que como defini-las.]
+
+Há três variantes de padrões de classes: simples, nomeado e posicional.
+Vamos estudá-las nessa ordem.
+
+==== Padrões de classe simples
+
+Já((("simple class patterns"))) vimos um exemplo de padrões de
+classe simples usados como sub-padrões na <<sequence_patterns_sec>>:
+
+[source, python3]
+----
+        case [str(name), _, _, (float(lat), float(lon))]:
+----
+
+////
+
+By the way, there is an interesting corolary here:
+if I want to do duck typing,
+i.e. pattern match attributes of an instance of an arbitrary class,
+I can pattern match with `object`:
+
+    >>> class Foo: pass
+    >>> foo = Foo()
+    >>> foo.bar = 'baz'
+    >>> match foo:
+    ...     case object(bar=b):
+    ...         print(b)
+    ...
+    baz
+
+And that's regardless of `object` not taking keyword arguments:
+
+    >>> object(bar='baz')
+    Traceback (most recent call last):
+      File "<input>", line 1, in <module>
+        object(bar='baz')
+    TypeError: object() takes no arguments
+
+////
+
+Aquele padrão casa com uma sequência de quatro itens,
+onde o primeiro item deve ser uma instância de `str` e
+o último item deve ser um tupla de dois elementos, com duas instâncias de `float`.
+
+A sintaxe dos padrões de classe se parece com a invocação de um construtor.
+Abaixo temos um padrão de classe que "casa" com valores `float`
+sem vincular uma variável (o corpo do `case` pode ser referir a `x` diretamente, se necessário):
+
+[source, python3]
+----
+    match x:
+        case float():
+            do_something_with(x)
+----
+
+Mas isso aqui possivelmente será um bug no seu código:
+
+[source, python3]
+----
+    match x:
+        case float:  # DANGER!!!
+            do_something_with(x)
+----
+
+No exemplo anterior, `case float:` "casa" com qualquer sujeito,
+pois Python entende `float` como uma variável, que é então vinculada ao sujeito.
+
+A sintaxe `float(x)` do padrão simples é um caso especial que se aplica apenas
+a onze tipos embutidos "abençoados", listados no final da seção
+https://fpy.li/5-16["Class Patterns" (_Padrões de Classe_)] (EN) da
+pass:[<a href="https://fpy.li/pep634" class="orm:hideurl">PEP 634—Structural Pattern Matching:
+Specification (<em>(Pattern Matching Estrutural: Especificação)</em></a>]:
+
+[source]
+----
+bool   bytearray   bytes   dict   float   frozenset   int   list   set   str   tuple
+----
+
+Nessas classes, a variável que parece um argumento do construtor—por exemplo,
+o `x` em `float(x)`—é vinculada a toda a instância do sujeito ou à parte do sujeito que "casa" com um sub-padrão,
+como exemplificado por `str(name)` no padrão de sequência que vimos antes:
+
+[source, python3]
+----
+        case [str(name), _, _, (float(lat), float(lon))]:
+----
+
+Se a classe não de um daqueles onze tipos embutidos "abençoados",
+então essas variáveis parecidas com  argumentos representam padrões
+a serem testados com atributos de uma instância daquela classe.
+
+
+[[keyword_class_patterns_sec]]
+==== Padrões de classe nomeados
+
+Para((("keyword class patterns"))) entender como usar padrões de classe nomeados,
+observe a classe `City` e suas cinco instâncias no <<ex_cities_match>>, abaixo.
+
+[[ex_cities_match]]
+.A classe `City` e algumas instâncias
+====
+[source, python3]
+----
+include::../code/05-data-classes/match_cities.py[tags=CITY]
+----
+====
+
+Dadas essas definições, a seguinte função devolve uma lista de cidades asiáticas:
+
+[source, python3]
+----
+include::../code/05-data-classes/match_cities.py[tags=ASIA]
+----
+
+O padrão `City(continent='Asia')` encontra qualquer instância de `City`
+onde o atributo `continent` seja igual a `'Asia'`,
+independente do valor dos outros atributos.
+
+Para coletar o valor do atributo `country`, você poderia escrever:
+
+[source, python3]
+----
+include::../code/05-data-classes/match_cities.py[tags=ASIA_COUNTRIES]
+----
+
+O padrão `City(continent='Asia', country=cc)` encontra as mesmas cidades asiáticas,
+como antes, mas agora a variável `cc` está vinculada ao atributo `country` da instância.
+Isso inclusive funciona se a variável do padrão também se chamar `country`:
+
+[source, python3]
+----
+        match city:
+            case City(continent='Asia', country=country):
+                results.append(country)
+----
+
+Padrões de classe nomeados são bastante legíveis,
+e funcionam com qualquer classe que possua atributos de instância públicos.
+Mas eles são um tanto prolixos.
+
+Padrões de classe posicionais são mais convenientes em alguns casos,
+mas exigem suporte explícito da classe do sujeito, como veremos a seguir.
+
+[[positional_class_patterns_sec]]
+==== Padrões de classe posicionais
+
+Dadas((("positional class patterns"))) as definições do <<ex_cities_match>>,
+a seguinte função devolveria uma lista de cidades asiáticas,
+usando um padrão de classe posicional:
+
+[source, python3]
+----
+include::../code/05-data-classes/match_cities.py[tags=ASIA_POSITIONAL]
+----
+
+O padrão `City('Asia')` encontra qualquer instância de `City` na qual
+o valor do primeiro atributo seja `Asia`, independente do valor dos outros atributos.
+
+Se você quiser obter o valor do atributo `country`, poderia escrever:
+
+[source, python3]
+----
+include::../code/05-data-classes/match_cities.py[tags=ASIA_COUNTRIES_POSITIONAL]
+----
+
+O padrão `City('Asia', _, country)` encontra as mesmas cidades de antes,
+mas agora variável `country` está vinculada ao terceiro atributo da instância.
+
+Eu falei do "primeiro" ou do "terceiro" atributos, mas o quê isso realmente significa?
+
+`City` (ou qualquer classe) funciona com padrões posicionais graças a
+um atributo de classe especial chamado `+__match_args__+`,
+que as fábricas de classe vistas nesse capítulo criam automaticamente.
+Esse é o valor de `+__match_args__+` na classe `City`:
+
+[source, pycon]
+----
+>>> City.__match_args__
+('continent', 'name', 'country')
+----
+
+Como se vê, `+__match_args__+` declara os nomes dos atributos na ordem
+em que eles serão usados em padrões posicionais.
+
+Na <<positional_pattern_implement_sec>> vamos escrever código para definir
+`+__match_args__+` em uma classe que criaremos sem a ajuda de uma fábrica de classes.
+
+[TIP]
+====
+Você pode combinar argumentos nomeados e posicionais em um padrão.
+Alguns, mas não todos, os atributos de instância disponíveis para o _match_
+podem estar listados no `+__match_args__+`.
+Dessa forma, algumas vezes pode ser necessário usar argumentos nomeados em um padrão,
+além dos argumentos posicionais.
+====
+
+Hora de um resumo de capítulo.((("", startref="DCBpattern05")))((("", startref="PMpattern05")))
+
+
+=== Resumo do Capítulo
+
+O((("data class builders", "overview of"))) tópico principal desse capítulo foram
+as fábricas de classes de dados `collections.namedtuple`, `typing.NamedTuple`,
+e `dataclasses.dataclass`.
+Vimos como cada uma delas gera classes de dados a partir de descrições,
+fornecidas como argumentos a uma função fábrica ou, no caso das duas últimas,
+a partir de uma declaração `class` com dicas de tipo.
+Especificamente, ambas as variantes de tupla produzem subclasses de `tuple`,
+acrescentando apenas a capacidade de acessar os campos por nome,
+e criando também um atributo de classe `_fields`,
+que lista os nomes dos campos na forma de uma tupla de strings.
+
+A seguir colocamos lado a lado os principais recursos de cada uma das três fábricas de classes,
+incluindo como extrair dados da instância como um `dict`,
+como obter os nomes e valores default dos campos,
+e como criar uma nova instância a partir de uma instância existente.
+
+Isso levou ao nosso primeiro contato com dicas de tipo,
+especialmente aquelas usadas para anotar atributos em uma declaração `class`,
+usando a notação introduzida no Python 3.6 com a
+https://fpy.li/pep526[PEP 526—Syntax for Variable Annotations (_Sintaxe para Anotações de Variáveis_)] (EN).
+O aspecto provavelmente mais surpreeendente das dicas de tipo em geral
+é o fato delas não terem efeito durante a execução.
+Python continua sendo uma linguagem dinâmica.
+Ferramentas externas, como o Mypy,
+são necessárias para aproveitar a informação de tipagem na
+detecção de erros via análise estática do código-fonte.
+Após um resumo básico da sintaxe da PEP 526,
+estudamos os efeitos das anotações em uma classe simples e
+em classes criadas por `typing.NamedTuple` e por `@dataclass`.
+
+A seguir falamos sobre os recursos mais usados dentre os oferecidos por `@dataclass`,
+e sobre a opção `default_factory` da função `dataclasses.field`.
+Também demos uma olhada nas dicas de pseudo-tipo especiais `typing.ClassVar` e
+`dataclasses.InitVar`, importantes no contexto das classes de dados.
+Esse tópico central foi concluído com um exemplo baseado no schema Dublin Core,
+ilustrando como usar `dataclasses.fields` para iterar sobre os atributos de uma instância de
+`Resource` em um `+__repr__+` customizado.
+
+Então alertamos contra os possíveis usos abusivos das classes de dados,
+frustrando um princípio básico da programação orientada a objetos:
+os dados e as funções que acessam os dados devem estar juntos na mesma classe.
+Classes sem uma lógica podem ser um sinal de uma lógica fora de lugar.
+
+Na última seção, vimos como o _pattern matching_
+funciona com instâncias de qualquer classe como sujeitos—e
+não apenas das classes criadas com as fábricas apresentadas nesse capítulo.
+
+[[further_data_class]]
+=== Leitura complementar
+
+A documentação((("data class builders", "further reading on")))
+padrão de Python para as fábricas de classes de dados vistas aqui é muito boa, e inclui muitos pequenos exemplos.
+
+Em especial para `@dataclass`, a maior parte da
+https://fpy.li/pep557[PEP 557—Data Classes (_Classes de Dados_)] (EN)
+foi copiada para a documentação do módulo https://fpy.li/3s[`dataclasses`].
+Entretanto, algumas seções informativas da
+https://fpy.li/pep557[PEP 557] não foram copiadas, incluindo
+https://fpy.li/5-18["Why not just use namedtuple?" (_Por que simplesmente não usar namedtuple?_)],
+https://fpy.li/5-19["Why not just use typing.NamedTuple?" (_Por que simplesmente não usar typing.NamedTuple?_)],
+e a seção https://fpy.li/5-20["Rationale" (_Justificativa_)], que termina com a seguinte _Q&A_:
+
+[quote, Eric V. Smith, PEP 557 "Justificativa"]
+____
+Quando não é apropriado usar Classes de Dados?
+
+Quando for exigida compatibilidade da API com tuplas de dicts.
+Quando for exigida validação de tipo além daquela oferecida
+pelas PEPs 484 e 526, ou quando for exigida validação ou conversão de valores.
+____
+
+Em pass:[<a href="https://fpy.li/5-21" class="orm:hideurl"><em>RealPython.com</em></a>],
+Geir Arne Hjelle escreveu um
+https://fpy.li/5-22["Ultimate guide to data classes in Python 3.7" (_O guia definitivo das classes de dados no Python 3.7_)]
+(EN) muito completo.
+
+Na PyCon US 2018, Raymond Hettinger apresentou
+https://fpy.li/5-23["Dataclasses: The code generator to end all code generators" (video)
+(_Dataclasses: O gerador de código para acabar com todos os geradores de código_)] (EN).
+
+Para mais recursos e funcionalidade avançada, incluindo validação, o
+https://fpy.li/5-24[projeto _attrs_] (EN),
+liderado por Hynek Schlawack, surgiu anos antes de `dataclasses` e oferece mais facilidades,
+com a promessa de "trazer de volta a alegria de criar classes, 
+liberando você do tedioso trabalho de implementar protocolos de objeto
+(também conhecidos como métodos _dunder_)".
+
+A influência do _attrs_ sobre o `@dataclass` é reconhecida por Eric V. Smith na PEP 557.
+Isso provavelmente inclui a mais importante decisão de Smith sobre a API:
+o uso de um decorador de classe em vez de uma classe base ou de
+uma metaclasse para realizar a tarefa.
+
+Glyph—fundador do projeto Twisted—escreveu uma excelente introdução à _attrs_ em
+https://fpy.li/5-25["The One Python Library Everyone Needs" (_A Biblioteca Python que Todo Mundo Precisa Ter_)] (EN).
+A documentação da _attrs_ inclui uma https://fpy.li/5-26[discussão aobre alternativas].
+
+O autor de livros, instrutor e cientista maluco da computação Dave Beazley escreveu o
+https://fpy.li/5-27[_cluegen_], um outro gerador de classes de dados.
+Se você já assistiu alguma palestra do David,
+sabe que ele é um mestre na metaprogramação Python a partir de princípios básicos.
+Então achei inspirador descobrir, no arquivo _README.md_ do _cluegen_,
+o caso de uso concreto que o motivou a criar uma alternativa ao `@dataclass` de Python,
+e sua filosofia de apresentar uma abordagem para resolver o problema,
+ao invés de fornecer uma ferramenta: a ferramenta pode inicialmente ser mais rápida de usar ,
+mas a abordagem é mais flexível e pode ir tão longe quanto você deseje.
+
+Sobre a _classe de dados_ como um cheiro no código,
+a melhor fonte que encontrei foi livro de Martin Fowler, _Refactoring_ ("Refatorando"), 2ª ed.
+A versão mais recente não traz a citação da epígrafe deste capitulo,
+"Classes de dados são como crianças...", mas apesar disso é a melhor edição do livro mais famoso de Fowler,
+em especial para pythonistas, pois os exemplos são em JavaScript moderno,
+que é mais próximo de Python que de Java—a linguagem usada na primeira edição.
+
+O site https://fpy.li/5-28[_Refactoring Guru_ (Guru da Refatoração)] (EN) também tem uma descrição do
+https://fpy.li/5-29[data class code smell (_classe de dados como cheiro no código_)] (EN).
+
+
+
+.Ponto de vista
+****
+
+O((("data class builders", "Soapbox discussion")))((("Soapbox sidebars", "@dataclass")))
+verbete para https://fpy.li/5-30["Guido"] no
+pass:[<a href="https://fpy.li/5-31" class="orm:hideurl">"The Jargon File"</a>] (EN)
+é sobre Guido van Rossum. Entre outras coisa, ele diz:
+
+[quote]
+____
+Diz a lenda que o atributo mais importante de Guido, além do próprio Python,
+é a máquina do tempo de Guido, um aparelho que se diz que ele possui por causa da
+frequência irritante com que pedidos de usuários por novos recursos
+recebem como resposta "Implementei isso noite passada mesmo..."
+____
+
+Por um longo tempo, uma das peças ausentes da sintaxe de Python
+foi uma forma rápida e padronizada de declarar atributos de instância em uma classe.
+Muitas linguagens orientadas a objetos incluem esse recurso.
+Aqui está parte da definição da classe `Point` em Smalltalk:
+
+----
+Object subclass: #Point
+    instanceVariableNames: 'x y'
+    classVariableNames: ''
+    package: 'Kernel-BasicObjects'
+----
+
+A segunda linha lista os nomes dos atributos de instância  `x` e `y`.
+Se existissem atributos de classe, eles estariam na terceira linha.
+
+Python sempre teve uma forma fácil de declarar um atributo de classe,
+se ele tiver um valor inicial.
+Mas atributos de instância são mais comuns,
+e os programadores Python tem sido obrigados a olhar dentro do método `+__init__+` para encontrá-los,
+sempre temerosos que podem existir atributos de instância sendo criados
+em outro lugar na classe—ou mesmo por funções e métodos de outras classes.
+
+Agora temos o `@dataclass`, viva!
+
+Mas ele traz seus próprios problemas
+
+Primeiro, quando você usa `@dataclass`, dicas de tipo não são opcionais.
+Pelos últimos sete anos, desde a
+https://fpy.li/pep484[PEP 484—Type Hints (_Dicas de Tipo_)] (EN),
+nos prometeram que elas sempre seriam opcionais.
+Agora temos um novo recurso importante na linguagem que exige dicas de tipo.
+Se você não gosta de toda essa tendência de tipagem estática,
+pode querer usar a https://fpy.li/5-24[`attrs`] no lugar do `@dataclass`.
+
+Em segundo lugar, a sintaxe da https://fpy.li/pep526[PEP 526] (EN)
+para anotar atributos de instância e de classe inverte a convenção consagrada para declarações de classe:
+tudo que era declarado no nível superior de um bloco `class` era um atributo de classe
+(métodos também são atributos de classe).
+Com a PEP 526 e o `@dataclass`,
+qualquer atributo declarado no nível superior com uma dica de tipo se torna um atributo de instância:
+
+[source, python3]
+----
+    @dataclass
+    class Spam:
+        repeat: int  # instance attribute
+----
+
+Aqui, `repeat` também é um atributo de instância:
+
+[source, python3]
+----
+    @dataclass
+    class Spam:
+        repeat: int = 99  # instance attribute
+----
+
+Mas se não houver dicas de tipo,
+subitamente estamos de volta os bons velhos tempos quando declarações
+no nível superior da classe pertencem apenas à classe:
+
+[source, python3]
+----
+    @dataclass
+    class Spam:
+        repeat = 99  # class attribute!
+----
+
+Por fim, se você desejar anotar aquele atributo de classe com um tipo,
+não pode usar tipos regulares, porque então ele se tornará um atributo de instância.
+Você tem que recorrer a aquela anotação usando o pseudo-tipo `ClassVar`:
+
+[source, python3]
+----
+    @dataclass
+    class Spam:
+        repeat: ClassVar[int] = 99  # aargh!
+----
+
+Aqui estamos falando sobre uma exceçao da exceção da regra.
+Me parece algo muito pouco pythônico.
+
+Não tomei parte nas discussões que levaram à PEP 526 ou à
+https://fpy.li/pep557[PEP 557—Data Classes (_Classes de Dados_)],
+mas aqui está uma sintaxe alternativa que eu gostaria de ver:
+
+[source, python3]
+----
+@dataclass
+class HackerClubMember:
+    .name: str                                   # <1>
+    .guests: list = field(default_factory=list)
+    .handle: str = ''
+
+    all_handles = set()                          # <2>
+----
+<1> Atributos de instância devem ser declarados com um prefixo `.`.
+<2> Qualquer nome de atributo que não tenha um prefixo `.`
+é um atributo de classe (como sempre foram).
+
+A gramática da linguagem teria que mudar para acomodar isso.
+Mas acho essa forma muito legível, e ela evita o problema da exceção-da-exceção.
+
+Queria poder pegar a máquina do tempo de Gudo emprestada e voltar a 2017,
+para convencer os desenvolvedores principais a aceitarem essa ideia.
+****

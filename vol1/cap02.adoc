@@ -1,0 +1,2712 @@
+[[ch_sequences]]
+== Uma coleção de sequências
+
+[quote, Leo Geurts&#x002C; Lambert Meertens&#x002C; and Steven Pembertonm, <em>ABC Programmer's Handbook</em> (Bosko Books) p.8]
+____
+Como podem ter notado, várias das operações mencionadas funcionam da mesma forma com textos, listas e tabelas.
+Coletivamente, textos, listas e tabelas são chamados de 'trens' (_trains_). [...]
+A instrução `FOR` também funciona, de forma genérica, com trens.
+____
+
+
+Antes de criar Python, Guido foi um dos desenvolvedores da linguagem
+ABC—um projeto de pesquisa de 10 anos para criar um ambiente de programação para iniciantes.
+A ABC introduziu várias ideias que hoje consideramos "pythônicas":
+operações genéricas com diferentes tipos de sequências, tipos tupla e mapeamento embutidos,
+estrutura de blocos por indentação, tipagem forte sem declaração de variáveis, entre outras.
+A usabilidade de Python não é acidental.
+
+Python herdou da ABC o tratamento uniforme de sequências.
+Strings, listas, sequências de bytes, arrays, elementos XML e resultados vindos de bancos de dados
+compartilham um rico conjunto de operações comuns, incluindo iteração, fatiamento, ordenação e concatenação.
+
+Entender a variedade de sequências disponíveis no Python evita reinventar a roda,
+e sua interface comum nos inspira a criar APIs que
+suportem e aproveitem bem os tipos de sequências existentes e futuros.
+
+A maior parte deste capítulo trata das sequências em geral,
+desde a conhecida `list` até os tipos `str` e `bytes`, adicionados no Python 3.
+Tópicos específicos sobre listas, tuplas, arrays e filas também foram incluídos,
+mas os detalhes sobre strings Unicode e sequências de bytes são tratados no <<ch_str_bytes>>.
+Além disso, a ideia aqui é falar sobre os tipos de sequências prontas para usar.
+A criação de novos tipos de sequência é o tema do <<ch_seq_methods>>.
+
+Os((("sequences", "topics covered"))) principais tópicos cobertos neste capítulo são:
+
+* Compreensão de listas e os fundamentos das expressões geradoras
+* Usar tuplas como registros ou como listas imutáveis
+* Desempacotamento de sequências e padrões de sequências
+* Fatiamento de sequências para leitura e escrita
+* Tipos especializados de sequências, como arrays e filas
+
+=== Novidades neste capítulo
+
+A((("sequences", "significant changes to"))) atualização mais importante desse capítulo é
+a <<sequence_patterns_sec>>,
+primeira abordagem das instruções `match/case`
+introduzidas no Python 3.10.
+
+As outras mudanças são aperfeiçoamentos da primeira edição:
+
+* Um novo diagrama e uma nova descrição do funcionamento interno das
+sequências, contrastando contêineres e sequências planas.
+
+* Uma comparação entre  `list` e `tuple` quanto ao desempenho e ao armazenamento.
+
+* Ressalvas sobre tuplas com elementos mutáveis, e como detectá-los se necessário.
+
+Movi a discussão sobre tuplas nomeadas para a <<classic_named_tuples_sec>> no <<ch_dataclass>>,
+onde elas são comparadas com `typing.NamedTuple` e `@dataclass`.
+
+[NOTE]
+====
+Para abrir espaço para conteúdo novo mantendo o número de páginas dentro do razoável, a seção
+"Managing Ordered Sequences with Bisect" ("_Gerenciando sequências ordenadas com bisect_") da primeira edição
+agora é um https://fpy.li/bisect[artigo] (EN)
+no site que complementa o livro.
+====
+
+=== Uma visão geral das sequências embutidas
+
+A((("sequences", "overview of built-in", id="Soverv02"))) biblioteca padrão oferece
+uma boa seleção de tipos de sequências, implementadas em C:
+
+Sequências contêiner::
+  Podem((("container sequences"))) armazenar itens de tipos diferentes, incluindo contêineres aninhados e objetos de qualquer tipo.
+  Alguns exemplos: `list`, `tuple`, e `collections.deque`.
+Sequências planas::
+  Armazenam((("flat sequences"))) itens de algum tipo simples, mas não outras coleções ou referências a objetos.
+  Alguns exemplos: `str`, `bytes`, e `array.array`.
+
+Uma((("tuples", "simplified memory diagram for")))((("arrays"))) _sequência contêiner_ mantém
+referências para os objetos que contém, que podem ser de qualquer tipo,
+enquanto uma  _sequência plana_ armazena o valor de seu conteúdo em seu próprio espaço de memória,
+e não como objetos Python distintos.
+Veja a <<container_v_flat_img>>.
+
+[[container_v_flat_img]]
+.Diagramas de memória simplificados mostrando uma `tuple` e um `array`, cada uma com três itens. As células em cinza representam o cabeçalho de cada objeto Python na memória. A `tuple` tem um array de ponteiros para seus itens. Cada item é um objeto Python separado, possivelmente contendo também referências aninhadas a outros objetos Python, como aquela lista de dois itens. Por outro lado, um `array` Python é um único objeto, contendo um array da linguagem C com três números de ponto flutuante no formato nativo da CPU.
+image::../images/flpy_0201.png[Diagrama de memória simplificado de um `array` e de uma `tuple`]
+
+Dessa forma, sequências planas são mais compactas, mas só podem armazenar valores primitivos como
+bytes e números inteiros e de ponto flutuante.
+
+[NOTE]
+====
+Todo objeto Python na memória tem um cabeçalho com metadados.
+O objeto Python mais simples, um `float`, tem um campo de valor e dois campos de metadados:
+
+* `ob_refcnt`: a contagem de referências ao objeto
+* `ob_type`: um ponteiro para o tipo do objeto
+* `ob_fval`: um `double` de C mantendo o valor do `float`
+
+No Python 64-bits, cada um desses campos ocupa 8 bytes.
+Por isso um array de números de ponto flutuante é mais compacto que uma tupla de números de ponto flutuante:
+o array é um único objeto contendo apenas o valor dos números,
+enquanto a tupla consiste de vários objetos—a própria tupla e cada objeto `float` que ela contém.
+====
+
+[role="pagebreak-before less_space"]
+Outra forma de agrupar as sequências é por mutabilidade:
+
+Sequências mutáveis::
+  Por((("mutable sequences"))) exemplo, `list`, `bytearray`, `array.array` e `collections.deque`.
+Sequências imutáveis::
+  Por((("immutable sequences"))) exemplo, `tuple`, `str`, e `bytes`.
+
+A <<sequence_uml>> ajuda a visualizar como as sequências mutáveis herdam todos os métodos
+das sequências imutáveis e implementam vários métodos adicionais.
+Os tipos embutidos de sequências na verdade não são subclasses das classes base abstratas (ABCs)
+`Sequence` e `MutableSequence`, mas sim _subclasses virtuais_ registradas com aquelas
+ABCs—como veremos no <<ch_ifaces_prot_abc>>.
+Por serem subclasses virtuais, `tuple` e `list` passam nesses testes:
+
+[source, pycon]
+----
+>>> from collections import abc
+>>> issubclass(tuple, abc.Sequence)
+True
+>>> issubclass(list, abc.MutableSequence)
+True
+----
+
+[[sequence_uml]]
+.Diagrama de classe UML simplificado para algumas classes de collections.abc (as superclasses estão à esquerda; as setas de herança apontam das subclasses para as superclasses; nomes em itálico indicam classes e métodos abstratos).
+image::../images/flpy_0202.png[Diagrama de classe UML para `Sequence` e `MutableSequence`]
+
+Lembre-se((("UML class diagrams", "simplified for collections.abc"))) dessas características básicas:
+mutável versus imutável; contêiner versus plana.
+Elas ajudam a extrapolar o que se sabe sobre um tipo de sequência para outros tipos.
+
+O tipo mais fundamental de sequência é a lista: um contêiner mutável.
+Espero que você já esteja muito familiarizada com listas,
+então vamos passar diretamente para a compreensão de listas,
+uma forma potente de criar listas que algumas vezes é subutilizada por sua sintaxe parecer, a princípio, estranha.
+Dominar as compreensões de listas abre as portas para expressões geradoras que—entre outros usos—podem produzir
+elementos para preencher sequências de qualquer tipo.
+Ambas são temas da próxima seção.((("", startref="Soverv02")))
+
+
+=== Compreensões de listas e expressões geradoras
+
+Um((("sequences", "list comprehensions and generator expressions", id="Slist02")))((("list comprehensions (listcomps)",
+"building sequences with")))
+jeito rápido de criar uma sequência é usando uma compreensão de lista (se o alvo é uma `list`) ou
+uma expressão geradora (para outros tipos de sequências).
+Se você não usa essas formas sintáticas diariamente,
+aposto que está perdendo oportunidades de escrever código mais legível e, muitas vezes, mais rápido também.
+
+Se você duvida de minha alegação, sobre essas formas serem "mais legíveis", continue lendo.
+Vou tentar convencer você.
+
+[TIP]
+====
+Por comodidade, muitos programadores Python se referem a compreensões de listas como _listcomps_,
+e a expressões geradoras como _genexps_.
+Usarei também esses dois termos.
+====
+
+==== Compreensões de lista e legibilidade
+
+Em sua opinião((("list comprehensions (listcomps)", "readability and")))
+qual desses exemplos é mais fácil de ler, o <<ex_build_list>> ou o <<ex_listcomp0>>?
+
+[[ex_build_list]]
+.Cria uma lista de códigos Unicode a partir de uma string
+====
+[source, pycon]
+----
+>>> symbols = '$¢£¥€¤'
+>>> codes = []
+>>> for symbol in symbols:
+...     codes.append(ord(symbol))
+...
+>>> codes
+[36, 162, 163, 165, 8364, 164]
+----
+====
+
+[[ex_listcomp0]]
+.Cria uma lista de códigos Unicode a partir de uma string, usando uma listcomp
+====
+[source, pycon]
+----
+>>> symbols = '$¢£¥€¤'
+>>> codes = [ord(symbol) for symbol in symbols]
+>>> codes
+[36, 162, 163, 165, 8364, 164]
+----
+====
+
+Qualquer um que saiba um pouco de Python consegue ler o <<ex_build_list>>.
+Entretanto, após aprender sobre as listcomps, acho o <<ex_listcomp0>> mais legível,
+porque deixa sua intenção explícita.
+
+Um loop `for` pode ser usado para muitas coisas diferentes:
+percorrer uma sequência para contar ou encontrar itens, computar valores agregados (somas, médias),
+ou inúmeras outras tarefas.
+O código no <<ex_build_list>> está criando uma lista.
+Uma listcomp, por outro lado, é mais clara.
+Seu objetivo é sempre criar uma nova lista.
+
+Naturalmente, é possível abusar das compreensões de lista para escrever código verdadeiramente incompreensível.
+Já vi código Python usando listcomps apenas para repetir um bloco de código por seus efeitos colaterais.
+Se você não vai fazer alguma coisa com a lista criada, não deveria usar essa sintaxe.
+Além disso, tente manter o código curto.
+Se uma compreensão ocupa mais de duas linhas,
+provavelmente seria melhor quebrá-la ou reescrevê-la como um bom e velho loop `for`.
+Avalie qual o melhor caminho: em Python, como em português, não existem regras absolutas para se escrever bem.
+
+
+.Dica de sintaxe
+[TIP]
+====
+Em((("list comprehensions (listcomps)", "syntax tip")))((("&#x005C; line continuation escape")))((("backslash (&#x005C;)")))((("&#x005C; (backslash)")))((("line breaks")))((("multiline lists")))((("lists", "multiline")))((("square brackets ([])")))((("[] (square brackets)")))((("&#x007B;&#x007D; (curly brackets)")))((("curly brackets (&#x007B;&#x007D;)")))
+código Python, quebras de linha são ignoradas dentro de pares de `[]`, `{}`, ou `()`.
+Então você pode usar múltiplas linhas para criar listas, listcomps, tuplas, dicionários, etc.,
+sem necessidade de usar o marcador de continuação de linha `\`,
+que não funciona se após o `\` você acidentalmente digitar um espaço.
+Outro detalhe, quando aqueles pares de delimitadores são usados para definir um literal com uma série de itens
+separados por vírgulas, uma vírgula solta no final será ignorada.
+Daí, por exemplo, quando se codifica uma lista a partir de um literal com múltiplas linhas,
+é uma gentileza deixar uma vírgula após o último item.
+Isso torna um pouco mais fácil ao próximo programador acrescentar mais um item àquela lista,
+e reduz o ruído quando se lê os diffs.
+====
+
+.Escopo local dentro de compreensões e expressões geradoras
+****
+No((("scope", "within comprehensions and generator expressions")))((("generator expressions (genexps)")))((("list comprehensions (listcomps)", "local scope within")))
+Python 3, compreensões de lista, expressões geradoras, e suas irmãs, as compreensões de `set` e de `dict`,
+tem um escopo local para manter as variáveis criadas na condição `for`.
+Entretanto, variáveis atribuídas com
+o((("assignment expression (&#x003A;&#x3D;)")))((("Walrus operator (&#x003A;&#x3D;)")))((("&#x003A;&#x3D; (Walrus operator)")))
+"operador morsa" (_"Walrus operator"_), `:=`, continuam acessíveis após
+aquelas compreensões ou expressões retornarem—diferente
+das variáveis locais em uma função.
+A https://fpy.li/pep572[PEP 572—Assignment Expressions] (EN) define o escopo do alvo de um `:=`
+como a função à qual ele pertence, exceto se houver uma declaração `global` ou `nonlocal` para aquele
+identificador.footnote:[Agradeço à leitora Tina Lapine por apontar essa informação.]
+
+[source, pycon]
+----
+>>> x = 'ABC'
+>>> codes = [ord(x) for x in x]
+>>> x  <1>
+'ABC'
+>>> codes
+[65, 66, 67]
+>>> codes = [last := ord(c) for c in x]
+>>> last  <2>
+67
+>>> c  <3>
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'c' is not defined
+----
+<1> `x` não foi sobrescrito: continua vinculado a `'ABC'`.
+<2> `last` permanece.
+<3> `c` desapareceu; ele só existiu dentro da listcomp.
+
+****
+
+Compreensões de lista criam listas a partir de sequências ou de qualquer outro tipo iterável,
+filtrando e transformando os itens.
+As funções embutidas `filter` e `map` podem fazer o mesmo,
+mas perdemos legibilidade, como veremos a seguir.
+
+
+==== Listcomps versus map e filter
+
+Listcomps((("map function")))((("functions", "map function")))((("filter function")))((("functions",
+"filter, map, and reduce functions")))((("list comprehensions (listcomps)", "versus map and filter functions")))
+fazem tudo que as funções `map` e `filter` fazem,
+sem os malabarismos exigidos pela funcionalidade limitada do `lambda` de Python.
+
+Considere o <<ex_listcomp_x_filter_map>>.
+
+[[ex_listcomp_x_filter_map]]
+.A mesma lista, criada por uma listcomp e por uma composição de map/filter
+====
+[source, pycon]
+----
+>>> symbols = '$¢£¥€¤'
+>>> beyond_ascii = [ord(s) for s in symbols if ord(s) > 127]
+>>> beyond_ascii
+[162, 163, 165, 8364, 164]
+>>> beyond_ascii = list(filter(lambda c: c > 127, map(ord, symbols)))
+>>> beyond_ascii
+[162, 163, 165, 8364, 164]
+----
+====
+
+Eu imaginava que `map` e `filter` fossem mais rápidas que as listcomps equivalentes, mas Alex Martelli
+assinalou que não é o caso—pelo menos não nos exemplos acima.
+O script https://fpy.li/2-1[listcomp_speed.py] no
+https://fpy.li/code[repositório de código de Python Fluente]
+é um teste de desempenho simples, comparando listcomp com `filter/map`.
+
+Vou falar mais sobre `map` e `filter` no <<ch_func_objects>>.
+Vamos agora ver o uso de listcomps para computar produtos cartesianos:
+uma lista contendo tuplas criadas a partir de todos os itens de duas ou mais listas.
+
+[[cartesian_product_sec]]
+==== Produtos cartesianos
+
+Listcomps((("list comprehensions (listcomps)", "building lists from cartesian products")))((("Cartesian products",
+id="cartprod02")))
+podem criar listas a partir do produto cartesiano de dois ou mais iteráveis.
+Os itens resultantes de um produto cartesiano são tuplas criadas com os itens de cada iterável na entrada, e
+a lista resultante tem o tamanho igual ao produto dos tamanhos dos iteráveis usados.
+Veja a <<cartesian_product_fig>>.
+
+[[cartesian_product_fig]]
+.O produto cartesiano de 3 valores de cartas e 4 naipes é uma sequência de 12 itens.
+image::../images/flpy_0203.png[Diagrama do produto cartesiano]
+
+Por exemplo, imagine que você precisa produzir uma lista de camisetas disponíveis em duas cores e três tamanhos.
+O <<ex_listcomp_cartesian>> mostra como produzir tal lista usando uma listcomp.
+O resultado tem seis itens.
+
+[[ex_listcomp_cartesian]]
+.Produto cartesiano usando uma compreensão de lista
+====
+[source, pycon]
+----
+>>> colors = ['black', 'white']
+>>> sizes = ['S', 'M', 'L']
+>>> tshirts = [(color, size) for color in colors for size in sizes]  <1>
+>>> tshirts
+[('black', 'S'), ('black', 'M'), ('black', 'L'), ('white', 'S'),
+ ('white', 'M'), ('white', 'L')]
+>>> for color in colors:  <2>
+...     for size in sizes:
+...         print((color, size))
+...
+('black', 'S')
+('black', 'M')
+('black', 'L')
+('white', 'S')
+('white', 'M')
+('white', 'L')
+>>> tshirts = [(color, size) for size in sizes      <3>
+...                          for color in colors]
+>>> tshirts
+[('black', 'S'), ('white', 'S'), ('black', 'M'), ('white', 'M'),
+ ('black', 'L'), ('white', 'L')]
+----
+====
+<1> Isso gera uma lista de tuplas ordenadas por cor, depois por tamanho.
+<2> Observe que a lista resultante é ordenada como se os loops `for`
+estivessem aninhados na mesma ordem que eles aparecem na listcomp.
+<3> Para ter os itens ordenados por tamanho e então por cor, apenas rearranje as cláusulas `for`;
+quebrar a listcomp em duas linhas torna mais fácil ver como o resultado será ordenado.
+
+
+No <<ex_pythonic_deck>> (em <<ch_data_model>>)
+usei a seguinte expressão para inicializar um baralho de cartas com uma lista
+contendo 52 cartas de todos os 13 valores possíveis para cada um dos quatro naipes,
+ordenada por naipe e então por valor:
+
+[source, python3]
+----
+        self._cards = [Card(rank, suit) for suit in self.suits
+                                        for rank in self.ranks]
+----
+
+Listcomps são mágicas de truque só: elas criam listas.
+Para gerar dados para outros tipos de sequências, uma genexp é o caminho.
+A próxima seção é uma pequena incursão às genexps, no contexto de criação de sequências que não são
+listas.((("", startref="cartprod02")))
+
+
+==== Expressões geradoras
+
+Para((("generator expressions (genexps)")))((("list comprehensions (listcomps)", "versus generator expressions",
+secondary-sortas="generator expressions")))
+inicializar tuplas, arrays e outros tipos de sequências, você também pode usar uma listcomp,
+mas uma genexp (expressão geradora) economiza memória,
+pois ela produz itens um de cada vez usando o protocolo iterador,
+em vez de criar uma lista inteira apenas para alimentar outro construtor.
+
+As genexps usam a mesma sintaxe das listcomps, mas são delimitadas por parênteses em vez de colchetes.
+
+O <<ex_genexp_load>> demonstra o uso básico de genexps para criar uma tupla e um array.
+
+[[ex_genexp_load]]
+.Inicializando uma tupla e um array a partir de uma expressão geradora
+====
+[source, pycon]
+----
+>>> symbols = '$¢£¥€¤'
+>>> tuple(ord(symbol) for symbol in symbols)  <1>
+(36, 162, 163, 165, 8364, 164)
+>>> import array
+>>> array.array('I', (ord(symbol) for symbol in symbols))  <2>
+array('I', [36, 162, 163, 165, 8364, 164])
+----
+====
+<1> Se a expressão geradora é o único argumento em uma chamada de função,
+não há necessidade de duplicar os parênteses circundantes.
+<2> O construtor de `array` espera dois argumentos,
+então os parênteses em torno da expressão geradora são obrigatórios.
+O primeiro argumento do construtor de `array` define o tipo de armazenamento usado para os números no array,
+como veremos na <<arrays_sec>>.
+
+O <<ex_genexp_cartesian>> usa uma genexp com um produto cartesiano para
+gerar uma relação de camisetas de duas cores em três tamanhos.
+Diferente do <<ex_listcomp_cartesian>>,
+aquela lista de camisetas com seis itens nunca é criada na memória:
+a expressão geradora alimenta o loop `for` produzindo um item por vez.
+Se as duas listas usadas no produto cartesiano tivessem mil itens cada uma,
+usar uma função geradora evitaria o custo de construir uma lista
+com um milhão de itens apenas para passar ao loop `for`.
+
+[[ex_genexp_cartesian]]
+.Produto cartesiano em uma expressão geradora
+====
+[source, pycon]
+----
+>>> colors = ['black', 'white']
+>>> sizes = ['S', 'M', 'L']
+>>> for tshirt in (f'{c} {s}' for c in colors for s in sizes):  <1>
+...     print(tshirt)
+...
+black S
+black M
+black L
+white S
+white M
+white L
+----
+====
+<1> A expressão geradora produz um item por vez; uma lista com todas as seis variações de camisetas
+nunca é criada neste exemplo.
+
+[NOTE]
+====
+O <<ch_generators>> explica em detalhes o funcionamento de geradoras.
+A ideia aqui é apenas mostrar o uso de expressões geradores para inicializar sequências diferentes de listas,
+ou produzir uma saída que não precise ser mantida na memória.
+====
+
+Vamos agora estudar outra sequência fundamental de Python: a tupla.
+
+[[tuples_more_than_lists_sec]]
+=== Tuplas não são apenas listas imutáveis
+
+Alguns((("sequences", "tuples", id="Stup02"))) textos introdutórios de Python apresentam as tuplas como
+"listas imutáveis", mas isso é subestimá-las.
+Tuplas tem duas funções: elas podem ser usadas como listas imutáveis e também como registros sem nomes de campos.
+Esse uso algumas vezes é negligenciado, então vamos começar por ele.((("", startref="Slist02")))
+
+
+==== Tuplas como registros
+
+Tuplas podem conter registros:
+cada((("tuples", "as records", secondary-sortas="records", id="tuple02")))
+item na tupla contém os dados de um campo, e a posição do item indica seu significado.
+
+Se você pensar em uma tupla apenas como uma lista imutável,
+a quantidade e a ordem dos elementos pode ser importante ou não, dependendo do contexto.
+Mas quando usamos uma tupla como uma coleção de campos,
+o número de itens em geral é fixo e sua ordem é sempre importante.
+
+O <<ex_tuples_as_records>> mostras tuplas usadas como registros.
+Observe que, em todas as expressões, ordenar a tupla destruiria a informação,
+pois o significado de cada campo é dado por sua posição na tupla.
+
+[[ex_tuples_as_records]]
+.Tuplas usadas como registros
+====
+[source, pycon]
+----
+>>> lax_coordinates = (33.9425, -118.408056)  <1>
+>>> city, year, pop, chg, area = ('Tokyo', 2003, 32_450, 0.66, 8014)  <2>
+>>> traveler_ids = [('USA', '31195855'), ('BRA', 'CE342567'),  <3>
+...     ('ESP', 'XDA205856')]
+>>> for passport in sorted(traveler_ids):  <4>
+...     print('%s/%s' % passport)   <5>
+...
+BRA/CE342567
+ESP/XDA205856
+USA/31195855
+>>> for country, _ in traveler_ids:  <6>
+...     print(country)
+...
+USA
+BRA
+ESP
+----
+====
+<1> Latitude e longitude do Aeroporto Internacional de Los Angeles.
+<2> Dados sobre Tóquio: nome, ano, população (em milhares), crescimento populacional (%) e área (km²).
+<3> Uma lista de tuplas no formato +(código_de_país, número_do_passaporte)+.
+<4> Iterando sobre a lista, `passport` é vinculado a cada tupla.
+<5> O operador de formatação `%` entende as tuplas e trata cada item como um campo separado.
+<6> A instrução `for` sabe como recuperar separadamente os itens de uma tupla—isso é chamado "desempacotamento" (_unpacking_).
+Aqui não estamos interessados no segundo item, então o atribuímos a `_`,
+uma variável descartável, apenas para coletar valores que não usaremos.
+
+[TIP]
+====
+Em geral, usar `+_+` como variável descartável (_dummy variable_) é só uma convenção.
+É apenas um nome de variável estranho mas válido.
+Entretanto, em uma instrução `match/case`, o `+_+` é um coringa que corresponde a qualquer valor,
+mas não está vinculado a um valor
+Veja a <<sequence_patterns_sec>>.
+No console de Python, o resultado da instrução anterior é atribuído a `+_+`, exceto quando o resultado é `None`.
+====
+
+Muitas vezes pensamos em registros como estruturas de dados com campos nomeados.
+O <<ch_dataclass>> apresenta duas formas de criar tuplas com campos nomeados.
+
+Mas muitas vezes não é preciso se dar ao trabalho de criar uma classe apenas para nomear os campos,
+especialmente se você aproveitar o desempacotamento e evitar o uso de índices para acessar os campos.
+No <<ex_tuples_as_records>>, atribuímos
+`('Tokyo', 2003, 32_450, 0.66, 8014)` a `city, year, pop, chg, area` em uma única instrução.
+E daí o operador `%` atribuiu cada item da tupla `passport` para a posição correspondente
+da string de formato passada a `print`.
+Esses foram dois exemplos de _desempacotamento de tuplas_.
+
+
+[NOTE]
+====
+O((("tuples", "tuple unpacking"))) termo "desempacotamento de tuplas" (_tuple unpacking_)
+é muito usado entre os pythonistas, mas _desempacotamento de iteráveis_ é mais preciso
+e está ganhando popularidade, como no título da
+https://fpy.li/2-2[PEP 3132 -- Extended Iterable Unpacking (_Desempacotamento Estendido de Iteráveis_)].
+
+A <<iterable_unpacking_sec>> fala mais sobre desempacotamento,
+não apenas de tuplas, mas também de sequências e iteráveis em geral.
+====
+
+Agora vamos considerar o uso da classe `tuple` como uma variante imutável da classe
+`list`.((("", startref="tuple02")))
+
+==== Tuplas como listas imutáveis
+
+O((("tuples", "as immutable lists", secondary-sortas="immutable lists", id="Timlist02")))((("lists", "using tuples as immutable",
+id="Ltupple02")))
+interpretador Python e a biblioteca padrão fazem uso extensivo das tuplas como listas imutáveis,
+e você deve seguir o exemplo.
+Isso traz dois benefícios importantes:
+
+Clareza:: Quando você vê uma `tuple` no código, sabe que seu tamanho nunca mudará.
+Desempenho:: Uma `tuple` usa menos memória que uma `list` de mesmo tamanho, e permite ao Python realizar algumas otimizações.
+
+Entretanto, lembre-se que a imutabilidade de uma `tuple` só se aplica às referências ali contidas.
+Referências em uma tupla não podem ser apagadas ou substituídas.
+Mas se uma daquelas referências apontar para um objeto mutável, e aquele objeto mudar, então o valor da `tuple` muda.
+O próximo trecho de código ilustra esse fato criando duas tuplas—`a` e `b`— que inicialmente são iguais.
+A <<tuple_mutable>> representa a disposição inicial da tupla `b` na memória.
+
+[[tuple_mutable]]
+.O conteúdo em si da tupla é imutável, mas isso significa apenas que as referências mantidas pela tupla vão sempre apontar para os mesmos objetos. Entretanto, se um dos objetos referenciados for mutável—uma lista, por exemplo—seu conteúdo pode mudar.
+image::../images/flpy_0204.png[Diagram de referências para uma tupla com três itens]
+
+Quando o último item em `b` muda, `a` e `b` se tornam diferentes:
+
+[source, pycon]
+----
+>>> a = (10, 'alpha', [1, 2])
+>>> b = (10, 'alpha', [1, 2])
+>>> a == b
+True
+>>> b[-1].append(99)
+>>> a == b
+False
+>>> b
+(10, 'alpha', [1, 2, 99])
+----
+
+Tuplas com itens mutáveis podem ser uma fonte de bugs.
+Se uma tupla contém qualquer item mutável,
+ela não pode ser usada como chave em um `dict` ou como elemento em um `set`.
+O motivo será explicado em <<what_is_hashable>>.
+
+Se você quiser determinar explicitamente se uma tupla (ou qualquer outro objeto) tem um valor fixo,
+pode usar a função embutida `hash` para criar uma função `fixed`, assim:
+
+[source, pycon]
+----
+>>> def fixed(o):
+...     try:
+...         hash(o)
+...     except TypeError:
+...         return False
+...     return True
+...
+>>> tf = (10, 'alpha', (1, 2))
+>>> tm = (10, 'alpha', [1, 2])
+>>> fixed(tf)
+True
+>>> fixed(tm)
+False
+----
+
+Vamos aprofundar essa questão em <<tuple-relative-immutable>>.
+
+Apesar dessa ressalva, as tuplas são frequentemente usadas como listas imutáveis.
+Elas oferecem algumas vantagens de desempenho, explicadas por uma dos desenvolvedores principais de Python,
+Raymond Hettinger, em uma resposta à questão
+https://fpy.li/2-3["Are tuples more efficient than lists in Python?" (_As tuplas são mais eficientes que as listas no Python?_)]
+no StackOverflow.
+Em resumo, Hettinger escreveu:
+
+* Para avaliar uma tupla literal, o compilador Python gera bytecode para uma constante tupla em uma operação;
+mas para um literal lista, o bytecode gerado insere cada elemento como uma constante separada na pilha,
+e então cria a lista.
+* Dada a tupla `t`, `tuple(t)` simplesmente devolve uma referência para a mesma `t`. Não há necessidade de cópia.
+Por outro lado, dada uma lista `l`, o construtor `list(l)` precisa criar uma nova cópia de `l`.
+* Devido a seu tamanho fixo, uma instância de `tuple` tem alocado para si o espaço exato de memória que precisa.
+Em contrapartida, instâncias de `list` reservam memória adicional, para amortizar o custo de acréscimos futuros.
+* As referências para os itens em uma tupla são armazenadas em um array na struct da tupla,
+enquanto uma lista mantém um ponteiro para um array de referências armazenada em outro lugar.
+Essa indireção é necessária porque, quando a lista cresce além do espaço alocado naquele momento,
+Python precisa realocar o array de referências para criar espaço.
+A indireção adicional torna o cache da CPU menos eficiente.((("", startref="Timlist02")))((("", startref="Ltupple02")))
+
+==== Comparando os métodos de tuplas e listas
+
+Quando((("tuples", "versus lists", secondary-sortas="lists")))((("lists", "versus tuples", secondary-sortas="tuples")))
+usamos uma tupla como uma variante imutável de `list`, é bom saber o quão similares são suas APIs.
+Como se pode ver na <<list_x_tuple_attrs_tbl>>,
+`tuple` suporta todos os métodos de `list` que não envolvem adicionar ou remover itens,
+com uma exceção—`tuple` não possui o método `+__reversed__+`.
+Entretanto, `reversed(my_tuple)` funciona sem esse método; ele serve apenas para otimizar.
+
+[[list_x_tuple_attrs_tbl]]
+.Métodos e atributos encontrados em `list` ou `tuple` (os métodos implementados por `object` foram omitidos para economizar espaço)
+[options="header"]
+|================================================================================================================================================
+|                         | `list` | `tuple` | &#xa0;
+|       `+s.__add__(s2)+` |   ●   |   ●   | `s + s2`—concatenação
+|      `+s.__iadd__(s2)+` |   ●   |       | `+s += s2+`—concatenação no mesmo lugar
+|           `s.append(e)` |   ●   |       | Acrescenta um elemento após o último
+|             `s.clear()` |   ●   |       | Apaga todos os itens
+|   `+s.__contains__(e)+` |   ●   |   ●   | `e in s`
+|              `s.copy()` |   ●   |       | Cópia rasa da lista
+|            `s.count(e)` |   ●   |   ●   | Conta as ocorrências de um elemento
+|    `+s.__delitem__(p)+` |   ●   |       | Remove o item na posição `p`
+|          `s.extend(it)` |   ●   |       | Acrescenta itens do iterável `it`
+|    `+s.__getitem__(p)+` |   ●   |   ●   | `+s[p]+`—obtém o item na posição `p`
+|  `+s.__getnewargs__()+` |       |   ●   | Suporte a serialização otimizada com `pickle`
+|            `s.index(e)` |   ●   |   ●   | Encontra a posição da primeira ocorrência de `e`
+|        `s.insert(p, e)` |   ●   |       | Insere elemento `e` antes do item na posição `p`
+|        `+s.__iter__()+` |   ●   |   ●   | Obtém um iterador
+|         `+s.__len__()+` |   ●   |   ●   | `+len(s)+`—número de itens
+|        `+s.__mul__(n)+` |   ●   |   ●   | `+s * n+`—concatenação repetida
+|       `+s.__imul__(n)+` |   ●   |       | `+s *= n+`—concatenação repetida no mesmo lugar
+|       `+s.__rmul__(n)+` |   ●   |   ●   | `+n * s+`—concatenação repetida inversafootnote:[Operadores invertidos são explicados no <<ch_op_overload>>.]
+|            `s.pop([p])` |   ●   |       | Remove e devolve o último item ou o item na posição opcional `p`
+|           `s.remove(e)` |   ●   |       | Remove o primeiro elemento de valor igual a `e`
+|           `s.reverse()` |   ●   |       | Reverte, no lugar, a ordem dos itens
+|    `+s.__reversed__()+` |   ●   |       | Obtém iterador para percorrer itens do último para o primeiro
+| `+s.__setitem__(p, e)+` |   ●   |       | `+s[p] = e+`—coloca `e` na posição `p`, sobrescrevendo o item existentefootnote:[Também usado para sobrescrever uma sub-sequência. Veja a <<assigning_to_slices>>.]
+|`s.sort([key], [reverse])` |   ●   |       | Ordena os itens no lugar, com os argumentos nomeados opcionais `key` e `reverse`
+|================================================================================================================================================
+
+Vamos agora examinar um tópico importante para a programação Python idiomática:
+tuplas, listas e desempacotamento iterável.((("", startref="Stup02")))
+
+
+[[iterable_unpacking_sec]]
+=== Desempacotando sequências e iteráveis
+
+O desempacotamento((("sequences", "unpacking sequences and iterables", id="Sunpack02")))((("iterables", "unpacking",
+id="iterun02")))((("unpacking", "sequences and iterables")))
+é importante porque evita o uso de índices para acessar itens de sequências,
+o que causa muitos bugs.
+Além disso, o desempacotamento funciona tendo qualquer objeto iterável como fonte de dados—incluindo iteradores,
+que não suportam((("square brackets ([])")))((("[] (square brackets)"))) a notação de índice (`[]`).
+O único requisito é que o iterável produza exatamente um item por variável do lado esquerdo da atribuição,
+a menos que você use um asterisco (`*`) para capturar os itens em excesso, como explicado na <<tuple_star>>.
+
+A forma mais visível de desempacotamento é a _atribuição paralela_;
+isto é, atribuir itens de um iterável a uma tupla de variáveis, como vemos nesse exemplo:
+
+[source, pycon]
+----
+>>> lax_coordinates = (33.9425, -118.408056)
+>>> latitude, longitude = lax_coordinates  # unpacking
+>>> latitude
+33.9425
+>>> longitude
+-118.408056
+----
+
+Uma aplicação elegante de desempacotamento é permutar os valores de variáveis sem usar uma variável temporária:
+
+[source, pycon]
+----
+>>> b, a = a, b
+----
+
+Outro exemplo de desempacotamento é prefixar um argumento com `*` ao chamar uma função:
+
+[source, pycon]
+----
+>>> divmod(20, 8)
+(2, 4)
+>>> t = (20, 8)
+>>> divmod(*t)
+(2, 4)
+>>> quotient, remainder = divmod(*t)
+>>> quotient, remainder
+(2, 4)
+----
+
+O código acima mostra outro uso do desempacotamento:
+permitir que funções devolvam múltiplos valores de forma conveniente para quem as chama.
+Em ainda outro exemplo, a função `os.path.split()` cria uma tupla `(path, last_part)`
+a partir de um caminho do sistema de arquivos:
+
+[source, pycon]
+----
+>>> import os
+>>> _, filename = os.path.split('/home/luciano/.ssh/id_rsa.pub')
+>>> filename
+'id_rsa.pub'
+----
+
+Outra forma de usar apenas alguns itens quando desempacotando é com a sintaxe `*`, que veremos a seguir.
+
+[[tuple_star]]
+==== Usando * para recolher itens em excesso
+
+Definir((("unpacking", "using &#x002A; to grab excess items")))((("star (&#x002A;) operator",
+id="star02")))((("&#x002A; (star) operator", id="star02a")))
+parâmetros de função com `*args` para capturar argumentos
+em excesso é um recurso clássico de Python.
+
+No Python 3, essa ideia foi estendida para se aplicar também à atribuição paralela:
+
+[source, pycon]
+----
+>>> a, b, *rest = range(5)
+>>> a, b, rest
+(0, 1, [2, 3, 4])
+>>> a, b, *rest = range(3)
+>>> a, b, rest
+(0, 1, [2])
+>>> a, b, *rest = range(2)
+>>> a, b, rest
+(0, 1, [])
+----
+
+No contexto da atribuição paralela, o prefixo `*` pode ser aplicado a exatamente uma variável,
+mas pode aparecer em qualquer posição:
+
+[source, pycon]
+----
+>>> a, *body, c, d = range(5)
+>>> a, body, c, d
+(0, [1, 2], 3, 4)
+>>> *head, b, c, d = range(5)
+>>> head, b, c, d
+([0, 1], 2, 3, 4)
+----
+
+
+==== Desempacotando com * em chamadas de função e sequências literais
+
+A https://fpy.li/pep448[PEP 448—Additional Unpacking Generalizations (_Generalizações adicionais de desempacotamento_)]
+(EN) introduziu((("unpacking", "with &#x002A; in function calls and sequence literals")))
+uma sintaxe mais flexível para desempacotamento de iterável, melhor resumida em
+https://fpy.li/2q["O que há de novo no Python 3.5" ] (EN).
+
+Em chamadas de função, podemos usar `*` múltiplas vezes:
+
+[source, pycon]
+----
+>>> def fun(a, b, c, d, *rest):
+...     return a, b, c, d, rest
+...
+>>> fun(*[1, 2], 3, *range(4, 7))
+(1, 2, 3, 4, (5, 6))
+----
+
+O `*` pode também ser usado na definição de literais `list`, `tuple`, ou `set`, como
+visto nesses exemplos de
+https://fpy.li/2q["O que há de novo no Python 3.5"] (EN):
+
+
+[source, pycon]
+----
+>>> *range(4), 4
+(0, 1, 2, 3, 4)
+>>> [*range(4), 4]
+[0, 1, 2, 3, 4]
+>>> {*range(4), 4, *(5, 6, 7)}
+{0, 1, 2, 3, 4, 5, 6, 7}
+----
+
+A PEP 448 introduziu uma nova sintaxe similar para `**`, que veremos na <<dict_unpacking_sec>>.
+
+Por fim, outro importante aspecto do desempacotamento de tuplas:
+funciona com estruturas aninhadas.((("", startref="star02")))((("", startref="star02a")))
+
+
+==== Desempacotamento aninhado
+
+O((("unpacking", "nested"))) alvo de um desempacotamento pode usar aninhamento,
+por exemplo `(a, b, (c, d))`.
+Python fará a coisa certa se o valor tiver a mesma estrutura aninhada.
+O <<ex_nested_tuple>> mostra o desempacotamento aninhado em ação.
+[[ex_nested_tuple]]
+.Desempacotando tuplas aninhadas para acessar a longitude
+====
+[source, python3]
+----
+include::../code/02-array-seq/metro_lat_lon.py[tags=MAIN]
+----
+====
+<1> Cada tupla contém um registro com quatro campos, o último deles um par de coordenadas.
+<2> Ao atribuir o último campo a uma tupla aninhada, desempacotamos as coordenadas.
+<3> O teste `lon \<= 0:` seleciona apenas cidades no hemisfério ocidental.
+
+
+A saída do <<ex_nested_tuple>> é:
+
+[source, text]
+----
+                |  latitude | longitude
+Mexico City     |   19.4333 |  -99.1333
+New York-Newark |   40.8086 |  -74.0204
+São Paulo       |  -23.5478 |  -46.6358
+----
+
+O alvo da atribuição de um desempacotamento pode também ser uma lista, mas bons casos de uso aqui são raros.
+Aqui está o único que conheço: se você tem uma consulta de banco de dados que devolve um único registro
+(por exemplo, se o código SQL tem a instrução `LIMIT 1`),
+daí é possível desempacotar e ao mesmo tempo se assegurar que há apenas um resultado com o seguinte código:
+
+[source, pycon]
+----
+>>> [record] = query_returning_single_row()
+----
+
+Se o registro contiver apenas um campo, é possível obtê-lo diretamente, assim:
+
+[source, pycon]
+----
+>>> [[field]] = query_returning_single_row_with_single_field()
+----
+
+Ambos os exemplos acima podem ser escritos com tuplas, mas não esqueça da peculiaridade sintática,
+tuplas com um único item devem ser escritas com uma vírgula final.
+Então o primeiro alvo seria  `(record,)` e o segundo `((field,),)`.
+Nos dois casos, esquecer aquela vírgula causa um bug
+silencioso.footnote:[Agradeço ao revisor técnico Leonardo Rochael por esse exemplo.]
+
+Agora vamos estudar _pattern matching_,
+que suporta maneiras ainda mais poderosas para desempacotar
+sequências.((("", startref="Sunpack02")))((("", startref="iterun02")))
+
+
+[[sequence_patterns_sec]]
+=== Pattern matching com sequências
+
+O((("match/case statement")))((("sequences", "pattern matching with", id="Spattern02")))((("pattern matching", "match/case statement")))
+novo recurso mais visível de Python 3.10 é o _pattern matching_
+(casamento de padrões) com a instrução `match/case`, proposta na
+https://fpy.li/pep634[PEP 634—Structural Pattern Matching: Specification (_Casamento Estrutural de Padrões: Especificação_)] (EN).
+
+[role="man-height2"]
+[NOTE]
+====
+Carol Willing, uma das desenvolvedoras principais de Python,
+escreveu uma excelente introdução ao _pattern matching_ na seção
+https://fpy.li/2r["Casamento de padrão estrutural"]footnote:[NT: A tradução em português da documentação de
+Python adotou o termo "casamento de padrões" no lugar de _pattern matching_.
+O termo em inglês é usado nas comunidades brasileiras
+de linguagens que implementam _pattern matching_ há muitos anos, como por exemplo Scala,
+Elixir e Haskell.
+Naturalmente mantivemos os títulos originais nos links externos.]
+em https://fpy.li/2s["O que há de novo no Python 3.10"].
+Você pode querer ler aquela revisão rápida.
+Neste livro, dividi o tratamento do casamento de padrões em diferentes capítulos,
+dependendo dos tipos de padrão:
+na <<pattern_matching_mappings_sec>> e na <<pattern_instances_sec>>.
+E há um exemplo mais longo na <<pattern_matching_case_study_sec>>.
+====
+
+Vamos ao primeiro exemplo do tratamento de sequências com `match/case`.
+
+Imagine que você está construindo um robô que aceita comandos,
+enviados como sequências de palavras e números, como `BEEPER 440 3`.
+Após separar o comando em partes e analisar os números, você teria uma mensagem como `['BEEPER', 440, 3]`.
+Então, você poderia usar um método assim para interpretar mensagens naquele formato:
+
+[[ex_robot]]
+.Método de uma classe `Robot` imaginária
+====
+[source, python3]
+----
+    def handle_command(self, message):
+        match message:  # <1>
+            case ['BEEPER', frequency, times]:  # <2>
+                self.beep(times, frequency)
+            case ['NECK', angle]:  # <3>
+                self.rotate_neck(angle)
+            case ['LED', ident, intensity]:  # <4>
+                self.leds[ident].set_brightness(ident, intensity)
+            case ['LED', ident, red, green, blue]:  # <5>
+                self.leds[ident].set_color(ident, red, green, blue)
+            case _:  # <6>
+                raise InvalidCommand(message)
+----
+====
+<1> A expressão após a palavra-chave `match` é o sujeito (_subject_).
+O sujeito contém os dados que Python vai comparar aos padrões em cada instrução `case`.
+<2> Esse padrão casa com qualquer sujeito que seja uma sequência de três itens.
+O primeiro item deve ser a string `BEEPER`.
+O segundo e o terceiro itens podem ser qualquer coisa, e serão vinculados às variáveis `frequency` e `times`, nessa ordem.
+<3> Isso casa com qualquer sujeito com dois itens, se o primeiro for `'NECK'`.
+<4> Isso vai casar com uma sujeito de três itens começando com `LED`.
+Se o número de itens não for correspondente, Python segue para o próximo `case`.
+<5> Outro padrão de sequência começando com `'LED'`, agora com cinco itens—incluindo a constante `'LED'`.
+<6> Esse é o `case` default.
+Vai casar com qualquer sujeito que não tenha sido capturado por um dos padrões precedentes.
+A variável `_` é especial, como logo veremos.
+
+Olhando((("pattern matching", "destructuring"))) superficialmente,
+`match/case` se parece instrução `switch/case` da linguagem C—mas isso é só uma pequena parte da sua
+funcionalidade.footnote:[Na minha opinião, uma sucessão `if/elif/elif/.../else` funciona muito bem no lugar de `switch/case`.
+E ela não sofre dos problemas de https://fpy.li/2-8[fallthrough (_cascateamento_)] (EN) e de
+https://fpy.li/2-9[dangling else (_o `else` errante_)] (EN),
+que alguns projetistas de linguagens copiaram irracionalmente do C—décadas
+após sabermos que tais problemas causam inúmeros bugs.]
+Uma melhoria fundamental do `match` sobre o `switch` é((("destructuring")))
+a _desestruturação_—uma forma mais avançada de desempacotamento.
+Desestruturação é uma palavra nova no vocabulário de Python,
+mas é usada com frequência na documentação de linguagens
+que suportam o _pattern matching_—como Scala e Elixir.
+
+Como um primeiro exemplo de desestruturação, o <<ex_nested_tuple_match>>
+mostra parte do <<ex_nested_tuple>> reescrito com `match/case`.
+
+[[ex_nested_tuple_match]]
+.Desestruturando tuplas aninhadas—requer Python ≥ 3.10
+====
+[source, python3]
+----
+include::../code/02-array-seq/match_lat_lon.py[tags=MAIN]
+----
+====
+<1> O sujeito desse `match` é `record`—isto é, cada uma das tuplas em `metro_areas`.
+<2> Uma instrução `case` tem duas partes: um padrão e uma guarda opcional, com a palavra-chave `if`.
+
+Em geral, um padrão de sequência casa com o sujeito se estas três condições forem verdadeiras:
+
+. O sujeito é uma sequência, _e_
+. O sujeito e o padrão tem o mesmo número de itens, _e_
+. Todos os itens correspondentes casam, incluindo os itens aninhados.
+
+Por exemplo, o padrão `[name, _, _, (lat, lon)]` no <<ex_nested_tuple_match>>
+casa com uma sequência de quatro itens, e o último item tem que ser uma sequência de dois itens.
+
+Padrões de sequência((("pattern matching", "tuples and lists")))
+podem ser escritos como tuplas e listas, mas a sintaxe usada não faz diferença:
+em um padrão de sequência, colchetes e parênteses tem o mesmo significado.
+Escrevi o padrão como uma lista com uma tupla aninhada de dois itens para evitar a
+repetição de colchetes ou parênteses no <<ex_nested_tuple_match>>.
+
+Um padrão de sequência pode casar com instâncias da maioria das subclasses reais ou virtuais de `collections.abc.Sequence`,
+com a exceção de `str`, `bytes`, e `bytearray`.
+
+[WARNING]
+====
+Instâncias de `str`, `bytes`, e `bytearray` não são tratadas como sequências no contexto de um `match/case`.
+Um sujeito de `match` de um desses tipos é tratado como um valor "atômico"—assim como o inteiro 987 é tratado como um único valor,
+e não como uma sequência de dígitos.
+Tratar aqueles três tipos como sequências poderia causar bugs devido a casamentos não intencionais.
+Se você quer usar um objeto daqueles tipos como um sujeito sequência, converta-o na instrução `match`.
+Por exemplo, veja `tuple(phone)` no trecho abaixo,
+que poderia ser usado para separar números de telefone por regiões do mundo com base no prefixo DDI:
+
+[source, py]
+----
+    match tuple(phone):
+        case ['1', *rest]:  # North America and Caribbean
+            ...
+        case ['2', *rest]:  # Africa and some territories
+            ...
+        case ['3' | '4', *rest]:  # Europe
+            ...
+----
+
+====
+
+Na biblioteca padrão, os seguintes tipos são compatíveis com padrões de sequência:
+
+[source]
+----
+list     memoryview    array.array
+tuple    range         collections.deque
+----
+
+Ao contrário do desempacotamento,
+padrões não desestruturam iteráveis que não sejam sequências (tal como os iteradores).
+
+O((("pattern matching", "&#x005F; symbol")))((("&#x005F; symbol"))) símbolo `+_+` é especial nos padrões:
+ele casa com qualquer item naquela posição, mas nunca é vinculado ao valor daquele item.
+O valor é descartado.
+Além disso, o `+_+` é a única variável que pode aparecer mais de uma vez em um padrão.
+
+Você pode vincular qualquer parte de um padrão a uma variável usando
+a((("keywords", "as keyword")))((("as keyword"))) palavra-chave `as`:
+
+[source, python3]
+----
+        case [name, _, _, (lat, lon) as coord]:
+----
+
+Dado o sujeito `['Shanghai', 'CN', 24.9, (31.1, 121.3)]`,
+o padrão anterior vai casar e atribuir valores às seguintes variáveis:
+
+// .Pattern matching
+[options="header"]
+|===
+| Variável | Valor atribuído
+| `name`  | `'Shanghai'`
+| `lat`   | `31.1`
+| `lon`   | `121.3`
+| `coord` | `(31.1, 121.3)`
+|===
+
+Para((("pattern matching", "type information"))) tornar os padrões mais específicos,
+podemos incluir informação de tipo.
+Por exemplo, o seguinte padrão casa com a mesma estrutura de sequência aninhada do exemplo anterior,
+mas o primeiro item deve ser uma instância de `str`,
+e ambos os itens da tupla devem ser instâncias de `float`:
+
+[source, python3]
+----
+        case [str(name), _, _, (float(lat), float(lon))]:
+----
+
+// but in the context of a pattern, that syntax works as a runtime type check:
+[TIP]
+====
+As expressões `str(name)` e `float(lat)` se parecem com chamadas a construtores,
+que usaríamos para converter `name` e `lat` para `str` e `float`.
+Mas no contexto de um padrão, aquela sintaxe faz uma checagem de tipos durante a execução do programa:
+o padrão acima vai casar com uma sequência de quatro itens,
+na qual o item 0 deve ser uma `str` e o item 3 deve ser um par de números de ponto flutuante.
+Além disso, a `str` no item 0 será vinculada à variável `name`
+e os números no item 3 serão vinculados a `lat` e `lon`, respectivamente.
+Assim, apesar de imitar a sintaxe de uma chamada de construtor,
+o significado de `str(name)` é totalmente diferente no contexto de um padrão.
+O uso de classes arbitrárias em padrões será tratado na <<pattern_instances_sec>>.
+====
+
+Por outro lado, se queremos casar qualquer sujeito sequência começando com uma `str` e
+terminando com uma sequência aninhada com dois números de ponto flutuante, podemos escrever:
+
+[source, python3]
+----
+        case [str(name), *_, (float(lat), float(lon))]:
+----
+
+O((("pattern matching", "&#x002A;&#x005F; symbol")))((("&#x002A;&#x005F; symbol"))) `+*_+`
+casa com qualquer número de itens, sem vinculá-los a uma variável.
+Usar `*extra` em vez de `+*_+` vincularia os itens a `extra` como uma `list` com 0 ou mais itens.
+
+A instrução de guarda opcional começando com `if` só é avaliada se o padrão casar,
+e pode se referir a variáveis vinculadas no padrão, como no <<ex_nested_tuple_match>>:
+
+[source, python3]
+----
+        match record:
+            case [name, _, _, (lat, lon)] if lon <= 0:
+                print(f'{name:15} | {lat:9.4f} | {lon:9.4f}')
+----
+
+O bloco aninhado com a instrução `print` só será executado se o padrão casar e a expressão guarda for _verdadeira_.
+
+[TIP]
+====
+A desestruturação com padrões é tão expressiva que, algumas vezes,
+um `match` com um único `case` pode tornar o código mais simples.
+Guido van Rossum tem uma coleção de exemplos de `case/match`,
+incluindo um que ele chamou de
+https://fpy.li/2-10["A very deep iterable and type match with extraction" (_Um match de iterável e tipo muito profundo, com extração_)] (EN).
+====
+
+O <<ex_nested_tuple_match>> não é melhor que o <<ex_nested_tuple>>.
+É apenas um exemplo para contrastar duas formas de fazer a mesma coisa.
+O próximo exemplo mostra como o _pattern matching_ contribui para a criação de código claro, conciso e eficaz.
+
+[[pattern_matching_seq_interp_sec]]
+==== Casando padrões de sequência em um interpretador
+
+Peter Norvig((("lis.py interpreter", "pattern matching in", id="lispypattern02")))((("pattern matching",
+"in lis.py interpreter",
+secondary-sortas="lis.py", id="PMinterp02")))((("Scheme language", id="scheme02"))),
+da Universidade de Stanford, escreveu o
+https://fpy.li/2-11[_lis.py_]:
+um interpretador de um subconjunto do dialeto Scheme da linguagem de programação Lisp,
+em 132 belas linhas de código Python legível.
+Peguei o código fonte de Norvig (publicado sob a licença MIT) e o atualizei para Python 3.10,
+para exemplificar o _pattern matching_.
+Nessa seção, vamos comparar uma parte fundamental do código de Norvig—que usa `if/elif` e
+desempacotamento—com uma nova versão usando `match/case`.
+
+As duas funções principais do _lis.py_ são `parse` e `evaluate`.footnote:[A última é
+chamada `eval` no código original;
+a renomeei para evitar confusão com a função embutida `eval` de Python.]
+O parser (_analisador sintático_) recebe as expressões entre parênteses do Scheme
+e devolve listas Python.
+Aqui estão dois exemplos:
+
+[source, python]
+----
+>>> parse('(gcd 18 45)')
+['gcd', 18, 45]
+>>> parse('''
+... (define double
+...     (lambda (n)
+...         (* n 2)))
+... ''')
+['define', 'double', ['lambda', ['n'], ['*', 'n', 2]]]
+----
+
+O avaliador recebe listas como essas e as executa.
+O primeiro exemplo está chamando uma função `gcd` com `18` e `45` como argumentos.
+Quando executada, ela computa o maior divisor comum (`gcd` são as iniciais do termo em inglês
+_greatest common divisor_) dos argumentos (que é 9).
+O segundo exemplo está definindo uma função chamada `double` com um parâmetro `n`.
+O corpo da função é a expressão `(* n 2)`.
+O resultado da chamada a uma função em Scheme é o valor da última expressão no corpo da função chamada.
+
+Nosso foco aqui é a desestruturação de sequências, então não vou explicar as ações do avaliador.
+Veja a <<pattern_matching_case_study_sec>> para aprender mais sobre o funcionamento do _lis.py_.
+
+O <<ex_norvigs_eval>> mostra o avaliador de Norvig com algumas pequenas modificações,
+abreviado para mostrar apenas os padrões de sequência.
+
+
+[[ex_norvigs_eval]]
+.Casando padrões sem `match/case`
+====
+[source, python]
+----
+include::../code/02-array-seq/lispy/py3.9/lis.py[tags=EVAL_IF_TOP]
+    # ... lines omitted
+include::../code/02-array-seq/lispy/py3.9/lis.py[tags=EVAL_IF_MIDDLE]
+    # ... more lines omitted
+----
+====
+
+Observe como cada instrução `elif` verifica o primeiro item da lista, e então desempacota a lista, ignorando o primeiro item.
+O uso extensivo do desempacotamento sugere que Norvig é um fã do _pattern matching_,
+mas ele originalmente escreveu aquele código em Python 2 (apesar de agora ele funcionar com qualquer Python 3)
+
+Usando `match/case` em Python ≥ 3.10, podemos refatorar `evaluate`, como mostrado no <<ex_match_eval>>.
+
+[[ex_match_eval]]
+.Pattern matching com `match/case`—requer Python ≥ 3.10
+====
+[source, python3]
+----
+include::../code/02-array-seq/lispy/py3.10/lis.py[tags=EVAL_MATCH_TOP]
+    # ... lines omitted
+include::../code/02-array-seq/lispy/py3.10/lis.py[tags=EVAL_MATCH_MIDDLE]
+        # ... more lines omitted
+include::../code/02-array-seq/lispy/py3.10/lis.py[tags=EVAL_MATCH_BOTTOM]
+----
+====
+<1> Casa se o sujeito for uma sequência de dois itens começando com `'quote'`.
+<2> Casa se o sujeito for uma sequência de quatro itens começando com `'if'`.
+<3> Casa se o sujeito for uma sequência com três ou mais itens começando com `'lambda'`. A guarda assegura que `body` não esteja vazio.
+<4> Casa se o sujeito for uma sequência de três itens começando com `'define'`, seguido de uma instância de `Symbol`.
+<5> É uma boa prática ter um `case` para capturar qualquer outro sujeito.
+Neste exemplo, se `exp` não casar com nenhum dos padrões, a expressão está mal-formada, então gera um `SyntaxError`.
+
+Sem o último `case`, para pegar tudo que tiver passado pelos anteriores,
+o bloco `match` não faz nada quando o sujeito não casa com algum `case`—e isso pode causar uma falha silenciosa.
+
+Norvig deliberadamente evitou a checagem e o tratamento de erros em _lis.py_, para manter o código fácil de entender.
+Com _pattern matching_, podemos acrescentar mais verificações e ainda manter o programa legível.
+Por exemplo, no padrão `'define'`,
+o código original não se assegura que `name` é uma instância de `Symbol`—isso exigiria um bloco `if`,
+uma chamada a `isinstance`, e mais código.
+O <<ex_match_eval>> é mais curto e mais seguro que o <<ex_norvigs_eval>>.
+
+===== Padrões alternativos para lambda
+
+Essa é a sintaxe de `lambda` no Scheme,
+usando a convenção sintática onde
+o sufixo `…` significa que o elemento pode aparecer zero ou mais vezes:
+
+[source, lisp]
+----
+(lambda (parms…) body1 body2…)
+----
+
+Um padrão simples para o `case` de `'lambda'` seria esse:
+
+[source, python3]
+----
+       case ['lambda', parms, *body] if body:
+----
+
+Entretanto, isso casa com qualquer valor na posição `parms`,
+incluindo o primeiro `x` nesse sujeito inválido:
+
+[source, python3]
+----
+['lambda', 'x', ['*', 'x', 2]]
+----
+
+A lista aninhada após a palavra-chave `lambda` do Scheme
+contém os nomes do parâmetros formais da função,
+e deve ser uma lista mesmo que contenha apenas um elemento.
+Ela pode também ser uma lista vazia,
+se função não receber parâmetros—como a `random.random()` de Python.
+
+No <<ex_match_eval>>, tornei o padrão de `'lambda'` mais seguro usando um padrão de sequência aninhado:
+
+[source, python3]
+----
+        case ['lambda', [*parms], *body] if body:
+            return Procedure(parms, body, env)
+----
+
+Em um padrão de sequência, o `*` pode aparecer apenas uma vez por sequência.
+Aqui temos duas sequências: a externa e a interna.
+
+Acrescentando os caracteres `[*]` em torno de `parms`
+fez o padrão mais parecido com a sintaxe do Scheme da qual ele trata,
+e nos deu uma verificação estrutural adicional.
+
+===== Sintaxe abreviada para definição de função
+
+O Scheme tem uma sintaxe alternativa de `define`, para criar uma função nomeada sem usar um `lambda` aninhado.
+Tal sintaxe funciona assim:
+
+[source, lisp]
+----
+(define (name parm…) body1 body2…)
+----
+
+A palavra-chave `define` é seguida por uma lista com o `name` da nova função e zero ou mais nomes de parâmetros.
+Após a lista vem o corpo da função, com uma ou mais expressões.
+
+Acrescentar essas duas linhas ao `match` cuida da implementação:
+
+[source, py]
+----
+        case ['define', [Symbol() as name, *parms], *body] if body:
+            env[name] = Procedure(parms, body, env)
+----
+
+Eu colocaria esse `case` após o `case` da outra forma de `define` no  <<ex_match_eval>>.
+A ordem desses _cases_ de `define` é irrelevante nesse exemplo,
+pois nenhum sujeito pode casar com esses dois padrões:
+o segundo elemento deve ser um `Symbol` na forma original de `define`,
+mas deve ser uma sequência começando com um `Symbol` na sintaxe de `define` para definição de função.
+
+Agora pense em quanto trabalho teríamos para adicionar o suporte a essa segunda sintaxe de `define`
+sem a ajuda do _pattern matching_ no <<ex_norvigs_eval>>.
+A instrução `match` faz mais que o `switch` das linguagens similares ao C.
+
+O _pattern matching_ é um exemplo de programação declarativa:
+o código descreve "o que" você quer casar,
+em vez de "como" casar.
+A forma do código segue a forma dos dados, como ilustra a <<syntax_and_pattern_tbl>>.
+
+[[syntax_and_pattern_tbl]]
+.Algumas formas sintáticas do Scheme e os padrões de `case` para tratá-las
+[options="header"]
+|============================================================================
+| Sintaxe do Scheme                        | Padrão de sequência
+| `(quote exp)`                         | `['quote', exp]`
+| `(if test conseq alt)`                | `['if', test, conseq, alt]`
+| `(lambda (parms…) body1 body2…)`      | `['lambda', [*parms], *body] if body`
+| `(define name exp)`                   | `['define', Symbol() as name, exp]`
+| `(define (name parms…) body1 body2…)` | `['define', [Symbol() as name, *parms], *body] if body`
+|============================================================================
+
+Espero que a refatoração do `evaluate` de Norvig com _pattern matching_
+tenha convencido você que `match/case` pode tornar seu código mais legível e mais seguro.
+
+[NOTE]
+====
+Veremos mais do _lis.py_ na <<pattern_matching_case_study_sec>>,
+quando vamos revisar o exemplo completo de `match/case` em `evaluate`.
+Se você quiser aprender mais sobre o _lys.py_ de Norvig, leia seu maravilhoso post
+https://fpy.li/2-12["(How to Write a (Lisp) Interpreter (in Python))" _(Como Escrever um Interpretador (Lisp) em (Python))_].
+====
+
+Isso conclui nossa primeira passagem por desempacotamento, desestruturação e _pattern matching_ com sequências.
+Vamos tratar de outros tipos de padrões mais adiante, em outros capítulos.
+
+Todo programador Python sabe que sequências podem ser fatiadas usando a sintaxe `s[a:b]`.
+Vamos agora examinar alguns fatos menos conhecidos sobre fatiamento.((("",
+startref="PMinterp02")))((("", startref="Spattern02")))((("", startref="lispypattern02")))((("", startref="scheme02")))
+
+
+=== Fatiamento
+
+Um((("sequences", "slicing", id="Sslice02")))((("zero-based indexing")))
+recurso comum a `list`, `tuple`, `str`, e a todos os tipos de sequência em Python,
+é o suporte a operações de fatiamento, que são mais potentes do que a maioria das pessoas percebe.
+
+Nesta seção descrevemos o _uso_ dessas formas avançadas de fatiamento.
+Sua implementação em uma classe definida pelo usuário será tratada no <<ch_seq_methods>>,
+mantendo nossa filosofia de tratar de classes prontas para usar nessa parte do livro,
+e da criação de novas classes na <<classes_protocols_part>>.
+
+
+==== Por que fatias e faixas excluem o último item?
+
+A((("slicing", "excluding last item in"))) convenção pythônica de excluir o último item em fatias e
+faixas funciona bem com a indexação iniciada no zero usada no Python, no C e em muitas outras linguagens.
+Algumas vantagens desta convenção:
+
+* É fácil ver o tamanho da fatia ou da faixa quando apenas a posição final é dada: tanto `range(3)` quanto `my_list[:3]` produzem três itens.
+* É fácil calcular o tamanho de uma fatia ou de uma faixa quando o início e o fim são dados: basta subtrair `fim-início`.
+* É fácil cortar uma sequência em duas partes em qualquer índice `x`, sem sobreposição: escreva `my_list[:x]` e `my_list[x:]`.
+Por exemplo:
++
+[source, pycon]
+----
+>>> l = [10, 20, 30, 40, 50, 60]
+>>> l[:2]  # split at 2
+[10, 20]
+>>> l[2:]
+[30, 40, 50, 60]
+>>> l[:3]  # split at 3
+[10, 20, 30]
+>>> l[3:]
+[40, 50, 60]
+----
+
+Agora vamos olhar mais de perto a forma como Python interpreta a notação de fatiamento.
+
+
+[[slice_objects]]
+==== Objetos fatia
+
+Isso((("slicing", "slice objects"))) não é segredo, mas vale a pena repetir, só para ter certeza:
+`s[a:b:c]` pode ser usado para especificar um passo ou salto `c`, fazendo com que a fatia resultante pule itens.
+O passo pode ser também negativo, devolvendo os itens em ordem inversa.
+Veja três exemplos:
+
+[source, pycon]
+----
+>>> s = 'bicycle'
+>>> s[::3]
+'bye'
+>>> s[::-1]
+'elcycib'
+>>> s[::-2]
+'eccb'
+----
+
+Vimos outro exemplo no <<ch_data_model>>, quando usamos `deck[12::13]` para obter todos os ases de uma baralho não embaralhado:
+
+[source, pycon]
+----
+>>> deck[12::13]
+[Card(rank='A', suit='spades'), Card(rank='A', suit='diamonds'),
+Card(rank='A', suit='clubs'), Card(rank='A', suit='hearts')]
+----
+
+A notação `a:b:c` só é válida entre `[]` quando usada como operador de indexação ou de subscrição (_subscript_),
+e produz um objeto fatia (_slice object_): `slice(a, b, c)`.
+Para avaliar a expressão `seq[start:stop:step]`,
+o Python chama `+seq.__getitem__(slice(start, stop, step))+`, como veremos na <<how_slicing_works>>.
+Mesmo se você não for implementar seus próprios tipos de sequência, saber dos objetos fatia é útil,
+porque eles permitem que você atribua nomes às fatias, da mesma forma que planilhas permitem dar nomes a faixas de células.
+
+Suponha que você precise analisar um arquivo de dados como a fatura mostrada na <<flat_file_invoce>>.
+Em vez de encher seu código de fatias explícitas fixas, você pode nomeá-las.
+Veja como isso torna legível o loop `for` no final do exemplo.
+
+[[flat_file_invoce]]
+.Itens de um arquivo tabular de fatura
+====
+[source, pycon]
+----
+>>> invoice = """
+... 0.....6.................................40........52...55........
+... 1909  Pimoroni PiBrella                     $17.50    3    $52.50
+... 1489  6mm Tactile Switch x20                 $4.95    2     $9.90
+... 1510  Panavise Jr. - PV-201                 $28.00    1    $28.00
+... 1601  PiTFT Mini Kit 320x240                $34.95    1    $34.95
+... """
+>>> SKU = slice(0, 6)
+>>> DESCRIPTION = slice(6, 40)
+>>> UNIT_PRICE = slice(40, 52)
+>>> QUANTITY =  slice(52, 55)
+>>> ITEM_TOTAL = slice(55, None)
+>>> line_items = invoice.split('\n')[2:]
+>>> for item in line_items:
+...     print(item[UNIT_PRICE], item[DESCRIPTION])
+...
+    $17.50   Pimoroni PiBrella
+     $4.95   6mm Tactile Switch x20
+    $28.00   Panavise Jr. - PV-201
+    $34.95   PiTFT Mini Kit 320x240
+----
+====
+
+Voltaremos aos objetos +slice+ quando formos discutir a criação de suas próprias coleções, na <<sliceable_sequence>>.
+Enquanto isso, do ponto de vista do usuário, o fatiamento tem recursos adicionais,
+como fatias multidimensionais e a notação de reticências (`\...`).
+Siga comigo.
+
+
+==== Fatiamento multidimensional e reticências
+
+O operador `[]`((("[] (square brackets)")))((("square brackets ([])")))((("slicing", "multidimensional slicing and ellipses")))
+pode também receber múltiplos índices ou fatias separadas por vírgulas.
+Os((("&#x005F;&#x005F;getitem&#x005F;&#x005F;")))((("&#x005F;&#x005F;setitem&#x005F;&#x005F;")))
+métodos especiais  `+__getitem__+` e `+__setitem__+`, que tratam o operador `[]`,
+recebem os índices em `a[i, j]` como uma tupla.
+Em outras palavras, para avaliar `a[i, j]`, Python chama `+a.__getitem__((i, j))+`.
+
+Isso é usado, por exemplo, no pacote externo NumPy, onde itens de uma `numpy.ndarray` bi-dimensional
+podem ser recuperados usando a sintaxe `a[i, j]`, e uma fatia bi-dimensional é obtida com uma expressão como `a[m:n, k:l]`.
+O <<ex_numpy_array>>, abaixo nesse mesmo capítulo, mostra o uso dessa notação.
+
+Exceto por `memoryview`, os tipos embutidos de sequência de Python são uni-dimensionais,
+então aceitam só um índice ou fatia, e não uma tupla de índices ou
+fatias.footnote:[Na <<memoryview_sec>> vamos mostrar que
+views da memória construídas de forma especial podem ter mais de uma dimensão.]
+
+As((("ellipsis (&#x2026;)")))((("&#x2026; (ellipsis)"))) reticências—escritas como três pontos finais
+(`\...`) e não como `…` (Unicode U+2026)&#x2014;são reconhecidas como um símbolo pelo parser de Python.
+Esse símbolo é um apelido para o objeto `Ellipsis`, a única instância da classe `ellipsis`.footnote:[Não,
+eu não escrevi ao contrário: o nome da classe `ellipsis` realmente se escreve só com minúsculas,
+e a instância é um objeto embutido chamado `Ellipsis`,
+da mesma forma que `bool` é em minúsculas mas suas instâncias são `True` e `False`.]
+Dessa forma, ele pode ser passado como argumento para funções e como parte da especificação de uma fatia,
+como em `f(a, \..., z)` ou `a[i:\\...]`.
+O NumPy usa `\...` como atalho ao fatiar arrays com muitas dimensões;
+por exemplo, se `x` é um array com quatro dimensões, `x[i, \\...]` é um atalho para `x[i, :, :, :,]`.
+Veja  https://fpy.li/2-13["NumPy quickstart"] (EN)
+para saber mais sobre isso.
+
+Desconheço usos de `Ellipsis` ou de índices multidimensionais na biblioteca padrão de Python.
+Esses recursos sintáticos existem para suportar tipos definidos pelo usuário ou extensões como o NumPy.
+
+Fatias não são úteis apenas para extrair informações de sequências;
+elas podem também ser usadas para modificar sequências mutáveis no lugar—isto é, sem precisar reconstruí-las do zero.
+
+[[assigning_to_slices]]
+==== Atribuindo a fatias
+
+Sequências((("slicing", "assigning to slices"))) mutáveis podem ser enxertadas,
+extirpadas e, de várias maneiras modificadas no lugar com o uso da notação de fatias
+no lado esquerdo de uma instrução de atribuição ou como alvo de uma instrução `del`.
+Os próximos exemplos dão uma ideia do poder dessa notação:
+
+[source, pycon]
+----
+>>> l = list(range(10))
+>>> l
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+>>> l[2:5] = [20, 30]
+>>> l
+[0, 1, 20, 30, 5, 6, 7, 8, 9]
+>>> del l[5:7]
+>>> l
+[0, 1, 20, 30, 5, 8, 9]
+>>> l[3::2] = [11, 22]
+>>> l
+[0, 1, 20, 11, 5, 22, 9]
+>>> l[2:5] = 100  <1>
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: can only assign an iterable
+>>> l[2:5] = [100]
+>>> l
+[0, 1, 100, 22, 9]
+----
+<1> Quando o alvo de uma atribuição é uma fatia,
+o lado direito deve ser um objeto iterável, mesmo que tenha apenas um item.
+
+Todo programador sabe que a concatenação é uma operação frequente com sequências.
+Tutoriais introdutórios de Python explicam o uso de `+` e `*` para tal propósito,
+mas há detalhes sutis em seu funcionamento, como veremos a seguir.((("", startref="Sslice02")))
+
+
+=== Usando + e * com sequências
+Em((("sequences", "using &#x002B; and &#x002A; with", id="Splusast02")))((("&#x002B; operator",
+id="plusop02")))((("star (&#x002A;) operator", id="starseq02")))((("&#x002A; (star) operator",
+id="starseq02a")))((("concatenation", id="concat02")))
+Python, podemos assumir que sequências suportem `\+` e `*`.
+Em geral, os dois operandos de `+` devem ser sequências do mesmo tipo,
+e nenhum deles é modificado: uma nova sequência daquele mesmo tipo é criada como resultado da concatenação.
+
+Para concatenar múltiplas cópias da mesma sequência, multiplique por um inteiro.
+Da mesma forma, uma nova sequência é criada:
+
+[source, pycon]
+----
+>>> l = [1, 2, 3]
+>>> l * 5
+[1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+>>> 5 * 'abcd'
+'abcdabcdabcdabcdabcd'
+----
+
+Tanto `+` quanto `*` sempre criam um novo objeto, e nunca modificam seus operandos.
+
+[WARNING]
+====
+Tenha cuidado com expressões como `a * n` quando `a` é uma sequência contendo itens mutáveis,
+pois o resultado pode ser surpreendente.
+Por exemplo, tentar inicializar uma lista de listas como `my_list = [[]] * 3`
+vai resultar em uma lista com três referências para a mesma lista interna,
+que provavelmente não é o desejado.
+====
+
+A próxima seção fala das armadilhas ao se tentar usar `*` para inicializar uma lista de listas.
+
+==== Criando uma lista de listas
+
+Algumas((("lists", "building lists of lists"))) vezes precisamos inicializar
+uma lista com um certo número de listas aninhadas—para, por exemplo,
+distribuir estudantes em uma lista de equipes, ou para representar casas no tabuleiro de um jogo.
+A melhor forma de fazer isso é com uma compreensão de lista, como no <<ex_list_of_lists_ok>>.
+
+[[ex_list_of_lists_ok]]
+.Uma lista com três listas de tamanho 3 pode representar um tabuleiro de jogo da velha
+====
+[source, pycon]
+----
+>>> board = [['_'] * 3 for i in range(3)]  <1>
+>>> board
+[['_', '_', '_'], ['_', '_', '_'], ['_', '_', '_']]
+>>> board[1][2] = 'X'  <2>
+>>> board
+[['_', '_', '_'], ['_', '_', 'X'], ['_', '_', '_']]
+----
+====
+<1> Cria uma lista de três listas, cada uma com três itens.
+Inspeciona a estrutura criada.
+<2> Coloca um "X" na linha 1, coluna 2, e verifica o resultado.
+
+Um atalho tentador mas errado seria fazer algo como o <<ex_list_of_lists_wrong>>.
+
+[[ex_list_of_lists_wrong]]
+.Uma lista com três referências para a mesma lista é inútil
+====
+[source, pycon]
+----
+>>> weird_board = [['_'] * 3] * 3  <1>
+>>> weird_board
+[['_', '_', '_'], ['_', '_', '_'], ['_', '_', '_']]
+>>> weird_board[1][2] = 'O' <2>
+>>> weird_board
+[['_', '_', 'O'], ['_', '_', 'O'], ['_', '_', 'O']]
+----
+====
+<1> A lista externa é feita de três referências para a mesma lista interna.
+Enquanto ela não é modificada, tudo parece correr bem.
+<2> Colocar um "O" na linha 1, coluna 2, revela que todas as linhas são apelidos do mesmo objeto.
+
+O problema com o <<ex_list_of_lists_wrong>> é que ele se comporta, essencialmente, como o código abaixo:
+
+[source, python3]
+----
+row = ['_'] * 3
+board = []
+for i in range(3):
+    board.append(row)  <1>
+----
+<1> A mesma `row` é anexada três vezes ao `board`.
+
+Por outro lado, a compreensão de lista no  <<ex_list_of_lists_ok>> equivale ao seguinte código:
+
+[source, python3]
+----
+>>> board = []
+>>> for i in range(3):
+...     row = ['_'] * 3  # <1>
+...     board.append(row)
+...
+>>> board
+[['_', '_', '_'], ['_', '_', '_'], ['_', '_', '_']]
+>>> board[2][0] = 'X'
+>>> board  # <2>
+[['_', '_', '_'], ['_', '_', '_'], ['X', '_', '_']]
+----
+<1> Cada iteração cria uma nova `row` e a acrescenta ao `board`.
+<2> Como esperado, apenas a linha 2 é modificada.
+
+[TIP]
+====
+Se o problema ou a solução mostrados nessa seção não estão claros para você, não se preocupe.
+Escrevi o <<ch_refs_mut_mem>> para esclarecer a mecânica e os perigos das referências e dos objetos mutáveis.
+====
+
+Até aqui discutimos o uso dos operadores simples `\+` e `\*` com sequências,
+mas existem também os operadores `+=` e `*=`, que produzem resultados muito diferentes,
+dependendo da mutabilidade da sequência alvo.
+A próxima seção explica como eles funcionam.
+
+[[aug_assign_seqs]]
+==== Atribuição aumentada com sequências
+
+Os((("augmented assignment operators", id="augasop02")))((("&#x002B;&#x003D; (addition assignment) operator",
+id="adassign02")))((("&#x002A;&#x003D; (star equals) operator", id="stareq02")))((("addition assignment (&#x002B;&#x003D;) operator",
+id="additonassign02")))
+operadores de atribuição aumentada `\+=` e `\*=` se comportam de formas muito diferentes,
+dependendo do primeiro operando.
+Para simplificar a discussão, vamos primeiro nos concentrar na adição aumentada (`+=`),
+mas os conceitos se aplicam a `*=` e a outros operadores de atribuição aumentada.
+
+O método especial que faz `\+=` funcionar
+chama-se `++__iadd__++` , que significa _in-place addition_ (adição no mesmo lugar).
+
+Entretanto, se `+__iadd__+` não estiver implementado, Python usa `+__add__+` como antes de fazer a atribuição.
+Considere essa expressão simples:
+
+[source, pycon]
+----
+>>> a += b
+----
+
+Se `a` implementar `+__iadd__+`, esse método será chamado.
+No caso de sequências mutáveis (por exemplo, `list`, `bytearray`, `array.array`),
+o objeto `a` será modificado no lugar (mesmo resultado de `a.extend(b)`).
+Porém, quando `a` não implementa `+__iadd__+`, a expressão `+a += b+` tem o mesmo efeito de `a = a + b`:
+a expressão `a + b` é avaliada antes, produzindo um novo objeto, que então é vinculado a `a`.
+Em outras palavras, a identidade do objeto vinculado à variável `a` pode ou não mudar,
+dependendo da existência de  `+__iadd__+`.
+
+Em geral, para sequências mutáveis, é razoável supor que `+__iadd__+` está implementado e
+que `+=` acontece _in-place_.
+Para sequências imutáveis, obviamente isso não pode acontecer.
+
+O que acabei de escrever sobre `+=` também se aplica a `\*=`, que é implementado via `++__imul__++`.
+Os métodos especiais `++__iadd__++` e `++__imul__++` são tratados no <<ch_op_overload>>.
+
+Veja uma demonstração de `*=` com uma sequência mutável e depois com uma sequência imutável:
+
+[source, pycon]
+----
+>>> l = [1, 2, 3]
+>>> id(l)
+4311953800  <1>
+>>> l *= 2
+>>> l
+[1, 2, 3, 1, 2, 3]
+>>> id(l)
+4311953800  <2>
+>>> t = (1, 2, 3)
+>>> id(t)
+4312681568  <3>
+>>> t *= 2
+>>> id(t)
+4301348296  <4>
+----
+<1> O ID da lista inicial.
+<2> Após a multiplicação, a lista é o mesmo objeto, com novos itens anexados.
+<3> O ID da tupla inicial.
+<4> Após a multiplicação, uma nova tupla foi criada.
+
+A concatenação repetida de sequências imutáveis é ineficiente, pois ao invés de apenas acrescentar novos itens,
+o interpretador tem que copiar toda a sequência alvo para criar um novo objeto com os novos itens
+concatenados.footnote:[`str` é uma exceção a essa descrição.
+Como criar strings com `+=` em loops é tão comum em bases de código reais,
+o CPython foi otimizado para esse caso de uso.
+Instâncias de `str` são alocadas na memória com espaço extra,
+então a concatenação não exige a cópia da string inteira a cada operação.]
+
+Vimos casos de uso comuns para `+=`.
+A próxima seção mostra um caso surpreendente,
+que demonstra o real significado de "imutável" no contexto das tuplas.
+
+[[tuple_puzzler]]
+==== Um quebra-cabeça com a atribuição +=
+
+Tente responder sem usar o console: qual o resultado da avaliação das duas expressões no
+<<ex_aug_item_assign_question>>?footnote:[Agradeço a Leonardo Rochael e Cesar Kawakami
+por compartilharem esse enigma na Conferência PythonBrasil de 2013.]
+
+[[ex_aug_item_assign_question]]
+.Um enigma
+====
+[source, pycon]
+----
+>>> t = (1, 2, [30, 40])
+>>> t[2] += [50, 60]
+----
+====
+
+O que acontece a seguir? Escolha a melhor alternativa:
+
+A. `t` se torna `(1, 2, [30, 40, 50, 60])`.
+
+B. É gerado um `TypeError` com a mensagem `'tuple' object does not support item assignment` (_o objeto tupla não suporta atribuição de itens_).
+
+C. As alternativas A e B estão corretas.
+
+D. Nenhuma das alternativas acima.
+
+
+Quando vi isso, tinha certeza que a resposta era B, mas, na verdade é C: as alternativas A e B estão corretas!
+
+O <<ex_aug_item_assign_solution>> é a saída real em um console rodando Python
+3.10.footnote:[Alguns leitores sugeriram que a operação no exemplo pode ser
+realizada com `++t[2].extend([50,60])++`, sem erros.
+Eu sei disso, mas a intenção aqui é mostrar o comportamento estranho do operador `+=` nesse caso.]
+
+[[ex_aug_item_assign_solution]]
+.O resultado inesperado: o item t2 é modificado _e_ uma exceção é gerada
+
+====
+[source, pycon]
+----
+>>> t = (1, 2, [30, 40])
+>>> t[2] += [50, 60]
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: 'tuple' object does not support item assignment
+>>> t
+(1, 2, [30, 40, 50, 60])
+----
+====
+
+O https://fpy.li/2-14[Online Python Tutor] (EN) é uma ferramenta online fantástica
+para visualizar em detalhes o funcionamento de Python.
+A <<aug_item_assign_tutor>> é uma composição de duas capturas de tela,
+mostrando os estados inicial e final da tupla `t` do <<ex_aug_item_assign_solution>>.
+
+[[aug_item_assign_tutor]]
+.Estados inicial e final do enigma da atribuição de tuplas (diagrama gerado pelo Online Python Tutor).
+image::../images/flpy_0205.png[Diagrama de referência]
+
+Se olharmos o bytecode gerado pelo Python para a expressão `s[a] += b` (<<ex_aug_item_assign_bytecode>>),
+fica claro como isso acontece.
+
+[[ex_aug_item_assign_bytecode]]
+.Bytecode para a expressão `s[a] += b`
+====
+[source, pycon]
+----
+>>> dis.dis('s[a] += b')
+  1           0 LOAD_NAME                0 (s)
+              3 LOAD_NAME                1 (a)
+              6 DUP_TOP_TWO
+              7 BINARY_SUBSCR                      <1>
+              8 LOAD_NAME                2 (b)
+             11 INPLACE_ADD                        <2>
+             12 ROT_THREE
+             13 STORE_SUBSCR                       <3>
+             14 LOAD_CONST               0 (None)
+             17 RETURN_VALUE
+----
+====
+<1> Coloca o valor de `s[a]` no `TOS` (_Top Of Stack_, topo da pilha).
+<2> Executa `TOS += b`. Isso é bem sucedido se `TOS` se refere a um objeto mutável
+(no <<ex_aug_item_assign_solution>> é uma lista).
+<3> Atribui `s[a] = TOS`.
+Isso falha se `s` é imutável  (a tupla `t` no <<ex_aug_item_assign_solution>>).
+
+Esse exemplo é um caso raro—nunca vi esse comportamento bizarro estragar o dia de alguém
+em mais de 20 anos trabalhando com Python.
+
+Há três lições para tirar daqui:
+
+* Evite colocar objetos mutáveis em tuplas.
+* A atribuição aumentada não é uma operação atômica—acabamos de vê-la gerar uma exceção após executar parte de seu trabalho.
+* Inspecionar o bytecode de Python não é muito difícil, e pode ajudar a ver o que está acontecendo por debaixo dos panos.
+
+Depois de ver as sutilezas do uso de `+` e `*` para concatenação,
+podemos mudar de assunto e tratar de outra operação essencial com sequências:
+ordenação.((("", startref="Splusast02")))((("", startref="plusop02")))((("",
+startref="starseq02")))((("", startref="starseq02a")))((("", startref="concat02")))((("",
+startref="augasop02")))((("", startref="stareq02")))((("", startref="additonassign02")))((("", startref="adassign02")))
+
+
+[[sort_x_sorted]]
+=== list.sort versus a função embutida sorted
+
+O((("sequences", "list.sort versus sorted built-in", id="Slistsort02")))((("lists",
+"list.sort versus sorted built-in", id="Llistsort")))((("sorted function", id="sortfun02")))
+método `list.sort` ordena uma lista no mesmo lugar—isto é, sem criar uma cópia.
+Ele devolve `None` para nos lembrar que muda a própria instância e não cria uma nova lista.
+Essa é uma convenção importante da API de Python:
+funções e métodos que mudam um objeto no mesmo lugar deve devolver `None`,
+para deixar claro a quem chamou que o
+receptorfootnote:[Receptor (_receiver_) é o alvo de uma chamada a um método,
+o objeto vinculado a `self` no corpo do método.]
+foi modificado, e que nenhum objeto novo foi criado.
+Um comportamento similar pode ser observado, por exemplo,
+na função `random.shuffle(s)`, que devolve `None` após
+embaralhar os itens de uma sequência mutável _in-place_ (no lugar),
+isto é, mudando a posição dos itens dentro da própria sequência.
+
+
+[NOTE]
+====
+A convenção de devolver `None` para sinalizar mudanças no mesmo lugar tem uma desvantagem:
+não podemos encadear chamadas a esses métodos.
+Em contraste, métodos que devolvem novos objetos (todos os métodos de `str`, por exemplo)
+podem ser cascateados no estilo de uma interface fluente.
+Veja o artigo https://fpy.li/2-15["Fluent interface"] (EN)
+da Wikipedia em inglês para uma descrição mais detalhada deste tópico.
+====
+
+A função embutida `sorted`, por outro lado, cria e devolve uma nova lista.
+Ela aceita qualquer objeto iterável como um argumento, incluindo sequências imutáveis e geradores (veja o <<ch_generators>>).
+Independente do tipo do iterável passado a `sorted`, ela sempre cria e devolve uma nova lista.
+
+Tanto `list.sort` quanto `sorted` podem receber dois argumentos nomeados opcionais:
+
+`reverse`::
+  Se `True`, os itens são devolvidos em ordem decrescente (isto é, invertendo a comparação dos itens).
+O default é `False`.
+
+`key`::
+  Uma função de um argumento que será aplicada a cada item, para produzir sua chave de ordenação.
+  Por exemplo, ao ordenar uma lista de strings, `key=str.lower`
+  pode ser usada para realizar uma ordenação sem levar em conta maiúsculas e minúsculas,
+  e `key=len` irá ordenar as strings pela quantidade de caracteres.
+O default é a função identidade (isto é, os itens propriamente ditos são comparados).
+
+
+[TIP]
+====
+Também se pode usar o parâmetro de palavra-chave opcional `key`
+com as funções embutidas `min()` e `max()`,
+e com outras funções da biblioteca padrão (por exemplo, `itertools.groupby()` e `heapq.nlargest()`).
+====
+
+Aqui estão alguns exemplos para esclarecer o uso dessas funções e dos argumentos nomeados.
+Os exemplos também demonstram que o algoritmo de ordenação de Python é estável
+(isto é, ele preserva a ordem relativa de itens que resultam iguais na comparação):footnote:[O
+principal algoritmo de ordenação de Python se chama Timsort, em homenagem a seu criador,
+Tim Peters.
+Para curiosidades sobre o Timsort, veja o <<sequences_soapbox>>.]
+
+
+[source, pycon]
+----
+>>> fruits = ['grape', 'raspberry', 'apple', 'banana']
+>>> sorted(fruits)
+['apple', 'banana', 'grape', 'raspberry']  <1>
+>>> fruits
+['grape', 'raspberry', 'apple', 'banana']  <2>
+>>> sorted(fruits, reverse=True)
+['raspberry', 'grape', 'banana', 'apple']  <3>
+>>> sorted(fruits, key=len)
+['grape', 'apple', 'banana', 'raspberry']  <4>
+>>> sorted(fruits, key=len, reverse=True)
+['raspberry', 'banana', 'grape', 'apple']  <5>
+>>> fruits
+['grape', 'raspberry', 'apple', 'banana']  <6>
+>>> fruits.sort()                          <7>
+>>> fruits
+['apple', 'banana', 'grape', 'raspberry']  <8>
+----
+<1> Isso produz uma lista de strings ordenadas
+alfabeticamente.footnote:[As palavras nesse exemplo estão ordenadas em ordem alfabética
+porque são 100% constituídas de caracteres ASCII em letras minúsculas.
+Veja o aviso após o exemplo.]
+<2> Inspecionando a lista original, vemos que ela não mudou.
+<3> Isso é a ordenação "alfabética" anterior, invertida.
+<4> Uma nova lista de strings, agora ordenada por tamanho.
+Como o algoritmo de ordenação é estável, "grape" e "apple," ambas com tamanho 5, estão em sua ordem original.
+<5> Essas são strings ordenadas por tamanho em ordem descendente.
+Não é o inverso do resultado anterior porque a ordenação é estável e então, novamente, "grape" aparece antes de "apple."
+<6> Até aqui, a ordenação da lista `fruits` original não mudou.
+<7> Isso ordena a lista no mesmo lugar, devolvendo `None` (que o console omite).
+<8> Agora `fruits` está ordenada.
+
+[WARNING]
+====
+Por((("strings", "default sorting of"))) default,
+Python ordena as strings lexicograficamente por código de caractere.
+Isso quer dizer que as letras maiúsculas ASCII virão antes das minúsculas,
+e caracteres não-ASCII dificilmente serão ordenados de forma razoável.
+A <<sorting_unicode_sec>> trata de maneiras corretas de ordenar texto da forma esperada por seres humanos.
+====
+
+Uma vez ordenadas, podemos realizar buscas em nossas sequências de forma muito eficiente.
+Um((("bisect module"))) algoritmo de busca binária já é fornecido no módulo `bisect` da biblioteca padrão de Python.
+Aquele módulo também inclui a função `bisect.insort`,
+que você pode usar para assegurar que suas sequências ordenadas permaneçam ordenadas.
+Há uma introdução ilustrada ao módulo `bisect` no post https://fpy.li/bisect["Managing Ordered Sequences with Bisect" (_Gerenciando Sequências Ordenadas com Bisect_)] (EN)
+no site que complementa este livro.
+
+Muito do que vimos até aqui neste capítulo se aplica a sequências em geral, não apenas a listas ou tuplas.
+Programadores Python às vezes usam excessivamente o tipo `list`,
+por ele ser tão conveniente—eu mesmo já fiz isso.
+Por exemplo, se você está processando grandes listas de números,
+deveria considerar usar arrays em vez de listas.
+O restante do capítulo é dedicado a alternativas a listas e tuplas.((("", startref="Slistsort02")))((("", startref="Llistsort")))((("", startref="sortfun02")))
+
+
+=== Quando uma lista não é a resposta
+
+O((("sequences", "alternatives to lists", id="Salt02")))((("lists", "alternatives to", id="Lalt02")))
+tipo `list` é flexível e fácil de usar mas, dependendo dos requerimentos específicos, há opções melhores.
+Por exemplo, um `array` economiza muita memória se você precisa manipular milhões de valores de ponto flutuante.
+Por outro lado, se você está constantemente acrescentando e removendo itens das pontas opostas de uma lista,
+é bom saber que um((("queues", "deque (double-ended queue)")))((("deque (double-ended queue)")))((("FIFO (first in, first out)")))
+`deque` (uma fila com duas pontas) é uma estrutura  de dados
+FIFOfootnote:[Sigla em inglês para "First in, first out"
+(primeiro a entrar, primeiro a sair), o comportamento padrão de filas.] mais eficiente.
+
+[TIP]
+====
+Se seu código frequentemente verifica se um item está presente em uma coleção (por exemplo, `item in my_collection`),
+considere usar um `set` para `my_collection`, especialmente se ela contiver um número grande de itens.
+Um `set` é otimizado para verificação rápida de presença de itens.
+Eles também são iteráveis, mas não são sequências, porque a ordenação de itens de conjuntos não é especificada.
+Vamos falar deles no <<ch_dicts_sets>>.
+====
+
+O restante desse capítulo discute tipos mutáveis de sequências que, em muitos casos, podem substituir as listas.
+Começamos pelos arrays.
+
+[[arrays_sec]]
+==== Arrays
+
+Se((("arrays", id="array02"))) uma lista contém apenas números, um `array.array` é um substituto mais eficiente.
+Arrays suportam todas as operações das sequências mutáveis (incluindo `.pop`, `.insert`, e `.extend`),
+bem como métodos adicionais para carregamento e armazenamento rápidos, como
+`.frombytes` e `.tofile`.
+
+Um array de Python é quase tão enxuto quanto um array do C.
+Como mostrado na <<container_v_flat_img>>, um `array` de valores `float` não contém objetos da classe `float`,
+mas apenas os bytes representando seus valores em código de máquina—como um array do tipo `double` na linguagem C.
+Ao criar um `array`, você fornece um código de tipo (_typecode_),
+uma letra que determina o tipo na linguagem C usado para armazenar cada item na memória.
+Por exemplo, +b+ é o código de tipo para o que o C chama de `signed char`, um inteiro variando de -128 a 127.
+Se você criar uma `array('b')`, então cada item será armazenado em um único byte e será interpretado como um inteiro.
+Para grandes sequências de números, isso economiza muita memória.
+E Python não permite que você insira qualquer número que não corresponda ao tipo do array.
+
+O <<ex_array_io>> mostra a criação, o armazenamento e o carregamento
+de um array de 10 milhões de números de ponto flutuante aleatórios.
+
+[[ex_array_io]]
+.Criando, armazenando e carregando uma grande array de números de ponto flutuante.
+====
+[source, pycon]
+----
+>>> from array import array  <1>
+>>> from random import random
+>>> floats = array('d', (random() for i in range(10**7)))  <2>
+>>> floats[-1]  <3>
+0.07802343889111107
+>>> fp = open('floats.bin', 'wb')
+>>> floats.tofile(fp)  <4>
+>>> fp.close()
+>>> floats2 = array('d')  <5>
+>>> fp = open('floats.bin', 'rb')
+>>> floats2.fromfile(fp, 10**7)  <6>
+>>> fp.close()
+>>> floats2[-1]  <7>
+0.07802343889111107
+>>> floats2 == floats  <8>
+True
+----
+====
+<1> Importa o tipo `array`.
+<2> Cria um array de números de ponto flutuante de dupla precisão (código de tipo `'d'`)
+a partir de qualquer objeto iterável—nesse caso, uma expressão geradora.
+<3> Inspeciona o último número no array.
+<4> Salva o array em um arquivo binário.
+<5> Cria um array vazio de números de ponto flutuante de dupla precisão
+<6> Lê 10 milhões de números do arquivo binário.
+<7> Inspeciona o último número no array.
+<8> Verifica a igualdade do conteúdo dos arrays
+
+Como você pode ver, `array.tofile` e `array.fromfile` são fáceis de usar.
+Se você rodar o exemplo, verá que são também muito rápidos.
+Um pequeno experimento mostra que `array.fromfile` demora aproximadamente 0,1
+segundos para carregar 10 milhões de números de ponto flutuante de
+dupla precisão de um arquivo binário criado com `array.tofile`.
+Isso é quase 60 vezes mais rápido que ler os números de um arquivo de texto,
+algo que também exige passar cada linha para a função embutida `float`.
+Salvar o arquivo com `array.tofile` é umas sete vezes mais rápido que
+escrever um número de ponto flutuante por vez em um arquivo de texto.
+Além disso, o tamanho do arquivo binário com 10 milhões de números de dupla precisão é de
+80.000.000 bytes (8 bytes por número, nenhum byte a mais),
+enquanto o arquivo de texto ocupa 181.515.739 bytes para os mesmos dados.
+
+Para o caso específico de arrays numéricas representando dados binários,
+tal como bitmaps de imagens, Python tem os tipos `bytes` e `bytearray`, discutidos na <<ch_str_bytes>>.
+
+Vamos encerrar essa seção sobre arrays com a <<list_x_array_attrs_tbl>>,
+comparando as características de `list` e `array.array`.
+
+[[list_x_array_attrs_tbl]]
+.Métodos e atributos encontrados em `list` ou `array` (os métodos descontinuados de array e aqueles implementados também pir object foram omitidos para preservar espaço)
+[options="header"]
+|================================================================================================================================================
+|                       | list  | array | &#xa0;
+|       `+s.__add__(s2)+` |   ●   |   ●   | `++s + s2++`—concatenação
+|      `+s.__iadd__(s2)+` |   ●   |   ●   | `++s += s2++`—concatenação no mesmo lugar
+|         `s.append(e)` |   ●   |   ●   | Acrescenta um elemento após o último
+|        `s.byteswap()` |       |   ●   | Permuta os bytes de todos os itens do array para conversão de _endianness_ (ordem de interpretação bytes)
+|           `s.clear()` |   ●   |       | Apaga todos os itens
+|   `+s.__contains__(e)+` |   ●   |   ●   | `e in s`
+|            `s.copy()` |   ●   |       | Cópia rasa da lista
+|        `+s.__copy__()+` |       |   ●   | Suporte a `copy.copy`
+|          `s.count(e)` |   ●   |   ●   | Conta as ocorrências de um elemento
+|    `+s.__deepcopy__()+` |       |   ●   | Suporte otimizado a `copy.deepcopy`
+|    `+s.__delitem__(p)+` |   ●   |   ●   | Remove o item na posição `p`
+|        `s.extend(it)` |   ●   |   ●   | Acrescenta itens a partir do iterável `it`
+|      `s.frombytes(b)` |       |   ●   | Acrescenta itens de uma sequência de bytes, interpretada como valores compactos de máquina
+|    `s.fromfile(f, n)` |       |   ●   | Acrescenta `n` itens de um arquivo binário `f`, interpretado como valores compactos de máquina
+|       `s.fromlist(l)` |       |   ●   | Acrescenta itens de lista; se um deles causar um `TypeError`, nenhum item é acrescentado
+|    `+s.__getitem__(p)+` |   ●   |   ●   | `++s[p]++`—obtém o item ou fatia na posição
+|          `s.index(e)` |   ●   |   ●   | Encontra a posição da primeira ocorrência de `e`
+|      `s.insert(p, e)` |   ●   |   ●   | Insere elemento `e` antes do item na posição `p`
+|          `s.itemsize` |       |   ●   | Tamanho em bytes de cada item do array
+|        `+s.__iter__()+` |   ●   |   ●   | Obtém iterador
+|         `+s.__len__()+` |   ●   |   ●   | `++len(s)++`—número de itens
+|        `+s.__mul__(n)+` |   ●   |   ●   | `++s * n++`—concatenação repetida
+|       `+s.__imul__(n)+` |   ●   |   ●   | `++s *= n++`—concatenação repetida no mesmo lugar
+|       `+s.__rmul__(n)+` |   ●   |   ●   | ++n * s++—concatenação repetida invertidafootnote:[Operadores invertidos são explicados no <<ch_op_overload>>.]
+|          `s.pop([p])` |   ●   |   ●   | Remove e devolve o item na posição `p` (default: o último)
+|         `s.remove(e)` |   ●   |       | Remove o primeiro elemento de valor igual a `e`
+|         `s.reverse()` |   ●   |   ●   | Reverte a ordem dos itens no mesmo lugar
+|    `+s.__reversed__()+` |   ●   |       | Obtém iterador para percorrer itens do último até o primeiro
+| `+s.__setitem__(p, e)+` |   ●   |   ●   | ++s[p] = e++—coloca `e` na posição `p`, sobrescrevendo item ou fatia existente
+|`s.sort([key], [reverse])` |   ●   |       | Ordena itens no mesmo lugar, com os argumentos nomeados opcionais `key` e `reverse`
+|         `s.tobytes()` |       |   ●   | Devolve itens como valores de máquina compactos em um objeto `bytes`
+|         `s.tofile(f)` |       |   ●   | Grava itens como valores de máquina compactos no arquivo binário `f`
+|          `s.tolist()` |       |   ●   | Devolve os itens como objetos numéricos em uma `list`
+|          `s.typecode` |       |   ●   | String de um caractere identificando o tipo em C dos itens
+|================================================================================================================================================
+
+[TIP]
+====
+Até Python 3.10, o tipo `array` ainda não tem um método `sort` equivalente a `list.sort()`,
+que reordena os elementos na própria estrutura de dados, sem copiá-la.
+Se você precisa ordenar um array, use a função embutida `sorted` para reconstruir o array:
+
+[source, python3]
+----
+a = array.array(a.typecode, sorted(a))
+----
+
+Para manter a ordem de um array ordenado ao acrescentar novos itens, use a função https://fpy.li/2t[`bisect.insort`].
+====
+
+Se você trabalha muito com arrays e não conhece `memoryview`,
+pode estar desperdiçando memória e CPU.
+Veja o próximo tópico.((("", startref="array02")))
+
+
+[[memoryview_sec]]
+==== Views de memória
+
+A((("memoryview class", id="memview02"))) classe embutida `memoryview` é um tipo sequência de memória compartilhada,
+que permite manipular fatias de arrays sem copiar bytes.
+Ela foi inspirada pela biblioteca NumPy (que discutiremos brevemente, na <<numpy_sec>>).
+Travis Oliphant, autor principal da NumPy,
+responde assim à questão https://fpy.li/2-17["When should a memoryview be used?" _Quando se deve usar uma memoryview?_]:
+
+[quote]
+____
+Uma memoryview é essencialmente uma estrutura de array Numpy generalizada dentro do próprio Python
+(sem a matemática).
+Ela permite compartilhar memória entre estruturas de dados
+(coisas como imagens PIL, bancos de dados SQLite, arrays da NumPy, etc.) sem copiar bytes.
+Isso é muito importante ao lidar com grandes conjuntos de dados.
+____
+
+Usando uma notação similar ao módulo `array`, o método `memoryview.cast` permite mudar
+a forma como múltiplos bytes são lidos ou escritos como unidades,
+sem a necessidade de alterar os bytes.
+`memoryview.cast` devolve um novo objeto `memoryview`,
+sempre compartilhando a mesma memória.
+
+O <<ex_memoryview_demo>> mostra como criar views alternativas da mesmo array de 6 bytes,
+para operar com ele como uma matriz de 2x3 ou de 3x2.
+
+
+[[ex_memoryview_demo]]
+.Manipular 6 bytes de memória como views de 1×6, 2×3, e 3×2
+====
+[source, pycon]
+----
+>>> from array import array
+>>> octets = array('B', range(6))  # <1>
+>>> m1 = memoryview(octets)  # <2>
+>>> m1.tolist()
+[0, 1, 2, 3, 4, 5]
+>>> m2 = m1.cast('B', [2, 3])  # <3>
+>>> m2.tolist()
+[[0, 1, 2], [3, 4, 5]]
+>>> m3 = m1.cast('B', [3, 2])  # <4>
+>>> m3.tolist()
+[[0, 1], [2, 3], [4, 5]]
+>>> m2[1,1] = 22  # <5>
+>>> m3[1,1] = 33  # <6>
+>>> octets  # <7>
+array('B', [0, 1, 2, 33, 22, 5])
+----
+====
+<1> Cria um array de 6 bytes (código de tipo `'B'`).
+<2> Cria uma `memoryview` a partir daquele array, e a exporta como uma lista.
+<3> Cria uma nova `memoryview` a partir da anterior, mas com `2` linhas e `3` colunas.
+<4> Ainda outra `memoryview`, agora com `3` linhas e `2` colunas.
+<5> Sobrescreve o byte em `m2`, na linha `1`, coluna `1` com `22`.
+<6> Sobrescreve o byte em `m3`, na linha `1`, coluna `1` com `33`.
+<7> Mostra o array original, provando que a memória era compartilhada entre `octets`, `m1`, `m2`, e `m3`.
+
+O fantástico poder de `memoryview` também pode ser usado para o mal.
+O <<ex_memoryview_evil_demo>> mostra como mudar um único byte de um item em um array de inteiros de 16 bits.
+
+[[ex_memoryview_evil_demo]]
+.Mudando o valor de um item em um array de inteiros de 16 bits trocando apenas o valor de um de seus bytes
+====
+[source, pycon]
+----
+>>> numbers = array.array('h', [-2, -1, 0, 1, 2])
+>>> memv = memoryview(numbers)  <1>
+>>> len(memv)
+5
+>>> memv[0]  <2>
+-2
+>>> memv_oct = memv.cast('B')  <3>
+>>> memv_oct.tolist()  <4>
+[254, 255, 255, 255, 0, 0, 1, 0, 2, 0]
+>>> memv_oct[5] = 4  <5>
+>>> numbers
+array('h', [-2, -1, 1024, 1, 2])  <6>
+----
+====
+<1> Cria uma `memoryview` a partir de um array de 5 inteiros de 16 bits com sinal (tipo `'h'`).
+<2> `memv` vê os mesmos 5 itens no array.
+<3> Cria `memv_oct`, transformando os elementos de `memv` em bytes (tipo `'B'`).
+<4> Exporta os elementos de `memv_oct` como uma lista de 10 bytes, para inspeção.
+<5> Atribui o valor `4` ao byte com offset `5`.
+<6> Observe a mudança em `numbers`: um `4` no byte mais significativo de um inteiro de 2 bytes sem sinal é `1024`.
+
+[NOTE]
+====
+Você pode ver um exemplo de inspeção de uma `memoryview` com o pacote `struct` em
+https://fpy.li/2-18["Parsing binary records with struct" _Analisando registros binários com struct_] (EN).
+====
+
+Enquanto isso, se você está fazendo processamento numérico avançado com arrays,
+deveria estar usando as bibliotecas NumPy.
+Vamos agora fazer um breve passeio por elas.((("", startref="memview02")))
+
+[[numpy_sec]]
+==== NumPy
+
+Nesse((("NumPy", id="numpy02"))) livro eu priorizo o que já existe na biblioteca padrão de Python,
+para que você a aproveite ao máximo.
+Mas a NumPy é tão importante que exige um desvio.
+
+Graças a suas operações avançadas com arrays e matrizes,
+o Numpy permitiu que Python se tornasse uma das principais linguagens para aplicações de computação científica.
+A Numpy implementa tipos multidimensionais e homogêneos de arrays e matrizes,
+que podem conter não apenas números, mas também registros definidos pelo usuário.
+E fornece operações eficientes ao nível desses elementos.
+
+A SciPy((("SciPy", id="scipy02"))) é uma biblioteca criada usando a NumPy,
+e oferece inúmeros algoritmos de computação científica, incluindo álgebra linear,
+cálculo numérico e estatística.
+A SciPy é rápida e confiável porque usa a popular base de código C e Fortran do
+https://fpy.li/2-19[Repositório Netlib].
+Em outras palavras, a SciPy dá a cientistas o melhor de dois mundos:
+um prompt iterativo e as APIs de alto nível de Python,
+junto com funções estáveis e comprovadamente eficientes para processamento numérico,
+otimizadas em C e Fortran.
+
+O <<ex_numpy_array>>, uma demonstração muito rápida da Numpy,
+demonstra algumas operações básicas com arrays bi-dimensionais.
+
+[[ex_numpy_array]]
+.Operações básicas com linhas e colunas em uma `numpy.ndarray`
+====
+[source, pycon]
+----
+>>> import numpy as np <1>
+>>> a = np.arange(12)  <2>
+>>> a
+array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11])
+>>> type(a)
+<class 'numpy.ndarray'>
+>>> a.shape  <3>
+(12,)
+>>> a.shape = 3, 4  <4>
+>>> a
+array([[ 0,  1,  2,  3],
+       [ 4,  5,  6,  7],
+       [ 8,  9, 10, 11]])
+>>> a[2]  <5>
+array([ 8,  9, 10, 11])
+>>> a[2, 1]  <6>
+9
+>>> a[:, 1]  <7>
+array([1, 5, 9])
+>>> a.transpose()  <8>
+array([[ 0,  4,  8],
+       [ 1,  5,  9],
+       [ 2,  6, 10],
+       [ 3,  7, 11]])
+----
+====
+<1> Importa a NumPy, que precisa ser instalada previamente (ela não faz parte da biblioteca padrão de Python).
+Por convenção, `numpy` é importada como `np`.
+<2> Cria e inspeciona um `numpy.ndarray` com inteiros de `0` a `11`.
+<3> Inspeciona as dimensões do array: esse é um array com uma dimensão e 12 elementos.
+<4> Muda o formato do array, acrescentando uma dimensão e depois inspecionando o resultado.
+<5> Obtém a linha no índice `2`
+<6> Obtém elemento na posição `2, 1`.
+<7> Obtém a coluna no índice `1`
+<8> Cria um novo array por transposição (permutando as colunas com as linhas)
+
+A NumPy também suporta operações de alto nível para carregar,
+salvar e operar sobre todos os elementos de um `numpy.ndarray`:
+
+[source, pycon]
+----
+>>> import numpy
+>>> floats = numpy.loadtxt('floats-10M-lines.txt')  <1>
+>>> floats[-3:]  <2>
+array([ 3016362.69195522,   535281.10514262,  4566560.44373946])
+>>> floats *= .5  <3>
+>>> floats[-3:]
+array([ 1508181.34597761,   267640.55257131,  2283280.22186973])
+>>> from time import perf_counter as pc <4>
+>>> t0 = pc(); floats /= 3; pc() - t0 <5>
+0.03690556302899495
+>>> numpy.save('floats-10M', floats)  <6>
+>>> floats2 = numpy.load('floats-10M.npy', 'r+')  <7>
+>>> floats2 *= 6
+>>> floats2[-3:]  <8>
+memmap([ 3016362.69195522,   535281.10514262,  4566560.44373946])
+----
+<1> Carrega 10 milhões de números de ponto flutuante de um arquivo de texto.
+<2> Usa a notação de fatiamento de sequência para inspecionar os três últimos números.
+<3> Multiplica cada elemento no array `floats` por `.5` e inspeciona novamente os três últimos elementos.
+<4> Importa o cronômetro de medida de tempo em alta resolução (disponível desde Python 3.3).
+
+<5> Divide cada elemento por `3`;
+o tempo decorrido para dividir os 10 milhões de números de ponto flutuante é menos de 40 milissegundos.
+<6> Salva o array em um arquivo binário _.npy_.
+<7> Carrega os dados como um arquivo mapeado na memória em outro array;
+isso permite o processamento eficiente de fatias do array, mesmo que ele não caiba inteiro na memória.
+<8> Inspeciona os três últimos elementos após multiplicar cada elemento por `6`.
+
+Isso foi apenas um aperitivo.
+
+A NumPy e a SciPy são bibliotecas formidáveis, e estão na base de outras ferramentas fantásticas,
+como a https://fpy.li/2-20[Pandas] (EN)—que implementa tipos eficientes de arrays capazes de conter dados não-numéricos,
+e fornece funções de importação/exportação em vários formatos diferentes, como _.csv_, _.xls_, dumps SQL, HDF5,
+etc.—e a https://fpy.li/2-21[scikit-learn] (EN), o conjunto de ferramentas para Aprendizagem de Máquina mais usado atualmente.
+A maior parte das funções da NumPy e da SciPy são implementadas em C ou {cpp},
+e conseguem aproveitar todos os núcleos de CPU disponíveis, pois podem liberar a GIL((("Global Interpreter Lock (GIL)")))
+(Global Interpreter Lock, _Trava Global do Interpretador_) de Python.
+O projeto https://fpy.li/dask[Dask] suporta a paralelização do processamento da NumPy,
+da Pandas e da scikit-learn para grupos (_clusters_) de máquinas.
+Esses pacotes merecem livros inteiros.
+Este não é um desses livros,
+mas nenhuma revisão das sequências de Python estaria completa sem pelo menos uma breve passagem pelos arrays da NumPy.
+
+Tendo visto as sequências planas—arrays padrão e arrays da NumPy—vamos agora
+nos voltar para um grupo completamente diferente de substitutos para a boa e velha `list`:
+filas (_queues_).((("", startref="numpy02")))((("", startref="scipy02")))
+
+==== Deques e outras filas
+
+Os((("queues", "deque (double-ended queue)")))((("deque (double-ended queue)",
+id="deque02")))(((".append method", primary-sortas="append method")))(((".pop method",
+primary-sortas="pop method")))((("FIFO (first in, first out)")))
+métodos `.append` e `.pop` tornam uma `list` usável como uma pilha (_stack_)
+ou uma fila (_queue_) (usando `.append` e `.pop(0)`, se obtém o comportamento FIFO de uma fila).
+Mas inserir e remover da cabeça de uma lista
+(a posição com índice 0) é caro, pois a lista toda precisa ser deslocada na memória.
+
+A((("collections.deque class", id="coldeq02"))) classe `collections.deque` é
+uma fila _thread-safe_ (segura para usar com threads),
+otimizada para inserção e remoção rápida nas duas pontas.
+É também a estrutura preferencial se você precisa manter uma lista de
+"últimos itens vistos" ou coisa semelhante,
+pois um `deque` pode ser delimitado—isto é, criado com um tamanho máximo fixo.
+Se um `deque` delimitado está cheio, quando se adiciona um novo item, o item na ponta oposta é descartado.
+O <<ex_deque>> mostra algumas das operações típicas com um `deque`.
+
+
+[[ex_deque]]
+.Usando um `deque`
+====
+[source, pycon]
+----
+>>> from collections import deque
+>>> dq = deque(range(10), maxlen=10)  <1>
+>>> dq
+deque([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], maxlen=10)
+>>> dq.rotate(3)  <2>
+>>> dq
+deque([7, 8, 9, 0, 1, 2, 3, 4, 5, 6], maxlen=10)
+>>> dq.rotate(-4)
+>>> dq
+deque([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], maxlen=10)
+>>> dq.appendleft(-1)  <3>
+>>> dq
+deque([-1, 1, 2, 3, 4, 5, 6, 7, 8, 9], maxlen=10)
+>>> dq.extend([11, 22, 33])  <4>
+>>> dq
+deque([3, 4, 5, 6, 7, 8, 9, 11, 22, 33], maxlen=10)
+>>> dq.extendleft([10, 20, 30, 40])  <5>
+>>> dq
+deque([40, 30, 20, 10, 3, 4, 5, 6, 7, 8], maxlen=10)
+----
+====
+<1> O argumento opcional `maxlen` determina o número máximo de itens permitidos nessa instância de `deque`;
+isso estabelece o valor de um atributo de instância `maxlen`, somente de leitura.
+<2> Rotacionar com `n > 0` retira itens da direita e os recoloca pela esquerda;
+quando `n < 0`, os itens são retirados pela esquerda e anexados pela direita.
+<3> Acrescentar itens a um `deque` cheio (`len(d) == d.maxlen`) elimina itens da ponta oposta.
+Na linha seguinte, note que o `0` foi descartado.
+<4> Acrescentar três itens à direita derruba `-1`, `1`, e `2` da extremidade esquerda.
+<5> Observe que `extendleft(iter)` acrescenta cada item sucessivo do argumento `iter`
+do lado esquerdo do `deque`, então a posição final dos itens é invertida.
+
+A <<list_x_deque_methods_tbl>> compara os métodos específicos de `list` e `deque`
+(omitindo aqueles que também aparecem em `object`).
+
+Veja que `deque` implementa a maioria dos métodos de `list`,
+acrescentando alguns específicos ao seu modelo, como `popleft` e `rotate`.
+Mas há um custo oculto: remover itens do meio de um `deque` não é rápido.
+A estrutura é realmente otimizada para acréscimos e remoções pelas pontas.
+
+As operações `append` e `popleft` são atômicas,
+então `deque` pode ser usado de forma segura como uma fila FIFO em aplicações multithread sem a necessidade de travas.
+
+[[list_x_deque_methods_tbl]]
+.Métodos implementados em `list` ou `deque` (aqueles também implementados por `object` foram omitidos para preservar espaço)
+[options="header"]
+|==================================================================================================================================================
+|                         | list  | deque | &#xa0;
+|       `+s.__add__(s2)+` |   ●   |       | `++s + s2++`—concatenação
+|      `+s.__iadd__(s2)+` |   ●   |   ●   | `++s += s2++`—concatenação no mesmo lugar
+|           `s.append(e)` |   ●   |   ●   | Acrescenta um elemento à direita (após o último)
+|       `s.appendleft(e)` |       |   ●   | Acrescenta um elemento à esquerda (antes do primeiro)
+|             `s.clear()` |   ●   |   ●   | Apaga todos os itens
+|   `+s.__contains__(e)+` |   ●   |       | `e in s`
+|              `s.copy()` |   ●   |       | Cópia rasa da lista
+|        `+s.__copy__()+` |       |   ●   | Suporte a `copy.copy` (cópia rasa)
+|            `s.count(e)` |   ●   |   ●   | Conta ocorrências de um elemento
+|    `+s.__delitem__(p)+` |   ●   |   ●   | Remove item na posição `p`
+|           `s.extend(i)` |   ●   |   ●   | Acrescenta item do iterável `i` pela direita
+|       `s.extendleft(i)` |       |   ●   | Acrescenta item do iterável `i` pela esquerda
+|    `+s.__getitem__(p)+` |   ●   |   ●   | `++s[p]++`—obtém item ou fatia na posição
+|            `s.index(e)` |   ●   |       | Encontra a primeira ocorrência de `e`
+|        `s.insert(p, e)` |   ●   |       | Insere elemento `e` antes do item na posição `p`
+|        `+s.__iter__()+` |   ●   |   ●   | Obtém iterador
+|         `+s.__len__()+` |   ●   |   ●   | `++len(s)++`—número de itens
+|        `+s.__mul__(n)+` |   ●   |       | `++s * n++`—concatenação repetida
+|       `+s.__imul__(n)+` |   ●   |       | `++s *= n++`—concatenação repetida no mesmo lugar
+|       `+s.__rmul__(n)+` |   ●   |       | `++n * s`++—concatenação repetida invertidafootnote:[Operadores invertidos são explicados no <<ch_op_overload>>.]
+|               `s.pop()` |   ●   |   ●   | Remove e devolve último itemfootnote:[`a_list.pop(p)` permite remover da posição `p`, mas `deque` não suporta essa opção.]
+|           `s.popleft()` |       |   ●   | Remove e devolve primeiro item
+|           `s.remove(e)` |   ●   |       | Remove o primeiro elemento de valor igual a `e`
+|           `s.reverse()` |   ●   |   ●   | Inverte a ordem do itens no mesmo lugar
+|    `+s.__reversed__()+` |   ●   |   ●   | Obtém iterador para percorrer itens, do último para o primeiro
+|           `s.rotate(n)` |       |   ●   | Move `n` itens de um lado para o outro
+|    `+s.__setitem__(p, e)+` |   ●   |   ●   | `++s[p] = e++`—coloca `e` na posição `p`, sobrescrevendo item ou fatia existentes
+| `s.sort([key], [reverse])` |   ●   |       | Ordena os itens no mesmo lugar, com os argumentos nomeados opcionais `key` e `reverse`
+|==================================================================================================================================================
+
+Além((("queues", "implementing"))) de `deque`, outros pacotes da biblioteca padrão de Python implementam filas:
+
+`queue`::
+    Fornece as classes sincronizadas (isto é, seguras para se usar com múltiplas threads)
+    `SimpleQueue`, `Queue`, `LifoQueue`, e `PriorityQueue`.
+    Essas classes podem ser usadas para comunicação segura entre threads.
+    Todas, exceto `SimpleQueue`, podem ser delimitadas passando um argumento `maxsize` maior que 0 ao construtor.
+    Entretanto, elas não descartam um item para abrir espaço, como faz `deque`.
+    Em vez disso, quando a fila está lotada, a inserção de um novo item bloqueia quem tentou inserir—isto é,
+    ela espera até alguma outra thread criar espaço retirando um item da fila, algo útil para limitar o número de threads ativas.
+
+`multiprocessing`::
+    Implementa((("multiprocessing package"))) sua própria `SimpleQueue`, não-delimitada,
+    e `Queue`, delimitada, muito similares àquelas no pacote `queue`, mas projetadas para comunicação entre processos.
+    Uma fila especializada, `multiprocessing.JoinableQueue`, serve para gerenciamento de tarefas.
+
+`asyncio`::
+    Fornece((("asyncio package", "queue implementation by"))) `Queue`, `LifoQueue`, `PriorityQueue`,
+    e `JoinableQueue` com APIs inspiradas pelas classes nos módulos `queue` e `multiprocessing`,
+    mas adaptadas para gerenciar tarefas em programação assíncrona.
+
+`heapq`::
+    Diferente((("heapq package"))) do últimos três módulos,
+    `heapq` não implementa a classe queue, mas oferece funções como `heappush` e `heappop`,
+    que permitem o uso de uma sequência mutável como uma fila do tipo heap ou como uma fila de prioridade.
+
+
+Aqui termina nossa revisão das alternativas ao tipo `list`,
+e também nossa exploração dos tipos sequência em geral—exceto pelas especificidades de `str` e
+das sequências binárias, que tem seu próprio capítulo
+(<<ch_str_bytes>>).((("", startref="Salt02")))((("", startref="Lalt02")))((("", startref="deque02")))((("", startref="coldeq02")))
+
+
+=== Resumo do capítulo
+
+Dominar((("sequences", "overview of"))) o uso dos tipos sequência da biblioteca padrão
+é um pré-requisito para escrever código Python conciso, eficiente e idiomático.
+
+As sequências de Python são geralmente categorizadas como mutáveis ou imutáveis,
+mas também é útil considerar um outro eixo: sequências planas e sequências contêiner.
+As primeiras são mais compactas, mais rápidas e mais fáceis de usar,
+mas estão limitadas a armazenar dados atômicos como números, caracteres e bytes.
+As sequências contêiner são mais flexíveis, mas podem surpreender quando contêm objetos mutáveis.
+Então, quando armazenando estruturas de dados aninhadas,
+é preciso ter cuidado para usar tais sequências da forma correta.
+
+Infelizmente Python não tem um tipo de sequência contêiner imutável infalível:
+mesmo as tuplas "imutáveis" podem ter seus valores modificados quando contêm itens mutáveis
+como listas ou objetos definidos pelo usuário.
+
+Compreensões de lista e expressões geradoras são notações poderosas para criar e inicializar sequências.
+Se você ainda não se sente confortável com essas técnicas, gaste o tempo necessário para aprender seu uso básico.
+Não é difícil, e você logo vai estar gostando delas.
+
+As tuplas no Python tem dois papéis:  como registros de campos sem nome e como listas imutáveis.
+Ao usar uma tupla como uma lista imutável,
+lembre-se que só é garantido que o valor de uma tupla será fixo se todos os seus itens também forem imutáveis.
+Chamar `hash(t)` com a tupla como argumento é uma forma rápida de se assegurar que seu valor é fixo.
+Se `t` contiver itens mutáveis, um `TypeError` é gerado.
+
+Quando uma tupla é usada como registro,
+o desempacotamento de tuplas é a forma mais segura e legível de extrair seus campos.
+Além das tuplas, `*` funciona com listas e iteráveis em vários contextos,
+e alguns de seus casos de uso apareceram no Python 3.5 com a
+https://fpy.li/pep448[PEP 448—Additional Unpacking Generalizations (_Generalizações de Desempacotamento Adicionais_)]
+(EN).
+Python 3.10 introduziu o casamento de padrões com `match/case`,
+suportando um tipo de desempacotamento mais poderoso, conhecido como desestruturação.
+
+O fatiamento de sequências é um dos recursos de sintaxe preferidos de Python,
+e é ainda mais poderoso do que muita gente pensa.
+Fatiamento multidimensional e a notação de reticências (`\...`), como usados no NumPy,
+podem também ser suportados por sequências definidas pelo usuário.
+Atribuir a fatias é uma forma muito expressiva de editar sequências mutáveis.
+
+Concatenação repetida, como em `seq * n`, é conveniente e, tomando cuidado,
+pode ser usada para inicializar listas de listas contendo itens imutáveis.
+Atribuição aumentada com `+=` e `*=` se comporta de forma diferente com sequências mutáveis e imutáveis.
+No último caso, esses operadores necessariamente criam novas sequências.
+Mas se a sequência alvo é mutável, ela em geral é modificada no lugar—mas nem sempre,
+depende de como a sequência é implementada.
+
+O método `sort` e a função embutida `sorted` são fáceis de usar e flexíveis,
+graças ao argumento opcional `key`: uma função para calcular o critério de ordenação.
+E aliás, `key` também pode ser usado com as funções embutidas `min` e `max`.
+
+Além de listas e tuplas, a biblioteca padrão de Python oferece `array.array`.
+Apesar da NumPy e da SciPy não serem parte da biblioteca padrão,
+se você faz qualquer tipo de processamento numérico em grandes conjuntos de dados,
+estudar mesmo uma pequena parte dessas bibliotecas pode levar você muito longe.
+
+Terminamos com uma visita à versátil `collections.deque`, que é segura para usar com threads.
+Comparamos sua API com a de `list` na <<list_x_deque_methods_tbl>>
+e mencionamos as outras implementações de filas na biblioteca padrão.
+
+
+[[array_fur_reading_sec]]
+=== Leitura complementar
+
+O((("sequences", "further reading on"))) capítulo 1, "Data Structures" (_Estruturas de Dados_)
+do https://fpy.li/pycook3[Python Cookbook</em>, 3rd ed.]
+(EN) (O'Reilly), de David Beazley e Brian K. Jones, traz muitas receitas usando sequências,
+incluindo a "Recipe 1.11.
+Naming a Slice" (_Receita 1.11.
+Nomeando uma Fatia_),
+onde aprendi o truque de atribuir fatias a variáveis para melhorar a legibilidade,
+como ilustrado no nosso <<flat_file_invoce>>.
+
+A segunda edição do _Python Cookbook_ foi escrita para Python 2.4,
+mas a maior parte de seu código funciona com Python 3,
+e muitas das receitas dos capítulos 5 e 6 lidam com sequências.
+O livro foi editado por Alex Martelli, Anna Ravenscroft, e David Ascher,
+e inclui contribuições de dúzias de pythonistas.
+A terceira edição foi reescrita do zero, e se concentra mais na semântica da linguagem—especialmente
+no que mudou no Python 3—enquanto o volume mais antigo enfatiza a pragmática
+(isto é, como aplicar a linguagem a problemas da vida real).
+Apesar de algumas das soluções da segunda edição não serem mais a melhor abordagem,
+honestamente acho que vale a pena ter à mão as duas edições do _Python Cookbook_.
+
+
+O https://fpy.li/2v["HowTo - Ordenação"]
+oficial de Python tem vários exemplos de técnicas avançadas de uso de `sorted` e `list.sort`.
+
+A https://fpy.li/2-2[PEP 3132--Extended Iterable Unpacking (_Desempacotamento Estendido de Iterável_)]
+(EN) é a fonte canônica para ler sobre o novo uso da sintaxe `*extra` no lado esquerdo de atribuições paralelas.
+Se você quiser dar uma olhada no processo de evolução de Python,
+https://fpy.li/2-24["Missing *-unpacking generalizations" (_As generalizações esquecidas de * no desempacotamento_)]
+(EN) é um tópico do bug tracker propondo melhorias na notação de desempacotamento iterável.
+https://fpy.li/pep448[PEP 448--Additional Unpacking Generalizations (_Generalizações de Desempacotamento Adicionais_)]
+(EN) foi o resultado de discussões ocorridas naquele tópico.
+
+[role="pagebreak-before less_space"]
+Como mencionei na <<sequence_patterns_sec>>, o texto introdutório
+https://fpy.li/2r["Casamento de padrão estrutural"],
+de Carol Willing, no
+https://fpy.li/2s["O que há de novo no Python 3.10"],
+é uma ótima introdução a esse novo grande recurso, em mais ou menos 1.400 palavras
+(isso é menos de 5 páginas quando o Firefox converte o HTML em PDF).
+https://fpy.li/pep636[PEP 636—Structural Pattern Matching: Tutorial (_Casamento de Padrões Estrutural: Tutorial_)]
+(EN) também é bom, porém mais longo.
+A mesma PEP 636 inclui o
+https://fpy.li/2-27["Appendix A—Quick Intro" (_Apêndice A-Introdução Rápida_)] (EN).
+Ele é menor que a introdução de Willing, porque omite as considerações gerais sobre os motivos pelos quais o
+casamento de padrões é útil.
+Se você precisar de mais argumentos para se convencer ou convencer outros que o casamento de padrões
+foi bom para o Python, leia as 22 páginas de
+https://fpy.li/pep635[PEP 635—Structural Pattern Matching: Motivation and Rationale (_Casamento de Padrões Estrutural: Motivação e Justificativa_)]
+(EN).
+
+O post de Eli Bendersky em seu blog,
+https://fpy.li/2-28["Less copies in Python with the buffer protocol and memoryviews" (_Menos cópias em Python, com o protocolo de buffer e mamoryviews_)]
+inclui um pequeno tutorial sobre `memoryview`.
+
+Há muitos livros tratando da NumPy no mercado, e muitos não mencionam "NumPy" no título.
+Dois exemplos são o https://fpy.li/2-29[_Python Data Science Handbook_],
+escrito por Jake VanderPlas e de acesso aberto,
+e a segunda edição do
+https://fpy.li/2-30[Python for Data Analysis], de Wes McKinney.
+
+"A Numpy é toda sobre vetorização". Essa é a frase de abertura do livro de acesso aberto
+https://fpy.li/2-31[From Python to NumPy], de Nicolas P. Rougier.
+Operações vetorizadas aplicam funções matemáticas a todos os elementos de um array
+sem um loop explícito escrito em Python.
+Elas podem operar em paralelo, usando instruções especiais de vetor presentes em CPUs modernas,
+tirando proveito de múltiplos núcleos ou delegando para a GPU, dependendo da biblioteca.
+O primeiro exemplo no livro de Rougier mostra um aumento de velocidade de 500 vezes,
+após a refatoração de uma bela classe pythônica, usando um método gerador,
+em uma pequena e feroz função que chama um par de funções de vetor da NumPy.
+
+Para aprender a usar `deque` (e outras coleções), veja os exemplos e as receitas práticas em
+https://fpy.li/2w["Tipos de dados de contêineres"],
+na documentação de Python.
+
+A melhor defesa da convenção de Python de excluir o último item `range`
+e fatias foi escrita pelo grande Edsger W. Dijkstra, em uma nota curta intitulada
+https://fpy.li/2-32["Why Numbering Should Start at Zero" (_Porque a Numeração Deve Começar em Zero_)].
+O assunto da nota é notação matemática, mas ela é relevante para Python porque
+Dijkstra explica, com humor e rigor, porque uma sequência como 2, 3, ..., 12
+deveria sempre ser expressa como 2 ≤ i < 13.
+Todas as outras convenções razoáveis são refutadas,
+bem como a ideia de deixar cada usuário escolher uma convenção.
+O título se refere à indexação baseada em zero, mas a nota na verdade é sobre porque é desejável que `'ABCDE'[1:3]`
+signifique `'BC'` e não `'BCD'`, e porque faz todo sentido escrever
+`range(2, 13)` para produzir 2, 3, 4, ..., 12.
+E, por sinal, a nota foi escrita à mão, mas é linda e totalmente legível.
+A letra de Dijkstra é tão cristalina que alguém criou uma https://fpy.li/2-33[fonte] a partir de suas anotações.
+
+[[sequences_soapbox]]
+.Ponto de Vista
+****
+
+[role="soapbox-title"]
+*A natureza das tuplas*
+
+Em((("Soapbox sidebars", "tuples")))((("tuples", "nature of")))((("sequences", "Soapbox discussion", id="Ssoap02")))
+2012, apresentei um poster sobre a linguagem ABC na PyCon US.
+Antes de criar Python, Guido van Rossum tinha trabalhado no interpretador ABC, então ele veio ver meu pôster.
+Entre outras coisas, falamos sobre como os _compounds_ (compostos) da ABC,
+predecessores das tuplas de Python.
+Compostos também suportam atribuição paralela e são usados como chaves compostas em dicionários
+(ou _tabelas_, no jargão da ABC).
+Entretanto, compostos não são sequências,
+Eles não são iteráveis, e não é possível obter um campo por índice, muitos menos fatiá-los.
+Ou você manuseia o composto inteiro ou extrai os campos individuais usando atribuição paralela, e é isso.
+
+Disse a Guido que essas limitações tornavam muito claro o principal propósito dos compostos:
+ele são apenas registros sem campos nomeados.
+Sua resposta: "Fazer as tuplas se comportarem como sequências foi uma gambiarra."
+
+Isso ilustra a abordagem pragmática que tornou Python mais prático e mais bem sucedido que a ABC.
+Da perspectiva de um implementador de linguagens, fazer as tuplas se comportarem como sequências custa pouco.
+Como resultado, o principal caso de uso de tuplas como registros não é tão óbvio,
+mas ganhamos listas imutáveis—mesmo que seu tipo não seja tão claramente nomeado como seria `frozenlist`.
+
+
+[role="soapbox-title"]
+*Sequências planas versus sequências contêineres*
+
+Para((("Soapbox sidebars", "flat versus container sequences")))((("container sequences")))((("flat sequences")))
+realçar os diferentes modelos de memória dos tipos de sequências usei os termos
+_sequência contêiner_ e _sequência plana_.
+A palavra "contêiner" vem da própria
+https://fpy.li/2x[documentação do "Modelo de Dados"]:
+
+[quote]
+____
+Alguns objetos contêm referências a outros objetos; eles são chamados de contêineres.
+____
+
+Usei o termo "sequência contêiner" para ser específico,
+porque existem contêineres em Python que não são sequências, como `dict` e `set`.
+Sequências contêineres podem ser aninhadas porque elas podem conter objetos de qualquer tipo,
+incluindo seu próprio tipo.
+
+Por outro lado, _sequências planas_ são tipos de sequências que não podem ser aninhadas,
+pois só podem conter valores atômicos como inteiros, números de ponto flutuante ou caracteres.
+
+Adotei o termo _sequência plana_  porque precisava de algo para contrastar com "sequência contêiner."
+
+Apesar do uso anterior da palavra "containers" na documentação oficial,
+há uma classe abstrata em `collections.abc` chamada `Container`.
+Aquela ABC tem apenas um método, `+__contains__+`—o método especial por trás do operador `in`.
+Isso significa que arrays e strings, que não são contêineres no sentido tradicional,
+são subclasses virtuais de `Container`, porque implementam `+__contains__+`.
+Isso é só mais um exemplo de humanos usando uma mesma palavra para significar coisas diferentes.
+Nesse livro, vou escrever "contêiner" com minúscula e em português para
+"um objeto que contém referências para outros objetos" e
+`Container` com a inicial maiúscula em fonte mono espaçada para me referir a `collections.abc.Container`.
+
+
+[role="soapbox-title"]
+*Listas bagunçadas*
+
+Textos((("Soapbox sidebars", "mixed-bag lists")))((("lists", "mixed-bag")))
+introdutórios de Python costumam enfatizar que listas podem conter objetos de diferentes tipos,
+mas na prática esse recurso não é muito útil: colocamos itens em uma lista para processá-los mais tarde,
+o que implica o suporte, da parte de todos os itens, a pelo menos alguma operação em comum
+(isto é, eles devem todos "grasnar", independente de serem ou não 100% patos, geneticamente falando).
+Por exemplo, não é possível ordenar uma lista em Python 3 a menos que os itens ali contidos sejam comparáveis:
+
+[source, pycon]
+----
+>>> l = [28, 14, '28', 5, '9', '1', 0, 6, '23', 19]
+>>> sorted(l)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: unorderable types: str() < int()
+----
+
+Diferente das listas, as tuplas muitas vezes mantêm itens de tipos diferentes.
+Isso é natural: se cada item em uma tupla é um campo, então cada campo pode ter um tipo diferente.
+
+[role="soapbox-title"]
+*'key' é brilhante*
+
+O((("Soapbox sidebars", "key argument")))((("key argument")))((("arguments", "key argument")))
+argumento opcional `key` de `list.sort`, `sorted`, `max`, e `min` é uma grande ideia.
+Outras linguagens forçam você a fornecer uma função de comparação com dois argumentos,
+como a função descontinuada de Python 2 `cmp(a, b)`.
+Usar `key` é mais simples e mais eficiente.
+É mais simples porque basta definir uma função de um único argumento que recupera ou calcula
+o critério a ser usado para ordenar seus objetos;
+isso é mais fácil que escrever uma função de dois argumentos para devolver –1, 0, 1.
+Também é mais eficiente, porque a função `key` é invocada apenas uma vez por item,
+enquanto a comparação de dois argumentos é chamada a cada vez
+que o algoritmo de ordenação precisa comparar dois itens.
+Claro, Python também precisa comparar as chaves ao ordenar,
+mas aquela comparação é feita em código C otimizado, não em uma função Python escrita por você.
+
+Por sinal, usando `key` podemos ordenar uma lista bagunçada de números e strings "parecidas com números".
+Só precisamos decidir se queremos tratar todos os itens como inteiros ou como strings:
+
+[source, pycon]
+----
+>>> l = [28, 14, '28', 5, '9', '1', 0, 6, '23', 19]
+>>> sorted(l, key=int)
+[0, '1', 5, 6, '9', 14, 19, '23', 28, '28']
+>>> sorted(l, key=str)
+[0, '1', 14, 19, '23', 28, '28', 5, 6, '9']
+----
+
+
+[role="soapbox-title"]
+*A Oracle, o Google, e a Conspiração Timbot*
+
+O((("Soapbox sidebars", "Oracle, Google, and the Timbot")))((("Timsort algorithm")))
+algoritmo de ordenação usado em `sorted` e `list.sort` é o Timsort,
+um algoritmo adaptativo que troca de estratégia de ordenação (entre _merge sort_ e _insertion sort_),
+dependendo de quão ordenados os dados já estão.
+Isso é eficiente porque dados reais tendem a ter séries de itens ordenados.
+Há um https://fpy.li/2y[artigo da Wikipedia] sobre ele.
+
+O Timsort foi usado no CPython pela primeira vez em 2002.
+Desde 2009, o Timsort também é usado para ordenar arrays tanto em Java padrão quanto no Android,
+um fato que ficou muito conhecido quando a Oracle usou parte do código relacionado ao Timsort
+como evidência da violação da propriedade intelectual da Sun pelo Google.
+Por exemplo, veja essa https://fpy.li/2-36[ordem do Juiz William Alsup] (EN) de 2012.
+Em 2021, a Suprema Corte dos Estados Unidos decidiu que o uso do código de Java pelo Google é
+"fair use"footnote:[NT: Conceito da lei de copyright norte-americana que permite,
+em determinadas circunstâncias, o uso sem autorização prévia de partes da propriedade intelectual de outros.
+Em geral traduzido como "uso razoável" ou "uso aceitável".
+Essa doutrina não faz parte da lei brasileira.]
+
+O Timsort foi inventado por Tim Peters, um dos desenvolvedores principais de Python,
+e tão produtivo que se acredita que ele seja uma inteligência artificial, o Timbot.
+Você pode ler mais sobre essa teoria da conspiração em https://fpy.li/2-37["Python Humor"] (EN).
+Tim também escreveu "The Zen of Python": `import this`.((("", startref="Ssoap02")))
+
+****
