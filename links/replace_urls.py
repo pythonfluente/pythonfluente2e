@@ -3,8 +3,8 @@
 import sys
 
 def main():
-    adoc_name = sys.argv[2]
     pairs_name = sys.argv[1]
+    adoc_name = sys.argv[2]
     pairs = []
     with open(pairs_name) as fp:
         for line in fp.readlines():

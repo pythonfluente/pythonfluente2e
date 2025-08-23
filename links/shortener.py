@@ -7,7 +7,7 @@ This script reads a `.htaccess` file and a plain text file with
 URLs (the target URLs).
 
 It outputs a list of target URLs and corresponding paths
-for short URLs in the FPI.LI domain like `/2d`, `/2e`, etc.
+for short URLs in the FPY.LI domain like `/2d`, `/2e`, etc.
 This list is used to replace the target URLs with short URLs
 in the `.adoc` files where the target URLs are used.
 
@@ -62,6 +62,12 @@ import sys
 from collections.abc import Iterable, Iterator
 from typing import NamedTuple, TextIO
 from datetime import datetime
+
+DO_NOT_SHORTEN = {
+    'http://pythonfluente.com',
+    'http://fluentpython.com',
+    'http://oreilly.com',
+}
 
 
 class PathURL(NamedTuple):
@@ -162,6 +168,8 @@ def main():
     path_urls = []
     path_gen = gen_unused_short(redirects)
     for url in urls:
+        if url in DO_NOT_SHORTEN:
+            continue
         path_url = shorten_one(url, path_gen, redirects, targets)
         path_urls.append(path_url)
         path, url, new = path_url
