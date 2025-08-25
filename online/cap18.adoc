@@ -1,0 +1,1358 @@
+[[ch_with_match]]
+== Instruções with, match, e blocos else
+
+[quote, Raymond Hettinger, um eloquente evangelista de Python]
+____
+Gerenciadores de contexto podem vir a ser quase tão importantes quanto a própria sub-rotina. Só arranhamos a superfície das possibilidades. [...] Basic tem uma instrução `with`, há instruções `with` em várias linguagens. Mas elas não fazem a mesma coisa, todas fazem algo muito raso, economizam consultas a atributos com o operador ponto (`.`), elas não configuram e desfazem ambientes. Não pense que é a mesma coisa só porque o nome é igual. A instrução `with` é mais que isso.footnote:[Palestra de abertura da PyCon US 2013: https://fpy.li/18-1["What Makes Python Awesome" ("_O que torna Python incrível_")]; a parte sobre `with` começa em 23:00 e termina em 26:15.] (EN)
+____
+
+
+Este((("with, match, and else blocks", "topics covered"))) capítulo é sobre mecanismos de controle de fluxo não muito comuns em outras linguagens e que, por essa razão, podem ser ignorados ou subutilizados em Python.
+São eles:
+
+* A instrução `with` e o protocolo de gerenciamento de contexto
+* A instrução `match/case` para _pattern matching_ (casamento de padrões)
+* A cláusula `else` nas instruções `for`, `while`, e `try`
+
+A instrução `with` cria um contexto temporário e o destrói com segurança, sob o controle de um objeto gerenciador de contexto. Isso previne erros e reduz código repetitivo, tornando as APIs ao mesmo tempo mais seguras e mais fáceis de usar. Programadores Python estão encontrando muitos usos para blocos `with` além do fechamento automático de arquivos.
+
+Já estudamos _pattern matching_ em capítulos anteriores, mas aqui veremos como a gramática de uma linguagem de programação pode ser expressa como padrões de sequências.
+Por isso `match/case` é uma ferramenta eficiente para criar processadores de linguagem fáceis de entender e de estender. Vamos examinar um interpretador completo para um pequeno (porém funcional) subconjunto da linguagem Scheme. As mesmas ideias poderiam ser aplicadas no desenvolvimento de uma linguagem de templates ou uma DSL (_Domain-Specific Language_, literalmente Linguagem de Domínio Específico) para codificar regras de negócio em um sistema maior.
+
+A cláusula `else` não é grande coisa, mas ajuda a transmitir a intenção por trás do código quando usada corretamente junto com `for`, `while` e `try`.
+
+=== Novidades nesse capítulo
+
+A <<pattern_matching_case_study_sec>> é nova.
+
+Também((("with, match, and else blocks", "significant changes to"))) atualizei a <<context_utilities_sec>> para incluir alguns recursos do módulo `contextlib` adicionados desde Python 3.6,
+e os novos gerenciadores de contexto "parentizados", introduzidos no Python 3.10.
+
+Vamos começar com a poderosa instrução `with`.
+
+[[context_managers_sec]]
+=== Gerenciadores de contexto e a instrução with
+
+Objetos((("context managers", "purpose of")))((("with, match, and else blocks", "context managers and with blocks", id="wmebcontextm18"))) gerenciadores de contexto
+existem para controlar uma instrução `with`, da mesma forma que iteradores existem para controlar uma instrução `for`.
+
+A((("with, match, and else blocks", "purpose of with statements"))) instrução `with`
+foi projetada para simplificar alguns usos comuns de `try/finally`,
+que garantem que alguma operação seja realizada após um bloco de código,
+mesmo que o bloco termine com um `return`, uma exceção, ou uma chamada `sys.exit()`.
+O código no bloco `finally` normalmente libera um recurso crítico ou restaura um estado anterior que havia sido temporariamente modificado.
+
+A((("context managers", "creative uses for"))) comunidade Python
+está encontrando novos usos criativos para gerenciadores de contexto.
+Alguns exemplos, da biblioteca padrão, são:
+
+* Gerenciar transações no módulo `sqlite3` — veja https://docs.python.org/3/library/sqlite3.html#using-the-connection-as-a-context-manager["Usando a conexão como gerenciador de contexto"].
+* Manipular travas, condições e semáforos de forma segura—como descrito na https://docs.python.org/pt-br/3/library/threading.html#using-locks-conditions-and-semaphores-in-the-with-statement[documentação do módulo `threading`] (EN).
+* Configurar ambientes customizados para operações aritméticas com objetos `Decimal`—veja a https://docs.python.org/pt-br/3/library/decimal.html#decimal.localcontext[documentação de `decimal.localcontext`] (EN).
+* Remendar (_patch_) objetos para testes—veja a https://docs.python.org/pt-br/3/library/unittest.mock.html#patch[função `unittest.mock.patch`] (EN).
+
+A((("context managers", "methods included in interface")))((("&#x005F;&#x005F;enter&#x005F;&#x005F;")))((("&#x005F;&#x005F;exit&#x005F;&#x005F;"))) interface gerenciador de contexto consiste dos métodos `+__enter__+` and `+__exit__+`.
+No topo do `with`, Python chama o método `+__enter__+` do objeto gerenciador de contexto. Quando o bloco `with` encerra ou termina por qualquer razão, Python chama
+`+__exit__+` no objeto gerenciador de contexto.
+
+O((("context managers", "demonstrations of", id="CMdemo18"))) exemplo mais comum é se assegurar que um objeto arquivo seja fechado. O <<with_file_demo>> é uma demonstração detalhada do uso do `with` para fechar um arquivo.
+
+[[with_file_demo]]
+.Demonstração do uso de um objeto arquivo como gerenciador de contexto
+====
+[source, pycon]
+----
+>>> with open('mirror.py') as fp:  # <1>
+...     src = fp.read(60)  # <2>
+...
+>>> len(src)
+60
+>>> fp  # <3>
+<_io.TextIOWrapper name='mirror.py' mode='r' encoding='UTF-8'>
+>>> fp.closed, fp.encoding  # <4>
+(True, 'UTF-8')
+>>> fp.read(60)  # <5>
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: I/O operation on closed file.
+----
+====
+<1> `fp` está vinculado ao arquivo de texto aberto, pois o método `+__enter__+` do arquivo devolve `self`.
+<2> Lê `60` caracteres Unicode de `fp`.
+<3> A variável `fp` ainda está disponível—blocos `with` não definem um novo escopo, como fazem as funções.
+<4> Podemos ler os atributos do objeto `fp`.
+<5> Mas não podemos ler mais texto de `fp` pois, no final do bloco `with`, o método `+TextIOWrapper.__exit__+` foi chamado, e isso fechou o arquivo.
+
+A primeira explicação no <<with_file_demo>> transmite uma informação sutil porém crucial:
+o objeto gerenciador de contexto é o resultado da avaliação da expressão após o `with`, mas o valor vinculado à variável alvo (na cláusula `as`) é o resultado devolvido pelo método `+__enter__+` do objeto gerenciador de contexto.
+
+E acontece que a função `open()` devolve uma instância de `TextIOWrapper`, e o método `+__enter__+` dessa classe devolve `self`.
+Mas em uma classe diferente, o método `+__enter__+` também pode devolver algum outro objeto em vez do gerenciador de contexto.
+
+Quando o fluxo de controle sai do bloco `with` de qualquer forma, o método `+__exit__+` é invocado no objeto gerenciador de contexto, e não no que quer que `+__enter__+` tenha devolvido.
+
+A cláusula `as` da instrução `with` é opcional. No caso de `open`, sempre precisamos obter uma referência para o arquivo, para podermos chamar seus métodos. Mas alguns gerenciadores de contexto devolvem `None`, pois não tem nenhum objeto útil para entregar ao usuário.
+
+O <<looking_glass_demo_1>> mostra o funcionamento de um gerenciador de contexto perfeitamente frívolo, projetado para ressaltar a diferença entre o gerenciador de contexto e o objeto devolvido por seu método `+__enter__+`.
+
+[[looking_glass_demo_1]]
+.Testando a classe gerenciadora de contexto `LookingGlass`
+====
+[source, py]
+----
+include::../code/18-with-match/mirror.py[tags=MIRROR_DEMO_1]
+----
+====
+<1> O gerenciador de contexto é uma instância de `LookingGlass`; Python chama `+__enter__+` no gerenciador de contexto e o resultado é vinculado a `what`.
+<2> Exibe uma `str`, depois o valor da variável alvo `what`.
+A saída de cada `print` será invertida.
+<3> Agora o bloco `with` terminou. Podemos ver que o valor devolvido por `+__enter__+`, armazenado em `what`, é a string `'JABBERWOCKY'`.
+<4> A saída do programa não está mais invertida.
+
+
+O <<looking_glass_ex>> mostra a implementação de `LookingGlass`.
+
+[[looking_glass_ex]]
+.mirror.py: código da classe gerenciadora de contexto `LookingGlass`
+====
+[source, py]
+----
+include::../code/18-with-match/mirror.py[tags=MIRROR_EX]
+----
+====
+<1> Python invoca `+__enter__+` sem argumentos além de `self`.
+<2> Armazena o método `sys.stdout.write`  original, para podermos restaurá-lo mais tarde.
+<3> Faz um _monkey-patch_ em `sys.stdout.write`, substituindo-o com nosso próprio método.
+<4> Devolve a string `'JABBERWOCKY'`, apenas para termos algo para colocar na variável alvo `what`.
+<5> Nosso substituto de `sys.stdout.write` inverte o argumento `text` e chama a implementação original.
+<6> Se tudo correu bem, Python chama `+__exit__+` com `None, None, None`; se ocorreu uma exceção, os três argumentos recebem dados da exceção, como descrito a seguir, logo após esse exemplo.
+<7> Restaura o método original em `sys.stdout.write`.
+<8> Se a exceção não é `None` e seu tipo é `ZeroDivisionError`, exibe uma mensagem...
+<9> ...e devolve `True`, para informar o interpretador que a exceção foi tratada.
+<10> Se `+__exit__+` devolve `None` ou qualquer valor _falso_, qualquer exceção levantada dentro do bloco `with` será propagada.
+
+[TIP]
+====
+Quando aplicações reais tomam o controle da saída padrão, elas frequentemente desejam substituir `sys.stdout` com outro objeto similar a um arquivo por algum tempo, depois voltar ao original. O gerenciador de contexto https://fpy.li/18-6[`contextlib.redirect_stdout`] faz exatamente isso: passe a ele seu objeto similar a um arquivo que substituirá `sys.stdout`.
+====
+
+O interpretador chama o método `+__enter__+` sem qualquer argumento—além do `self` implícito. Os três argumentos passados a `+__exit__+` são:
+
+`exc_type`:: A classe da exceção (por exemplo, `ZeroDivisionError`).
+
+`exc_value`:: A instância da exceção. Algumas vezes, parâmetros passados para o construtor da exceção—tal como a mensagem de erro—podem ser encontrados em `exc_value.args`.
+
+`traceback`:: Um objeto `traceback`.footnote:[Os três argumentos recebidos por `self` são exatamente o que você obtém se chama https://fpy.li/18-7[`sys.exc_info()`] no bloco `finally` de uma instrução `try/finally`. Isso faz sentido, considerando que a instrução `with` tem por objetivo substituir a maioria dos usos de `try/finally`, e chamar `sys.exc_info()` é muitas vezes necessário para determinar que ação de limpeza é necessária.]
+
+Para uma visão detalhada de como funciona um gerenciador de contexto, vejamos o <<looking_glass_demo_2>>, onde `LookingGlass` é usado fora de um bloco `with`, de forma que podemos chamar manualmente seus métodos
+ `+__enter__+` e `+__exit__+`.
+
+[[looking_glass_demo_2]]
+.Exercitando o `LookingGlass` sem um bloco `with`
+====
+[source, py]
+----
+include::../code/18-with-match/mirror.py[tags=MIRROR_DEMO_2]
+----
+====
+<1> Instancia e inspeciona a instância de `manager`.
+<2> Chama o método `+__enter__+` do manager e guarda o resultado em `monster`.
+<3> `monster` é a string `'JABBERWOCKY'`. O identificador `True` aparece invertido, porque toda a saída via `stdout` passa pelo método `write`, que modificamos em `+__enter__+`.
+<4> Chama `+manager.__exit__+` para restaurar o `stdout.write` original.((("", startref="CMdemo18")))
+
+
+.Gerenciadores de contexto entre parênteses
+[TIP]
+====
+Python((("context managers", "parenthesized in Python 3.10"))) 3.10 adotou
+https://fpy.li/pep617[um novo parser] (analisador sintático),
+mais poderoso que o antigo https://fpy.li/18-8[parser LL(1)].
+Isso permitiu introduzir novas sintaxes que não eram viáveis anteriormente.
+Uma melhoria na sintaxe foi permitir gerenciadores de contexto agrupados entre parênteses, assim:
+
+[source, py]
+----
+with (
+    CtxManager1() as example1,
+    CtxManager2() as example2,
+    CtxManager3() as example3,
+):
+    ...
+----
+
+Antes do 3.10, as linhas acima teriam que ser escritas como blocos `with` aninhados.
+====
+
+A biblioteca padrão inclui o pacote `contextlib`, com funções, classe e decoradores muito convenientes para desenvolver, combinar e usar gerenciadores de contexto.
+
+[[context_utilities_sec]]
+==== Utilitários do contextlib
+
+Antes((("context managers", "contextlib utilities"))) de desenvolver suas próprias classes gerenciadoras de contexto, dê uma olhada em
+https://docs.python.org/pt-br/3/library/contextlib.html[`contextlib`—"Utilities for ++with++-statement contexts" ("Utilitários para contextos da instrução ++with++)], na documentação de Python.
+Pode ser que você esteja prestes a escrever algo que já existe, ou talvez exista uma classe ou algum invocável que tornará seu trabalho mais fácil.
+
+Além do gerenciador de contexto `redirect_stdout` mencionado logo após o <<looking_glass_ex>>, o `redirect_stderr` foi acrescentado no Python 3.5—ele faz o mesmo que seu par mais antigo, mas com as saídas direcionadas para `stderr`.
+
+O pacote `contextlib` também inclui:
+
+`closing`:: Uma função para criar gerenciadores de contexto a partir de objetos que forneçam um método `close()` mas não implementam a interface `+__enter__/__exit__+`.
+
+`suppress`:: Um gerenciador de contexto para ignorar temporariamente exceções passadas como parâmetros.
+
+`nullcontext`:: Um gerenciador de contexto que não faz nada, para simplificar a lógica condicional em torno de objetos que podem não implementar um gerenciador de contexto adequado.
+Ele serve como um substituto quando o código condicional antes do bloco `with` pode ou não fornecer um gerenciador de contexto para a instrução `with`. Adicionado no Python 3.7.
+
+O módulo `contextlib` fornece classes e um decorador que são mais largamente aplicáveis que os decoradores mencionados acima:
+
+`@contextmanager`:: Um decorador que permite construir um gerenciador de contexto a partir de um simples função geradora, em vez de criar uma classe e implementar a interface. Veja a <<using_cm_decorator_sec>>.
+
+`AbstractContextManager`:: Uma ABC que formaliza a interface gerenciador de contexto, e torna um pouco mais fácil criar classes gerenciadoras de contexto, através de subclasses—adicionada no Python 3.6.
+
+`ContextDecorator`:: Uma classe base para definir gerenciadores de contexto baseados em classes que podem também ser usadas como decoradores de função, rodando a função inteira dentro de um contexto gerenciado.
+
+`ExitStack`:: Um gerenciador de contexto que permite entrar em um número variável de gerenciadores de contexto. Quando o bloco ++with++ termina, ++ExitStack++ chama os métodos `+__exit__+` dos gerenciadores de contexto empilhados na ordem LIFO (Last In, First Out, _Último a Entrar, Primeiro a Sair_). Use essa classe quando você não sabe de antemão em quantos gerenciadores de contexto será necessário entrar no bloco `with`; por exemplo, ao abrir ao mesmo tempo todos os arquivos de uma lista arbitrária de arquivos.
+
+Com Python 3.7, `contextlib` acrescentou `AbstractAsyncContextManager`, `@asynccontextmanager`, e `AsyncExitStack`.
+Eles são similares aos utilitários equivalentes sem a parte `async` no nome, mas projetados para uso com a nova instrução `async with`, tratado no <<ch_async>>.
+
+Desses todos, o utilitário mais amplamente usado é o decorador `@contextmanager`, então ele merece mais atenção. Esse decorador também é interessante por mostrar um uso não relacionado a iteração para a instrução `yield`.
+
+[[using_cm_decorator_sec]]
+==== Usando o @contextmanager
+
+O((("@contextmanager decorator", id="atcontextm18")))((("context managers", "@contextmanager decorator", id="CMatcontextm18"))) decorador `@contextmanager` é uma ferramenta elegante e prática, que une três recursos distintos de Python: um decorador de função, um gerador, e a instrução `with`.
+
+Usar o `@contextmanager` reduz o código repetitivo na criação de um gerenciador de contexto: em vez de escrever toda uma classe com métodos `+__enter__/__exit__+`, você só precisa implementar um gerador com uma única instrução `yield`, que deve produzir o que o método `+__enter__+` deveria devolver.
+
+Em um gerador decorado com `@contextmanager`, o `yield` divide o corpo da função em duas partes: tudo que vem antes do `yield` será executado no início do bloco `with`, quando o interpretador chama `+__enter__+`; o código após o `yield` será executado quando `+__exit__+` é chamado, no final do bloco.
+
+O <<looking_glass_gen_ex>> substitui a classe `LookingGlass` do <<looking_glass_ex>> por uma função geradora.
+
+[[looking_glass_gen_ex]]
+.mirror_gen.py: um gerenciador de contexto implementado com um gerador
+====
+[source, py]
+----
+include::../code/18-with-match/mirror_gen.py[tags=MIRROR_GEN_EX]
+----
+====
+<1> Aplica o decorador `contextmanager`.
+<2> Preserva o método `sys.stdout.write` original.
+<3> `reverse_write` pode chamar `original_write` mais tarde, pois ele está disponível em sua clausura (closure).
+<4> Substitui `sys.stdout.write` por `reverse_write`.
+<5> Produz o valor que será vinculado à variável alvo na cláusula `as` da instrução `with`. O gerador se detem nesse ponto, enquanto o corpo do `with` é executado.
+<6> Quando o fluxo de controle sai do bloco `with`, a execução continua após o `yield`; neste ponto o `sys.stdout.write` original é restaurado.
+
+O <<looking_glass_gen_demo>> mostra a função `looking_glass` em operação.
+
+[[looking_glass_gen_demo]]
+.Testando a função gerenciadora de contexto `looking_glass`
+====
+[source, py]
+----
+include::../code/18-with-match/mirror_gen.py[tags=MIRROR_GEN_DEMO_1]
+----
+====
+<1> A única diferença do <<looking_glass_demo_1>> é o nome do gerenciador de contexto:`looking_glass` em vez de `LookingGlass`.
+
+O decorador `contextlib.contextmanager` envolve a função em uma classe que implementa os métodos `+__enter__+` e `+__exit__+`.footnote:[A classe real se chama `_GeneratorContextManager`. Se você quiser saber exatamente como ela funciona, leia seu https://fpy.li/18-10[código fonte] na __Lib/contextlib.py__ de Python 3.10.]
+
+O método `+__enter__+` daquela classe:
+
+. Chama a função geradora para obter um objeto gerador—vamos chamá-lo de `gen`.
+. Chama `next(gen)` para acionar com ele a palavra reservada `yield`.
+. Devolve o valor produzido por `next(gen)`, para permitir que o usuário o vincule a uma variável usando o formato `with/as`.
+
+Quando o bloco `with` termina, o método `+__exit__+`:
+
+. Verifica se uma exceção foi passada como `exc_type`; em caso afirmativo, `gen.throw(exception)` é invocado, fazendo com que a exceção seja levantada na linha `yield`, dentro do corpo da função geradora.
+. Caso contrário, `next(gen)` é chamado, retomando a execução do corpo da função geradora após o `yield`.
+
+O <<looking_glass_gen_ex>> tem um defeito:
+Se uma exceção for levantada no corpo do bloco `with`,
+o interpretador Python vai capturá-la e levantá-la novamente na expressão `yield` dentro de `looking_glass`.
+Mas não há tratamento de erro ali, então o gerador `looking_glass` vai terminar sem nunca restaurar o método `sys.stdout.write` original, deixando o sistema em um estado inconsistente.
+
+O <<looking_glass_gen_exc_ex>> acrescenta o tratamento especial da exceção `ZeroDivisionError`, tornando esse gerenciador de contexto funcionalmente equivalente ao <<looking_glass_ex>>, baseado em uma classe.
+
+[[looking_glass_gen_exc_ex]]
+.mirror_gen_exc.py: gerenciador de contexto baseado em um gerador implementando tratamento de erro—com o mesmo comportamento externo de <<looking_glass_ex>>
+====
+[source, py]
+----
+include::../code/18-with-match/mirror_gen_exc.py[tags=MIRROR_GEN_EXC]
+----
+====
+<1> Cria uma variável para uma possível mensagem de erro; essa é a primeira mudança em relação a <<looking_glass_gen_ex>>.
+<2> Trata `ZeroDivisionError`, fixando uma mensagem de erro.
+<3> Desfaz o _monkey-patching_ de `sys.stdout.write`.
+<4> Mostra a mensagem de erro, se ela foi determinada.
+
+Lembre-se que o método `+__exit__+` diz ao interpretador que ele tratou a exceção ao devolver um valor _verdadeiro_; nesse caso, o interpretador suprime a exceção.
+
+Por outro lado, se `+__exit__+` não devolver explicitamente um valor, o interpretador recebe o habitual `None`, e propaga a exceção.
+Com o `@contextmanager`, o comportamento default é invertido: o método `+__exit__+` fornecido pelo decorador assume que qualquer exceção enviada para o gerador está tratada e deve ser suprimida.
+
+[TIP]
+====
+Ter um `try/finally` (ou um bloco `with`) em torno do `yield` é o preço inescapável do uso de `@contextmanager`,
+porque você nunca sabe o que os usuários do seu gerenciador de contexto vão fazer dentro do bloco `with`.footnote:[Essa dica é uma citação literal de um comentário de Leonardo Rochael, um do revisores técnicos desse livro. Muito bem dito, Leo!]
+====
+
+Um recurso pouco conhecido do `@contextmanager` é que os geradores decorados com ele podem ser usados eles mesmos como decoradores.footnote:["Pouco conhecido" porque pelo menos eu e os outros revisores técnicos não sabíamos disso até Caleb Hattingh nos contar. Obrigado, Caleb!]
+Isso ocorre porque `@contextmanager` é implementado com a classe `contextlib.ContextDecorator`.
+
+O <<looking_glass_gen_deco_demo>> mostra o gerenciador de contexto `looking_glass` do <<looking_glass_gen_ex>> sendo usado como um decorador.
+
+[[looking_glass_gen_deco_demo]]
+.O gerenciador de contexto `looking_glass` também funciona como um decorador.
+====
+[source, py]
+----
+include::../code/18-with-match/mirror_gen.py[tags=MIRROR_GEN_DECO]
+----
+====
+<1> `looking_glass` faz seu trabalho antes e depois do corpo de `verse` rodar.
+<2> Isso confirma que o `sys.write` original foi restaurado.
+
+Compare o <<looking_glass_gen_deco_demo>> com o <<looking_glass_gen_demo>>, onde `looking_glass` é usado como um gerenciador de contexto.
+
+Um interessante exemplo real do uso do `++@contextmanager++` fora da biblioteca padrão é a https://fpy.li/18-11[reescrita de arquivo no mesmo lugar usando um gerenciador de contexto] de Martijn Pieters. O <<inplace_ex>> mostra como ele é usado.
+
+[[inplace_ex]]
+.Um gerenciador de contexto para reescrever arquivos no lugar
+====
+[source, python3]
+----
+import csv
+
+with inplace(csvfilename, 'r', newline='') as (infh, outfh):
+    reader = csv.reader(infh)
+    writer = csv.writer(outfh)
+
+    for row in reader:
+        row += ['new', 'columns']
+        writer.writerow(row)
+----
+====
+
+A função `inplace` é um gerenciador de contexto que fornece a você dois identificadores—no exemplo, `infh` e `outfh`—para o mesmo arquivo, permitindo que seu código leia e escreva ali ao mesmo tempo. Isso é mais fácil de usar que a https://docs.python.org/pt-br/3/library/fileinput.html#fileinput.input[função `fileinput.input`] (EN) da biblioteca padrão (que, por sinal, também fornece um gerenciador de contexto).
+
+Se você quiser estudar o código-fonte do `inplace` de Martijn (listado no https://fpy.li/18-11[post]) (EN), encontre a((("yield keyword")))((("keywords", "yield keyword"))) palavra reservada `yield`: tudo antes dela lida com configurar o contexto, que implica criar um arquivo de backup, então abrir e produzir referências para os identificadores de arquivo de leitura e escrita que serão devolvidos pela chamada a `+__enter__+`. O processamento do `+__exit__+` após o `yield` fecha os identificadores do arquivo e, se algo deu errado, restaura o arquivo do backup.
+
+Isso conclui nossa revisão da instrução `with` e dos gerenciadores de contexto. Vamos agora olhar o `match/case`, no contexto de um exemplo completo.((("", startref="wmebcontextm18")))((("", startref="CMatcontextm18")))((("", startref="atcontextm18")))
+
+
+[[pattern_matching_case_study_sec]]
+=== Pattern matching no lis.py: um estudo de caso
+
+Na((("lis.py interpreter", "topics covered")))((("with, match, and else blocks", "pattern matching in lis.py", id="WMEBlispy18")))((("pattern matching", "in lis.py interpreter", secondary-sortas="lis.py", id="PMlispy18"))) <<pattern_matching_seq_interp_sec>>, vimos exemplos de sequências de padrões extraídos da funcão `evaluate` do interpretador _lis.py_ de Peter Norvig, portado para Python 3.10.
+Nessa seção quero dar um visão geral do funcionamento do _lis.py_, e também explorar todas as cláusulas `case` de `evaluate`, explicando não apenas os padrões mas também o que o interpretador faz em cada `case`.
+
+Além de mostrar mais _pattern matching_, escrevi essa seção por três razões:
+
+. O _lis.py_ de Norvig é um lindo exemplo de código Python idiomático.
+. A simplicidade do Scheme é uma aula magna de design de linguagens.
+. Aprender como um interpretador funciona me deu um entendimento mais profundo sobre Python e sobre linguagens de programação em geral—interpretadas ou compiladas.
+
+Antes de olhar o código Python, vamos ver um pouquinho de Scheme, para você poder entender este estudo de caso—pensando em quem nunca viu Scheme e Lisp antes.
+
+
+==== A sintaxe do Scheme
+
+No((("lis.py interpreter", "Scheme syntax", id="LPIschemesyn18")))((("Scheme language", id="scheme18"))) Scheme não há distinção entre expressões e instruções, como temos em Python. Também não existem operadores infixos. Todas as expressões usam a notação prefixa, como `(+ x 13)` em vez de `x + 13`.
+A mesma notação prefixa é usada para chamadas de função—por exemplo, `(gcd x 13)`—e formas especiais—por exemplo, `(define x 13)`, que em Python escreveríamos como uma declaração de atribuição `x = 13`.
+
+A((("S-expression"))) notação usada no Scheme e na maioria dos dialetos de Lisp é conhecida como _S-expression_ (_Expressão-S_).footnote:[As pessoas reclamam sobre o excesso de parênteses no Lisp, mas uma indentação bem pensada e um bom editor praticamente resolvem essa questão. O maior problema de legibilidade é o uso da mesma notação `(f ...)` para chamadas de função e formas especiais como `(define ...)`, `(if ...)` e `(quote ...)`, que de forma alguma se comportam como chamadas de função]
+
+O <<ex_gcd_scheme>> mostra um exemplo simples em Scheme.
+
+[[ex_gcd_scheme]]
+.Maior divisor comum em Scheme
+====
+[source, scheme]
+----
+(define (mod m n)
+    (- m (* n (quotient m n))))
+
+(define (gcd m n)
+    (if (= n 0)
+        m
+        (gcd n (mod m n))))
+
+(display (gcd 18 45))
+----
+====
+
+O <<ex_gcd_scheme>> mostra três expressões em Scheme:
+duas definições de função—`mod` e `gcd`—e uma chamada a `display`,
+que vai devolver 9, o resultado de `(gcd 18 45)`.
+O <<ex_gcd_python>> é o mesmo código em Python (menor que a explicação em português do
+https://pt.wikipedia.org/wiki/Algoritmo_de_Euclides[_algoritmo recursivo de Euclides_]).
+
+[[ex_gcd_python]]
+.Igual ao <<ex_gcd_scheme>>, mas escrito em Python
+====
+[source, py]
+----
+def mod(m, n):
+    return m - (m // n * n)
+
+def gcd(m, n):
+    if n == 0:
+        return m
+    else:
+        return gcd(n, mod(m, n))
+
+print(gcd(18, 45))
+----
+====
+
+Em Python idiomático, eu usaria o operador `%` em vez de reinventar `mod`, e seria mais eficiente usar um loop `while` em vez de recursão. Mas queria mostrar duas definições de função, e fazer os exemplos o mais similares possível, para ajudar você a ler o código Scheme.
+
+O Scheme não tem instruções iterativas de controle de fluxo como `while` ou `for`.
+A iteração é feita com recursão.
+Observe que não há atribuições nos exemplos em Python e Scheme. O uso extensivo de recursão e o uso mínimo de atribuição são marcas registradas do estilo funcional de programação.footnote:[Para tornar a iteração por recursão prática e eficiente, o Scheme e outras linguagens funcionais implementam _chamadas de cauda apropriadas (ou otimizadas)_. Para ler mais sobre isso, veja o <<soapbox_with_match>>.]
+
+Agora vamos revisar o código da versão Python 3.10 do _lis.py_.
+O código fonte completo, com testes, está
+no diretório
+https://fpy.li/18-15[_18-with-match/lispy/py3.10/_],
+do repositório https://fpy.li/code[_fluentpython/example-code-2e_] no Github.((("", startref="scheme18")))((("", startref="LPIschemesyn18")))
+
+
+==== Importações e tipos
+
+O <<lis_top_ex>> mostra((("lis.py interpreter", "imports and types"))) as primeiras linhas do _lis.py_.
+O uso do `TypeAlias` e do operador de união de tipos `|` exige Python 3.10.
+
+[[lis_top_ex]]
+.lis.py: início do arquivo
+====
+[source, py]
+----
+include::../code/18-with-match/lispy/py3.10/lis.py[tags=IMPORTS]
+----
+====
+
+Os tipos definidos são:
+
+`Symbol`:: Só um alias para `str`.
+Em _lis.py_, `Symbol` é usado para identificadores;
+não há um tipo de dados string, com operações como fatiamento (_slicing_), divisão (_splitting_), etc.footnote:[Mas o segundo interpretador de Norvig, https://fpy.li/18-16[_lispy.py_], suporta strings como um tipo de dado, e também traz recursos avançados como macros sintáticas, continuações, e chamadas de cauda otimizadas. Entretanto, o _lispy.py_ é quase três vezes maior que o _lis.py_—é mais difícil de entender.]
+
+`Atom`:: Um elemento sintático simples, tal como um número ou um `Symbol`—ao contrário de uma estrutura complexa, composta por vários elementos distintos, como uma lista.
+
+`Expression`:: Os componentes básicos de programas Scheme são expressões feitas de átomos e listas, possivelmente aninhados.
+
+==== O parser
+
+O parser (_analisador sintático_)((("lis.py interpreter", "parser", id="lispyparser18"))) de Norvig tem 36 linhas de código que
+exibem o poder de Python aplicado ao tratamento da sintaxe recursiva simples das expressões-S—sem strings,
+comentários, macros e outros recursos que tornam a análise sintática do Scheme padrão mais complicada (<<lis_parser_ex>>).
+
+[[lis_parser_ex]]
+.lis.py: as principais funcões do analisador
+====
+[source, py]
+----
+include::../code/18-with-match/lispy/py3.10/lis.py[lines=27..36]
+    # mais código do analisador omitido na listagem do livro
+----
+====
+
+A principal função desse grupo é `parse`, que recebe uma expressão-S em forma de `str` e devolve um objeto `Expression`, como definido no <<lis_top_ex>>:
+um `Atom` ou uma `list` que pode conter mais átomos e listas aninhadas.
+
+Norvig usa um truque elegante em `tokenize`:
+ele acrescenta espaços antes e depois de cada parênteses na entrada, e então a recorta,
+resultando em uma lista de símbolos sintáticos (_tokens_) com `'('` e `')'` como símbolos separados
+Esse atalho funciona porque não há um tipo string no pequeno Scheme de _lis.py_, então todo `'('` ou `')'` é um delimitador de expressão.
+O código recursivo do analisador está em `read_from_tokens`,
+uma função de 14 linhas que você pode ler no repositório
+https://fpy.li/18-17[_fluentpython/example-code-2e_].
+Vou pular isso, pois quero me concentrar em outras partes do interpretador.
+
+Aqui estão alguns doctests estraídos do https://fpy.li/18-18[_lispy/py3.10/examples_test.py_]:
+
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=PARSE]
+----
+
+As regras de avaliação para esse subconjunto do Scheme são simples:
+
+. Um símbolo sintático que se pareça com um número é tratado como um `float` ou um `int`.
+. Todo o resto que não seja um `'('` ou um `')'` é considerado um `Symbol`—uma `str`, a ser usado como um identificador. Isso inclui texto no código-fonte como `+`, `set!`, e `make-counter`, que são identificadores válidos em Scheme, mas não em Python.
+. Expressões dentro de `'('` e `')'` são avaliadas recursivamente como listas contendo átomos ou listas aninhadas que podem conter átomos ou mais listas aninhadas.
+
+Usando a terminologia do interpretador Python, a saída de `parse` é uma AST (_Abstract Syntax Tree_—Árvore Sintática Abstrata):
+uma representação conveniente de um programa Scheme como listas aninhadas formando uma estrutura similar a uma árvore, onde a lista mais externa é o tronco, listas internas são os galhos, e os átomos são as folhas (<<ast_fig>>).((("", startref="lispyparser18")))
+
+[role="width-80"]
+[[ast_fig]]
+.Uma expressão `lambda` de Scheme, representada como código-fonte (sintaxe concreta de expressões-S), como uma árvore, e como uma sequência de objetos Python (sintaxe abstrata).
+image::../images/flpy_1801.png["Código Scheme, im diagram de árvore e objetos Python"]
+
+==== O ambiente
+
+A((("lis.py interpreter", "Environment class", id="lispyenv18"))) classe `Environment` estende `collections.ChainMap`, acrescentando o método `change`, para atualizar um valor dentro de um dos dicts encadeados que as instâncias de `ChainMap` mantém em uma lista de mapeamentos: o atributo `self.maps`.
+O método `change` é necessário para suportar a forma `(set! …)` do Scheme, descrita mais tarde; veja o <<environment_class_ex>>.
+
+
+[[environment_class_ex]]
+._lis.py_: a classe `Environment`
+====
+[source, py]
+----
+include::../code/18-with-match/lispy/py3.10/lis.py[tags=ENV_CLASS]
+----
+====
+
+Observe que o método `change` só atualiza chaves existentes.footnote:[O comentário `++# type: ignore[index]++` está ali por causa do issue  https://fpy.li/18-19[#6042] no _typeshed_, que segue sem resolução quando esse capítulo está sendo revisado. `ChainMap` é anotado como `MutableMapping`, mas a dica de tipo no atributo `maps` diz que ele é uma lista de `Mapping`, indiretamente tornando todo o `ChainMap` imutável até onde o Mypy entende.]
+Tentar mudar uma chave não encontrada causa um `KeyError`.
+
+Esse doctest mostra como `Environment` funciona:
+
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=ENVIRONMENT]
+----
+<1> Ao ler os valores, `Environment` funciona como `ChainMap`: as chaves são procuradas nos mapeamentos aninhados da esquerda para a direita. Por isso o valor de `a` no `outer_env` é encoberto pelo valor em `inner_env`.
+<2> Atribuir com `[]` sobrescreve ou insere novos itens, mas sempre no primeiro mapeamento, `inner_env` nesse exemplo.
+<3> `env.change('b', 333)` busca a chave `b` e atribui a ela um novo valor no mesmo lugar, no `outer_env`
+
+A seguir temos a função `standard_env()`, que constrói e devolve um `Environment` carregado com funções pré-definidas, similar ao módulo `+__builtins__+` de Python, que está sempre disponível (<<lis_std_env_ex>>).
+
+[[lis_std_env_ex]]
+.lis.py: `standard_env()` constrói e devolve o ambiente global
+====
+[source, py]
+----
+include::../code/18-with-match/lispy/py3.10/lis.py[lines=77..85]
+            # omitted here: more operator definitions
+include::../code/18-with-match/lispy/py3.10/lis.py[lines=92..97]
+            # omitted here: more function definitions
+include::../code/18-with-match/lispy/py3.10/lis.py[lines=111..116]
+----
+====
+
+Resumindo, o mapeamento `env` é carregado com:
+
+* Todas as funções do módulo `math` de Python
+* Operadores selecionados do módulo `op` de Python
+* Funções simples porém poderosas construídas com o `lambda` de Python
+* Estruturas e entidades embutidas de Python, ou renomeadas, como `callable` para `procedure?`, ou mapeadas diretamente, como `round`
+
+==== O REPL
+
+O((("lis.py interpreter", "REPL (read-eval-print-loop)"))) REPL (read-eval-print-loop, _loop-lê-calcula-imprime_ ) de Norvig é fácil de entender mas não é amigável ao usuário (veja o <<ex_lispy_repl>>).
+Se nenhum argumento de linha de comando é passado a _lis.py_,
+a função `repl()` é invocada por `main()`—definida no final do módulo.
+No prompt de `lis.py>`, devemos digitar expressões corretas e completas; se esquecemos de fechar um só parênteses, _lis.py_ se encerra.footnote:[Enquanto estudava o _lis.py_ e o _lispy.py_ de Norvig, comecei uma versão chamada https://fpy.li/18-20[_mylis_], que acrescenta alguns recursos, incluindo um REPL que aceita expressões-S parciais e espera a continuação, como o REPL de Python sabe que não terminamos e apresenta um prompt secundário (`\...`) até entrarmos uma expressão ou instrução completa, que possa ser analisada e avaliada. O _mylis_ também trata alguns erros de forma graciosa, mas ele ainda é fácil de quebrar. Não é nem de longe tão robusto quanto o REPL de Python.]
+
+[role="pagebreak-before less_space"]
+[[ex_lispy_repl]]
+.As funções do REPL
+====
+[source, python3]
+----
+include::../code/18-with-match/lispy/py3.10/lis.py[tags=REPL]
+----
+====
+
+Segue uma breve explicação sobre essas duas funções:
+
+`repl(prompt: str = 'lis.py> ') -> NoReturn`::
+    Chama `standard_env()` para provisionar as funções embutidas para o ambiente global,
+    então entra em um loop infinito, lendo e avaliando cada linha de entrada,
+    calculando-a no ambiente global, e exibindo o resultado—a menos que seja `None`.
+    O `global_env` pode ser modificado por  `evaluate`.
+    Por exemplo, quando o usuário define uma nova variável global ou uma função nomeada,
+    ela é armazenada no primeiro mapeamento do ambiente—o `dict` vazio na chamada ao construtor de `Environment` na primeira linha de `repl`.
+
+`lispstr(exp: object) -> str`::
+    A função inversa de `parse`:
+    dado um objeto Python representando uma expressão,
+    `lispstr` devolve o código-fonte para ela.
+    Por exemplo, dado `['+', 2, 3]`, o resultado é `'(+ 2 3)'`.
+
+==== O avaliador de expressões
+
+Agora((("lis.py interpreter", "evaluate function", id="lispyeval18"))) podemos apreciar a beleza do avaliador de expressões de Norvig—tornado um pouco mais bonito com `match/case`.
+A função `evaluate` no <<ex_evaluate_match>> recebe uma `Expression` (construída por `parse`) e um `Environment`.
+
+O corpo de `evaluate` é composto por uma única instrução `match` com uma expressão `exp` como sujeito.
+Os padrões de `case` expressam a sintaxe e a semântica do Scheme com uma clareza impressionante.
+
+[[ex_evaluate_match]]
+.`evaluate` recebe uma expressão e calcula seu valor
+====
+[source, python3]
+----
+include::../code/18-with-match/lispy/py3.10/lis.py[tags=EVALUATE]
+----
+====
+
+Vamos estudar cada cláusula `case` e o que cada uma faz.
+Em algumas ocasiões eu acrescentei comentários, mostrando uma expressão-S que casaria com padrão quando transformado em uma lista de Python.
+Os doctests extraídos de
+https://fpy.li/18-21[_examples_test.py_] demonstram cada `case`.
+
+
+[[eval_atom_sec]]
+===== avaliando números
+
+[source, python3]
+----
+    case int(x) | float(x):
+        return x
+----
+
+Padrão&#x3a;::
+    Instância de `int` ou `float`.
+
+Ação&#x3a;::
+    Devolve o próprio valor.
+
+Exemplo&#x3a;::
++
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_NUMBER]
+----
+
+===== avaliando símbolos
+
+[source, python3]
+----
+    case Symbol(var):
+        return env[var]
+----
+
+Padrão&#x3a;::
+    Instância de `Symbol`, isto é, uma `str` usada como identificador.
+
+Ação&#x3a;::
+    Consulta `var` em `env` e devolve seu valor.
+
+Exemplos&#x3a;::
++
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_SYMBOL]
+----
+
+===== (quote …)
+
+A forma especial `quote` trata átomos e listas como dados em vez de expressões a serem avaliadas.
+
+[source, python3]
+----
+    # (quote (99 bottles of beer))
+    case ['quote', x]:
+        return x
+----
+
+Padrão&#x3a;::
+    Lista começando com o símbolo `'quote'`, seguido de uma expressão `x`.
+
+Ação&#x3a;::
+    Devolve `x` sem avaliá-la.
+
+Exemplos&#x3a;::
++
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_QUOTE]
+----
+
+Sem `quote`, cada expressão no teste geraria um erro:
+
+[role="pagebreak-before less_space"]
+* `no-such-name` seria buscado no ambiente, gerando um `KeyError`
+* `(99 bottles of beer)` não pode ser avaliado, pois o número 99 não é um `Symbol` nomeando uma forma especial, um operador ou uma função
+* `(/ 10 0)` geraria um `ZeroDivisionError`
+
+.Por que linguagens tem palavras reservadas?
+****
+Apesar((("reserved keywords")))((("keywords", "reserved keywords"))) de ser simples,
+`quote` não pode ser implementada como uma função em Scheme.
+Seu poder especial é impedir que o interpretador avalie `(f 10)` na expressão `(quote (f 10))`:
+o resultado é apenas uma lista com um `Symbol` e um `int`.
+Por outro lado, em uma chamada de função como `(abs (f 10))`,
+o interpretador primeiro calcula o resultado de `(f 10)` antes de invocar `abs`.
+Por isso `quote` é uma palavra reservada: ela precisa ser tratada como uma forma especial.
+
+De modo geral, palavras reservadas são necessárias para:
+
+* Introduzir regras especiais de avaliação, como `quote` e `lambda`—que não avaliam nenhuma de suas sub-expressões
+* Mudar o fluxo de controle, como em `if` e chamadas de função—que também tem regras especiais de avaliação
+* Para gerenciar o ambiente, como em `define` e `set`
+
+Por isso também Python, e linguagens de programação em geral, precisam de palavras reservadas.
+Pense em `def`, `if`, `yield`, `import`, `del`, e o que elas fazem em Python.
+****
+
+
+===== (if …)
+
+[source, python3]
+----
+    # (if (< x 0) 0 x)
+    case ['if', test, consequence, alternative]:
+        if evaluate(test, env):
+            return evaluate(consequence, env)
+        else:
+            return evaluate(alternative, env)
+----
+
+Padrão&#x3a;::
+    Lista começando com `'if'` seguida de três expressões: `test`, `consequence`, e `alternative`.
+
+Ação&#x3a;::
+    Avalia `test`:
+    * Se verdadeira, avalia `consequence` e devolve seu valor.
+    * Caso contrário, avalia `alternative` e devolve seu valor.
+
+Exemplos&#x3a;::
++
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_IF]
+----
+
+Os ramos `consequence` e `alternative` devem ser expressões simples.
+Se mais de uma expressão for necessária em um ramo, você pode combiná-las com `(begin exp1 exp2…)`, fornecida como uma função em _lis.py_—veja o <<lis_std_env_ex>>.
+
+===== (lambda …)
+
+A forma `lambda` do Scheme define funções anônimas.
+Ela não sofre das limitações da `lambda` de Python:
+qualquer função que pode ser escrita em Scheme pode ser escrita usando a sintaxe `(lambda …)`.
+
+[source, python3]
+----
+    # (lambda (a b) (/ (+ a b) 2))
+    case ['lambda' [*parms], *body] if body:
+        return Procedure(parms, body, env)
+----
+
+Padrão&#x3a;::
+    Lista começando com `'lambda'`, seguida de:
+    * Lista de zero ou mais nomes de parâmetros
+    * Uma ou mais expressões coletadas em `body` (a expressão guarda assegura que `body` não é vazio).
+
+Ação&#x3a;::
+    Cria e devolve uma nova instância de `Procedure` com os nomes de parâmetros, a lista de expressões como o corpo da função, e o ambiente atual.
+
+Exemplo&#x3a;::
++
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_LAMBDA]
+----
+
+A classe `Procedure` implementa o conceito de uma closure (_clausura_):
+um objeto invocável contendo nomes de parâmetros, um corpo de função,
+e uma referência ao ambiente no qual a `Procedure` está sendo instanciada.
+Vamos estudar o código de `Procedure` daqui a pouco.
+
+
+[role="pagebreak-before less_space"]
+===== (define …)
+
+A palavra reservada `define` é usada de duas formas sintáticas diferentes.
+A mais simples é:
+
+[source, python3]
+----
+    # (define half (/ 1 2))
+    case ['define', Symbol(name), value_exp]:
+        env[name] = evaluate(value_exp, env)
+----
+
+Padrão&#x3a;::
+    Lista começando com `'define'`, seguido de um `Symbol` e uma expressão.
+
+Ação&#x3a;::
+    Avalia a expressão e coloca o valor resultante em `env`, usando `name` como chave.
+
+Exemplo&#x3a;::
++
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_DEFINE]
+----
+
+O doctest para esse `case` cria um `global_env`, para podermos verificar que `evaluate` coloca `answer` dentro daquele `Environment`.
+
+Podemos usar primeira forma de `define` para criar variáveis ou para vincular nomes a funções anônimas, usando `(lambda …)` como o `value_exp`.
+
+A segunda forma de `define` é um atalho para definir funções nomeadas.
+
+[source, python3]
+----
+
+    # (define (average a b) (/ (+ a b) 2))
+    case ['define', [Symbol(name), *parms], *body] if body:
+        env[name] = Procedure(parms, body, env)
+----
+
+Padrão&#x3a;::
+
+    Lista começando com `'define'`, seguida de:
+    * Uma lista começando com um `Symbol(name)`, seguida de zero ou mais itens agrupados em uma lista chamada `parms`.
+    * Uma ou mais expressões agrupadas em `body` (a expressão guarda garante que `body` não esteja vazio)
+
+Ação&#x3a;::
+    * Cria uma nova instância de `Procedure` com os nomes dos parâmetros, a lista de expressões como o corpo, e o ambiente atual.
+    * Insere a `Procedure` em `env`, usando `name` como chave.
+
+O doctest no <<test_case_defun>> define e coloca no `global_env` uma função chamada `%`, que calcula uma porcentagem.
+
+[[test_case_defun]]
+.Definindo uma função chamada `%`, que calcula uma porcentagem
+====
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_DEFUN]
+----
+====
+
+// O doctet novamente cria um `global_env`.
+
+Após chamar `evaluate`, verificamos que `%` está vinculada a uma `Procedure` que recebe dois argumentos numéricos e devolve uma porcentagem.
+
+O padrão para o segundo `define` não obriga os itens em `parms` a serem todos instâncias de `Symbol`.
+Eu teria que verificar isso antes de criar a `Procedure`, mas não o fiz—para manter o código aqui tão fácil de acompanhar quanto o de Norvig.
+
+
+
+===== (set! …)
+
+A forma `set!` muda o valor de uma variável previamente definida.footnote:[A atribuição é um dos primeiros recursos ensinados em muitos tutoriais de programacão, mas `set!` só aparece na página 220 do mais conhecido livro de Scheme,
+https://fpy.li/18-22[_Structure and Interpretation of Computer Programs_ (_A Estrutura e a Interpretação de Programas de Computador_), 2nd ed.,] de Abelson et al. (MIT Press), também conhecido como SICP ou "Wizard Book" (_Livro do Mago_).
+Programas em estilo funcional podem nos levar muito longe sem as mudanças de estado típicas da programação imperativa e da programação orientada a objetos.]
+
+[source, python3]
+----
+    # (set! n (+ n 1))
+    case ['set!', Symbol(name), value_exp]:
+        env.change(name, evaluate(value_exp, env))
+----
+
+Padrão&#x3a;::
+    Lista começando com `'set!'`, seguida de um `Symbol` e de uma expressão.
+
+Ação&#x3a;::
+    Atualiza o valor de `name` em `env` com o resultado da avaliação da expressão.
+
+O método `Environment.change` atravessa os ambientes encadeados de local para global,
+e atualiza a primeira ocorrência de `name` com o novo valor.
+Se não estivéssemos implementando a palavra reservada `'set!'`,
+esse interpretador poderia usar apenas o `ChainMap` de Python para implementar `env`,
+sem precisar da nossa classe `Environment`.
+
+[role="pagebreak-before less_space"]
+.O nonlocal de Python e o set! do Scheme tratam da mesma questão
+****
+O((("nonlocal keyword")))((("keywords", "nonlocal keyword"))) uso da forma `set!` está relacionado ao uso da palavra reservada `nonlocal` em Python:
+declarar `nonlocal x` permite a `x = 10` atualizar uma variável `x` anteriormente definida fora do escopo local.
+Sem a declaração `nonlocal x`, `x = 10` vai sempre criar uma variável local em Python, como vimos na <<nonlocal_sec>>.
+
+De forma similar, `(set! x 10)` atualiza um `x` anteriormente definido que pode estar fora do ambiente local da função.
+Por outro lado, a variável `x` em `(define x 10)` é sempre uma variável local, criada ou atualizada no ambiente local.
+
+Ambos, `nonlocal` e `(set! …)`, são necessários para atualizar o estados do programas mantidos em variáveis dentro de uma clausura (_closure_). O <<ex_average_fixed>> demonstrou o uso de `nonlocal` para implementar uma função que calcula uma média contínua, mantendo itens `count` e `total` em uma clausura.
+Aqui está a mesma ideia, escrita no subconjunto de Scheme de _lis.py_:
+
+[source, scheme]
+----
+(define (make-averager)
+    (define count 0)
+    (define total 0)
+    (lambda (new-value)
+        (set! count (+ count 1))
+        (set! total (+ total new-value))
+        (/ total count)
+    )
+)
+(define avg (make-averager))  # <1>
+(avg 10)  # <2>
+(avg 11)  # <3>
+(avg 15)  # <4>
+----
+<1> Cria uma nova clausura com a função interna definida por `lambda` e as variáveis `count` e `total`, inicialziadas com 0; vincula a clausura a `avg`.
+<2> Devolve 10.0.
+<3> Devolve 10.5.
+<4> Devolve 12.0.
+
+O código acima é um dos testes em https://fpy.li/18-18[_lispy/py3.10/examples_test.py_].
+
+****
+
+Agora chegamos a uma chamada de função.
+
+[[function_call_sec]]
+===== Chamada de função
+
+[source, python3]
+----
+    # (gcd (* 2 105) 84)
+    case [func_exp, *args] if func_exp not in KEYWORDS:
+        proc = evaluate(func_exp, env)
+        values = [evaluate(arg, env) for arg in args]
+        return proc(*values)
+----
+
+Padrão&#x3a;::
++
+--
+Lista com um ou mais itens.
+
+A expressão guarda garante que `func_exp` não é um de
+`['quote', 'if', 'define', 'lambda', 'set!']`—listados logo antes de `evaluate` no <<ex_evaluate_match>>.
+
+O padrão casa com  qualquer lista com uma ou mais expressões,
+vinculando a primeira expressão a `func_exp` e o restante a `args` como uma lista, que pode ser vazia.
+--
+
+Ação&#x3a;::
+    * Avaliar `func_exp` para obter uma `proc` da função.
+    * Avaliar cada item em `args` para criar uma lista de valores dos argumentos.
+    * Chamar `proc` com os valores como argumentos separados, devolvendo o resultado.
+
+Exemplo&#x3a;::
++
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_CALL]
+----
+
+Esse doctest continua do <<test_case_defun>>:
+ele assume que `global_env` contém uma função chamada `%`.
+Os argumentos passados a `%` são expressões aritméticas,
+para enfatizar que eles são avaliados antes da função ser chamada.
+
+A expressão guarda nesse `case` é necessária porque `[func_exp, *args]`
+casa com  qualquer sequência sujeito com um ou mais itens.
+Entretanto, se `func_exp` é uma palavra reservada e o
+sujeito não casou com nenhum dos `case` anteriores,
+então isso é de fato um erro de sintaxe.
+
+
+===== Capturar erros de sintaxe
+
+Se o sujeito `exp` não casa com  nenhum dos `case` anteriores,
+o `case` "pega tudo" gera um `SyntaxError`:
+
+[source, python3]
+----
+    case _:
+        raise SyntaxError(lispstr(exp))
+----
+
+Aqui está um exemplo de um `(lambda …)` malformado, identificado como um `SyntaxError`:
+
+[source, pycon]
+----
+include::../code/18-with-match/lispy/py3.10/examples_test.py[tags=EVAL_SYNTAX_ERROR]
+----
+
+Se o `case` para chamada de função não tivesse aquela expressão guarda rejeitando palavras reservadas, a expressão `(lambda is not like this)` teria sido tratada como uma chamada de função,
+que geraria um `KeyError`, pois `'lambda'` não é parte do ambiente—da mesma forma que `lambda` em Python não é uma função embutida.((("", startref="lispyeval18")))
+
+
+==== Procedure: uma classe que implementa uma clausura
+
+
+A((("decorators and closures", "closures in lis.py")))((("lis.py interpreter", "Procedure class", id="lispyproced18"))) classe `Procedure` poderia muito bem se chamar `Closure`, porque é isso que ela representa:
+uma definição de função junto com um ambiente.
+A definição de função inclui o nome dos parâmetros e as expressões que compõe o corpo da funcão.
+O((("free variables"))) ambiente é usado quando a função é chamada, para fornecer os valores das _variáveis livres_: variáveis que aparecem no corpo da função mas não são parâmetros, variáveis locais ou variáveis globais.
+Vimos os conceitos de _clausura_ e de _variáveis livres_ na <<closures_sec>>.
+
+Aprendemos como usar clausuras em Python,
+mas agora podemos mergulhar mais fundo e ver como uma clausura é implementada em _lis.py_:
+
+[source, python]
+----
+include::../code/18-with-match/lispy/py3.10/lis.py[tags=PROCEDURE]
+----
+<1> Chamada quando uma função é definida pelas formas `lambda` ou `define`.
+<2> Salva os nomes dos parâmetros, as expressões no corpo e o ambiente, para uso posterior.
+
+<3> Chamada por `proc(*values)` na última linha da cláusula `case [func_exp, *args]`.
+<4> Cria `local_env`, mapeando `self.parms` como nomes de variáveis locais e os `args` passados como valores.
+<5> Cria um novo `env` combinado, colocando `local_env` primeiro e então `self.env`—o ambiente que foi salvo quando a função foi definida.
+<6> Itera sobre cada expressão em `self.body`, avaliando-as no `env` combinado.
+<7> Devolve o resultado da última expressão avaliada.
+
+Há um par de funções simples após `evaluate` em https://fpy.li/18-24[_lis.py_]:
+`run` lê um programa Scheme completo e o executa,
+e `main` chama `run` ou `repl`, dependendo da linha de comando—parecido com o modo como Python faz.
+Não vou descrever essas funções, pois não há nada novo ali.
+Meus objetivos aqui eram compartilhar com vocês a beleza do pequeno interpretador de Norvig,
+explicar melhor como as clausuras funcionam,
+e mostrar como `match/case` foi uma ótima adição ao Python.
+
+Para fechar essa seção estendida sobre _pattern matching_,
+vamos formalizar o conceito de um OR-pattern (_padrão-OU_).((("", startref="lispyproced18")))
+
+==== Using padrões-OU
+
+Uma((("lis.py interpreter", "OR-patterns")))((("OR-patterns")))((("&#x01C0; (pipe) operator")))((("pipe (&#x01C0;) operator"))) série de padrões separados por `|` formam um
+https://fpy.li/18-25[_OR-pattern_] (EN):
+ele tem êxito se qualquer dos sub-padrões tiver êxito.
+O padrão em <<eval_atom_sec>> é um OR-pattern:
+
+[source, python3]
+----
+    case int(x) | float(x):
+        return x
+----
+
+Todos os sub-padrões em um OR-pattern devem usar as mesmas variáveis.
+Essa restrição é necessária para garantir que
+as variáveis estejam disponíveis para a expressão de guarda e para o corpo do `case`,
+independente de qual sub-padrão tenha sido bem sucedido.
+
+[WARNING]
+====
+No contexto de uma cláusula `case`, o operador `|` tem um significado especial.
+Ele não aciona o método especial `+__or__+`,
+que manipula expressões como `a | b` em outros contextos,
+onde ele é sobrecarregado para realizar operações como união de conjuntos ou disjunção binária com inteiros (o "ou binário"), dependendo dos operandos.
+====
+
+Um OR-pattern não está limitado a aparecer no nível superior de um padrão.
+`|` pode também ser usado em sub-padrões.
+Por exemplo, se quiséssemos que o _lis.py_ aceitasse a letra grega λ (lambda)footnote:[O nome Unicode oficial para λ (U+03BB) é GREEK SMALL LETTER LAMDA. Isso não é um erro ortográfico: o caractere é chamado "lamda" sem o "b" no banco de dados do Unicode. De acordo com o artigo https://fpy.li/18-26["Lambda"] (EN) da Wikipedia em inglês,
+o Unicode Consortium adotou essa forma em função de
+"preferências expressas pela Autoridade Nacional Grega."]
+além da palavra reservada `lambda`, poderíamos reescrever o padrão assim:
+
+[source, python3]
+----
+    # (λ (a b) (/ (+ a b) 2) )
+    case ['lambda' | 'λ', [*parms], *body] if body:
+        return Procedure(parms, body, env)
+----
+
+Agora podemos passar para o terceiro e último assunto deste capítulo:
+lugares incomuns onde a cláusula `else` pode aparecer no Python.((("", startref="WMEBlispy18")))((("", startref="PMlispy18")))
+
+=== Faça isso, então aquilo: os blocos else além do if
+
+Isso((("with, match, and else blocks", "else clause", id="WMEBelse18")))((("else blocks", id="else18"))) não é segredo,
+mas é um recurso pouco conhecido em Python:
+a cláusula `else` pode ser usada não apenas com instruções `if`, mas também com as instruções `for`, `while`, e `try`.
+
+A semântica para `for/else`, `while/else`, e `try/else` é semelhante, mas é muito diferente do `if/else`.
+No início, a palavra `else` na verdade atrapalhou meu entendimento desses recursos, mas no fim acabei me acostumando.
+
+Aqui estão as regras:
+
+`for`:: O bloco `else` será executado apenas se e quando o loop `for` rodar até o fim (isto é, não rodará se o `for` for interrompido com um `break`).
+
+`while`:: O bloco `else` será executado apenas se e quando o loop `while` terminar pela condição se tornar _falsa_ (novamente, não rodará se o `while` for interrompido por um `break`)
+
+`try`:: O bloco `else` será executado apenas se nenhuma exceção for gerada no bloco `try`. A https://docs.python.org/pt-br/3/reference/compound_stmts.html[documentação oficial] também afirma: "Exceções na cláusula `else` não são tratadas pela cláusula `except` precedente."
+
+Em todos os casos, a cláusula `else` também será ignorada se uma exceção ou uma instrução `return`, `break` ou `continue` fizer com que o fluxo de controle saia do bloco principal da instrução composta.
+No caso do `try`, esta é a diferença importante entre `else` e `finally`:
+o bloco `finally` será executado sempre, ocorrendo ou não uma exceção,
+e até mesmo se o fluxo de execução sair do bloco `try` por uma instrução como `return`.
+
+[NOTE]
+====
+Não tenho nada contra o funcionamento dessas cláusulas `else`,
+mas do ponto de vista do design da linguagem,
+a palavra `else` foi uma escolha infeliz;
+`else` implica em uma alternativa excludente,
+como em "Execute esse loop, caso contrário faça aquilo."
+Mas a semântica do `else` em loops é o oposto: "Execute esse loop, então faça aquilo."
+Isso sugere que `then` ("então") seria uma escolha melhor.
+Também faria sentido no contexto de um `try`:
+"Tente isso, então faça aquilo."
+Entretanto, acrescentar uma nova palavra reservada é uma ruptura séria em uma linguagem—uma decisão muito difícil.
+Guido sempre foi econômico com palavras reservadas.
+====
+
+Usar `else` com essas instruções muitas vezes torna o código mais fácil de ler e evita o transtorno de configurar flags de controle ou acrescentar instruções `if` extras ao código.
+
+O uso de `else` em loops em geral segue o padrão desse trecho:
+
+[source, python3]
+----
+for item in my_list:
+    if item.flavor == 'banana':
+        break
+else:
+    raise ValueError('No banana flavor found!')
+----
+
+No caso de blocos `try/except`, o `else` pode parecer redundante à primeira vista.
+Afinal, a `after_call()` no trecho a seguir só será executado se a `dangerous_call()` não gerar uma exceção, correto?
+
+[source, python3]
+----
+try:
+    dangerous_call()
+    after_call()
+except OSError:
+    log('OSError...')
+----
+
+Entretanto, isso coloca a `after_call()` dentro do bloco `try` sem um bom motivo.
+Por clareza e correção, o corpo de um bloco `try` deveria conter apenas instruções que podem gerar as exceções esperadas. Isso é melhor:
+
+[source, python3]
+----
+try:
+    dangerous_call()
+except OSError:
+    log('OSError...')
+else:
+    after_call()
+----
+
+Agora fica claro que o bloco `try` está de guarda contra possíveis erros na `dangerous_call()`, e não em `after_call()`.
+Também fica explícito que `after_call()` só será executada se nenhuma exceção for gerada no bloco `try`.
+
+Em Python, `try/except` é frequentemene usado para controle de fluxo, não apenas para tratamento de erro. Há inclusive um acrônimo/slogan para isso, documentado no https://docs.python.org/pt-br/3/glossary.html#term-eafp[glossário oficial de Python]:
+
+[quote]
+____
+EAFP:: Iniciais da expressão em inglês “easier to ask for forgiveness than permission” que significa “é mais fácil pedir perdão que permissão”. Este estilo de codificação comum em Python assume a existência de chaves ou atributos válidos e captura exceções caso essa premissa se prove falsa. Este estilo limpo e rápido se caracteriza pela presença de várias instruções `try` e `except`. A técnica diverge do estilo LBYL, comum em outras linguagens como C, por exemplo.
+____
+
+O glossário então define LBYL:
+
+[quote]
+____
+LBYL:: Iniciais da expressão em inglês “look before you leap”, que significa algo como “olhe antes de pisar”[NT: ou "olhe antes de pular"]. Este estilo de codificação testa as pré-condições explicitamente antes de fazer chamadas ou buscas. Este estilo contrasta com a abordagem EAFP e é caracterizada pela presença de muitas instruções `if`.
+Em um ambiente multithread, a abordagem LBYL pode arriscar a introdução de uma condição de corrida entre “o olhar” e “o pisar”. Por exemplo, o código `if key in mapping: return mapping[key]` pode falhar se outra thread remover `key` do `mapping` após o teste, mas antes da olhada. Esse problema pode ser resolvido com bloqueios [travas] ou usando a abordagem EAFP.
+
+____
+
+Dado o estilo EAFP, faz mais sentido conhecer e usar os blocos `else` corretamente nas instruções `try/except`.
+
+[NOTE]
+====
+Quando a [inclusão da] instrução `match` foi discutida, algumas pessoas (eu incluído) acharam que ela também devia ter uma cláusula `else`.
+No fim ficou decidido que isso não era necessário, pois `case _:` tem o mesmo efeito.footnote:[Acompanhando a discussão na lista python-dev, achei que uma razão para a rejeição do `else` foi a falta de consenso sobre como indentá-lo dentro do `match`: o `else` deveria ser indentedo no mesmo nível do `match` ou no mesmo nível do `case`?]
+====
+
+Agora vamos resumir o capítulo((("", startref="else18")))((("", startref="WMEBelse18"))).
+
+=== Resumo do capítulo
+
+Este((("with, match, and else blocks", "overview of"))) capítulo começou com gerenciadores de contexto e o significado da instrução `with`, indo rapidamente além de uso comum (o fechamento automático de arquivos abertos). Implementamos um gerenciador de contexto customizado: a classe `LookingGlass`, usando os métodos
+`+__enter__/__exit__+`, e vimos como tratar exceções no método `+__exit__+`. Uma ideia fundamental apontada por Raymond Hettinger, na palestra de abertura da Pycon US 2013, é que `with` não serve apenas para gerenciamento de recursos; ele é uma ferramenta para fatorar código comum de configuração e de finalização, ou qualquer par de operações que precisem ser executadas antes e depois de outro procedimento.footnote:[Veja https://fpy.li/18-29[slide 21 em "Python is Awesome" ("_Python é Incrível_")] (EN).]
+
+Revisamos funções no módulo `contextlib` da biblioteca padrão. Uma delas, o decorador `@contextmanager`, permite implementar um gerenciador de contexto usando apenas um mero gerador com um ++yield++—uma solução menos trabalhosa que criar uma classe com pelo menos dois métodos. Reimplementamos a ++LookingGlass++ como uma função geradora `looking_glass`, e discutimos como fazer tratamento de exceções usando o `@contextmanager`.
+
+Então estudamos o elegante interpretador Scheme de Peter Norvig, o _lis.py_, escrito em Python idiomático e refatorado para usar `match/case` em `evaluate`—a função central de qualquer interpretador.
+Entender o funcionamenteo de `evaluate` exigiu revisar um pouco de Scheme, um parser para expressões-S, um REPL simples e a construção de escopos aninhados através de `Environment`, uma subclasse de `collection.ChainMap`.
+No fim, _lys.py_ se tornou um instrumento para explorarmos mais que _pattern matching_. Ele mostra como diferentes partes de um interpretador trabalham juntas, jogando luz sobre recursos fundamentais do próprio Python: porque palavras reservadas são necessárias, como as regras de escopo funcionam, e como clausuras são criadas e usadas.
+
+
+[[further_reading_context_sec]]
+=== Para saber mais
+
+O https://docs.python.org/pt-br/3/reference/compound_stmts.html[Capítulo 8, "Instruções Compostas,"] em((("with, match, and else blocks", "further reading on"))) _A Referência da Linguagem Python_ diz praticamente tudo que há para dizer sobre cláusulas `else` em instruções `if`, `for`, `while` e `try`. Sobre o uso pythônico de `try/except`, com ou sem `else`, Raymond Hettinger deu uma resposta brilhante para a pergunta https://fpy.li/18-31["Is it a good practice to use try-except-else in Python?" (_É uma boa prática usar try-except-else em Python?_)] (EN) no StackOverflow. O pass:[<a class="orm:hideurl" href="https://fpy.li/pynut3"><em>Python in a Nutshell</em></a>], 3rd ed., by Martelli et al., tem um capítulo sobre exceções com uma excelente discussão sobre o estilo EAFP, atribuindo à pioneira da computação Grace Hopper a criação da frase "É mais fácil pedir perdão que pedir permissão."
+
+
+O capítulo 4 de _A Biblioteca Padrão de Python_, "Tipos Embutidos", tem uma seção dedicada a https://docs.python.org/pt-br/3/library/stdtypes.html#typecontextmanager["Tipos de Gerenciador de Contexto"]. Os métodos especiais `+__enter__/__exit__+` também estão documentados em _A Referência da Linguagem Python_, em https://docs.python.org/pt-br/3/reference/datamodel.html#with-statement-context-managers["Gerenciadores de Contexto da Instrução with"].footnote:[NT:No momento em que essa tradução é feita, o título dessa seção na documentação diz "Com gerenciadores de contexto de instruções", uma frase que sequer faz sentido. Foi aberto um issue sobre isso.] Os gerenciadores de contexto foram introduzidos na https://fpy.li/pep343[PEP 343—The "with" Statement] (EN).
+
+Raymond Hettinger apontou a instrução `with` como um "recurso maravilhoso da linguagem" em sua https://fpy.li/18-29[palestra de abertura da PyCon US 2013] (EN). Ele também mostrou alguns usos interessantes de gerenciadores de contexto em sua apresentação https://fpy.li/18-35["Transforming Code into Beautiful, Idiomatic Python" (_"Transformando Código em Lindo Python Idiomático"_)] (EN), na mesma conferência.
+
+O post de Jeff Preshing em seu blog, https://fpy.li/18-36["The Python 'with' Statement by Example" "_A Instrução 'with' de Python através de Exemplos_"](EN) é interessante pelos exemplos de uso de gerenciadores de contexto com a biblioteca gráfica `pycairo`.
+
+A classe `contextlib.ExitStack` foi baseada em uma ideia original de Nikolaus Rath, que escreveu um post curto explicando porque ela é útil:
+https://fpy.li/18-37["On the Beauty of Python's ExitStack" "_Sobre a Beleza do ExitStack de Python"_]. No texto, Rath propõe que `ExitStack` é similar, mas mais flexível que a instrução `defer` em Go—que acho uma das melhores ideias naquela linguagem.
+
+Beazley and Jones desenvolveram gerenciadores de contexto para propósitos muito diferentes em seu livro, pass:[<em><a class="orm:hideurl" href="https://fpy.li/pycook3">Python Cookbook,</a></em>] (EN) 3rd ed. A "Recipe 8.3. Making Objects Support the Context-Management Protocol" (_Receita 8.3. Fazendo Objetos Suportarem o Protocolo Gerenciador de Contexto_) implementa uma classe `LazyConnection`, cujas instâncias são gerenciadores de contexto que abrem e fecham conexões de rede automaticamente, em blocos `with`. A "Recipe 9.22. Defining Context Managers the Easy Way" (_Receita 9.22. O Jeito Fácil de Definir Gerenciadores de Contexto_) introduz um gerenciador de contexto para código de cronometragem, e outro para realizar mudanças transacionais em um objeto `list`: dentro do bloco `with` é criada um cópia funcional da instância de `list`, e todas as mudanças são aplicadas àquela cópia funcional. Apenas quando o bloco `with` termina sem uma exceção a cópia funcional substitui a original. Simples e genial.
+
+Peter Norvig descreve seu pequeno interpretador Scheme nos posts
+pass:[<a href="https://fpy.li/18-38">"(How to Write a (Lisp) Interpreter (in Python))" "(_Como Escrever um Interpretador (Lisp) (em Python))_"</a>] (EN) e
+pass:[<a href="https://fpy.li/18-39">"(An ((Even Better) Lisp) Interpreter (in Python))" "_(Um Interpretador (Lisp (Ainda Melhor)) (em Python))_"</a>] (EN).
+O código-fonte de _lis.py_ e _lispy.py_ está no repositório https://fpy.li/18-40[_norvig/pytudes_].
+Meu repositório, https://fpy.li/18-41[_fluentpython/lispy_], inclui a versão _mylis_ do _lis.py_, atualizado para Python 3.10, com um REPL melhor, integraçào com a linha de comando, exemplos, mais testes e referências para aprender mais sobre Scheme.
+O melhor ambiente e dialeto de Scheme para aprender e experimentar é o https://fpy.li/18-42[Racket].
+
+////
+PROD: The title of Norvig's second post
+"(An ((Even Better) Lisp) Interpreter (in Python))"
+appears without the first "(" and the trailing "))" in the rendered PDF,
+and it is also generating an index entry.
+Can you please find a way to make it appear right, and not generate an index entry? Thanks!
+////
+
+
+[[soapbox_with_match]]
+.Ponto de vista
+****
+
+[role="soapbox-title"]
+Fatorando o pão
+
+Em ((("Soapbox sidebars", "with statements")))((("with, match, and else blocks", "Soapbox discussion", id="WMEBsoap18"))) sua palestra de abertura na PyCon US 2013, https://fpy.li/18-1["What Makes Python Awesome" ("_O que torna Python incrível_")],
+Raymond Hettinger diz que quando viu a proposta da instrução `with`, pensou que era "um pouquinho misteriosa." Inicialmente tive uma reação similar. As PEPs são muitas vezes difíceis de ler, e a PEP 343 é típica nesse sentido.
+
+Mas aí--nos contou Hettinger--ele teve uma ideia: as sub-rotinas são a invenção mais importante na história das linguagens de computador. Se você tem sequências de operações, como A;B;C e P;B;Q, você pode fatorar B em uma sub-rotina. É como fatorar o recheio de um sanduíche: usar atum com tipos de diferentes de pão. Mas e se você quiser fatorar o pão, para fazer sanduíches com pão de trigo integral usando recheios diferentes a cada vez? É isso que a instrução `with` oferece. Ela é o complemento da sub-rotina. Hettinger continuou:
+
+[quote]
+____
+A instrução `with` é algo muito importante.
+Encorajo vocês a irem lá e olharem para a ponta desse iceberg, e daí cavarem mais fundo.
+Provavelmente é possível fazer coisas muito profundas com a instrução `with`.
+Seus melhores usos ainda estão por ser descobertos.
+Espero que, se vocês fizerem bom uso dela, ela será copiada para outras linguagens, e todas as linguagens futuras vão incluí-la.
+Vocês podem ser parte da descoberta de algo quase tão profundo quanto a invenção da própria sub-rotina.
+____
+
+Hettinger admite que está tentando muito vender a instrução `with`.
+Mesmo assim, é um recurso bem útil.
+Quando ele usou a analogia do sanduíche para explicar como `with` é o complemento da sub-rotina, muitas possibilidades se abriram na minha mente.
+
+Se você precisa convencer alguém que Python é maravilhoso, assista a palestra de abertura de Hettinger.
+A parte sobre gerenciadores de contexto fica entre 23:00 to 26:15. Mas a palestra inteira é excelente.
+
+[role="soapbox-title"]
+Recursão eficiente com chamadas de cauda apropriadas
+
+
+As implementações((("Soapbox sidebars", "proper tail calls (PTC)", id="SStail18")))((("proper tail calls (PTC)", id="PTC18")))((("tail call optimization (TCO)", id="tco18"))) padrão de Scheme são obrigadas a oferecer _chamadas de cauda apropriadas_ (PTC, sigla em inglês para _proper tail calls_), para tornar a iteração por recursão uma alternativa prática aos loops `while` das linguagens imperativas.
+Alguns autores se referem às PTC como _otimização de chamadas de cauda_ (TCO, sigla em inglês para _tail call optimization_);
+para outros, TCO é uma coisa diferente.
+Para mais detalhes, leia https://pt.wikipedia.org/wiki/Recursividade_(ci%C3%AAncia_da_computa%C3%A7%C3%A3o)#Fun%C3%A7%C3%B5es_recursivas_em_cauda["Chamadas recursivas de cauda] na Wikipedia em português e
+https://fpy.li/18-44["Tail call"] (EN), mais aprofundado, na Wikipedia em inglês, e
+https://fpy.li/18-45["Tail call optimization in ECMAScript 6"] (EN).
+
+Uma _chamada de cauda_ é quando uma função devolve o resultado de uma chamada de função, que pode ou não ser a ela mesma (a função que está devolvendo o resultado).
+Os exemplos `gcd` no <<ex_gcd_scheme>> e no <<ex_gcd_python>> fazem chamadas de cauda (recursivas) no lado _falso_ do `if`.
+
+Por outro lado, essa `factorial` não faz uma chamada de cauda:
+
+[source, py]
+----
+def factorial(n):
+    if n < 2:
+       return 1
+    return n * factorial(n - 1)
+----
+
+A chamada para `factorial` na última linha não é uma chamada de cauda, pois o valor de `return` não é somente o resultado de uma chamada recursiva:
+o resultado é multiplicado por `n` antes de ser devolvido.
+
+Aqui está uma alternativa que usa uma chamada de cauda,
+e é portanto _recursiva de cauda_:
+
+[source, py]
+----
+def factorial_tc(n, product=1):
+    if n < 1:
+        return product
+    return factorial_tc(n - 1, product * n)
+----
+
+Python não tem PTC
+então não há vantagem em escrever funções recursivas de cauda.
+Neste caso, a primeira versão é, na minha opinião, mais curta e mais legível.
+Para usos na vida real, não se esqueça que Python tem o `math.factorial`,
+escrito em C sem recursão.
+O ponto é que, mesmo em linguagens que implementam PTC, isso não beneficia toda função recursiva,
+apenas aquelas cuidadosamente escritas para fazerem chamadas de cauda.
+
+Se PTC são suportadas pela linguagem,
+quando o interpretador vê uma chamada de cauda,
+ele pula para dentro do corpo da função chamada sem criar um novo stack frame, economizando memória.
+Há também linguagens compiladas que implementam PTC, por vezes como uma otimização que pode ser ligada e desligada.
+
+Não existe um consenso universal sobre a definição de TCO ou
+sobre o valor das PTC em linguagens que não foram projetadas como
+linguagens funcionais desde o início, como Python e Javascript.
+Em linguagens funcionais, PTC é um recurso esperado, não apenas uma otimização boa de ter à mão.
+Se a linguagem não tem outro mecanismo de iteração além da recursão,
+então PTC é necessário para tornar prático o uso da linguagem.
+O https://fpy.li/18-46[_lis.py_] de Norvig
+não implementa PTC, mas seu interpretador mais elaborado, o
+https://fpy.li/18-16[_lispy.py_], implementa.
+
+[role="soapbox-title"]
+Os argumentos contra chamadas de cauda apropriadas em Python e Javascript
+
+
+O CPython não implementa PTC, e provavelmente nunca o fará.
+Guido van Rossum escreveu
+https://fpy.li/18-48["Final Words on Tail Calls" (_"Últimas Palavras sobre Chamadas de Cauda"_)]
+para explicar o motivo. Resumindo, aqui está uma passagem fundamental de seu post:
+
+[quote]
+____
+Pessoalmente, acho que é um bom recurso para algumas linguagens, mas não acho que se encaixe no Python:
+a eliminação dos registros do stack para algumas chamadas mas não para outras certamente confundiria muitos usuários, que não foram criados na religião das chamadas de cauda, mas podem ter aprendido sobre a semântica das chamadas restreando algumas chamadas em um depurador.
+____
+
+Em 2015, PTC foram incluídas no padrão ECMAScript 6 para JavaScript.
+Em outubro de 2021 o interpretador no
+https://fpy.li/18-49[WebKit as implementa] (EN).
+O WebKit é usado pelo Safari.
+Os interpretadores JS em todos os outros navegadores populares não tem PTC,
+assim como o Node.js, que depende da engine V8 que o Google mantém para o Chrome.
+Transpiladores e polyfills (_injetores de código_) voltados para o JS, como o TypeScript, o ClojureScript e o Babel, também não suportam PTC, de acordo com essa https://fpy.li/18-50[" Tabela de compatibilidade com ECMAScript 6"] (EN).
+
+Já vi várias explicações para a rejeição das PTC por parte dos implementadores, mas a mais comum é a mesma que Guido van Rossum mencionou:
+PTC tornam a depuração mais difícil para todo mundo,
+e beneficiam apenas uma minoria que prefere usar recursão para fazer iteração.
+Para mais detalhes, veja
+https://fpy.li/18-51["What happened to proper tail calls in JavaScript?" "_O que aconteceu com as chamadas de cauda apropriadas em Javascript?_"] de Graham Marlow.
+
+Há casos em que a recursão é a melhor solução, mesmo no Python sem PTC.
+Em um https://fpy.li/18-52[post anterior]
+sobre o assunto, Guido escreveu:
+
+[quote]
+____
+[...] uma implementação típica de Python permite 1000 recursões,
+o que é bastante para código não-recursivo e para código que usa recursão para atravessar,
+por exemplo, um árvore de parsing típica,
+mas não o bastante para um loop escrito de forma recursiva sobre uma lista grande.
+____
+Concordo com Guido e com a maioria dos implementadores de Javascript.
+A falta de PTC é a maior restrição ao desenvolvimento de programas Python em um estilo funcional—mais que a sintaxe limitada de `lambda`.
+
+Se você estiver curioso em ver como PTC funciona em um interpretador com menos recursos (e menos código) que o _lispy.py_ de Norvig, veja o https://fpy.li/18-53[__mylis_2__].
+O truque é iniciar com o loop infinito em `evaluate` e o código no `case` para chamadas de função:
+essa combinação faz o interpretador pular para dentro do corpo da próxima `Procedure` sem chamar `evaluate` recursivamente durante a chamada de cauda.
+Esses pequenos interpretadores demonstram o poder da abstração:
+apesar de Python não implementar PTC, é possível e não muito difícil escrever um interpretador, em Python, que implementa PTC.
+Aprendi a fazer isso lendo o código de Peter Norvig.
+Obrigado por compartilhar, professor!((("", startref="tco18")))((("", startref="PTC18")))((("", startref="SStail18")))
+
+
+[role="soapbox-title"]
+A opinião de Norvig sobre evaluate() com _pattern matching_
+
+Eu((("Soapbox sidebars", "lis.py and evaluate function"))) compartilhei o código da versão Python 3.10 de _lis.py_ com Peter Norvig.
+Ele gostou do exemplo usando _pattern matching_, mas sugeriu uma solução diferente:
+em vez de usar os guardas que escrevi,
+ele teria exatamente um `case` por palavra reservada,
+e teria testes dentro de cada `case`, para fornecer mensagens de `SyntaxError`
+mais específicas—por exemplo, quando o corpo estiver vazio.
+Isso também tornaria o guarda em `case [func_exp, *args] if func_exp not in KEYWORDS:` desnecessário,
+pois todas as palavras reservadas teriam sido tratadas antes do `case` para chamadas de função.
+
+// [role="pagebreak-before less_space"]
+Provavelmente seguirei o conselho do professor Norvig quando acrescentar mais funcionalidades ao
+https://fpy.li/18-54[_mylis_].
+Mas a forma como estruturei `evaluate` no <<ex_evaluate_match>> tem algumas vantagens didáticas nesse livro:
+o exemplo é paralelo à implementação com `if/elif/…` (<<ex_norvigs_eval>>),
+as cláusulas `case` demonstram mais recursos de _pattern matching_
+e o código é mais conciso.((("", startref="WMEBsoap18")))
+
+****

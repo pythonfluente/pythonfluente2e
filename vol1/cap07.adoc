@@ -1,0 +1,923 @@
+[[ch_func_objects]]
+== Funções como objetos de primeira classe
+
+[quote, Guido van Rossum, BDFL de Python]
+____
+Nunca achei que Python tenha sido fortemente influenciado por linguagens funcionais, independente do que outros digam ou pensem.
+Eu estava mais familiarizado com linguagens imperativas, como o C e o Algol e, apesar de ter tornado as funções objetos de primeira classe, não via Python como uma linguagem funcional.footnote:[https://fpy.li/7-1["Origins of Python's 'Functional' Features" (_As origens dos recursos 'funcionais' de Python_—EN)], do blog The History of Python (A História de Python) do próprio Guido.]footnote:["Benevolent Dictator For Life." - Ditador Benevolente Vitalício.
+Veja Guido van van Rossum em https://fpy.li/bdfl["Origin of BDFL" (_A Origem do BDFL_)] (EN).]
+____
+
+No Python, funções((("objects", "first-class")))((("first-class objects")))((("functions, as first-class objects",
+"definition of term"))) são objetos de primeira classe.
+Estudiosos de linguagens de programação definem um "objeto de primeira classe"
+como uma entidade que pode ser:
+
+* Criada durante a execução de um programa;
+* Atribuída a uma variável ou a um elemento em uma estrutura de dados;
+* Passada como argumento para uma função;
+* Devolvida como o resultado de uma função.
+
+Inteiros, strings e dicionários são outros exemplos de objetos de primeira classe no Python—nada de incomum aqui.
+Tratar funções como objetos de primeira classe é um recurso essencial das linguagens funcionais, como Clojure, Elixir e Haskell.
+Entretanto, funções de primeira classe são tão úteis que foram adotadas por linguagens muito populares,
+como Javascript, Go e até Java (desde o JDK 8), nenhuma das quais pretende ser uma "linguagem funcional".
+
+Esse capítulo e quase toda a Parte III do livro exploram as aplicações práticas de se tratar funções como objetos.
+
+[TIP]
+====
+O termo "funções de primeira classe" é largamente usado como uma forma abreviada de
+"funções como objetos de primeira classe".
+Ele não é ideal, pois sugere a existência de uma "elite" entre as funções.
+Em Python, todas as funções são de primeira classe.
+====
+
+
+=== Novidades nesse capítulo
+
+A seção "Os nove sabores de objetos invocáveis"((("functions, as first-class objects", "significant changes to")))
+(<<flavors_of_callables>>) se chamava "Sete sabores de objetos invocáveis" na primeira edição deste livro.
+Os novos invocáveis são corrotinas nativas e geradores assíncronos, introduzidos no Python 3.5 e 3.6, respectivamente.
+Ambos serão estudados no <<ch_async>>, mas são mencionados aqui ao lado dos outros invocáveis.
+
+A <<positional_only_params>> é nova, e fala de um recurso que surgiu no Python 3.8: parâmetros somente posicionais.
+
+Transferi a discussão sobre acesso a anotações de funções durante a execução para a <<runtime_annot_sec>>.
+Quando escrevi a primeira edição, a https://fpy.li/pep484[PEP 484—Type Hints (_Dicas de Tipo_)] (EN)
+ainda estava sendo considerada, e as anotações eram usadas de várias formas diferentes.
+Desde Python 3.5, anotações precisam estar em conformidade com a PEP 484.
+Assim, o melhor lugar para falar delas é na a discussão sobre as dicas de tipo.
+
+[NOTE]
+====
+A((("function parameters, introspection of")))((("parameters", "introspection of function parameters")))
+primeira edição desse livro continha seções sobre a introspecção de objetos função,
+que desciam a detalhes de baixo nível e desviavam do assunto principal do capítulo.
+Reuni aquelas seções em um post entitulado
+https://fpy.li/7-2["Introspection of Function Parameters" (_Introspecção de Parâmetros de Funções_)], no _fluentpython.com_.
+====
+
+Agora vamos ver porque as funções de Python são objetos completos.
+
+
+=== Tratando uma função como um objeto
+
+A((("functions, as first-class objects", "treating functions like objects",
+id="FAFtreat07")))((("objects", "treating functions like", id="Otreat07")))
+sessão de console no <<func_object_demo>> mostra que funções de Python são objetos.
+Ali criamos uma função, a chamamos, lemos seu atributo
+`+__doc__+` e verificamos que o próprio objeto função é uma instância da classe `function`.
+
+[[func_object_demo]]
+.Cria e testa uma função, e então lê seu `+__doc__+` e verifica seu tipo
+====
+[source, pycon]
+----
+>>> def factorial(n):  <1>
+...     """returns n!"""
+...     return 1 if n < 2 else n * factorial(n - 1)
+...
+>>> factorial(42)
+1405006117752879898543142606244511569936384000000000
+>>> factorial.__doc__  <2>
+'returns n!'
+>>> type(factorial)  <3>
+<class 'function'>
+----
+====
+<1> Isso é uma sessão do console, então estamos criando uma função "durante a execução".
+<2> `+__doc__+` é um dos muitos atributos de objetos função.
+<3> `factorial` é um instância da classe `function`.
+
+O atributo `+__doc__+` é usado para gerar o texto de ajuda de um objeto.
+No console de Python, a instrução `help(factorial)` mostrará uma tela como a <<factorial_help>>.
+
+[[factorial_help]]
+.Tela de ajuda para `factorial`; o texto é criado a partir do atributo `+__doc__+` da função.
+image::../images/flpy_0701.png[Tela de ajuda da função factorial]
+
+O <<func_object_demo2>> mostra a natureza de "primeira classe" de um objeto função.
+Podemos atribuir tal objeto a uma variável `fact` e invocá-lo por esse nome.
+Podemos também passar `factorial` como argumento para a função https://fpy.li/44[`map`].
+Invocar `map(function, iterable)` devolve um iterável no qual cada item é
+o resultado de uma chamada ao primeiro argumento (uma função)
+com elementos sucessivos do segundo argumento (um iterável), `range(11)` no exemplo.
+
+
+[[func_object_demo2]]
+.Invoca `factorial` através da variável `fact`, e passa `factorial` como argumento para `map`
+====
+[source, pycon]
+----
+>>> fact = factorial
+>>> fact
+<function factorial at 0x...>
+>>> fact(5)
+120
+>>> map(factorial, range(11))
+<map object at 0x...>
+>>> list(map(factorial, range(11)))
+[1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]
+----
+====
+
+Ter funções de primeira classe permite programar em um estilo funcional.
+Um dos marcos da https://fpy.li/45[programação funcional]
+é o uso de funções de ordem superior, nosso próximo tópico.((("", startref="Otreat07")))((("", startref="FAFtreat07")))
+
+
+=== Funções de ordem superior
+
+Uma((("functions, as first-class objects", "higher-order functions",
+id="FAFhigh07")))((("higher-order functions", id="higher07")))((("functions", "higher-order functions", id="Fhigh07")))
+função que recebe uma função como argumento ou devolve uma função como resultado
+é uma _função de ordem superior_.
+Uma dessas funções é `map`, usada no <<func_object_demo2>>. Outra é a função embutida `sorted`:
+o argumento opcional `key` permite fornecer uma função, que será então aplicada na ordenação de cada item, como vimos na <<sort_x_sorted>>.
+Por exemplo, para ordenar uma lista de palavras por tamanho, passe a função `len` como `key`, como no <<higher_order_sort>>.
+
+[[higher_order_sort]]
+.Ordenando uma lista de palavras por tamanho
+====
+[source, pycon]
+----
+>>> fruits = ['strawberry', 'fig', 'apple', 'cherry', 'raspberry', 'banana']
+>>> sorted(fruits, key=len)
+['fig', 'apple', 'cherry', 'banana', 'raspberry', 'strawberry']
+>>>
+----
+====
+
+Qualquer função com um argumento pode ser usada como chave.
+Por exemplo, para criar um dicionário de rimas pode ser útil ordenar cada palavra escrita ao contrário.
+No <<higher_order_sort_reverse>>, observe que as palavras na lista não são modificadas de forma alguma;
+apenas suas versões escritas na ordem inversa são utilizadas como critério de ordenação.
+Por isso as _berries_ aparecem juntas.
+
+[[higher_order_sort_reverse]]
+.Ordenando uma lista de palavras pela ordem inversa de escrita
+====
+[source, pycon]
+----
+>>> def reverse(word):
+...     return word[::-1]
+>>> reverse('testing')
+'gnitset'
+>>> sorted(fruits, key=reverse)
+['banana', 'apple', 'fig', 'raspberry', 'strawberry', 'cherry']
+>>>
+----
+====
+
+No((("map function", id="map07")))((("functions", "filter, map, and reduce functions")))((("filter function",
+id="filter07")))((("reduce function", id="reduce07")))((("apply function", id="apply07")))
+paradigma funcional de programação, algumas das funções de ordem superior mais conhecidas são `map`, `filter`, `reduce` e `apply`.
+A função `apply` foi descontinuada no Python 2.3 e removida no Python 3, por não ser mais necessária.
+Se você precisar chamar uma função com um conjuntos dinâmico de argumentos,
+pode escrever `fn(*args, **kwargs)` em vez de `apply(fn, args, kwargs)` como fazíamos no século passado.
+
+As funções de ordem superior `map`, `filter` e `reduce` ainda existem,
+mas temos alternativas melhores para a maioria de seus casos de uso, como mostra a próxima seção.
+
+[[map_filter_reduce]]
+==== Substitutos modernos para map, filter, e reduce
+
+Linguagens funcionais((("list comprehensions (listcomps)", "versus map and filter functions")))((("generator expressions (genexps)")))
+normalmente oferecem as funções de ordem superior `map`, `filter`, and `reduce` (algumas vezes com nomes diferentes).
+As funções `map` e `filter` ainda estão embutidas no Python mas elas não são mais tão importantes
+desde a introdução das compreensões de lista e das expressões geradoras,
+Uma listcomp ou uma genexp fazem o mesmo que `map` e `filter` combinadas, e são mais legíveis.
+Considere o <<reduce_x_sum>>.
+
+
+[[reduce_x_sum]]
+.Listas de fatoriais produzidas com `map` e `filter`, comparadas com alternativas escritas com compreensões de lista
+====
+[source, pycon]
+----
+>>> list(map(factorial, range(6)))  <1>
+[1, 1, 2, 6, 24, 120]
+>>> [factorial(n) for n in range(6)]  <2>
+[1, 1, 2, 6, 24, 120]
+>>> list(map(factorial, filter(lambda n: n % 2, range(6))))  <3>
+[1, 6, 120]
+>>> [factorial(n) for n in range(6) if n % 2]  <4>
+[1, 6, 120]
+>>>
+----
+====
+<1> Cria uma lista de fatoriais de 0! a 5!.
+<2> Mesma operação, com uma compreensão de lista.
+<3> Lista de fatoriais de números ímpares até 5!, usando `map` e `filter`.
+<4> A compreensão de lista realiza a mesma tarefa, substituindo `map` e `filter`,
+e tornando `lambda` desnecessário.
+
+No Python 3, `map` e `filter` devolvem geradores—uma forma de iterador—então
+sua substituta direta agora é uma expressão geradora
+(no Python 2, essas funções devolviam listas, então sua alternativa mais próxima era a compreensão de lista).
+
+A função `reduce` foi rebaixada de função embutida, no Python 2, para o módulo `functools` no Python 3.
+Seu caso de uso mais comum, a somatória, é melhor servido pela função embutida `sum`,
+disponível desde o Python 2.3 (lançado em 2003).
+A função `sum` é mais legível e mais eficiente:
+
+[[reduce_x_sum2]]
+.Soma de inteiros até 99, realizada com `reduce` e `sum`
+====
+[source, pycon]
+----
+>>> from functools import reduce  <1>
+>>> from operator import add  <2>
+>>> reduce(add, range(100))  <3>
+4950
+>>> sum(range(100))  <4>
+4950
+>>>
+----
+====
+<1> A partir de Python 3.0, `reduce` deixou de ser uma função embutida.
+<2> Importa `add` para evitar a criação de uma função apenas para somar dois números.
+<3> Soma os inteiros até 99.
+<4> Mesma operação, com `sum`—não é preciso importar nem chamar `reduce` e `add`.
+
+[NOTE]
+=====================================================================
+A ideia comum de `sum` e `reduce`
+é aplicar alguma operação sucessivamente a itens em uma série,
+acumulando os resultados anteriores, reduzindo assim uma série de valores a um único valor.
+=====================================================================
+
+Outras funções de redução embutidas são `all` e `any`:
+
+`all(iterable)`:: Devolve `True` se não há nenhum elemento falso no iterável; `all([])` devolve `True`.
+
+`any(iterable)`:: Devolve `True` se qualquer elemento do `iterable` for verdadeiro;
+`any([])` devolve `False`.
+
+Dou um explicação mais completa sobre `reduce` na <<multi_hashing_sec>>,
+onde um exemplo mais longo, atravessando várias seções, cria um contexto
+significativo para o uso dessa função.
+As funções de redução serão resumidas mais à frente no livro, na <<iterable_reducing_sec>>,
+quando estivermos tratando dos iteráveis.
+Para usar uma função de ordem superior, às vezes é conveniente criar um pequena
+função, que será usada apenas uma vez.
+As funções anônimas existem para isso.
+Vamos falar delas a seguir.((("", startref="map07")))((("", startref="filter07")))((("", startref="reduce07")))((("", startref="apply07")))((("", startref="higher07")))((("", startref="FAFhigh07")))((("", startref="Fhigh07")))
+
+
+=== Funções anônimas
+
+
+A((("functions, as first-class objects", "anonymous functions")))((("anonymous functions")))((("lambda keyword")))((("keywords", "lambda keyword")))
+palavra reservada `lambda` cria uma função anônima dentro de uma expressão Python.
+
+Entretanto, a sintaxe simples de Python obriga que o corpo de uma `lambda` seja uma expressão.
+Em outras palavras, o corpo não pode conter instruções como `while`, `try`, etc.
+A atribuição com `=` também é uma instrução, então não pode ocorrer em um `lambda`.
+A nova sintaxe da expressão de atribuição, usando `:=`, pode ser usada.
+Porém, se você precisar dela, sua `lambda` provavelmente é muito complicada e difícil de ler,
+e deveria ser refatorado para uma função nomeada usando `def`.
+
+O melhor uso das funções anônimas é no contexto de uma lista de argumentos para uma função de ordem superior.
+Por exemplo, o <<higher_order_sort_reverse_lambda>> é o exemplo do dicionário de rimas do
+<<higher_order_sort_reverse>> reescrito com `lambda`, sem definir uma função `reverse`.
+
+[[higher_order_sort_reverse_lambda]]
+.Ordenando uma lista de palavras escritas na ordem inversa usando `lambda`
+====
+[source, pycon]
+----
+>>> fruits = ['strawberry', 'fig', 'apple', 'cherry', 'raspberry', 'banana']
+>>> sorted(fruits, key=lambda word: word[::-1])
+['banana', 'apple', 'fig', 'raspberry', 'strawberry', 'cherry']
+>>>
+----
+====
+
+Fora do contexto limitado dos argumentos das funções de ordem superior, funções anônimas são pouco úteis no Python.
+As restrições sintáticas tendem a tornar ilegíveis as `lambdas` não-triviais.
+Se uma `lambda` é difícil de ler, sugiro fortemente seguir o conselho de Fredrik Lundh sobre refatoração.
+
+.A receita de Fredrik Lundh para refatoração de lambdas
+****
+
+Se você encontrar um trecho de código difícil de entender por causa de uma `lambda`,
+Fredrik Lundh sugere o seguinte procedimento de refatoração:
+
+. Escreva um comentário explicando o que diabos aquela `lambda` faz.
+. Estude o comentário por algum tempo, e pense em um nome que traduza sua essência.
+. Converta a `lambda` para uma declaração `def`, usando aquele nome.
+. Remova o comentário.
+
+Esse passos são uma citação do
+https://fpy.li/46[_Programação Funcional—COMO FAZER_],
+leitura obrigatória.
+****
+
+A sintaxe `lambda` é apenas açúcar sintático: uma expressão `lambda` cria um objeto função,
+exatamente como a declaração `def`.
+Esse é apenas um dos vários tipos de objetos invocáveis no Python.
+Na próxima seção revisamos todos eles.
+
+[[flavors_of_callables]]
+=== Os nove sabores de objetos invocáveis
+
+O((("functions, as first-class objects", "callable objects", id="FAFcall07")))((("callable objects", "nine types of", id="calobj07")))((("objects", "callable objects", id="Ocall07"))) operador de invocação `()` pode ser aplicado a outros objetos além de funções.
+// beyond user-defined functions and ++lambdas++s.
+Para determinar se um objeto é invocável, use a função embutida `callable()`.
+No Python 3.9, a https://fpy.li/47[documentação do modelo de dados] lista nove tipos invocáveis:
+
+[role="pagebreak-before less_space"]
+Funções definidas pelo usuário:: Criadas((("user-defined functions"))) com instruções `def` ou expressões `lambda`.
+
+Funções embutidas:: Funções((("built-in functions"))) implementadas em C (no CPython), como `len` ou `time.strftime`.
+
+Métodos embutidos:: Métodos((("methods, as callable objects"))) implementados em C, como `dict.get`.
+
+Métodos:: Funções definidas no corpo de uma classe.
+
+Classes:: Quando((("classes", "as callable objects"))) invocada, uma classe executa seu método
+`+__new__+` para criar uma instância, e a seguir `+__init__+`, para inicializá-la. Então a instância é devolvida ao usuário.
+Como não existe um operador `new` no Python, invocar uma classe é como invocar uma função.footnote:[Invocar uma classe normalmente cria uma instância daquela mesma classe, mas outros comportamentos são possíveis, sobrescrevendo o `+__new__+`. Veremos um exemplo disso na <<flexible_new_sec>>.]
+
+Instâncias de classe:: Se uma classe define um método `+__call__+`, suas instâncias podem então ser invocadas como funções—esse é o assunto da próxima seção.
+
+Funções geradoras:: Funções ou métodos que usam a palavra reservada((("yield keyword")))((("keywords", "yield keyword")))((("generators", "generator functions in Python standard library"))) `yield` em seu corpo.
+Quando chamadas, devolvem um objeto gerador.
+
+Funções de corrotinas nativas:: Funções((("native coroutines", "functions defined with async def"))) ou métodos definidos com `async def`. Quando chamados, devolvem um objeto corrotina.
+Introduzidas no Python 3.5.
+
+Funções geradoras assíncronas:: Funções((("asynchronous generators"))) ou métodos definidos com `async def`, contendo `yield` em seu corpo.
+Quando chamados, devolvem um gerador assíncrono para ser usado com `async for`. Introduzidas no Python 3.6.
+
+Funções geradoras, funções de corrotinas nativas e geradoras assíncronas são diferentes de outros invocáveis: os valores devolvidos tais funções nunca são dados da aplicação, mas objetos que exigem processamento adicional, seja para produzir dados da aplicação, seja para realizar algum trabalho útil.
+Funções geradoras devolvem iteradores.
+Ambos são tratados no <<ch_generators>>.
+Funções de corrotinas nativas e funções geradoras assíncronas devolvem objetos que só funcionam com a ajuda de um framework de programação assíncrona, tal como _asyncio_.
+Elas são o assunto do <<ch_async>>.
+
+
+[TIP]
+====
+Dada a variedade dos tipos de invocáveis existentes no Python, a forma mais segura de determinar se um objeto é invocável é usando a função embutida `callable()`:
+
+----
+>>> abs, str, 'Ni!'
+(<built-in function abs>, <class 'str'>, 'Ni!')
+>>> [callable(obj) for obj in (abs, str, 'Ni!')]
+[True, True, False]
+----
+====
+
+Vamos agora criar instâncias de classes que funcionam como objetos invocáveis.((("", startref="FAFcall07")))((("", startref="calobj07")))((("", startref="Ocall07")))
+
+
+[[user_callables]]
+=== Tipos invocáveis definidos pelo usuário
+
+Além((("functions, as first-class objects", "user-defined callable types")))((("callable objects", "user-defined")))((("objects", "user-defined callable objects"))) das funções serem objetos reais,
+também é possível fazer com que objetos arbitrários se comportem como funções.
+Para isso, basta implementar o método de instância `+__call__+`.
+
+O <<ex_bingo_callable>> implementa uma classe `BingoCage`. Uma instância é criada a partir de qualquer iterável, e mantém uma `list` interna de itens, em ordem aleatória.
+Invocar a instância extrai um item.footnote:[Por que criar uma `BingoCage` quando já temos `random.choice`? A função `choice` pode devolver o mesmo item múltiplas vezes, pois o item escolhido não é removido da coleção usada.
+Invocações de `BingoCage` nunca devolvem um resultado duplicado—desde que a instância tenha sido preenchida com valores únicos.]
+
+[[ex_bingo_callable]]
+.bingocall.py: Uma `BingoCage` faz apenas uma coisa: escolhe itens de uma lista embaralhada
+====
+[source, py]
+----
+include::../code/07-1class-func/bingocall.py[tags=BINGO]
+----
+====
+<1> `+__init__+` aceita qualquer iterável; criar uma cópia local evita efeitos colaterais inesperados sobre qualquer `list` passada como argumento.
+<2> `shuffle` sempre vai funcionar, pois `self._items` é uma `list`.
+<3> O método principal.
+<4> Se `self._items` está vazia, gera uma exceção com uma mensagem apropriada.
+<5> Atalho para `bingo.pick()`: `bingo()`.
+
+Aqui está uma demonstração simples do <<ex_bingo_callable>>. Observe como uma instância de `bingo` pode ser invocada como uma função, e como a função embutida `callable()` a reconhece como um objeto invocável:
+
+[source, py]
+----
+include::../code/07-1class-func/bingocall.py[tags=BINGO_DEMO]
+----
+
+Uma classe que implementa `+__call__+` é uma forma fácil de criar objetos similares a funções,
+com algum estado interno que precisa ser mantido de uma invocação para outra,
+como os itens restantes na `BingoCage`.
+Outro bom caso de uso para `+__call__+` é a implementação de decoradores.
+Decoradores devem ser invocáveis, e muitas vezes é conveniente "lembrar" algo entre chamadas ao decorador
+por exemplo, para _memoization_ (a manutenção dos resultados de algum processamento complexo e/ou demorado para uso posterior)
+ou para separar uma implementação complexa entre vários métodos.
+
+A abordagem funcional para a criação de funções com  estado interno é através do uso de clausuras (_closures_).
+Clausuras e decoradores são o assunto do <<ch_closure_decorator>>.
+
+Vamos agora explorar a poderosa sintaxe oferecida pelo Python para declarar parâmetros de funções, e para passar argumentos para elas.
+
+
+=== De parâmetros posicionais a parâmetros somente nomeados
+
+Um((("functions, as first-class objects", "flexible parameter handling and",
+id="FAFflex07")))((("positional parameters", id="pospar07")))((("parameters", "positional", id="Pposition07"))) dos melhores recursos das funções Python é
+sua sintaxe muito flexível para declaração e tratamento de parâmetros.
+Exemplos((("unpacking", "iterables and mappings")))((("star (&#x002A;) operator")))((("&#x002A; (star) operator")))((("&#x002A;&#x002A; (double star) operator")))((("double star (&#x002A;&#x002A;) operator"))) disso são os usos de `+*+` e `+**+` para
+desempacotar e capturar iteráveis e mapeamentos em argumentos separados na chamada de uma função.
+Para ver esses recursos em ação, veja o código do <<tagger_ex>> e os testes mostrando seu uso no <<tagger_demo>>.
+
+[[tagger_ex]]
+.`tag` gera elementos HTML; um argumento somente nomeado `class_` é usado para passar atributos "class"; o `_` é necessário porque `class` é uma palavra reservada no Python
+====
+[source, py]
+----
+include::../code/07-1class-func/tagger.py[tags=TAG_FUNC]
+----
+====
+
+A função `tag` pode ser invocada de muitas formas, como demonstra o <<tagger_demo>>.
+
+[[tagger_demo]]
+.Algumas das muitas formas de invocar a função `tag` do <<tagger_ex>>
+====
+[source, py]
+----
+include::../code/07-1class-func/tagger.py[tags=TAG_DEMO]
+----
+====
+<1> Um argumento posicional único produz uma `tag` vazia com aquele nome.
+<2> Quaisquer argumentos após o primeiro serão capturados por `*content` na forma de uma `tuple`.
+<3> Argumentos nomeados que não são mencionados explicitamente na assinatura de `tag` são capturados por `**attrs` como um `dict`.
+<4> O parâmetro `class_` só pode ser passado como um argumento nomeado.
+<5> O primeiro argumento posicional também pode ser passado como argumento nomeado.
+<6> Prefixar o `dict` `my_tag` com `+**+` passa todos os seus itens como argumentos separados,
+que são então vinculados aos parâmetros nomeados, com o restante sendo capturado por `**attrs`.
+Nesse caso podemos ter uma chave `'class'` no `dict` de argumentos, porque é uma string, e não colide com a palavra reservada `class`.
+
+
+Argumentos somente nomeados((("keyword-only arguments")))((("parameters", "keyword-only")))((("arguments", "keyword-only arguments"))) são um recurso de Python 3. No <<tagger_ex>>, o parâmetro `class_` só pode ser passado como um argumento nomeado—ele nunca captura argumentos posicionais não-nomeados.
+Para especificar argumentos somente nomeados ao definir uma função, eles devem ser nomeados após o argumento prefixado por `+*+`. Se você não quer incluir argumentos posicionais variáveis, mas ainda assim deseja incluir argumentos somente nomeados, coloque um `+*+` sozinho na assinatura, assim:
+
+[source, pycon]
+----
+>>> def f(a, *, b):
+...     return a, b
+...
+>>> f(1, b=2)
+(1, 2)
+>>> f(1, 2)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: f() takes 1 positional argument but 2 were given
+----
+
+Observe que argumentos somente nomeados não precisam ter um valor default: eles podem ser obrigatórios, como o `b` no exemplo acima.
+
+
+[[positional_only_params]]
+==== Parâmetros somente posicionais
+
+Desde Python 3.8, assinaturas de funções definidas pelo usuário podem especificar parâmetros somente posicionais.
+Esse recurso sempre existiu para funções embutidas, tal como `divmod(a, b)`,
+que só pode ser chamada com parâmetros posicionais, e não na forma `divmod(a=10, b=4)`.
+
+Para definir uma função que requer parâmetros somente posicionais, use `/` na lista de parâmetros.
+
+Esse exemplo, de  https://fpy.li/48["O que há de novo no Python 3.8"], mostra como emular a função embutida `divmod`:
+
+[source, python]
+----
+def divmod(a, b, /):
+    return (a // b, a % b)
+----
+
+Todos os argumentos à esquerda da `/` são somente posicionais.
+Após a `/`, você pode especificar outros argumentos, que funcionam como da forma usual.
+
+[WARNING]
+====
+Uma `/` na lista de parâmetros é um erro de sintaxe no Python 3.7 ou anteriores.
+====
+
+Por exemplo, considere a função `tag` do <<tagger_ex>>.
+Se quisermos que o parâmetro `name` seja somente posicional, podemos acrescentar uma `/` após aquele parâmetro na assinatura da função, assim:
+
+[source, python]
+----
+def tag(name, /, *content, class_=None, **attrs):
+    ...
+----
+
+Você pode encontrar outros exemplos de parâmetros somente posicionais no já citado https://fpy.li/48["O que há de novo no Python 3.8"] e na https://fpy.li/pep570[PEP 570].
+
+Após esse mergulho nos recursos flexíveis de declaração de argumentos no Python, o resto desse capítulo trata dos pacotes da biblioteca padrão mais úteis para programar em um estilo funcional.((("", startref="FAFflex07")))((("", startref="pospar07")))((("", startref="Pposition07")))
+
+
+=== Pacotes para programação funcional
+
+Apesar((("functions, as first-class objects", "packages for functional programming", id="FAFfp07")))((("functional programming", "packages for", id="fprogpack07"))) de Guido deixar claro que não projetou Python para ser uma linguagem de programação funcional, o estilo de programação funcional pode ser amplamente utilizado, graças a funções de primeira classe, _pattern matching_ e o suporte de pacotes como `operator` e `functools`, dos quais falaremos nas próximas duas seções..
+
+
+[[operator_module_section]]
+==== O módulo operator
+
+Na((("operator module", id="opmod07"))) programação funcional, é muitas vezes conveniente usar um operador aritmético como uma função.
+Por exemplo, suponha que você queira multiplicar uma sequência de números para calcular fatoriais, mas sem usar recursão.
+Para calcular a soma, podemos usar `sum`, mas não há uma função equivalente para multiplicação.
+Você poderia usar ++reduce++—como vimos na <<map_filter_reduce>>—mas isso exige um função para multiplicar dois itens da sequência.
+O <<fact_reduce_lambda_ex>> mostra como resolver esse problema usando `lambda`.
+
+[[fact_reduce_lambda_ex]]
+.Fatorial implementado com `reduce`e uma função anônima
+====
+[source, python3]
+----
+from functools import reduce
+
+def factorial(n):
+    return reduce(lambda a, b: a*b, range(1, n+1))
+----
+====
+
+O módulo `operator` oferece funções equivalentes a dezenas de operadores,
+para você não precisar escrever funções triviais como `lambda a, b: a*b`.
+Com ele, podemos reescrever o <<fact_reduce_lambda_ex>> como no <<fact_reduce_operator_ex>>.
+
+[[fact_reduce_operator_ex]]
+.Fatorial implementado com `reduce` e `operator.mul`
+====
+[source, python3]
+----
+from functools import reduce
+from operator import mul
+
+def factorial(n):
+    return reduce(mul, range(1, n+1))
+----
+====
+
+Outro grupo de "++lambda++s de um só truque" que `operator` substitui são funções para extrair itens de sequências ou para ler atributos de objetos:
+`itemgetter` e `attrgetter` são fábricas que criam funções customizadas para fazer exatamente isso.
+
+O <<itemgetter_demo>> mostra um uso frequente de `itemgetter`: ordenar uma lista de tuplas pelo valor de um campo.
+No exemplo, as cidades são exibidas por ordem de código de país (campo 1).
+Essencialmente, `itemgetter(1)` cria uma função que, dada uma coleção, devolve o item no índice 1.
+Isso é mais fácil de escrever e ler que `lambda fields: fields[1]`, que faz a mesma coisa.
+
+[[itemgetter_demo]]
+.Demonstração de `itemgetter` para ordenar uma lista de tuplas (mesmos dados do <<ex_nested_tuple>>)
+====
+[source, pycon]
+----
+>>> metro_data = [
+...     ('Tokyo', 'JP', 36.933, (35.689722, 139.691667)),
+...     ('Delhi NCR', 'IN', 21.935, (28.613889, 77.208889)),
+...     ('Mexico City', 'MX', 20.142, (19.433333, -99.133333)),
+...     ('New York-Newark', 'US', 20.104, (40.808611, -74.020386)),
+...     ('São Paulo', 'BR', 19.649, (-23.547778, -46.635833)),
+... ]
+>>>
+>>> from operator import itemgetter
+>>> for city in sorted(metro_data, key=itemgetter(1)):
+...     print(city)
+...
+('São Paulo', 'BR', 19.649, (-23.547778, -46.635833))
+('Delhi NCR', 'IN', 21.935, (28.613889, 77.208889))
+('Tokyo', 'JP', 36.933, (35.689722, 139.691667))
+('Mexico City', 'MX', 20.142, (19.433333, -99.133333))
+('New York-Newark', 'US', 20.104, (40.808611, -74.020386))
+----
+====
+
+Se você passar múltiplos argumentos de indice para `itemgetter`, a função criada por ela vai devolver tuplas com os valores extraídos, algo que pode ser útil para ordenar((("keys", "sorting multiple"))) usando chaves múltiplas:
+
+[source, pycon]
+----
+>>> cc_name = itemgetter(1, 0)
+>>> for city in metro_data:
+...     print(cc_name(city))
+...
+('JP', 'Tokyo')
+('IN', 'Delhi NCR')
+('MX', 'Mexico City')
+('US', 'New York-Newark')
+('BR', 'São Paulo')
+>>>
+----
+
+Como `itemgetter` usa o operador `[]`, ela suporta não apenas sequências, mas também mapeamentos e qualquer classe que implemente
+`+__getitem__+`.
+
+Uma irmã de `itemgetter` é `attrgetter`, que cria funções para extrair atributos por nome.
+Se você passar os nomes de vários atributos como argumentos para `attrgetter`, ela vai devolver um tupla de valores.
+Além disso, se o nome de qualquer argumento contiver um `.` (ponto), `attrgetter`
+navegará por objetos aninhados para encontrar o atributo.
+Esses comportamento são apresentados no <<attrgetter_demo>>. Não é exatamente uma sessão de console curta, pois precisamos criar uma estrutura aninhada para demonstrar o tratamento de atributos com `.` por `attrgetter`.
+
+[[attrgetter_demo]]
+.Demonstração de `attrgetter` para processar uma lista previamente definida de `namedtuple` chamada `metro_data` (a mesma lista que aparece no <<itemgetter_demo>>)
+====
+[source, pycon]
+----
+>>> from collections import namedtuple
+>>> LatLon = namedtuple('LatLon', 'lat lon')  # <1>
+>>> Metropolis = namedtuple('Metropolis', 'name cc pop coord')  # <2>
+>>> metro_areas = [Metropolis(name, cc, pop, LatLon(lat, lon))  # <3>
+...     for name, cc, pop, (lat, lon) in metro_data]
+>>> metro_areas[0]
+Metropolis(name='Tokyo', cc='JP', pop=36.933, coord=LatLon(lat=35.689722,
+lon=139.691667))
+>>> metro_areas[0].coord.lat  # <4>
+35.689722
+>>> from operator import attrgetter
+>>> name_lat = attrgetter('name', 'coord.lat')  # <5>
+>>>
+>>> for city in sorted(metro_areas, key=attrgetter('coord.lat')):  # <6>
+...     print(name_lat(city))  # <7>
+...
+('São Paulo', -23.547778)
+('Mexico City', 19.433333)
+('Delhi NCR', 28.613889)
+('Tokyo', 35.689722)
+('New York-Newark', 40.808611)
+----
+====
+<1> Usa `namedtuple` para definir `LatLon`.
+<2> Também define `Metropolis`.
+<3> Cria a lista `metro_areas` com instâncias de `Metropolis`; observe o desempacotamento da tupla aninhada para extrair `(lat, lon)` e usá-los para criar o `LatLon` do atributo `coord` de `Metropolis`.
+<4> Obtém a latitude de dentro de `metro_areas[0]` .
+<5> Define um `attrgetter` para obter `name` e o atributo aninhado `coord.lat`.
+<6> Usa `attrgetter` novamente para ordenar uma lista de cidades pela latitude.
+<7> Usa o +attrgetter+ definido antes para exibir apenas o nome e a latitude da cidade.
+
+
+Abaixo está uma lista parcial das funções definidas em `operator`
+(filtrei os nomes iniciando com `_` porque são, em sua maioria, detalhes de implementação):
+
+[source, pycon]
+----
+>>> [name for name in dir(operator) if not name.startswith('_')]
+['abs', 'add', 'and_', 'attrgetter', 'concat', 'contains',
+'countOf', 'delitem', 'eq', 'floordiv', 'ge', 'getitem', 'gt',
+'iadd', 'iand', 'iconcat', 'ifloordiv', 'ilshift', 'imatmul',
+'imod', 'imul', 'index', 'indexOf', 'inv', 'invert', 'ior',
+'ipow', 'irshift', 'is_', 'is_not', 'isub', 'itemgetter',
+'itruediv', 'ixor', 'le', 'length_hint', 'lshift', 'lt', 'matmul',
+'methodcaller', 'mod', 'mul', 'ne', 'neg', 'not_', 'or_', 'pos',
+'pow', 'rshift', 'setitem', 'sub', 'truediv', 'truth', 'xor']
+----
+
+A maior parte dos 54 nomes listados é mais ou menos evidente.
+O grupo de nomes formados por um `i` inicial e o nome de um
+operador—por exemplo `iadd`, `iand`, etc—correspondem aos operadores de atribuição aumentada—por exemplo, `+=`, `&=`, etc.
+Essas funções mudam seu primeiro argumento no mesmo lugar, se o argumento for mutável;
+se não, funcionam como seus pares sem o prefixo `i`: simplemente devolvem o resultado da operação.
+
+Das funções restantes de `operator`, `methodcaller` será a última que veremos.
+Ela é algo similar a `attrgetter` e `itemgetter`, no sentido de criarem uma função durante a execução.
+A função criada invoca por nome um método do objeto passado como argumento, como mostra o <<methodcaller_demo>>.
+
+[[methodcaller_demo]]
+.Demonstração de `methodcaller`: o segundo teste mostra a vinculação de argumentos adicionais
+====
+[source, pycon]
+----
+>>> from operator import methodcaller
+>>> s = 'The time has come'
+>>> upcase = methodcaller('upper')
+>>> upcase(s)
+'THE TIME HAS COME'
+>>> hyphenate = methodcaller('replace', ' ', '-')
+>>> hyphenate(s)
+'The-time-has-come'
+----
+====
+
+O primeiro teste no <<methodcaller_demo>> está ali apenas para mostrar o funcionamento de `methodcaller`; se você precisa usar `str.upper` como uma função, basta chamá-lo na classe `str`, passando uma string como argumento, assim:
+
+[source, pycon]
+----
+>>> str.upper(s)
+'THE TIME HAS COME'
+----
+
+O segundo teste do <<methodcaller_demo>> mostra que `methodcaller` pode também executar uma aplicação parcial para fixar alguns argumentos, como faz a função `functools.partial`. Esse é nosso próximo tópico.((("", startref="opmod07")))
+
+[[functools_partial_sec]]
+==== Fixando argumentos com functools.partial
+
+O((("functools module", "freezing arguments with", id="functools07")))((("arguments", "freezing with functools.partial"))) módulo `functools` oferece várias funções de ordem superior.
+Já vimos `reduce` na <<map_filter_reduce>>.
+Uma outra é `partial`: dado um invocável, ela produz um novo invocável com alguns dos argumentos do invocável original vinculados a valores pré-determinados.
+Isso é útil para adaptar uma função que recebe um ou mais argumentos a uma API que requer uma função de callback com menos argumentos.
+O <<ex_partial_mul>> é uma demonstração trivial.
+
+[[ex_partial_mul]]
+.Empregando `partial` para usar uma função com dois argumentos onde é necessário um invocável com apenas um argumento
+====
+[source, pycon]
+----
+>>> from operator import mul
+>>> from functools import partial
+>>> triple = partial(mul, 3)  <1>
+>>> triple(7)  <2>
+21
+>>> list(map(triple, range(1, 10)))  <3>
+[3, 6, 9, 12, 15, 18, 21, 24, 27]
+----
+====
+<1> Cria uma nova função `triple` a partir de `mul`, vinculando o primeiro argumento posicional a `3`.
+<2> Testa a função.
+<3> Usa `triple` com `map`; `mul` não funcionaria com `map` nesse exemplo.
+
+Um exemplo mais útil envolve a função `unicode.normalize`, que vimos na <<normalizing_unicode>>. Se você trabalha com texto em muitas línguas diferentes, pode querer aplicar `unicode.normalize('NFC', s)` a qualquer string `s`, antes de compará-la ou armazená-la. Se você precisa disso com frequência, é conveninete ter uma função `nfc` para executar essa tarefa, como no <<ex_partial_nfc>>.
+
+[[ex_partial_nfc]]
+.Criando uma função conveniente para normalizar Unicode com `partial`
+====
+[source, pycon]
+----
+>>> import unicodedata, functools
+>>> nfc = functools.partial(unicodedata.normalize, 'NFC')
+>>> s1 = 'café'
+>>> s2 = 'cafe\u0301'
+>>> s1, s2
+('café', 'café')
+>>> s1 == s2
+False
+>>> nfc(s1) == nfc(s2)
+True
+----
+====
+
+`partial` recebe um invocável como primeiro argumento, seguido de um número arbitrário de argumentos posicionais e nomeados para vincular.
+
+O <<partial_demo>> mostra o uso de `partial` com a função `tag` (do <<tagger_ex>>), para fixar um argumento posicional e um argumento nomeado.
+
+[[partial_demo]]
+.Demonstração de `partial` aplicada à função `tag`, do <<tagger_ex>>
+====
+[source, pycon]
+----
+>>> from tagger import tag
+>>> tag
+<function tag at 0x10206d1e0>  <1>
+>>> from functools import partial
+>>> picture = partial(tag, 'img', class_='pic-frame')  <2>
+>>> picture(src='wumpus.jpeg')
+'<img class="pic-frame" src="wumpus.jpeg" />'  <3>
+>>> picture
+functools.partial(<function tag at 0x10206d1e0>, 'img', class_='pic-frame')  <4>
+>>> picture.func  <5>
+<function tag at 0x10206d1e0>
+>>> picture.args
+('img',)
+>>> picture.keywords
+{'class_': 'pic-frame'}
+----
+====
+<1> Importa `tag` do <<tagger_ex>> e mostra seu ID.
+<2> Cria a função `picture` a partir de `tag`, fixando o primeiro argumento posicional em `'img'` e o argumento nomeado `class_` em `'pic-frame'`.
+<3> `picture` funciona como esperado.
+<4> `partial()` devolve um objeto `functools.partial`.footnote:[O https://fpy.li/7-9[código fonte] de _functools.py_ revela que `functools.partial` é implementada em C e é usada por default.
+Se ela não estiver disponível, uma implementação em Python puro de `partial` está disponível desde Python 3.4.]
+<5> Um objeto `functools.partial` tem atributos que fornecem acesso à função original e aos argumentos fixados.
+
+A função `functools.partialmethod` faz o mesmo que `partial`, mas serve para trabalhar com métodos.
+
+O módulo `functools` também inclui funções de ordem superior para serem usadas como decoradores de função, como `cache` e `singledispatch`, entre outras.
+Essas funções são tratadas no <<ch_closure_decorator>>, que também explica como implementar decoradores customizados.((("", startref="FAFfp07")))((("", startref="fprogpack07")))((("", startref="functools07")))
+
+
+=== Resumo do capítulo
+
+O((("functions, as first-class objects", "overview of"))) objetivo deste capítulo foi explorar a natureza das funções como objetos de primeira classe no Python.
+As principais consequências disso são a possibilidade de atribuir funções a variáveis, passá-las para outras funções, armazená-las em estruturas de dados e acessar os atributos de funções, permitindo que frameworks e ferramentas usem essas informações.
+
+Funções de ordem superior, parte importante da programação funcional, são comuns no Python.
+As funções embutidas `sorted`, `min` e `max`, além de `functools.partial`, são exemplos de funções de ordem superior muito usadas na linguagem.
+O uso de `map`, `filter` e `reduce` já não é tão frequente como costumava ser, graças às compreensões de lista (e estruturas similares, como as expressões geradoras) e à adição de funções embutidas de redução como `sum`, `all` e `any`.
+
+Desde o Python 3.6, existem nove sabores de invocáveis, como funções simples criadas com `lambda` ou instâncias de classes que implementam `+__call__+`.
+Geradoras e corrotinas também são invocáveis, mas seu comportamento é muito diferente dos outros invocáveis.
+Todos os invocáveis podem ser detectados pela função embutida `callable()`.
+Invocáveis oferecem uma rica sintaxe para declaração de parâmetros formais,
+incluindo parâmetros nomeados, parâmetros somente posicionais e anotações.
+
+Por fim, vimos algumas funções do módulo `operator` e `functools.partial`,
+que facilitam a programação funcional, reduzindo a necessidade de lidar com a sintaxe de `lambda`.
+
+
+[[first_cls_fn_further_reading_sec]]
+=== Leitura complementar
+
+Nos((("functions, as first-class objects", "further reading on"))) próximos capítulos, continuaremos nossa jornada pela programação com objetos função.
+O <<ch_type_hints_def>> é dedicado às dicas de tipo nos parâmetros de função e nos valores devolvidos por elas.
+O <<ch_closure_decorator>> mergulha nos decoradores de função—um tipo especial de função de ordem superior—e no mecanismo de clausura (_closure_) que os faz funcionar.
+O <<ch_design_patterns>> mostra como as funções de primeira classe podem simplificar alguns padrões clássicos de projetos (_design patterns_) orientados a objetos.
+
+Em _A Referência da Linguagem Python_, a seção https://fpy.li/47["3.2. A hierarquia de tipos padrão"] mostra os noves tipos invocáveis, juntamente com todos os outros tipos embutidos.
+
+O capítulo 7 do 
+https://fpy.li/pycook3[_Python Cookbook_] (EN), 3ª ed. (O'Reilly), de David Beazley e Brian K. Jones,
+é um excelente complemento a esse capítulo, bem como ao  <<ch_closure_decorator>>,
+tratando basicamente dos mesmos conceitos com uma abordagem diferente.
+
+Veja a https://fpy.li/pep3102[PEP 3102--Keyword-Only Arguments (_Argumentos somente nomeados_)] (EN) se quiser saber a justificativa e casos de uso desse recurso.
+
+Uma ótima introdução à programação funcional em Python é o https://fpy.li/46["Programação Funcional COMO FAZER"], de A. M. Kuchling.
+O principal foco daquele texto, entretanto, é o uso de iteradores e geradoras, assunto do <<ch_generators>>.
+
+A questão no StackOverflow, https://fpy.li/7-12["Python: Why is functools.partial necessary?" (_Python: Por que functools.partial é necessária?_)] (EN), tem uma resposta muito informativa (e engraçada) escrita por Alex Martelli, co-autor do clássico _Python in a Nutshell_ (O'Reilly).
+
+Refletindo sobre a pergunta "Seria Python uma linguagem funcional?", criei uma de minhas palestras favoritas, "Beyond Paradigms" ("Para Além dos Paradigmas"), que apresentei na PyCaribbean, na PyBay e na PyConDE.
+Veja os https://fpy.li/7-13[slides] (EN) e o https://fpy.li/7-14[vídeo] (EN) da apresentação em Berlim—onde conheci Miroslav Šedivý e Jürgen Gmach, dois dos revisores técnicos desse livro.
+
+[[soapbox_1st_class_fn]]
+.Ponto de vista
+****
+
+[role="soapbox-title"]
+**Python é uma linguagem funcional?**
+
+Em((("functions, as first-class objects",
+"Soapbox discussion")))((("Soapbox sidebars", "functional programming with Python")))((("Python",
+"functional programming with")))((("functional programming", "with Python",
+secondary-sortas="Python"))) algum momento do ano 2000,
+eu estava participando de uma oficina sobre o framework Zope na Zope Corporation,
+nos EUA, quando Guido van Rossum entrou na sala (ele não era o instrutor).
+Na seção de perguntas e respostas que se seguiu, alguém perguntou quais recursos de Python ele tinha trazido de outras linguagens.
+A resposta de Guido: "Tudo que é bom no Python foi roubado de outras linguagens."
+
+Shriram Krishnamurthi, professor de Ciência da Computação na Brown University,
+inicia seu artigo, https://fpy.li/7-15["Teaching Programming Languages in a Post-Linnaean Age" (_Ensinando Linguagens de Programação em uma Era Pós-Taxonomia-de-Lineu_)] (EN), assim:
+
+[quote]
+____
+Os "paradigmas" de linguagens de programação são um legado moribundo e tedioso de uma era passada.
+Os atuais projetistas de linguagens não tem qualquer respeito por eles, então por que nossos cursos aderem servilmente a tais "paradigmas"?
+____
+
+Nesse artigo, Python é mencionado nominalmente na seguinte passagem:
+
+[quote]
+____
+E como descrever linguagens como Python, Ruby, ou Perl?
+Seus criadores não tem paciência com as sutilezas dessas nomenclaturas de Lineu;
+eles pegam emprestados todos os recursos que desejam, criando misturas que desafiam totalmente uma caracterização.
+____
+
+Krishnamurthi argumenta que, ao invés de tentar classificar as linguagens com alguma taxonomia, seria mais útil olhar para elas como agregados de recursos.
+Suas ideias inspiraram minha palestra "Beyond Paradigms" ("Para Além dos Paradigmas"), mencionada no final da <<first_cls_fn_further_reading_sec>>.
+
+Mesmo se esse não fosse o objetivo de Guido, dotar Python de funções de primeira classe abriu as portas para a programação funcional.
+Em seu post, https://fpy.li/7-1["Origins of Python's 'Functional' Features" (_As Origens dos Recursos 'Funcionais' dp Python_)] (EN),
+ele conta que `map`, `filter`, e `reduce` foram a primeira motivação para a inclusão do `lambda` ao Python.
+Todos esses recursos foram adicionados juntos ao Python 1.0 em 1994, por Amrit Prem,
+de acordo com o https://fpy.li/7-17[Misc/HISTORY] (EN) no código-fonte do CPython.
+
+Funções como `map`, `filter` e `reduce` surgiram inicialmente em Lisp, a primeira linguagem funcional.
+Lisp, entretanto, não limita o que pode ser feito dentro de uma `lambda`, pois tudo em List é uma expressão.
+Python usa uma sintaxe orientada a instruções (_statement oriented syntax_),
+na qual as expressões não podem conter instruções,
+e muitas das estruturas da linguagem são instruções--incluindo `try/catch`,
+que é o que mais sinto falta quando escrevo uma `lambda`.
+É o preço a pagar pela sintaxe extremamente legível de Python.footnote:[Há também o problema da perda de indentação quando colamos trechos de código em fóruns na Web, mas isso é outro assunto.] Lisp tem muitas virtudes, mas legibilidade não é uma delas.
+
+Ironicamente, roubar a sintaxe de compreensão de lista de outra linguagem funcional—Haskell—reduziu significativamente a necessidade de usar `map` e `filter`, e também `lambda`.
+
+Além da sintaxe limitada das funções anônimas,
+o maior obstáculo para uma adoção mais ampla de idiomas de programação funcional no Python é
+a ausência da eliminação de chamadas de cauda, uma otimização que permite
+o processamento eficiente de uma função que faz uma chamada recursiva na "cauda" de seu corpo,
+sem aumentar a pilha de execução a cada recursão.
+Em outro post,
+https://fpy.li/7-18["Tail Recursion Elimination" (_Eliminação de Recursão de Cauda_)] (EN),
+Guido apresenta várias razões pelas quais tal otimização não é adequada ao Python.
+O post é uma ótima leitura por seus argumentos técnicos,
+e mais ainda porque as três primeiras e mais importantes razões dadas são questões de usabilidade.
+Python não é um prazer de usar, aprender e ensinar por acidente.
+Guido foi intencional.
+
+Então cá estamos: Python não é, por projeto, uma linguagem funcional—seja lá o quê isso signifique.
+Python só pega emprestadas algumas boas ideias de linguagens funcionais.
+
+[role="soapbox-title"]
+**O problema das funções anônimas**
+
+Além((("Soapbox sidebars", "anonymous functions")))((("anonymous functions")))((("")))
+das restrições sintáticas específicas de Python,
+funções anônimas tem uma séria desvantagem em qualquer linguagem: elas não tem nome.
+
+Estou brincando, mas não muito.
+Os _stack traces_ são mais fáceis de ler quando as funções tem nome.
+Funções anônimas são um atalho conveniente, nos divertimos programando com elas, mas algumas vezes elas são levadas longe demais—especialmente se a linguagem e o ambiente encorajam o aninhamento profundo de funções anônimas, como faz o Javascript combinado com o Node.js.
+Ter muitas funções anônimas aninhadas torna a depuração e o tratamento de erros mais difíceis.
+A programação assíncrona no Python é mais estruturada, talvez pela sintaxe limitada do `lambda` impedir seu abuso e forçar uma abordagem mais explícita.
+Promessas, futuros e adiados (_deferreds_) são conceitos usados nas APIs assíncronas modernas.
+Prometo escrever mais sobre programação assíncrona no futuro, mas esse assunto será adiado até o <<ch_async>>.
+
+****
