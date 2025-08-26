@@ -258,7 +258,7 @@ iterável:: Qualquer objeto a partir do qual a função embutida `iter` consegue
 Objetos que implementam um método `+__iter__+` devolvendo um _iterador_ são iteráveis.
 Sequências são sempre iteráveis, bem como objetos que implementam um método `+__getitem__+` que aceite índices iniciando em 0.
 
-É importante deixar clara a relação entre iteráveis e iteradores: Python obtém iteradores de iteráveis.
+É importante deixar clara a relação entre iteráveis e iteradores: Python obtém um iterador a partir de um iterável.
 
 Aqui está um simples loop `for` iterando sobre uma `str`. A `str` `'ABC'` é o iterável aqui. Você não vê, mas há um iterador por trás das cortinas:
 
@@ -281,11 +281,11 @@ Se não existisse uma instrução `for` e fosse preciso emular o mecanismo do `f
 >>> it = iter(s)  # <1>
 >>> while True:
 ...     try:
-...         print(next(it))  # <2>
+...         char = next(it)  # <2>
 ...     except StopIteration:  # <3>
 ...         del it  # <4>
 ...         break  # <5>
-...
+...     print(char)  # <6>
 A
 B
 C
@@ -293,17 +293,20 @@ C
 <1> Cria um iterador `it` a partir de um iterável.
 <2> Chama `next` repetidamente com o iterador, para obter o item seguinte.
 <3> O iterador gera `StopIteration` quando não há mais itens.
-<4> Libera a referência a `it`—o obleto iterador é descartado.
+<4> Libera a referência a `it`—o objeto iterador é descartado.
 <5> Sai do loop.
+<6> Exibe `char`. Essa variável continua existindo depois do loop.
 
 `StopIteration` sinaliza que o iterador foi exaurido.
-Essa exceção é tratada internamente pela função embutida `iter()`, que é parte da lógica dos loops `for` e de outros contextos de iteração, como compreensões de lista, desempacotamento iterável, etc.
+Essa exceção é tratada internamente pela função embutida `iter()`,
+que é parte da lógica dos loops `for` e de outros contextos de iteração,
+como compreensões de lista, desempacotamento iterável, etc.
 
-A interface padrão de Python para um iterador tem dois métodos:
+A interface padrão de um iterador em Python tem dois métodos:
 
-`+__next__+`:: Devolve o próximo item em uma série, gerando `StopIteration` se não há mais nenhum.
+`+__next__+`:: Devolve o próximo item da série, gerando `StopIteration` se não há mais nenhum.
 
-`+__iter__+`:: Devolve `self`; isso permite que iteradores sejam usado quando um iterável é esperado. Por exemplo, em um loop `for` loop.
+`+__iter__+`:: Devolve `self`; isso permite que um iterador seja usado quando um iterável é esperado. Por exemplo, em um laço `for`.
 
 Essa interface está formalizada na ABC `collections.abc.Iterator`,
 que declara o método abstrato `+__next__+`,
@@ -2305,7 +2308,7 @@ Aqui está uma visão geral em alto nível de como o script está estruturado:
 
 `iter_iso_records`:: Essa função geradora lê arquivos _.iso_ (que se presume estarem no formato ISO-2709). Ela aceita dois argumento: o nome do arquivo e `isis_json_type`, uma das opções relacionadas à estrutura do registro. Cada iteração de seu loop `for` lê um registro, cria um `dict` vazio, o preenche com dados dos campos, e produz o `dict`.
 
-`iter_mst_records`:: Essa outra função geradora lê arquivos _.mst_.footnote:[A biblioteca usada para ler o complexo arquivo binário _.mst_ é na verdade escrita em Java, então essa funcionalidade só está disponível quando _isis2json.py_ é executado com o interpretador Jython, versão 2.5 ou superior. Para maiores detalhes, veja o arquivo https://fpy.li/17-47[_README.rst_] (EN)no repositório. As dependências são importadas dentro das funções geradoras que precisam delas, então o script pode rodar mesmo se apenas uma das bibliotecas externas esteja disponível.] Se você examinar o código-fonte de _isis2json.py_, vai notar que ela não é tão simples quanto `iter_iso_records`, mas sua interface e estrutura geral é a mesma: a função recebe como argumentos um nome de arquivo e um `isis_json_type`, e entra em um loop `for`, que cria e produz por iteração um `dict`, representando um único registro.
+`iter_mst_records`:: Essa outra função geradora lê arquivos _.mst_.footnote:[A biblioteca usada para ler o complexo arquivo binário _.mst_ é na verdade escrita em Java, então essa funcionalidade só está disponível quando _isis2json.py_ é executado com o interpretador Jython, versão 2.5 ou superior. Para mais detalhes, veja o arquivo https://fpy.li/17-47[_README.rst_] (EN)no repositório. As dependências são importadas dentro das funções geradoras que precisam delas, então o script pode rodar mesmo se apenas uma das bibliotecas externas esteja disponível.] Se você examinar o código-fonte de _isis2json.py_, vai notar que ela não é tão simples quanto `iter_iso_records`, mas sua interface e estrutura geral é a mesma: a função recebe como argumentos um nome de arquivo e um `isis_json_type`, e entra em um loop `for`, que cria e produz por iteração um `dict`, representando um único registro.
 
 `write_json`:: Essa função executa a escrita efetiva de registros JSON, um por vez. Ela recebe numerosos argumentos, mas o primeiro—++input_gen++—é uma referência para uma função geradora: `iter_iso_records` ou `iter_mst_records`. O loop `for` principal itera sobre os dicionários produzidos pela geradora `input_gen` selecionada, os reestrutura de diferentes formas, determinadas pelas opções de linha de comando, e anexa o registro JSON ao arquivo de saída.
 
