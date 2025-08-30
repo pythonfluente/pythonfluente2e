@@ -13,7 +13,6 @@ and lists the xrefs, once each, in the order they appear.
 
 import sys
 
-PREFIX = 'asciidoctor: INFO: possible invalid reference: '
 
 
 def good_id(xref):
@@ -24,6 +23,10 @@ def good_id(xref):
         xref.endswith('_part'),
         xref.endswith('_tbl'),
     ])
+
+
+PREFIX = 'asciidoctor: INFO: possible invalid reference: '
+
 
 def main():
     # see this module's docstring for input file
