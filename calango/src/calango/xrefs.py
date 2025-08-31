@@ -1,7 +1,8 @@
-import xml.etree.ElementTree as ET
+import subprocess
 from enum import Enum, auto
 from dataclasses import dataclass
 from bs4 import BeautifulSoup
+from pathlib import Path
 
 
 class Kind(Enum):
@@ -86,3 +87,36 @@ CHAPTER_ID = {
 
 CHAPTER_NUMBER = {i:n for (n, i) in CHAPTER_ID.items()}
 
+
+def find_git_root():
+    path = Path(__file__).resolve()
+    while path != path.parent:
+        if (path / '.git').is_dir():
+            return path
+        path = path.parent
+    raise LookupError(f'no .git dir found in {path} or parents')
+
+
+INVALID_MSG = 'asciidoctor: INFO: possible invalid reference: '
+
+def list_invalid_xrefs() -> list[str]:
+    adoc = find_git_root() / 'vol1/vol1.adoc'
+    cmd = f'''asciidoctor -v {adoc} -o lixo'''
+    print(cmd)
+    result = subprocess.run(cmd, shell=True, stderr=subprocess.PIPE, text=True)
+    seen = set()
+    xrefs = []
+    for line in result.stderr.splitlines():
+        assert line.startswith(INVALID_MSG), '? msg: ' + line
+        xref = line[len(INVALID_MSG):].strip()
+        if xref not in seen:
+            xrefs.append(xref)
+            seen.add(xref)
+            if xref.endswith('_ex'):
+                print(xref)
+
+    return xrefs
+
+
+if __name__ == '__main__':
+    list_invalid_xrefs()
