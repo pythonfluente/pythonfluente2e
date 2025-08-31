@@ -146,7 +146,7 @@ O <<blogdom_ex>> mostra o código dp _blogdom.py_.
 [[blogdom_ex]]
 .blogdom.py: procura domínios para um blog sobre Python
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/21-async/domains/asyncio/blogdom.py[]
 ----
@@ -180,7 +180,7 @@ Fazendo isso, você vai perceber que as corrotinas podem ser lidas como as boas 
 
 Por exemplo, imagine que o corpo dessa corrotina...
 
-[source, python3]
+[source, python]
 ----
 async def probe(domain: str) -> tuple[str, bool]:
     loop = asyncio.get_running_loop()
@@ -193,7 +193,7 @@ async def probe(domain: str) -> tuple[str, bool]:
 
 ...funciona como a função abaixo, exceto que, magicamente, ela nunca bloqueia a execução:
 
-[source, python3]
+[source, python]
 ----
 def probe(domain: str) -> tuple[str, bool]:  # no async
     loop = asyncio.get_running_loop()
@@ -386,7 +386,7 @@ Agora, considere o <<asyncpg_transaction_no_context_ex>>, que usa o driver Postg
 [[asyncpg_transaction_no_context_ex]]
 .Código exemplo da documentação do driver PostgreSQL _asyncpg_
 ====
-[source, python3]
+[source, python]
 ----
 tr = connection.transaction()
 await tr.start()
@@ -411,7 +411,7 @@ objetos implementando os métodos `+__aenter__+` e `+__aexit__+` como corrotinas
 
 Com `async with`, o <<asyncpg_transaction_no_context_ex>> pode ser escrito como esse outro trecho da https://fpy.li/21-11[documentação do _asyncpg_]:
 
-[source, python3]
+[source, python]
 ----
 async with connection.transaction():
     await connection.execute("INSERT INTO mytable VALUES (1, 2, 3)")
@@ -562,7 +562,7 @@ Um `asyncio.Semaphore` tem um contador interno que é decrementado toda vez que
 usamos `await` no método corrotina `.acquire()`,
 e incrementado quando chamamos o método `.release()`—que não é uma corrotina porque nunca bloqueia. O valor inicial do contador é definido quando o `Semaphore` é instanciado:
 
-[source, python3]
+[source, python]
 ----
     semaphore = asyncio.Semaphore(concur_req)
 ----
@@ -577,7 +577,7 @@ Em vez de usar esses métodos diretamente,
 é mais seguro usar o `semaphore` como um gerenciador de contexto assíncrono,
 como fiz na função `download_one` em <<flags2_asyncio_top>>:
 
-[source, python3]
+[source, python]
 ----
         async with semaphore:
             image = await get_flag(client, base_url, cc)
@@ -1028,7 +1028,7 @@ Um iterador assíncrono fornece um método corrotina `+__anext__+` que devolve u
 
 A https://fpy.li/21-43[documentação] (EN) do driver assíncrono de PostgreSQL _aiopg_ traz um exemplo que ilustra o uso de `async for` para iterar sobre as linhas de cursor de banco de dados.
 
-[source, python3]
+[source, python]
 ----
 async def go():
     pool = await aiopg.create_pool(dsn)
@@ -1094,7 +1094,7 @@ Vamos agora importar _domainlib.py_ e brincar com suas duas corrotinas: `probe` 
 [[domainlib_demo_repl]]
 .Experimentando com _domainlib.py_ após executar `python3 -m asyncio`
 ====
-[source, pycon]
+[source, python]
 ----
 >>> await asyncio.sleep(3, 'Rise and shine!')  # <1>
 'Rise and shine!'
@@ -1124,7 +1124,7 @@ O <<domainlib_demo_repl>> mostra que `multi_probe` é um gerador assíncrono, po
 [[domainlib_more_exp_repl]]
 .mais experimentos, continuando de <<domainlib_demo_repl>>
 ====
-[source, pycon]
+[source, python]
 ----
 >>> probe('python.org')  # <1>
 <coroutine object probe at 0x10e313740>
@@ -1152,7 +1152,7 @@ Vamos agora estudar o código do _domainlib.py_, com o gerador assíncrono `mult
 [[domainlib_ex]]
 .domainlib.py: funções para sondar domínios
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/21-async/domains/asyncio/domainlib.py[]
 ----
@@ -1170,7 +1170,7 @@ include::../code/21-async/domains/asyncio/domainlib.py[]
 ====
 O loop `for` no <<domainlib_ex>> poderia ser mais conciso:
 
-[source, python3]
+[source, python]
 ----
     for coro in asyncio.as_completed(coros):
         yield await coro
@@ -1215,7 +1215,7 @@ Graças à _domainlib_, o código de _domaincheck.py_ é bastante direto, como s
 [[domaincheck_ex]]
 .domaincheck.py: utilitário para sondar domínios usando domainlib
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/21-async/domains/asyncio/domaincheck.py[]
 ----
@@ -1241,7 +1241,7 @@ https://fpy.li/hattingh[_Using Asyncio in Python_]. O <<asynccontextmanager_ex>>
 [[asynccontextmanager_ex]]
 .Exemplo usando `@asynccontextmanager` e `loop.run_in_executor`
 ====
-[source, python3]
+[source, python]
 ----
 from contextlib import asynccontextmanager
 
@@ -1296,7 +1296,7 @@ Dado o gerador assíncrono `multi_probe` do <<domainlib_ex>>,
 poderíamos escrever outro gerador assíncrono que devolvesse apenas os nomes de domínios encontrados.
 Aqui está uma forma de fazer isso—novamente usando o console assíncrono iniciado com `-m asyncio`:
 
-[source, pycon]
+[source, python]
 ----
 >>> from domainlib import multi_probe
 >>> names = 'python.org rust-lang.org golang.org no-lang.invalid'.split()
@@ -1358,7 +1358,7 @@ para mais informações.
 
 Voltemos ao console assíncrono mágico:
 
-[source, pycon]
+[source, python]
 ----
 >>> names = 'python.org rust-lang.org golang.org no-lang.invalid'.split()
 >>> names = sorted(names)
@@ -1380,7 +1380,7 @@ Observe que ordenei a lista de nomes, para mostrar que os resultados chegam na o
 
 A PEP 530 permite o uso de `async for` e `await` em compreensões de lista, bem como em compreensões de `dict` e de `set`. Por exemplo, aqui está uma compreensão de `dict` para armazenar os resultados de `multi_probe` no console assíncrono:
 
-[source, pycon]
+[source, python]
 ----
 >>> {name: found async for name, found in multi_probe(names)}
 {'golang.org': True, 'python.org': True, 'no-lang.invalid': False,
@@ -1390,7 +1390,7 @@ A PEP 530 permite o uso de `async for` e `await` em compreensões de lista, bem 
 Podemos usar a palavra-chave `await` na expressão antes de cláusulas `for` ou de `async for`, e também na expressão após a cláusula `if`.
 Aqui está uma compreensão de `set` no console assíncrono, coletando apenas os domínios encontrados.
 
-[source, pycon]
+[source, python]
 ----
 >>> {name for name in names if (await probe(name)).found}
 {'rust-lang.org', 'python.org', 'golang.org'}
@@ -1417,7 +1417,7 @@ O <<blogdom_curio_ex>> mostra o script _blogdom.py_ (<<blogdom_ex>>) reescrito p
 [[blogdom_curio_ex]]
 .blogdom.py: <<blogdom_ex>>, agora usando o _Curio_
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/21-async/domains/curio/blogdom.py[]
 ----
@@ -1431,7 +1431,7 @@ include::../code/21-async/domains/curio/blogdom.py[]
 
 Para expandir esse último ponto: se você olhar nos exemplo de código de `asyncio` na primeira edição do _Python Fluente_, verá linhas como as seguintes, repetidas várias vezes:
 
-[source, python3]
+[source, python]
 ----
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
@@ -1445,7 +1445,7 @@ Outro exemplo: em vez da função especial `gather`, este trecho da
 https://fpy.li/21-50[documentação de "Task Groups"] (EN)
 coleta os resultados de todas as tarefas no grupo:
 
-[source, python3]
+[source, python]
 ----
 async with TaskGroup(wait=all) as g:
     await g.spawn(coro1)

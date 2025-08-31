@@ -58,7 +58,7 @@ Um decorador pode executar algum processamento com a função decorada, e ou a d
 
 Em outras palavras, supondo a existência de um decorador chamado `decorate`, esse código:
 
-[source, python3]
+[source, python]
 ----
 @decorate
 def target():
@@ -67,7 +67,7 @@ def target():
 
 tem o mesmo efeito de:
 
-[source, python3]
+[source, python]
 ----
 def target():
     print('running target()')
@@ -82,7 +82,7 @@ Para confirmar que a função decorada é substituída, veja a sessão de consol
 [[decorator_replaces]]
 .Um decorador normalmente substitui uma função por outra, diferente
 ====
-[source, pycon]
+[source, python]
 ----
 >>> def deco(func):
 ...     def inner():
@@ -162,7 +162,7 @@ referências para as duas funções decoradas:
 
 Se _registration.py_ for importado (e não executado como um script), a saída é essa:
 
-[source, pycon]
+[source, python]
 ----
 >>> import registration
 running register(<function f1 at 0x10063b1e0>)
@@ -171,7 +171,7 @@ running register(<function f2 at 0x10063b268>)
 
 Nesse momento, se você inspecionar `registry`, verá isso:
 
-[source, pycon]
+[source, python]
 ----
 >>> registration.registry
 [<function f1 at 0x10063b1e0>, <function f2 at 0x10063b268>]
@@ -207,7 +207,7 @@ uma variável local `a`—definida como parâmetro de função—e a variável `
 [[ex_global_undef]]
 .Função lendo uma variável local e uma variável global
 ====
-[source, pycon]
+[source, python]
 ----
 >>> def f1(a):
 ...     print(a)
@@ -224,7 +224,7 @@ NameError: global name 'b' is not defined
 
 O erro obtido não é surpreendente. Continuando do <<ex_global_undef>>, se atribuirmos um valor a um `b` global e então chamarmos `f1`, funciona:
 
-[source, pycon]
+[source, python]
 ----
 >>> b = 6
 >>> f1(3)
@@ -239,7 +239,7 @@ Dê uma olhada na função `f2`, no <<ex_local_unbound>>. As primeiras duas linh
 [[ex_local_unbound]]
 .A variável `b` é local, porque um valor é atribuído a ela no corpo da função
 ====
-[source, pycon]
+[source, python]
 ----
 >>> b = 6
 >>> def f2(a):
@@ -264,7 +264,7 @@ Isso não é um bug, mas uma escolha de projeto: Python não exige que você dec
 
 Se queremos que o interpretador trate `b` como uma variável global e também atribuir um novo valor a ela dentro da função, usamos a declaração `global`:
 
-[source, pycon]
+[source, python]
 ----
 >>> b = 6
 >>> def f3(a):
@@ -342,7 +342,7 @@ Imagine uma função `avg`, para calcular a média de uma série de valores que 
 
 Começando do zero, `avg` poderia ser usada assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> avg(10)
 10.0
@@ -359,7 +359,7 @@ Para começar, o <<ex_average_oo>> mostra uma implementação baseada em uma cla
 [[ex_average_oo]]
 .average_oo.py: uma classe para calcular uma média contínua
 ====
-[source, python3]
+[source, python]
 ----
 class Averager():
 
@@ -375,7 +375,7 @@ class Averager():
 
 A classe `Averager` cria instâncias invocáveis:
 
-[source, pycon]
+[source, python]
 ----
 >>> avg = Averager()
 >>> avg(10)
@@ -391,7 +391,7 @@ O <<ex_average_fn>>, a seguir, é uma implementação funcional, usando a funç�
 [[ex_average_fn]]
 .average.py: uma função de ordem superior para a clacular uma média contínua
 ====
-[source, python3]
+[source, python]
 ----
 def make_averager():
     series = []
@@ -410,7 +410,7 @@ Quando invocada, `make_averager` devolve um objeto função `averager`. Cada vez
 [[ex_average_demo1]]
 .Testando o <<ex_average_fn>>
 ====
-[source, pycon]
+[source, python]
 ----
 >>> avg = make_averager()
 >>> avg(10)
@@ -439,7 +439,7 @@ Inspecionar o objeto `averager` devolvido mostra como Python mantém os nomes de
 [[ex_average_demo2]]
 .Inspecionando a função criada por `make_averager` no <<ex_average_fn>>
 ====
-[source, pycon]
+[source, python]
 ----
 >>> avg.__code__.co_varnames
 ('new_value', 'total')
@@ -453,7 +453,7 @@ O valor de `series` é mantido no atributo `+__closure__+` da função devolvida
 [[ex_average_demo3]]
 .Continuando do <<ex_average_demo1>>
 ====
-[source, pycon]
+[source, python]
 ----
 >>> avg.__code__.co_freevars
 ('series',)
@@ -478,7 +478,7 @@ O <<ex_average_broken>> é uma implementação errada, apenas para ilustrar um p
 [[ex_average_broken]]
 .Um função de ordem superior incorreta para calcular um média contínua sem manter todo o histórico
 ====
-[source, python3]
+[source, python]
 ----
 def make_averager():
     count = 0
@@ -495,7 +495,7 @@ def make_averager():
 
 Se você testar o <<ex_average_broken>>, eis o resultado:
 
-[source, pycon]
+[source, python]
 ----
 >>> avg = make_averager()
 >>> avg(10)
@@ -516,7 +516,7 @@ A palavra reservada `nonlocal` foi introduzida no Python 3 para contornar esse p
 [[ex_average_fixed]]
 .Calcula uma média contínua sem manter todo o histórico (corrigida com o uso de `nonlocal`)
 ====
-[source, python3]
+[source, python]
 ----
 def make_averager():
     count = 0
@@ -557,7 +557,7 @@ O <<ex_clockdeco0>> é((("decorators and closures", "decorator implementation", 
 [[ex_clockdeco0]]
 ._clockdeco0.py_: decorador simples que mostra o tempo de execução de funções
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/09-closure-deco/clock/clockdeco0.py[]
 ----
@@ -571,7 +571,7 @@ O <<ex_clockdeco_demo>> demonstra o uso do decorador `clock`.
 [[ex_clockdeco_demo]]
 .Usando o decorador `clock`
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/09-closure-deco/clock/clockdeco_demo.py[]
 ----
@@ -598,7 +598,7 @@ $ python3 clockdeco_demo.py
 
 Lembre-se que esse código:
 
-[source, python3]
+[source, python]
 ----
 @clock
 def factorial(n):
@@ -607,7 +607,7 @@ def factorial(n):
 
 na verdade faz isso:
 
-[source, python3]
+[source, python]
 ----
 def factorial(n):
     return 1 if n < 2 else n*factorial(n-1)
@@ -619,7 +619,7 @@ Então, nos dois exemplos, `clock` recebe a função `factorial` como seu argume
 Ela então cria e devolve a função `clocked`, que o interpretador Python atribui a `factorial` (no primeiro exemplo, por baixo dos panos).
 De fato, se você importar o módulo `clockdeco_demo` e verificar o `+__name__+` de `factorial`, verá isso:
 
-[source, pycon]
+[source, python]
 ----
 >>> import clockdeco_demo
 >>> clockdeco_demo.factorial.__name__
@@ -651,7 +651,7 @@ E nessa nova versão os argumentos nomeados também são tratados corretamente.
 [[ex_clockdeco2]]
 ._clockdeco.py_: um decorador `clock` melhora
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/09-closure-deco/clock/clockdeco.py[]
 ----
@@ -687,7 +687,7 @@ Uma boa demonstração é aplicar `@cache` à função recursiva, e dolorosament
 [[ex_fibo_demo]]
 .O modo recursivo e extremamente dispendioso de calcular o _enésimo_ número na série de Fibonacci
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/09-closure-deco/fibo_demo.py[]
 ----
@@ -732,7 +732,7 @@ Mas acrescentar apenas duas linhas, para usar `cache`, melhora muito o desempenh
 [[fibo_demo_cache_ex]]
 .Implementação mais rápida, usando _caching_
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/09-closure-deco/fibo_demo_cache.py[]
 ----
@@ -807,7 +807,7 @@ Significa que registros que há algum tempo não são lidos, são descartados pa
 Desde Python 3.8, `lru_cache` pode ser aplicado de duas formas.
 Abaixo vemos o modo mais simples em uso:
 
-[source, python3]
+[source, python]
 ----
 @lru_cache
 def costly_function(a, b):
@@ -817,7 +817,7 @@ def costly_function(a, b):
 A outra forma—disponível desde Python 3.2—é invocá-lo como uma função,
 com `()`:
 
-[source, python3]
+[source, python]
 ----
 @lru_cache()
 def costly_function(a, b):
@@ -840,7 +840,7 @@ São eles:
 
 Eis um exemplo de invocação de `@lru_cache` com parâmetros diferentes dos defaults:
 
-[source, python3]
+[source, python]
 ----
 @lru_cache(maxsize=2**20, typed=True)
 def costly_function(a, b):
@@ -856,7 +856,7 @@ Imagine((("single dispatch generic functions", id="singlegen09")))((("functions"
 
 Poderíamos começar com uma função como essa:
 
-[source, python3]
+[source, python]
 ----
 import html
 
@@ -881,7 +881,7 @@ O comportamento que desejamos aparece no <<singledispatch_demo>>.
 [[singledispatch_demo]]
 .`htmlize()` gera HTML adaptado para diferentes tipos de objetos
 ====
-[source, pycon]
+[source, python]
 ----
 include::../code/09-closure-deco/htmlizer.py[tags=HTMLIZE_DEMO]
 ----
@@ -1065,7 +1065,7 @@ O ponto central aqui é que `register()` devolve `decorate`, que então é aplic
 
 O código do <<registration_param_ex>> está em um módulo _registration_param.py_. Se o importarmos, veremos o seguinte:
 
-[source, pycon]
+[source, python]
 ----
 >>> import registration_param
 running register(active=False)->decorate(<function f1 at 0x10063c1e0>)
@@ -1081,7 +1081,7 @@ Se, ao invés de usar a sintaxe `@`, usarmos `register` como uma função regula
 [[registration_param_demo]]
 .Usando o módulo registration_param listado no <<registration_param_ex>>
 ====
-[source, pycon]
+[source, python]
 ----
 >>> from registration_param import *
 running register(active=False)->decorate(<function f1 at 0x10073c1e0>)
@@ -1153,7 +1153,7 @@ Para exercitar a nova funcionalidade, vamos dar uma olhada em dois outros módul
 [[ex_clockdecoparam_demo1]]
 .clockdeco_param_demo1.py
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/09-closure-deco/clock/clockdeco_param_demo1.py[]
 ----
@@ -1172,7 +1172,7 @@ snooze: 0.12412118911743164s
 [[ex_clockdecoparam_demo2]]
 .clockdeco_param_demo2.py
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/09-closure-deco/clock/clockdeco_param_demo2.py[]
 ----
@@ -1277,7 +1277,7 @@ Isso significa que variáveis livres são avaliadas olhando para dentro do ambie
 
 Se Python tivesse escopo dinâmico e não tivesse clausuras, poderíamos improvisar `avg`—similar ao <<ex_average_fn>>—assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> ### this is not a real Python console session! ###
 >>> avg = make_averager()

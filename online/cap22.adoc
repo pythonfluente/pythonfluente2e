@@ -57,7 +57,7 @@ Usei o console de Python para explorar o conjuntos de dados, como mostra o <<ex_
 [[ex_osconfeed_explore]]
 .Exploração interativa do osconfeed.json
 ====
-[source, pycon]
+[source, python]
 ----
 include::../code/22-dyn-attr-prop/oscon/osconfeed_explore.rst[]
 ----
@@ -137,14 +137,14 @@ Qualquer script que gera ou emula nomes de atributos dinâmicos a partir de font
 
 O((("data wrangling", "invalid attribute name problem")))((("invalid attribute name problem"))) código de `FrozenJSON` não aceita com nomes de atributos que sejam palavras reservadas de Python. Por exemplo, se você criar um objeto como esse
 
-[source, pycon]
+[source, python]
 ----
 >>> student = FrozenJSON({'name': 'Jim Bo', 'class': 1982})
 ----
 
 não será possível ler `student.class`, porque `class` é uma palavra reservada no Python:
 
-[source, pycon]
+[source, python]
 ----
 >>> student.class
   File "<stdin>", line 1
@@ -155,7 +155,7 @@ SyntaxError: invalid syntax
 
 Claro, sempre é possível fazer assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> getattr(student, 'class')
 1982
@@ -163,7 +163,7 @@ Claro, sempre é possível fazer assim:
 
 Mas a ideia de `FrozenJSON` é oferecer acesso conveniente aos dados, então uma solução melhor é verificar se uma chave no mapamento passado para `+FrozenJSON.__init__+` é uma palavra reservada e, em caso positivo, anexar um `_` a ela, de forma que o atributo possa ser acessado assim:
 
-[source, pycon]
+[source, python]
 ----
 >>> student.class_
 1982
@@ -184,7 +184,7 @@ include::../code/22-dyn-attr-prop/oscon/explore1.py[tags=EXPLORE1]
 Um problema similar pode surgir se uma chave em um registro JSON não for um identificador válido em Python:
 
 
-[source, pycon]
+[source, python]
 ----
 >>> x = FrozenJSON({'2be':'or not'})
 >>> x.2be
@@ -218,7 +218,7 @@ Python recebe a instância devolvida por `+__new__+`, e daí a passa como o prim
 Se necessário, o método `+__new__+` pode também devolver uma instância de uma classe diferente. Quando isso acontece, o interpretador não invoca `+__init__+`.
 Em outras palavras, a lógica de Python para criar um objeto é similar a esse pseudo-código:
 
-[source, python3]
+[source, python]
 ----
 include::../code/22-dyn-attr-prop/pseudo_construction.py[]
 ----
@@ -269,7 +269,7 @@ Dada uma instância de `Event`, o <<ex22-7-added-uuid>> mostra o comportamento d
 [[ex22-7-added-uuid]]
 .Ler `venue` e `speakers` devolve objetos `Record`
 ====
-[source, pycon]
+[source, python]
 ----
 include::../code/22-dyn-attr-prop/oscon/schedule_v4.py[tags=SCHEDULE4_DEMO]
 ----
@@ -687,7 +687,7 @@ include::../code/22-dyn-attr-prop/bulkfood/bulkfood_v2.py[tags=LINEITEM_V2]
 
 Observe como agora não é possível criar uma `LineItem` com peso inválido:
 
-[source, pycon]
+[source, python]
 ----
 >>> walnuts = LineItem('walnuts', 0, 10.00)
 Traceback (most recent call last):
@@ -708,7 +708,7 @@ Apesar((("dynamic attributes and properties", "property class", id="DAPpclass22"
 
 Essa é a assinatura completa do construtor de `property`:
 
-[source, python3]
+[source, python]
 ----
 property(fget=None, fset=None, fdel=None, doc=None)
 ----
@@ -746,7 +746,7 @@ Na <<overriding_class_attributes>>, vimos que quando uma instância e sua classe
 [[attr_override_demo1]]
 .Atributo de instância oculta o atributo de classe `data`
 ====
-[source, pycon]
+[source, python]
 ----
 >>> class Class:  # <1>
 ...     data = 'the class data attr'
@@ -783,7 +783,7 @@ Agora vamos tentar  sobrescrever o atributo `prop` na instância `obj`. Continua
 [[attr_override_demo2]]
 .Um atributo de instância não oculta uma propriedade da classe (continuando do <<attr_override_demo1>>)
 ====
-[source, pycon]
+[source, python]
 ----
 >>> Class.prop  # <1>
 <property object at 0x1072b7408>
@@ -817,7 +817,7 @@ Como uma demonstração final, vamos adicionar uma propriedade a `Class`, e vê-
 [[attr_override_demo3]]
 .Uma nova propriedade de classe oculta o atributo de instância existente (continuando do <<attr_override_demo2>>)
 ====
-[source, pycon]
+[source, python]
 ----
 >>> obj.data  # <1>
 'bar'
@@ -850,7 +850,7 @@ Quando ferramentas como a função `help()` do console ou IDEs precisam mostrar 
 
 Se usada com a sintaxe clássica de invocação, `property` pode receber a string de documentação no argumento `doc`:
 
-[source, python3]
+[source, python]
 ----
     weight = property(get_weight, set_weight, doc='weight in kilograms')
 ----
@@ -893,7 +893,7 @@ include::../code/22-dyn-attr-prop/bulkfood/bulkfood_v2prop.py[tags=LINEITEM_V2_P
 
 Recorde que propriedades são atributos de classe. Ao criar cada propriedade `quantity`, precisamos passar o nome do atributo de `LineItem` que será gerenciado por aquela propriedade específica. Ter que digitar a palavra `weight` duas vezes na linha abaixo é lamentável:
 
-[source, python3]
+[source, python]
 ----
     weight = quantity('weight')
 ----
@@ -936,7 +936,7 @@ No <<lineitem_class_v2prop_demo>>, criei e inspecionei uma instância de `LineIt
 [[lineitem_class_v2prop_demo]]
 .bulkfood_v2prop.py: explorando propriedades e atributos de armazenamento
 ====
-[source, pycon]
+[source, python]
 ----
 include::../code/22-dyn-attr-prop/bulkfood/bulkfood_v2prop.py[tags=LINEITEM_V2_PROP_DEMO]
 ----
@@ -959,7 +959,7 @@ Vamos agora encerrar a discussão das propriedades com a questão da exclusão d
 
 Podemos((("dynamic attributes and properties", "handling attribute deletion")))((("attributes", "handling attribute deletion")))((("del statement"))) usar a instrução `del` para excluir não apenas variáveis, mas também atributos:
 
-[source, pycon]
+[source, python]
 ----
 >>> class Demo:
 ...    pass
@@ -994,7 +994,7 @@ Os doctests em _blackknight.py_ estão no <<demo_black_knight>>.
 [[demo_black_knight]]
 .blackknight.py: doctests para <<ex_black_knight>> (o Cavaleiro Negro nunca reconhece a derrota)
 ====
-[source, pycon]
+[source, python]
 ----
 include::../code/22-dyn-attr-prop/blackknight.py[tags=BLACK_KNIGHT_DEMO]
 ----
@@ -1003,7 +1003,7 @@ include::../code/22-dyn-attr-prop/blackknight.py[tags=BLACK_KNIGHT_DEMO]
 Usando a sintaxe clássica de invocação em vez de decoradores, o argumento `fdel` configura a função de exclusão.
 Por exemplo, a propriedade `member` seria escrita assim no corpo da classe `BlackKnight`:
 
-[source, python3]
+[source, python]
 ----
     member = property(member_getter, fdel=member_deleter)
 ----
@@ -1147,7 +1147,7 @@ A prática geral, entretanto, não concorda com a sintaxe definida pelos projeti
 
 Alex Martelli fala pela maioria da comunidade Python quando chama métodos de acesso de "idiomas patéticos", e então apresenta esse exemplos que parecem muito diferentes, mas fazem a mesma coisa: footnote:[Alex Martelli, _Python in a Nutshell_, 2ª ed. (O'Reilly), p. 101.]
 
-[source, python3]
+[source, python]
 ----
 someInstance.widgetCounter += 1
 # rather than...

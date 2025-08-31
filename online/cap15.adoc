@@ -50,7 +50,7 @@ sum(iterable, /, start=0)
 
 A função embutida `sum` é escrita em C, mas o _typeshed_ tem dicas de tipos sobrepostas para ela, em https://fpy.li/15-2[_builtins.pyi_]:
 
-[source, python3]
+[source, python]
 ----
 @overload
 def sum(__iterable: Iterable[_T]) -> Union[_T, int]: ...
@@ -76,7 +76,7 @@ O <<sum_overload_ex>> mostra como `sum` apareceria anotada e implementada em um 
 [[sum_overload_ex]]
 ._mysum.py_: definição da função `sum` com assinaturaas sobrepostas
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/15-more-types/mysum.py[]
 ----
@@ -142,7 +142,7 @@ Escrevi `max` em Python para tornar mais fácil ver a relação entre o funciona
 [[mymax_ex]]
 ._mymax.py_: Versão da funcão `max` em Python
 ====
-[source, python3]
+[source, python]
 ----
 # imports and definitions omitted, see next listing
 
@@ -169,7 +169,7 @@ Para consertar o https://fpy.li/shed4051[issue #4051], escrevi o código no <<my
 [[mymax_types_ex]]
 ._mymax.py_: início do módulo, com importações, definições e sobreposições
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/15-more-types/protocol/mymax/mymax.py[tags=MYMAX_TYPES]
 ----
@@ -183,7 +183,7 @@ Veremos esse benefício a seguir, estudando as sobreposições de `max`, em grup
 
 ===== Argumentos implementando SupportsLessThan, mas key e default não são fornecidos
 
-[source, python3]
+[source, python]
 ----
 @overload
 def max(__arg1: LT, __arg2: LT, *_args: LT, key: None = ...) -> LT:
@@ -199,7 +199,7 @@ O tipo devolvido por `max` é do mesmo tipo dos argumentos ou itens reais, como 
 
 Amostras de chamadas que casam com essas sobreposições:
 
-[source, python3]
+[source, python]
 ----
 max(1, 2, -3)  # returns 2
 max(['Go', 'Python', 'Rust'])  # returns 'Rust'
@@ -207,7 +207,7 @@ max(['Go', 'Python', 'Rust'])  # returns 'Rust'
 
 ===== Argumento key fornecido, mas default não
 
-[source, python3]
+[source, python]
 ----
 @overload
 def max(__arg1: T, __arg2: T, *_args: T, key: Callable[[T], LT]) -> T:
@@ -224,7 +224,7 @@ O tipo devolvido por `max` é o mesmo dos argumentos reais.
 
 Amostras de chamadas que casam com essas sobreposições:
 
-[source, python3]
+[source, python]
 ----
 max(1, 2, -3, key=abs)  # returns -3
 max(['Go', 'Python', 'Rust'], key=len)  # returns 'Python'
@@ -232,7 +232,7 @@ max(['Go', 'Python', 'Rust'], key=len)  # returns 'Python'
 
 ===== Argumento default fornecido, key não
 
-[source, python3]
+[source, python]
 ----
 @overload
 def max(__iterable: Iterable[LT], *, key: None = ...,
@@ -246,7 +246,7 @@ Assim, o tipo devolvido por `max` deve ser uma `Union` do tipo `LT` e do tipo do
 
 Amostras de chamadas que casam com essas sobreposições:
 
-[source, python3]
+[source, python]
 ----
 max([1, 2, -3], default=0)  # returns 2
 max([], default=None)  # returns None
@@ -255,7 +255,7 @@ max([], default=None)  # returns None
 
 ===== Argumentos key e default fornecidos
 
-[source, python3]
+[source, python]
 ----
 @overload
 def max(__iterable: Iterable[T], *, key: Callable[[T], LT],
@@ -272,7 +272,7 @@ As entradas são:
 O tipo devolvido por `max` deve ser uma `Union` do tipo `T` e do tipo do argumento `default`:
 
 
-[source, python3]
+[source, python]
 ----
 max([1, 2, -3], key=abs, default=None)  # returns -3
 max([], key=abs, default=None)  # returns None
@@ -371,7 +371,7 @@ Vamos explorar o comportamento de um `BookDict` durante a execução (no <<bookd
 [[bookdict_first_use_ex]]
 .Usando um `BookDict`, mas não exatamente como planejado
 ====
-[source, pycon]
+[source, python]
 ----
 >>> from books import BookDict
 >>> pp = BookDict(title='Programming Pearls',  # <1>
@@ -746,7 +746,7 @@ def clip(text: str, max_len: int = 80) -> str:
 
 As dicas de tipo são armazenadas em um `dict` no atributo `+__annotations__+` da função:
 
-[source, pycon]
+[source, python]
 ----
 >>> from clip_annot import clip
 >>> clip.__annotations__
@@ -826,7 +826,7 @@ Para demonstrar seu efeito, coloquei a mesma função `clip` do <<ex_clip_annot>
 
 No console, esse é o resultado de importar aquele módulo e ler as anotações de `clip`:
 
-[source, pycon]
+[source, python]
 ----
 >>> from clip_annot_post import clip
 >>> clip.__annotations__
@@ -837,7 +837,7 @@ Como se vê, todas as dicas de tipo são agora strings simples, apesar de não t
 
 A função `typing.get_type_hints` consegue resolver muitas dicas de tipo, incluindo essas de `clip`:
 
-[source, pycon]
+[source, python]
 ----
 >>> from clip_annot_post import clip
 >>> from typing import get_type_hints
@@ -1292,7 +1292,7 @@ A((("gradual type system", "implementing generic static protocols", id="GTSgenst
 Um deles é `SupportsAbs`, implementado assim no
 https://fpy.li/15-34[módulo _typing_]:
 
-[source, python3]
+[source, python]
 ----
 @runtime_checkable
 class SupportsAbs(Protocol[T_co]):
@@ -1307,7 +1307,7 @@ class SupportsAbs(Protocol[T_co]):
 
 `T_co` é declarado de acordo com a convenção de nomenclatura:
 
-[source, python3]
+[source, python]
 ----
 T_co = TypeVar('T_co', covariant=True)
 ----
@@ -1317,7 +1317,7 @@ Graças a `SupportsAbs`, o Mypy considera válido o seguinte código, como visto
 [[ex_abs_demo]]
 ._abs_demo.py_: uso do protocolo genérico `SupportsAbs`
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/15-more-types/protocol/abs_demo.py[]
 ----
@@ -1338,7 +1338,7 @@ O <<ex_generic_randompick_protocol>> mostra como criar um `RandomPicker` genéri
 [[ex_generic_randompick_protocol]]
 ._generic_randompick.py_: definição do `RandomPicker` genérico
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/15-more-types/protocol/random/generic_randompick.py[]
 ----
@@ -1564,7 +1564,7 @@ Se nem `in` nem `out` aparecem, então a classe é invariante naquele parâmetro
 Isso sugere que uma boa convenção para nomenclatura de variáveis de tipo covariante e
 contravariantes no Python seria:
 
-[source, python3]
+[source, python]
 ----
 T_out = TypeVar('T_out', covariant=True)
 T_in = TypeVar('T_in', contravariant=True)
@@ -1572,7 +1572,7 @@ T_in = TypeVar('T_in', contravariant=True)
 
 Aí poderíamos definir as classes assim:
 
-[source, python3]
+[source, python]
 ----
 class BeverageDispenser(Generic[T_out]):
     ...

@@ -54,7 +54,7 @@ Entretanto, pela((("&#x005F;&#x005F;repr&#x005F;&#x005F;")))((("&#x005F;&#x005F;
 [[ex_vector_demo]]
 .Testes de pass:[<code>Vector.&#x5f;&#x5f;init&#x5f;&#x5f;</code>] e pass:[<code>Vector.&#x5f;&#x5f;repr&#x5f;&#x5f;</code>]
 ====
-[source, pycon]
+[source, python]
 ----
 >>> Vector([3.1, 4.2])
 Vector([3.1, 4.2])
@@ -116,7 +116,7 @@ No contexto da programação orientada a objetos, um protocolo é uma interface 
 [[ex_pythonic_deck_rep]]
 .Código do <<ex_pythonic_deck>>, reproduzido aqui por conveniência
 ====
-[source, python3]
+[source, python]
 ----
 include::../code/01-data-model/frenchdeck.py[]
 ----
@@ -153,7 +153,7 @@ Vamos agora implementar o protocolo sequência em `Vector`, primeiro sem suporte
 
 Como((("Vector class, multidimensional", "sliceable sequences", id="VCMslice12")))((("sequences, special methods for", "sliceable sequences", id="SSMslice12")))((("slicing", "sliceable sequences", id="Sslseq12")))((("&#x005F;&#x005F;len&#x005F;&#x005F;", id="len12")))((("&#x005F;&#x005F;getitem&#x005F;&#x005F;", id="getitem12"))) vimos no exemplo da classe `FrenchDeck`, suportar o protocolo de sequência é muito fácil se você puder delegar para um atributo sequência em seu objeto, como nosso array `self._components`. Esses `+__len__+` e `+__getitem__+` de uma linha são um bom começo:
 
-[source, python3]
+[source, python]
 ----
 class Vector:
     # many lines omitted
@@ -168,7 +168,7 @@ class Vector:
 
 Após tais acréscimos, agora todas as seguintes operações funcionam:
 
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([3, 4, 5])
 >>> len(v1)
@@ -198,7 +198,7 @@ Uma demonstração vale mais que mil palavras, então dê uma olhada no <<ex_sli
 [[ex_slice0]]
 .Examinando o comportamento de `+__getitem__+` e fatias
 ====
-[source, pycon]
+[source, python]
 ----
 >>> class MySeq:
 ...     def __getitem__(self, index):
@@ -229,7 +229,7 @@ Vamos agora olhar mais de perto a própria classe `slice`, no <<ex_slice1>>.
 [[ex_slice1]]
 .Inspecionando os atributos da classe `slice`
 ====
-[source, pycon]
+[source, python]
 ----
 >>> slice  # <1>
 <class 'slice'>
@@ -254,7 +254,7 @@ Em outras palavras, `indices` expõe a lógica complexa implementada nas sequên
 
 Aqui estão dois exemplos, considerando uma sequência de `len == 5`, por exemplo `'ABCDE'`:
 
-[source, pycon]
+[source, python]
 ----
 >>> slice(None, 10, 2).indices(5)  # <1>
 (0, 5, 2)
@@ -305,7 +305,7 @@ Após a adição do código do <<ex_vector_v2>> à classe `Vector` class, temos 
 [[ex_vector_v2_demo]]
 .Testes do `+Vector.__getitem__+` aperfeiçoado, do <<ex_vector_v2>>
 ====
-[source, pycon]
+[source, python]
 ----
 include::../code/12-seq-hacking/vector_v2.py[tags=VECTOR_V2_DEMO]
 ----
@@ -322,7 +322,7 @@ Ao((("Vector class, multidimensional", "dynamic attribute access", id="VCMdyn12"
 
 Aqui está a sintaxe alternativa que queremos oferecer para a leitura dos quatro primeiros componentes de um vetor:
 
-[source, pycon]
+[source, python]
 ----
 >>> v = Vector(range(10))
 >>> v.x
@@ -359,7 +359,7 @@ Não é difícil implementar `+__getattr__+`, mas neste caso não é o suficient
 [[ex_vector_v3_getattr_bug]]
 .Comportamento inapropriado: realizar uma atribuição a `v.x` não gera um erro, mas introduz uma inconsistência
 ====
-[source, pycon]
+[source, python]
 ----
 >>> v = Vector(range(5))
 >>> v
@@ -450,7 +450,7 @@ Até aqui vimos que `functools.reduce()` pode ser substituída por `sum()`. Vamo
 
 Aqui está como `reduce` poderia ser usada para computar `5!` (o fatorial de 5):
 
-[source, pycon]
+[source, python]
 ----
 >>> 2 * 3 * 4 * 5  # the result we want: 5! == 120
 120
@@ -464,7 +464,7 @@ Voltando a nosso problema de _hash_, o <<ex_reduce_xor>> demonstra a ideia da co
 [[ex_reduce_xor]]
 .Três maneiras de calcular o xor acumulado de inteiros de 0 a 5
 ====
-[source, pycon]
+[source, python]
 ----
 >>> n = 0
 >>> for i in range(1, 6):  # <1>
@@ -494,7 +494,7 @@ Para escrever `+Vector.__hash__+` no meu estilo preferido precisamos importar os
 [[ex_vector_v4]]
 .Parte de vector_v4.py: duas importações e o método `+__hash__+` adicionados à classe `Vector` de vector_v3.py
 ====
-[source, python3]
+[source, python]
 ----
 from array import array
 import reprlib
@@ -539,7 +539,7 @@ image::../images/flpy_1202.png[Diagrama de map-reduce]
 
 A etapa de mapeamento produz um _hash_ para cada componente, e a etapa de redução agrega todos os _hashes_ com o operador +xor+. Se usarmos `map` em vez de uma _genexp_, a etapa de mapeamento fica ainda mais visível:
 
-[source, python3]
+[source, python]
 ----
     def __hash__(self):
         hashes = map(hash, self._components)
@@ -555,7 +555,7 @@ e assim economiza memória—exatamente como a expressão geradora que usamos no
 
 E enquanto estamos falando de funções de redução, podemos substituir nossa implementação apressada de `+__eq__+` com uma outra, menos custosa em termos de processamento e uso de memória, pelo menos para vetores grandes. Como visto no <<ex_vector2d_v0>>, temos esta implementação bastante concisa de `+__eq__+`:
 
-[source, python3]
+[source, python]
 ----
     def __eq__(self, other):
         return tuple(self) == tuple(other)
@@ -572,7 +572,7 @@ Uma forma melhor de comparar um `Vector` com outro `Vector` ou iterável seria o
 [[ex_eq_loop]]
 .A implementação de `+Vector.__eq__+` usando `zip` em um loop `for`, para uma comparação mais eficiente
 ====
-[source, python3]
+[source, python]
 ----
     def __eq__(self, other):
         if len(self) != len(other):  # <1>
@@ -600,7 +600,7 @@ Assim que uma comparação é `False`, `all` devolve `False`. O <<ex_eq_all>> mo
 [[ex_eq_all]]
 .A implementação de `+Vector.__eq__+` usando `zip` e `all`: mesma lógica do <<ex_eq_loop>>
 ====
-[source, python3]
+[source, python]
 ----
     def __eq__(self, other):
         return len(self) == len(other) and all(a == b for a, b in zip(self, other))
@@ -621,7 +621,7 @@ Ter um loop `for` que itera sobre itens sem perder tempo com variáveis de índi
 [[zip_demo]]
 .A função embutida `zip` trabalhando
 ====
-[source, pycon]
+[source, python]
 ----
 >>> zip(range(3), 'ABC')  # <1>
 <zip object at 0x10063ae48>
@@ -652,7 +652,7 @@ Isso foi implementado no Python 3.10.
 A função `zip` pode também ser usada para transpor uma matriz, representada como iteráveis aninhados.
 Por exemplo:
 
-[source, pycon]
+[source, python]
 ----
 >>> a = [(1, 2, 3),
 ...      (4, 5, 6)]
@@ -694,7 +694,7 @@ Por exemplo, dado um objeto `Vector` em um espaço 4D (`len(v) == 4`), o código
 
 Aqui estão algumas amostras do formato de coordenadas esféricas em 4D, retiradas dos doctests de _vector_v5.py_ (veja o <<ex_vector_v5>>):
 
-[source, pycon]
+[source, python]
 ----
 >>> format(Vector([-1, -1, -1, -1]), 'h')
 '<2.0, 2.0943951023931957, 2.186276035465284, 3.9269908169872414>'
@@ -813,7 +813,7 @@ Na https://fpy.li/12-11[Python-list] (EN), há uma thread de abril de 2003 chama
 
 O autor original, Guy Middleton, pediu melhorias para essa solução, afirmando não gostar de usar `lambda`:footnote:[Adaptei o código apresentado aqui: em 2003, `reduce` era uma função embutida, mas no Python 3 precisamos importá-la; também substitui os nomes `x` e `y` por `my_list` e `sub` (para sub-lista).]
 
-[source, pycon]
+[source, python]
 ----
 >>> my_list = [[1, 2, 3], [40, 50, 60], [9, 8, 7]]
 >>> import functools
@@ -827,7 +827,7 @@ Se você vai usar `lambda`, provavelmente não há razão para usar uma compreen
 
 Aqui está uma solução minha que agradará os amantes de `lambda`:
 
-[source, pycon]
+[source, python]
 ----
 >>> functools.reduce(lambda a, b: a + b[1], my_list, 0)
 60
@@ -839,7 +839,7 @@ Mas eu queria mostrar um exemplo sem uma compreensão de lista.
 
 A primeira resposta veio de Fernando Perez, criador do IPython, e realça como o NumPy suporta arrays _n_-dimensionais e fatiamento _n_-dimensional:
 
-[source, pycon]
+[source, python]
 ----
 >>> import numpy as np
 >>> my_array = np.array(my_list)
@@ -849,7 +849,7 @@ A primeira resposta veio de Fernando Perez, criador do IPython, e realça como o
 
 Acho a solução de Perez boa, mas Guy Middleton elegiou essa próxima solução, de Paul Rubin e Skip Montanaro:
 
-[source, pycon]
+[source, python]
 ----
 >>> import operator
 >>> functools.reduce(operator.add, [sub[1] for sub in my_list], 0)
@@ -858,7 +858,7 @@ Acho a solução de Perez boa, mas Guy Middleton elegiou essa próxima solução
 
 Então Evan Simpson perguntou, "Há algo errado com isso?":
 
-[source, pycon]
+[source, python]
 ----
 >>> total = 0
 >>> for sub in my_list:
@@ -886,7 +886,7 @@ A soma é necessária com tanta frequência que eu não me importaria de forma a
 ____
 
 Martelli então sugere uma função `sum()`, que ele mesmo programa e propõe para Python. Ela se torna uma função embutida no Python 2.3, lançado apenas três meses após aquela conversa na lista. E a sintaxe preferida de Alex se torna a regra:
-[source, pycon]
+[source, python]
 ----
 >>> sum([sub[1] for sub in my_list])
 60
@@ -894,7 +894,7 @@ Martelli então sugere uma função `sum()`, que ele mesmo programa e propõe pa
 
 No final do ano seguinte (novembro de 2004), Python 2.4 foi lançado e incluía expressões geradoras, fornecendo o que agora é, na minha opinião, a resposta mais pythônica para a pergunta original de Guy Middleton:
 
-[source, pycon]
+[source, python]
 ----
 >>> sum(sub[1] for sub in my_list)
 60

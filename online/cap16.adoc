@@ -8,7 +8,7 @@ ____
 
 Em((("operator overloading", "infix operators")))((("infix operators"))) Python, podemos calcular juros compostos usando uma fórmula escrita assim:
 
-[source, python3]
+[source, python]
 ----
 interest = principal * ((1 + rate) ** periods - 1)
 ----
@@ -143,7 +143,7 @@ Podemos encontrar o segundo caso onde `x != +x` na https://docs.python.org/pt-br
 [[ex_unary_plus_counter]]
 .O + unário produz um novo `Counter`sem as contagens negativas ou zero
 ====
-[source, pycon]
+[source, python]
 ----
 >>> ct = Counter('abracadabra')
 >>> ct
@@ -176,7 +176,7 @@ Entretanto, aqui vamos implementar `+` e `*` como operações matemáticas de ve
 ====
 Usuários que desejem concatenar ou repetir instâncias de `Vector` podem convertê-las para tuplas ou listas, aplicar o operador e convertê-las de volta—graças ao fato de `Vector` ser iterável e poder ser criado a partir de um iterável:
 
-[source, pycon]
+[source, python]
 ----
 >>> v_concatenated = Vector(list(v1) + list(v2))
 >>> v_repeated = Vector(tuple(v1) * 5)
@@ -185,7 +185,7 @@ Usuários que desejem concatenar ou repetir instâncias de `Vector` podem conver
 
 Somar dois vetores euclidianos resulta em um novo vetor no qual os componentes são as somas pareadas dos componentes dos operandos. Ilustrando:
 
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([3, 4, 5])
 >>> v2 = Vector([6, 7, 8])
@@ -197,7 +197,7 @@ True
 
 E o que acontece se tentarmos somar duas instâncias de `Vector` de tamanhos diferentes? Poderíamos gerar um erro, mas considerando as aplicações práticas (tal como recuperação de informação), é melhor preencher o `Vector` menor com zeros. Esse é o resultado que queremos:
 
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([3, 4, 5, 6])
 >>> v3 = Vector([1, 2])
@@ -210,7 +210,7 @@ Dados esses requerimentos básicos, podemos implementar `+__add__+` como no <<ex
 [[ex_vector_add_t1]]
 .Método `+Vector.__add__+`, versão #1
 ====
-[source, python3]
+[source, python]
 ----
     # inside the Vector class
 
@@ -235,7 +235,7 @@ O <<ex_vector_add_t1>> permite somar um `Vector` a um `Vector2d`, e `Vector` a u
 [[ex_vector_add_demo_mixed_ok]]
 .Nossa versão #1 de `+Vector.__add__+` também aceita objetos diferentes de ++Vector++
 ====
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([3, 4, 5])
 >>> v1 + (10, 20, 30)
@@ -255,7 +255,7 @@ Entretanto, se trocarmos a ordem dos operandos (no <<ex_vector_add_demo_mixed_fa
 [[ex_vector_add_demo_mixed_fail]]
 .A versão #1 de `+Vector.__add__+` falha com se o operador da esquerda não for um `Vector
 ====
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([3, 4, 5])
 >>> (10, 20, 30) + v1
@@ -299,7 +299,7 @@ A implementação viável mais simples de `+__radd__+` aparece no <<ex_vector_ad
 [[ex_vector_add_t2]]
 .Os  métodos `+__add__+` e `+__radd__+` de `Vector`
 ====
-[source, python3]
+[source, python]
 ----
     # inside the Vector class
 
@@ -318,7 +318,7 @@ Muitas vezes, `+__radd__+` pode ser simples assim: apenas a invocação do opera
 
 Se `+__radd__+` apenas invoca `+__add__+`, aqui está outra forma de obter o mesmo efeito:
 
-[source, python3]
+[source, python]
 ----
     def __add__(self, other):
         pairs = itertools.zip_longest(self, other, fillvalue=0.0)
@@ -332,7 +332,7 @@ Os métodos no <<ex_vector_add_t2>> funcionam com objetos `Vector` ou com qualqu
 [[ex_vector_error_iter]]
 .O método `+Vector.__add__+` precisa de operandos iteráveis
 ====
-[source, pycon]
+[source, python]
 ----
 >>> v1 + 1
 Traceback (most recent call last):
@@ -348,7 +348,7 @@ E pior ainda, recebemos uma mensagem enganosa se um operando for iterável mas s
 [[ex_vector_error_iter_not_add]]
 .O método `+Vector.__add__+` precisa de um iterável com itens numéricos
 ====
-[source, pycon]
+[source, python]
 ----
 >>> v1 + 'ABC'
 Traceback (most recent call last):
@@ -394,7 +394,7 @@ Agora que já sobrecarregamos o operador `+` com segurança, implementando `+__a
 
 O((("operator overloading", "overloading &#x002A; for scalar multiplication", id="OOscalar16")))((("* (star) operator", id="starover16")))((("star (*) operator", id="staroverb16")))((("multiplication, scalar", id="Mscalar16"))) que significa `Vector([1, 2, 3]) * x`? Se `x` é um número, isso seria um produto escalar, e o resultado seria um novo `Vector` com cada componente multiplicado por `x`—também conhecida como multiplicação elemento a elemento (_elementwise multiplication_):
 
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([1, 2, 3])
 >>> v1 * 10
@@ -411,7 +411,7 @@ Vamos implementar esse operador em nossa classe `Vector` na <<matmul_operator_se
 
 De volta a nosso produto escalar, começamos novamente com os métodos `+__mul__+` e `+__rmul__+` mais simples possíveis que possam funcionar:
 
-[source, python3]
+[source, python]
 ----
     # inside the Vector class
 
@@ -430,7 +430,7 @@ Esse é um exemplo claro de _duck typing_.
 [[ex_vector_v7]]
 .vector_v7.py: métodos do operador `*` adicionados
 ====
-[source, python3]
+[source, python]
 ----
 class Vector:
     typecode = 'd'
@@ -458,7 +458,7 @@ class Vector:
 
 Com o <<ex_vector_v7>>, é possível multiplicar um `Vector` por valores escalares de tipos numéricos comuns e não tão comuns:
 
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([1.0, 2.0, 3.0])
 >>> 14 * v1
@@ -504,7 +504,7 @@ O analisador sintático de Python também foi modificado para aceitar o novo ope
 
 Os testes simples abaixo mostram como `@` deve funcionar com instâncias de `Vector`:
 
-[source, pycon]
+[source, python]
 ----
 >>> va = Vector([1, 2, 3])
 >>> vz = Vector([5, 6, 7])
@@ -521,7 +521,7 @@ TypeError: unsupported operand type(s) for @: 'Vector' and 'int'
 O resultado de `va @ vz` no exemplo acima é o mesmo que obtemos no NumPy
 fazendo o produto escalar de arrays com os mesmos valores:
 
-[source, pycon]
+[source, python]
 ----
 >>> import numpy as np
 >>> np.array([1, 2, 3]) @ np.array([5, 6, 7])
@@ -535,7 +535,7 @@ O <<ex_vector_v7_matmul>> mostra o código dos métodos especiais relevantes na 
 [[ex_vector_v7_matmul]]
 .vector_v7.py: operator `@` methods
 ====
-[source, python3]
+[source, python]
 ----
 class Vector:
     # many methods omitted in book listing
@@ -629,7 +629,7 @@ O((("operator overloading", "rich comparison operators", id="OOrich16")))((("ric
 
 Dadas essas regras, vamos revisar e aperfeiçoar o comportamento do método `+Vector.__eq__+`, que foi escrito assim no __vector_v5.py__ (<<ex_vector_v5>>):
 
-[source, python3]
+[source, python]
 ----
 class Vector:
     # many lines omitted
@@ -644,7 +644,7 @@ Esse método produz os resultados do <<eq_initial_demo>>.
 [[eq_initial_demo]]
 .Comparando um `Vector` a um `Vector`, a um `Vector2d`, e a uma `tuple`
 ====
-[source, pycon]
+[source, python]
 ----
 >>> va = Vector([1.0, 2.0, 3.0])
 >>> vb = Vector(range(1, 4))
@@ -695,7 +695,7 @@ Rodando os testes do <<eq_initial_demo>> com o novo `+Vector.__eq__+` do <<ex_ve
 [[eq_demo_new_eq]]
 .Mesmas comparações do <<eq_initial_demo>>: o último resultado mudou
 ====
-[source, pycon]
+[source, python]
 ----
 >>> va = Vector([1.0, 2.0, 3.0])
 >>> vb = Vector(range(1, 4))
@@ -737,7 +737,7 @@ quando `+__eq__+` é definido e não devolve `NotImplemented`, `+__ne__+` devolv
 
 Em outras palavras, dados os mesmos objetos que usamos no <<eq_demo_new_eq>>, os resultados para `!=` são consistentes:
 
-[source, python3]
+[source, python]
 ----
 >>> va != vb
 False
@@ -750,7 +750,7 @@ True
 O `+__ne__+` herdado de `object` funciona como o código abaixo—exceto pelo original estar escrito em C:footnote:[A lógica para `+object.__eq__+` e
 `+object.__ne__+` está na função `object_richcompare` em https://fpy.li/16-9[_Objects/typeobject.c_], no código-fonte do CPython.]
 
-[source, python3]
+[source, python]
 ----
     def __ne__(self, other):
         eq_result = self == other
@@ -773,7 +773,7 @@ O <<eq_demo_augm_assign_immutable>> os mostra em ação.
 [[eq_demo_augm_assign_immutable]]
 .Usando `+=` e `*=` com instâncias de `Vector`
 ====
-[source, pycon]
+[source, python]
 ----
 >>> v1 = Vector([1, 2, 3])
 >>> v1_alias = v1  # <1>
@@ -931,7 +931,7 @@ A principal referência para os métodos especiais de operadores é o https://do
 Um exemplo brilhante de sobrecarga de operadores apareceu no pacote https://fpy.li/16-13[`pathlib`], adicionado no Python 3.4.
 Sua classe `Path` sobrecarrega o operador `/` para construir caminhos do sistema de arquivos a partir de strings, como mostra o exemplo abaixo, da documentação:
 
-[source, pycon]
+[source, python]
 ----
 >>> p = Path('/etc')
 >>> q = p / 'init.d' / 'reboot'
@@ -987,7 +987,7 @@ Se você olhar de perto o _traceback_ no <<ex_vector_error_iter_not_add>>, vai e
 [[ex_vector_error_iter_not_add_repeat]]
 .Mesmo que o <<ex_vector_error_iter_not_add>>
 ====
-[source, pycon]
+[source, python]
 ----
 >>> v1 + 'ABC'
 Traceback (most recent call last):
