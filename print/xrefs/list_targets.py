@@ -16,7 +16,7 @@ def main(adoc_names):
         for line in lines:
             if line.startswith('[['):
                 ch_id = line.strip()[2:-2]
-                print(vol_of_chapter(ch), ch, ch_id, sep='\t')
+                print(f'    {ch} : {ch_id!r},')
                 break
 
 if __name__ == '__main__':
