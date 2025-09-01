@@ -164,7 +164,7 @@ def replace_xrefs_to_vols():
         else:
             raise ValueError(f'unexpected xref: {xref!r}')
         link = BASE_URL + '#' + xref
-        print(f'<<{xref}>>', f'{text} [vol.{volume}, fpy.li{SHORT_URLS[link]}]')
+        print(f'<<{xref}>>', f'{text} &#91;vol.{volume}, fpy.li{SHORT_URLS[link]}&#93;')
 
 
 if __name__ == '__main__':
