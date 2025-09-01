@@ -98,6 +98,49 @@ PART_TITLE = {
     'metaprog_part': 'V—Metaprogramação',
 }
 
+SHORTENER_OUTPUT = '''
++ /4q	https://pythonfluente.com/2/#ch_ifaces_prot_abc
++ /4r	https://pythonfluente.com/2/#ch_op_overload
++ /4s	https://pythonfluente.com/2/#ch_generators
++ /4t	https://pythonfluente.com/2/#ch_seq_methods
+= /22	https://pythonfluente.com/2/#pattern_matching_case_study_sec
++ /4v	https://pythonfluente.com/2/#classes_protocols_part
++ /4w	https://pythonfluente.com/2/#how_slicing_works_sec
++ /4x	https://pythonfluente.com/2/#sliceable_sequence_sec
+= /25	https://pythonfluente.com/2/#virtual_subclass_sec
++ /4y	https://pythonfluente.com/2/#lispy_environ_sec
++ /4z	https://pythonfluente.com/2/#subclass_builtin_woes_sec
++ /52	https://pythonfluente.com/2/#slots_sec
+= /29	https://pythonfluente.com/2/#typeddict_sec
++ /53	https://pythonfluente.com/2/#ch_class_metaprog
+= /2a	https://pythonfluente.com/2/#problems_annot_runtime_sec
++ /54	https://pythonfluente.com/2/#ch_more_types
++ /55	https://pythonfluente.com/2/#ch_descriptors
++ /56	https://pythonfluente.com/2/#ch_inheritance
+= /2c	https://pythonfluente.com/2/#positional_pattern_implement_sec
++ /57	https://pythonfluente.com/2/#ch_async
++ /58	https://pythonfluente.com/2/#runtime_annot_sec
++ /59	https://pythonfluente.com/2/#multi_hashing_sec
++ /5a	https://pythonfluente.com/2/#iterable_reducing_sec
++ /5b	https://pythonfluente.com/2/#flexible_new_sec
++ /5c	https://pythonfluente.com/2/#ch_closure_decorator
++ /5d	https://pythonfluente.com/2/#ch_design_patterns
++ /5e	https://pythonfluente.com/2/#lispy_parser_sec
++ /5f	https://pythonfluente.com/2/#overload_sec
++ /5g	https://pythonfluente.com/2/#numbers_abc_proto_sec
++ /5h	https://pythonfluente.com/2/#runtime_checkable_proto_sec
++ /5j	https://pythonfluente.com/2/#variance_sec
++ /5k	https://pythonfluente.com/2/#generic_iterable_types_sec
++ /5m	https://pythonfluente.com/2/#typed_double_sec
++ /5n	https://pythonfluente.com/2/#enhancing_with_init_subclass_sec
++ /5p	https://pythonfluente.com/2/#more_type_hints_further_sec
++ /5q	https://pythonfluente.com/2/#max_overload_sec
+'''
+
+SHORT_URLS = {line.split()[2]:line.split()[1] for line
+              in SHORTENER_OUTPUT.strip().split('\n')}
+
+
 def replace_xrefs_to_vols():
     html_path = find_git_root() / 'online/index.html'
     with open(html_path) as fp:
@@ -121,7 +164,8 @@ def replace_xrefs_to_vols():
         else:
             raise ValueError(f'unexpected xref: {xref!r}')
         link = BASE_URL + '#' + xref
-        print(f'<<{xref}>>', f'{text} [vol.{volume}, {link}]')
+        print(f'<<{xref}>>', f'{text} [vol.{volume}, fpy.li{SHORT_URLS[link]}]')
+
 
 if __name__ == '__main__':
     replace_xrefs_to_vols()
