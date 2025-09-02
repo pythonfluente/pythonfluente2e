@@ -1,7 +1,7 @@
 ---
 name: Revisão preprint
 about: Relate um ou mais problemas em um PDF do preprint
-title: "[ERRATA] <algumas palavras para identificar o issue>"
+title: "[ERRATA] capítulo <N>, <mais contexto>"
 labels: impresso
 assignees: ramalho
 
@@ -20,4 +20,4 @@ Coloque a solução se for fácil. Ex. "o jogo de turco é massa" , deveria ser 
 Pode repetir as seções **Página lógica** e **Defeito** no mesmo _issue_.
 
 **PR (opcional) **
-Se souber e quiser fazer um _pull request_, primeiro cadastre o issue depois o PR referenciando o issue (ou mais de um).
+Se souber e quiser fazer um _pull request_, primeiro cadastre o issue depois o PR referenciando o issue (ou mais de um). O PR corrigindo vários erros deve deve alterar somente um capítulo. Se o mesmo erro ocorre em vários capítulos, submeta um PR somente para corrigir este erro nos vários capítulos.
