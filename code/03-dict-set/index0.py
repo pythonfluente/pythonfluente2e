@@ -3,7 +3,7 @@
 # (slide 41) Ex: lines-by-word file index
 
 # tag::INDEX0[]
-"""Build an index mapping word -> list of occurrences"""
+"""Constrói um índice que mapeie cada palavra → lista de ocorrências"""
 
 import re
 import sys
@@ -17,12 +17,12 @@ with open(sys.argv[1], encoding='utf-8') as fp:
             word = match.group()
             column_no = match.start() + 1
             location = (line_no, column_no)
-            # this is ugly; coded like this to make a point
+            # isso está feio; é apenas para ilustrar
             occurrences = index.get(word, [])  # <1>
             occurrences.append(location)       # <2>
             index[word] = occurrences          # <3>
 
-# display in alphabetical order
+# exibe em ordem alfabética
 for word in sorted(index, key=str.upper):      # <4>
     print(word, index[word])
 # end::INDEX0[]

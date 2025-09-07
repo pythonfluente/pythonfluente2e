@@ -3,7 +3,7 @@
 # (slide 41) Ex: lines-by-word file index
 
 # tag::INDEX_DEFAULT[]
-"""Build an index mapping word -> list of occurrences"""
+"""Constrói um índice que mapeie cada palavra → lista de ocorrências"""
 
 import collections
 import re
@@ -20,7 +20,7 @@ with open(sys.argv[1], encoding='utf-8') as fp:
             location = (line_no, column_no)
             index[word].append(location)  # <2>
 
-# display in alphabetical order
+# exibe em ordem alfabética
 for word in sorted(index, key=str.upper):
     print(word, index[word])
 # end::INDEX_DEFAULT[]
