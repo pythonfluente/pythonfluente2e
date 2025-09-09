@@ -33,7 +33,7 @@ def count_non_ascii(lines, counter=None) -> Counter[str]:
     return non_ascii
 
 
-def arrange_sample(sample, row_len, filler=None):
+def arrange_sample(sample, row_len, filler='x'):
     '''
     Break `sample` iterable into rows of `row_len` items,
     filling the empty places in the last row if needed.
@@ -45,7 +45,9 @@ def arrange_sample(sample, row_len, filler=None):
     source = list(sample)
     rows = []
     for start in range(0, len(source), row_len):
-        row = source[start:start+row_len]
+        chars = source[start:start+row_len]
+        chars = [(c if c != '\N{REPLACEMENT CHARACTER}' else '?') for c in chars]
+        row = [f'&#x{ord(c):x};' for c in chars]
         if len(row) < row_len:
             row.extend([filler]*(row_len-len(row)))
         rows.append(row)
@@ -59,6 +61,23 @@ def compact_display(characters, row_width):
             print('|'+cell, end='')
         print()
 
+def detail_display(counter, key=None):
+    uchars: list[UniChar] = []
+
+    for char, count in ((c, n) for c, n in counter.items()
+                        if ord(c) >= 256):
+        name = unicodedata.name(char)
+        categ = unicodedata.category(char)
+        uchars.append(UniChar(char, name, categ, count))
+
+    if key is not None:
+        uchars.sort(key=key)
+
+    print('[cols=">2,^1,11,1,>1"]')
+    print('|====')
+    for char, name, categ, count in uchars:
+        print(f'|`U+{ord(char):04x}`|{char}|{name}|{categ}|{count}')
+    print('|====')
 
 def main():
     print('Generated', strftime('%H:%M:%S'))
@@ -72,31 +91,20 @@ def main():
     print('|====')
 
     print('\n## CP1252\n')
-    octets = bytes(i for i in range(129, 160))
+    octets = bytes(i for i in range(128, 160))
     cp1252 = octets.decode('cp1252', errors='replace')
-    used = (char for char in cp1252 if char in non_ascii)
-    print('|====')
-    compact_display(used, num_cols)
-    print('|====')
+    used = {char:count for char, count in non_ascii.items() if char in cp1252}
+    # print('|====')
+    # compact_display(used.keys(), num_cols)
+    # print('|====')
 
+    detail_display(used, key=lambda uc: -uc.count)
 
     print('\n## Other')
 
-    uchars: list[UniChar] = []
-
-    for char, count in ((c, n) for c, n in non_ascii.items()
-                        if ord(c) >= 256):
-        name = unicodedata.name(char)
-        categ = unicodedata.category(char)
-        uchars.append(UniChar(char, name, categ, count))
-
-    uchars.sort(key=attrgetter('categ', 'count'))
-
-    print('[cols=">3,^1,11,1,>1"]')
-    print('|====')
-    for char, name, categ, count in uchars:
-        print(f'|`U+{ord(char):04x}`|{char}|{name}|{categ}|{count}')
-    print('|====')
+    detail_display({c : n for c, n in non_ascii.items() 
+                          if (ord(c) >= 256) and c not in cp1252},
+                   key=attrgetter('categ', 'count'))
 
 
 if __name__ == '__main__':
