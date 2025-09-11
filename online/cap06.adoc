@@ -18,21 +18,21 @@ ____
 
 Alice e o Cavaleiro((("object references", "distinction between objects and their names")))
 dão o tom do que veremos nesse capítulo.
-O tema é a distinção entre objetos e seus nomes;
-um nome não é o objeto; o nome é outra coisa.
+O tema é a distinção entre objetos e seus nomes:
+o nome não é o objeto, o nome é outra coisa.
 
 Começamos o capítulo apresentando uma metáfora para variáveis em Python:
 variáveis são rótulos, não caixas.
-Se variáveis de referência não são novidade para você,
+Mesmo que você já domine variáveis de referência,
 a analogia pode ainda ser útil para ilustrar questões de _aliasing_ (“apelidamento”)
-para alguém.
+para outra pessoa.
 
 Depois discutimos os conceitos de identidade, valor e apelidamento de objetos.
 Uma característica surpreendente das tuplas é revelada:
 elas são imutáveis, mas seus valores podem mudar.
 Isso leva a uma discussão sobre cópias rasas e profundas.
 Referências e parâmetros de funções são o tema seguinte:
-o problema com parâmetros mutáveis por default e
+o problema do parâmetro com default mutável e
 formas seguras de lidar com argumentos mutáveis passados para nossas funções por clientes.
 
 As últimas seções do capítulo tratam de coleta de lixo (_garbage collection_),
@@ -81,7 +81,7 @@ O exemplo e a figura a seguir ajudam a entender o motivo disso.
 O <<ex_a_b_refs>> é uma interação simples que não pode ser explicada por “variáveis como caixas”.
 
 [[ex_a_b_refs]]
-.As variáveis a e b mantém referências para a mesma lista, não cópias da lista.
+.As variáveis `a` e `b` referem-se à mesma lista, não cópias da lista.
 ====
 [source, python]
 ----
@@ -116,10 +116,10 @@ ela dizia:
 Com variáveis de referência,
 faz mais sentido dizer que a variável é atribuída a um objeto, não o contrário.
 Afinal, o objeto é criado antes da atribuição.
-<<ex_var_assign_after>> prova que o lado direito de uma atribuição é processado primeiro.
+O <<ex_var_assign_after>> prova que o lado direito de uma atribuição é processado primeiro.
 
 Já que o verbo “atribuir” é usado de diferentes maneiras,
-uma “vincular” é uma alternativa melhor:
+“vincular” é uma alternativa melhor:
 a declaração de atribuição em Python `x = …` vincula o nome `x`
 ao objeto criado ou referenciado no lado direito.
 E o objeto precisa existir antes que um nome possa ser vinculado a ele,
@@ -212,7 +212,7 @@ Dodgson. <<alias_x_copy>> ilustra esse cenário.
 .`charles` e `lewis` estão vinculados ao mesmo objeto; `alex` está vinculado a um objeto diferente de valor igual.
 image::../images/flpy_0602.png[Alias x copy diagram]
 
-<<ex_equal_not_same>> implementa e testa o objeto +alex+ como apresentado em <<alias_x_copy>>.
+O <<ex_equal_not_same>> constrói e testa o objeto `alex` como apresentado em <<alias_x_copy>>.
 
 [[ex_equal_not_same]]
 .`alex` e `charles` são iguais quando comparados, mas `alex` _não é_ `charles`
@@ -329,11 +329,13 @@ quando se comparam coleções grandes ou estruturas aninhadas com muitos níveis
 
 [WARNING]
 ====
-Normalmente estamos mais interessados na igualdade que na identidade de objetos.
-Checar se o objeto é `None` é _o único_ caso de uso comum do operador `is`.
-A maioria dos outros usos que vejo quando reviso código estão errados.
-Se você não estiver seguro, use `==`. Em geral, é o que você quer,
-e ele também funciona com `None`, ainda que não tão rápido.
+Normalmente estamos mais interessados na igualdade que na identidade de objetos,
+por isso o operador `==` é mais utilizado que `is`.
+O caso mais comum para uso de `is` é comparar com `None`.
+O `is` também é útil para testar valores de classes derivadas de `enum.Enum`.
+Se não estiver seguro, use `==`. Em geral, é o que você quer,
+e ele também funciona com `None` e valores de `Enum`,
+ainda que seja um pouco mais lento.
 ====
 
 Para concluir essa discussão de identidade versus igualdade,
@@ -475,7 +477,7 @@ Agora as tuplas na última posição de `l1` e `l2` não são mais o mesmo objet
 Veja <<shallow_copy2>>.
 
 [[shallow_copy1]]
-.Estado do programa imediatamente após a atribuição `l2 = list(l1)` em <<ex_shallow_copy>>. `l1` e `l2` se referem a listas diferentes, mas as listas compartilham referências para um mesmo objeto interno, a lista `[66, 55, 44]` e para a tupla `(7, 8, 9)`. (Diagrama gerado pelo Online Python Tutor)
+.Estado do programa imediatamente após a atribuição `l2 = list(l1)` em <<ex_shallow_copy>>. `l1` e `l2` se referem a listas diferentes, mas as listas compartilham referências para os mesmos objetos internos, a lista `[66, 55, 44]` e para a tupla `(7, 8, 9)`. (Diagrama gerado pelo Online Python Tutor)
 image::../images/flpy_0603.png[References diagram]
 
 A saída de <<ex_shallow_copy>> é <<ex_shallow_copy_out>>,
@@ -527,9 +529,9 @@ include::../code/06-obj-ref/bus.py[tags=BUS_CLASS]
 ----
 ====
 
-Agora, no <<ex_bus1_console>> interativo, vamos criar um objeto +bus+ (+bus1+) e
-dois clones—uma cópia rasa (+bus2+) e uma cópia profunda
-(+bus3+)—para ver o que acontece quando `bus1` deixa um passageiro.
+Agora, no <<ex_bus1_console>> interativo, vamos criar um objeto `bus1` e
+dois clones: uma cópia rasa (`bus2`) e uma cópia profunda
+(`bus3`). Então vemos o que acontece quando `bus1` deixa um passageiro.
 
 [[ex_bus1_console]]
 .Os efeitos do uso de `copy` versus `deepcopy`
@@ -663,7 +665,7 @@ id="Pmut06"))) com valores default são um ótimo recurso para definição de fu
 permitindo que nossas APIs evoluam mantendo a compatibilidade com versões anteriores.
 Entretanto, evite usar objetos mutáveis como valores default em parâmetros.
 
-Para ilustrar porquê, no <<ex_haunted_bus>>,
+Para ilustrar o motivo, no <<ex_haunted_bus>>
 modificamos o método `+__init__+` da classe `Bus` do <<ex_bus1>> para criar `HauntedBus`.
 Tentamos ser espertos: em vez do valor default `passengers=None`,
 temos `passengers=[]`, para evitar o `if` do `+__init__+` anterior.
@@ -733,8 +735,8 @@ quando `HauntedBus` recebe uma lista com passageiros como parâmetro,
 ele funciona como esperado.
 Coisas estranhas acontecem somente quando `HauntedBus` começa vazio,
 pois aí `self.passengers` se torna um apelido para o valor default do parâmetro `passengers`.
-O problema é que cada valor default é processado quando a função é definida -- normalmente
-quando o módulo é carregado -- e os valores default se tornam atributos do objeto-função.
+O problema é que cada valor default é processado quando a função é definida—normalmente
+quando o módulo é carregado—e os valores default se tornam atributos do objeto-função.
 Assim, se o valor default é um objeto mutável e você o altera,
 a alteração vai afetar todas as futuras chamadas da função.
 
@@ -882,7 +884,7 @@ ____
 A((("del statement", id="del06"))) primeira surpresa de `del` é não ser uma função,
 mas uma instrução (_statement_).
 
-Escrevemos `del x` e não `del(x)` -- apesar dessa última forma funcionar também,
+Escrevemos `del x` e não `del(x)`—apesar dessa última forma funcionar também,
 mas apenas porque as expressões `x` e `(x)` em geral tem o mesmo significado em Python.
 
 O segundo aspecto surpreendente é que `del` apaga referências, não objetos.
@@ -927,7 +929,7 @@ Assim que a contagem chega a zero, o objeto é imediatamente destruído:
 CPython invoca o método `+__del__+` no objeto (se definido)
 e daí libera a memória alocada para aquele objeto.
 No CPython 2.0, um algoritmo de coleta de lixo geracional foi acrescentado,
-para detectar grupos de objetos envolvidos em referências cíclicas -- grupos que
+para detectar grupos de objetos envolvidos em referências cíclicas—grupos que
 podem ser inacessíveis mesmo que existam referências restantes,
 quando todas as referências mútuas estão contidas dentro daquele grupo.
 Outras implementações de Python tem coletores de lixo mais sofisticados,
@@ -941,7 +943,7 @@ Para demonstrar o fim da vida de um objeto, <<ex_finalize>> usa `weakref.finaliz
 para registrar uma função callback a ser chamada quando o objeto é destruído.
 
 [[ex_finalize]]
-.Assistindo o fim de um objeto quando não resta nenhuma referência apontando para ele
+.Detectando o fim de um objeto quando não resta nenhuma referência apontando para ele
 
 ====
 [source, python]
@@ -1034,42 +1036,48 @@ True
 <1> `t1` e `t2` estão vinculadas ao mesmo objeto
 <2> Assim como `t3`.
 
-O mesmo comportamento pode ser observado com instâncias de `str`, `bytes` e `frozenset`.
+Podemos observar o mesmo comportamento com instâncias de `str`, `bytes` e `frozenset`.
 Note que `frozenset` não é uma sequência, então `fs[:]`
 não funciona se `fs` é um `frozenset`.
 Mas `fs.copy()` tem o mesmo efeito: ele trapaceia e retorna uma referência ao mesmo objeto,
-e não uma cópia, como mostra <<ex_same_string>>.footnote:[Essa mentirinha inofensiva,
+e não uma cópia.footnote:[Essa mentirinha inofensiva,
 do método `copy` não copiar nada, é justificável pela compatibilidade da interface:
 torna `frozenset` mais compatível com `set`.
 De qualquer forma, não faz diferença para o usuário final
 se dois objetos imutáveis idênticos são o mesmo ou são cópias.]
 
+O <<ex_same_string>> mostra outra otimização, relacionada aos tipos `str` e `int`:
 
 [[ex_same_string]]
-.Strings literais podem criar objetos compartilhados.
+.Strings e inteiros literais podem criar objetos compartilhados.
 ====
 [source, python]
 ----
->>> t1 = (1, 2, 3)
->>> t3 = (1, 2, 3)  # <1>
->>> t3 is t1  # <2>
-False
 >>> s1 = 'ABC'
->>> s2 = 'ABC'  # <3>
->>> s2 is s1 # <4>
+>>> s2 = 'ABC'  # <1>
+>>> s2 is s1    # <3>
 True
+>>> n1 = 10  
+>>> n2 = 10
+>>> n1 is n2   # <1>
+True
+>>> n3 = 1729
+>>> n4 = 1729
+>>> n3 is n4   # <2>
+False
 ----
 ====
-<1> Criando uma nova tupla do zero.
-<2> `t1` e `t3` são iguais, mas não são o mesmo objeto.
-<3> Criando uma segunda `str` do zero.
-<4> Surpresa: `a` e `b` se referem à mesma `str`!
+<1> Criando duas `str` com o mesmo valor.
+<4> Surpresa: `a` e `b` se referem ao mesmo objeto `str`!
+<1> Alguns inteiros pequenos são compartilhados.
+<2> Outros inteiros não são compartilhados.
+
 
 O((("interning"))) compartilhamento de strings literais é
 uma técnica de otimização chamada _internalização_ (_interning_).
 O CPython usa uma técnica similar com inteiros pequenos,
 para evitar a duplicação desnecessária de números que aparecem com muita frequência em programas,
-como 0, 1, -1, etc.
+como 0, 1, -1, 10, etc.
 Observe que o CPython não internaliza todas as strings e inteiros,
 e o critério pelo qual ele faz isso é um detalhe de implementação não documentado.
 
@@ -1085,8 +1093,8 @@ são mentiras inofensivas que economizam memória e tornam o interpretador mais 
 Não se preocupe, elas não trarão nenhum problema, pois se aplicam apenas a tipos imutáveis.
 Provavelmente, o melhor uso para esse tipo de detalhe é ganhar apostas contra outros
 Pythonistas.footnote:[Um péssimo uso dessas informações seria perguntar sobre elas
-quando entrevistando candidatos a emprego ou criando perguntas para exames de "certificação"
- Há inúmeros fatos mais importantes e úteis para testar conhecimentos de Python.]
+quando entrevistando candidatos a emprego ou criando perguntas para exames de "certificação".
+Há inúmeros fatos mais importantes e úteis para testar conhecimentos de Python.]
 
 === Resumo do capítulo
 
@@ -1097,7 +1105,7 @@ tempo.footnote:[Na verdade, o tipo de um objeto pode ser modificado,
 bastando para isso atribuir uma classe diferente ao atributo `+__class__+` do objeto.
 Mas isso é uma perversão, e eu me arrependo de ter escrito essa nota de rodapé.]
 
-Se duas variáveis se referem a objetos imutáveis de igual valor (`a == b` is `True`),
+Se duas variáveis se referem a objetos imutáveis de valor igual (quando `a == b` é `True`),
 na prática, dificilmente importa se elas se referem a cópias de mesmo valor
 ou são apelidos do mesmo objeto, porque o valor de objeto imutável não muda,
 com uma exceção.
@@ -1244,7 +1252,7 @@ na qual todos os tipos nativos são imutáveis, incluindo as listas.
 
 Python, por outro lado, não é uma linguagem funcional,
 muito menos uma linguagem funcional pura.
-Instâncias de classes definidas pelo usuário são mutáveis por default em Python -- como
+Instâncias de classes definidas pelo usuário são mutáveis por padrão em Python—como
 na maioria das linguagens orientadas a objetos.
 Ao criar seus próprios objetos, você precisa tomar o cuidado adicional de torná-los imutáveis,
 se este for um requisito.
@@ -1256,7 +1264,7 @@ mas seu valor pode mudar se a tupla contiver um objeto mutável.
 Objetos mutáveis também são a razão pela qual programar com threads é tão difícil:
 threads modificando objetos sem uma sincronização apropriada podem corromper dados.
 Sincronização excessiva, por outro lado, causa deadlocks.
-A linguagem e a plataforma Erlang -- que inclui Elixir -- foi projetada para maximizar
+A linguagem e a plataforma Erlang—que inclui Elixir—foi projetada para maximizar
 o tempo de execução em aplicações distribuídas de alta concorrência,
 como aplicações de controle de telecomunicações.
 Naturalmente, eles escolheram tornar os dados imutáveis por default.
