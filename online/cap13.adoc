@@ -57,7 +57,7 @@ As((("interfaces", "typing map")))((("typing map"))) quatro abordagens retratada
 Não faz sentido descartar qualquer uma delas.
 
 [[type_systems_described]]
-.A metade superior descreve abordagens de checagem de tipo durante a execução usando apenas o interpretador Python; a metade inferior requer um verificador de tipo estático externo, como o Mypy ou um IDE como o PyCharm. Os quadrantes da esquerda se referem a tipagem baseada na estrutura do objeto - isto é, dos métodos oferecidos pelo objeto, independente do nome de sua classe ou superclasses; os quadrantes da direita dependem dos objetos terem tipos explicitamente nomeados: o nome da classe do objeto, ou o nome de suas superclasses.
+.A metade superior descreve abordagens de checagem de tipo durante a execução usando apenas o interpretador Python; a metade inferior requer um checador de tipos estático externo, como o Mypy ou um IDE como o PyCharm. Os quadrantes da esquerda se referem a tipagem baseada na estrutura do objeto - isto é, dos métodos oferecidos pelo objeto, independente do nome de sua classe ou superclasses; os quadrantes da direita dependem dos objetos terem tipos explicitamente nomeados: o nome da classe do objeto, ou o nome de suas superclasses.
 image::../images/flpy_1301.png[Quatro abordagens para checagem de tipos]
 
 Cada uma dessas quatro abordagens dependem de interfaces para funcionarem,
@@ -147,7 +147,7 @@ Também é assim que protocolos são entendidos em Smalltalk, o primeiro ambient
 Exceto em páginas sobre programação de redes, a maioria dos usos da palavra "protocolo" na documentação de Python se refere a essas interfaces informais.
 
 Agora, com a adoção da https://fpy.li/pep544[PEP 544—Protocols: Structural subtyping (static duck typing)] (EN) no Python 3.8, a palavra "protocolo" ganhou um novo sentido em Python - um sentido próximo, mas diferente.
-Como vimos na <<protocols_in_fn_sec>> (<<ch_type_hints_def>>), a PEP 544 nos permite criar subclasses de `typing.Protocol` para definir um ou mais métodos que uma classe deve implementar (ou herdar) para satisfazer um verificador de tipo estático.
+Como vimos na <<protocols_in_fn_sec>> (<<ch_type_hints_def>>), a PEP 544 nos permite criar subclasses de `typing.Protocol` para definir um ou mais métodos que uma classe deve implementar (ou herdar) para satisfazer um checador de tipos estático.
 
 Quando precisar ser específico, vou adotar os seguintes termos:
 
@@ -379,7 +379,7 @@ E novamente, se `x` não for iterável, isso falhará rapidamente com um exceç�
 Nos casos que acabei de descrever, uma dica de tipo poderia apontar alguns problemas mais cedo, mas não todos os problemas.
 Lembre-se que o tipo `Any` é _consistente-com_ qualquer outro tipo.
 Inferência de tipo pode fazer com que uma variável seja marcada com o tipo `Any`.
-Quando isso acontece, o verificador de tipo se torna inútil.
+Quando isso acontece, o checador de tipos se torna inútil.
 Além disso, dicas de tipo não são aplicadas durante a execução.
 Falhar rápido é a última linha de defesa.
 
@@ -1218,8 +1218,8 @@ O parâmetro `self` normalmente não é anotado - presume-se que seu tipo seja a
 Aqui usamos `T` para assegurar que o tipo do resultado é o mesmo tipo de `self`.
 Além disso observe que `repeat_count` está limitado nesse protocolo a `int`.
 <3> A variável de tipo `RT` é vinculada pelo protocolo `Repeatable`:
-o verificador de tipo vai exigir que o tipo efetivo implemente `Repeatable`.
-<4> Agora o verificador de tipo pode verificar que o parâmetro `x` é um objeto que pode ser multiplicado por um inteiro, e que o valor retornado tem o mesmo tipo que `x`.
+o checador de tipos vai exigir que o tipo efetivo implemente `Repeatable`.
+<4> Agora o checador de tipos pode verificar que o parâmetro `x` é um objeto que pode ser multiplicado por um inteiro, e que o valor retornado tem o mesmo tipo que `x`.
 
 Este exemplo mostra porque o título da https://fpy.li/pep544[PEP 544] é
 "_Protocols: Structural subtyping (static duck typing)._ (Protocolos: Subtipagem estrutural (duck typing estático))."
@@ -1327,7 +1327,7 @@ Nessa seção eu queria demonstrar que um protocolo verificável durante a execu
 
 [TIP]
 ====
-Se você estiver usando um verificador de tipo externo, há uma vantagem nas verificações explícitas com `isinstance`:
+Se você estiver usando um checador de tipos externo, há uma vantagem nas verificações explícitas com `isinstance`:
 quando você escreve um comando `if` onde a condição é `isinstance(o, MyType)`,
 então o Mypy pode inferir que dentro do bloco `if`, o tipo do objeto `o` é _consistente-com_ `MyType`.
 ====
@@ -1581,7 +1581,7 @@ verifica que ele retorna um dos itens dados a `SimplePicker`,
 e então realiza testes estáticos e de execução sobre o item obtido.
 <8> Essa linha gera uma obervação no relatório do Mypy.
 
-Como vimos no <<top_protocol_test>>, `reveal_type` é uma função "mágica" reconhecida pelo Mypy. Por isso ela não é importada e  só conseguimos chamá-la de dentro de blocos `if` protegidos por `typing.TYPE_CHECKING`, que só é `True` para os olhos de um verificador de tipo estático, mas é `False` durante a execução.
+Como vimos no <<top_protocol_test>>, `reveal_type` é uma função "mágica" reconhecida pelo Mypy. Por isso ela não é importada e  só conseguimos chamá-la de dentro de blocos `if` protegidos por `typing.TYPE_CHECKING`, que só é `True` para os olhos de um checador de tipos estático, mas é `False` durante a execução.
 
 Os dois testes em <<ex_randompick_protocol_demo>> passam.
 O Mypy também não vê nenhum erro naquele código,

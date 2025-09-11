@@ -69,7 +69,7 @@ Assim os arquivos _.pyi_ são arquivos Python válidos.
 Como mencionado na <<arbitrary_arguments_sec>>, os dois sublinhados prefixando `+__iterable+` são a convenção da PEP 484 para argumentos apenas posicionais, que é verificada pelo Mypy.
 Isso significa que você pode invocar `sum(my_list)`, mas não `sum(__iterable = my_list)`.
 
-O verificador de tipo tenta fazer a correspondência entre os argumentos dados com cada assinatura sobreposta, em ordem.
+O checador de tipos tenta fazer a correspondência entre os argumentos dados com cada assinatura sobreposta, em ordem.
 A chamada `sum(range(100), 1000)` não casa com a primeira sobreposição, pois aquela assinatura tem apenas um parâmetro. Mas casa com a segunda.
 
 Você pode também usar `@overload` em um modulo Python regular, colocando as assinaturas sobrepostas logo antes da assinatura real da função e de sua implementação.
@@ -292,7 +292,7 @@ mymax_demo.py:109: error: Value of type variable "_LT" of "max"
   cannot be "None"
 ----
 
-Por outro lado, ter de escrever tantas linhas para suportar o verificador de tipo pode desencorajar a criação de funções convenientes e flexíveis como `max`.
+Por outro lado, ter de escrever tantas linhas para suportar o checador de tipos pode desencorajar a criação de funções convenientes e flexíveis como `max`.
 Se eu precisasse reinventar também a função `min`, poderia refatorar e reutilizar a maior parte da implementação de `max`.
 Mas teria que copiar e colar todas as declarações de sobreposição—apesar delas serem idênticas para `min`, exceto pelo nome da função.
 
@@ -357,7 +357,7 @@ Ele existe apenas para o benefício de checadores de tipos, e não tem qualquer 
 `TypedDict` fornece duas coisas:
 
 * Uma sintaxe similar à de classe para anotar uma `dict` com dicas de tipo para os valores de cada "campo".
-* Um construtor que informa ao verificador de tipo para esperar um `dict` com chaves e valores como especificados.
+* Um construtor que informa ao checador de tipos para esperar um `dict` com chaves e valores como especificados.
 
 Durante a execução, um construtor de `TypedDict` como `BookDict` é um placebo:
 ele tem o mesmo efeito de uma chamada ao construtor de `dict` com os mesmos  argumentos.
@@ -402,10 +402,10 @@ AttributeError: 'dict' object has no attribute 'title'
 <4> ...assim não é possível ler os campos usando a notação `objeto.campo`.
 <5> As dicas de tipo estão em `+BookDict.__annotations__+`, e não em `pp`.
 
-Sem um verificador de tipo, `TypedDict` é tão útil quanto comentários em um programa:
+Sem um checador de tipos, `TypedDict` é tão útil quanto comentários em um programa:
 pode ajudar a documentar o código, mas só isso.
 As fábricas de classes do <<ch_dataclass>>, por outro lado,
-são úteis mesmo se você não usar um verificador de tipo,
+são úteis mesmo se você não usar um checador de tipos,
 porque durante a execução elas geram uma classe customizada que pode ser instanciada.
 Elas também fornecem vários métodos ou funções úteis,
 listadas na <<builders_compared_tbl>> (<<ch_dataclass>>).
@@ -535,7 +535,7 @@ include::../code/15-more-types/typeddict/books.py[tags=FROMJSON]
 [WARNING]
 ====
 Não se deixe enganar por uma falsa sensação de tipagem segura com o <<from_json_ex>>!
-Olhando o código estático, o verificador de tipo não tem como prever se `json.loads()` irá devolver qualquer coisa parecida com um `BookDict`.
+Olhando o código estático, o checador de tipos não tem como prever se `json.loads()` irá devolver qualquer coisa parecida com um `BookDict`.
 Apenas a validação durante a execução pode garantir isso.
 ====
 
@@ -654,7 +654,7 @@ include::../code/15-more-types/cast/find.py[tags=CAST]
 A chamada `next()` na expressão geradora vai devolver ou o índice de um item `str` ou gerar `StopIteration`. Assim, `find_first_str` vai sempre devolver uma `str` se não for gerada uma exceção, e `str` é o tipo declarado do valor devolvido.
 
 Mas se a última linha for apenas `return a[index]`, o Mypy inferiria o tipo devolvido como `object`, porque o argumento `a` é declarado como `list[object]`.
-Então `cast()` é necessário para guiar o Mypy.footnote:[O uso de `enumerate` no exemplo serve para confundir intencionalmente o verificador de tipo. Uma implementação mais simples, produzindo strings diretamente, sem passar pelo índice de `enumerate`, seria corretamente analisada pelo Mypy, e o `cast()` não seria necessário.]
+Então `cast()` é necessário para guiar o Mypy.footnote:[O uso de `enumerate` no exemplo serve para confundir intencionalmente o checador de tipos. Uma implementação mais simples, produzindo strings diretamente, sem passar pelo índice de `enumerate`, seria corretamente analisada pelo Mypy, e o `cast()` não seria necessário.]
 
 Aqui está outro exemplo com `cast`, desta vez para corrigir uma dica de tipo desatualizada na biblioteca padrão de Python.
 No <<tcp_mojifinder_main>>, criei um objeto _asyncio_ , `Server`, e queria obter o endereço que o servidor estava ouvindo.
@@ -721,7 +721,7 @@ ____
 * `# type: ignore` é menos informativo.footnote:[A sintaxe
 +`# type: ignore[code]`+ permite especificar qual erro do Mypy está sendo silenciado, mas os códigos nem sempre são fáceis de interpretar.
 Veja a página https://fpy.li/15-22["Error codes"] na documentação do Mypy.]
-* Usar `Any` é contagioso: já que `Any` é _consistente-com_ todos os tipos, seu abuso pode produzir efeitos em cascata através da inferência de tipo, minando a capacidade do verificador de tipo para detectar erros em outras partes do código.
+* Usar `Any` é contagioso: já que `Any` é _consistente-com_ todos os tipos, seu abuso pode produzir efeitos em cascata através da inferência de tipo, minando a capacidade do checador de tipos para detectar erros em outras partes do código.
 
 Claro, nem todos os contratempos de tipagem podem ser resolvidos com `cast`.
 Algumas vezes precisamos de `# type: ignore`, do `Any` ocasional, ou mesmo deixar uma função sem dicas de tipo.
@@ -1482,7 +1482,7 @@ Podemos silenciar os checadores de tipos e omitir as dicas de tipo quando se tor
 [role="soapbox-title"]
 As tocas de coelho da tipagem
 
-Quando((("gradual type system", "Soapbox discussion")))((("Soapbox sidebars", "undocumented classes")))((("classes", "undocumented classes")))((("undocumented classes"))) usamos um verificador de tipo, algumas vezes somos obrigados a descobrir e importar classes que não precisávamos conhecer, e que nosso código não precisa usar—exceto para escrever dicas de tipo.
+Quando((("gradual type system", "Soapbox discussion")))((("Soapbox sidebars", "undocumented classes")))((("classes", "undocumented classes")))((("undocumented classes"))) usamos um checador de tipos, algumas vezes somos obrigados a descobrir e importar classes que não precisávamos conhecer, e que nosso código não precisa usar—exceto para escrever dicas de tipo.
 Tais classes não são documentadas, provavelmente porque são consideradas detalhes de implementação pelos autores dos pacotes. Aqui estão dois exemplos da biblioteca padrão.
 
 Tive que vasculhar a imensa documentação do _asyncio_,

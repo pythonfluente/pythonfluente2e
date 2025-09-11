@@ -69,7 +69,7 @@ introduziu no Python um _sistema de tipagem gradual_.
 Outras linguagens com sistemas de tipagem gradual são Typescript da Microsoft,
 Dart (a linguagem do SDK Flutter, criado pelo Google),
 e Hack (um dialeto de PHP que é compilado para a máquina virtual HHVM do Facebook).
-O próprio verificador de tipo MyPy começou como uma linguagem:
+O próprio checador de tipos MyPy começou como uma linguagem:
 um dialeto de Python de tipagem gradual com seu próprio interpretador.
 Guido van Rossum convenceu o criador do MyPy, Jukka Lehtosalo,
 a transformá-lo em uma ferramenta para checar código Python anotado.
@@ -90,7 +90,7 @@ A utilidade dessa função será explicada na <<lispy_parser_sec>>.
 Um sistema de tipagem gradual:
 
 É opcional::
-Por default, o verificador de tipo não deve emitir avisos para código que não tenha dicas de tipo.
+Por default, o checador de tipos não deve emitir avisos para código que não tenha dicas de tipo.
 Em vez disso, o verificador supõe o tipo `Any` quando não consegue determinar o tipo de um objeto.
 O tipo `Any` é considerado compatível com todos os outros tipos.
 Não captura erros de tipagem durante a execução do código::
@@ -119,7 +119,7 @@ https://fpy.li/8-3[#731, Support recursive types] (EN) do MyPy.
 
 É possível que você escreva um ótimo programa em Python,
 com uma boa cobertura de testes, todos passando,
-mas ainda assim não consiga escrever dicas de tipo que satisfaçam um verificador de tipagem.
+mas ainda assim não consiga escrever dicas de tipo que satisfaçam um checador de tipos.
 Nesse caso, omita as dicas de tipo problemáticas e entregue o programa!
 
 Dicas de tipo são opcionais em todos os níveis:
@@ -483,13 +483,13 @@ def double(x: abc.Sequence):
     return x * 2
 ----
 
-Um verificador de tipo irá rejeitar esse código.
+Um checador de tipos irá rejeitar esse código.
 Se você informar ao Mypy que `x` é do tipo `abc.Sequence`, ele vai marcar `x * 2` como erro,
 pois a https://fpy.li/8-13[`Sequence` ABC] não implementa ou herda o método `+__mul__+`.
 Durante a execução, o código vai funcionar com sequências concretas
 como `str`, `tuple`, `list`, `array`, etc., bem como com números,
 pois durante a execução as dicas de tipo são ignoradas.
-Mas o verificador de tipo se preocupa apenas com o que
+Mas o checador de tipos se preocupa apenas com o que
 estiver explicitamente declarado, e `abc.Sequence` não suporta `+__mul__+`.
 
 Por essa razão o título dessa seção é  "Tipos São Definidos pelas Operações Possíveis."
@@ -517,7 +517,7 @@ Vamos falar disso mais adiante nesse capítulo, em <<protocols_in_fn_sec>>, e co
 Tipagem nominal::
 É a ((("nominal typing"))) perspectiva adotada em {cpp}, Java, e C#, e suportada em Python anotado.
 Objetos e variáveis têm tipos.
-Mas objetos só existem durante a execução, e o verificador de tipo só se importa com o código-fonte,
+Mas objetos só existem durante a execução, e o checador de tipos só se importa com o código-fonte,
 onde as variáveis (incluindo parâmetros de função) tem anotações com dicas de tipo.
 Se `Duck` é uma subclasse de `Bird`,
 você pode atribuir uma instância de `Duck` a um parâmetro anotado como `birdie: Bird`.
@@ -525,7 +525,7 @@ Mas no corpo da função, o verificador considera a chamada `birdie.quack()` ile
 pois `birdie` é nominalmente um `Bird`, e aquela classe não fornece o método `.quack()`.
 Não interessa que o argumento real, durante a execução, é um `Duck`,
 porque a tipagem nominal é verificada estaticamente.
-O verificador de tipo não executa qualquer pedaço do programa, ele apenas analisa o código-fonte.
+O checador de tipos não executa qualquer pedaço do programa, ele apenas analisa o código-fonte.
 Isso é mais rígido que _duck typing_,
 com a vantagem de capturar alguns bugs durante o desenvolvimento,
 ou mesmo em tempo real, enquanto o código está sendo digitado em um IDE.
@@ -603,7 +603,7 @@ Durante a execução do programa, Python não se importa com os tipos declarados
 Ele usa apenas duck typing.
 O Mypy apontou um erro em `alert_bird`, mas a chamada da função com `daffy` funciona corretamente quando executada.
 À primeira vista isso pode surpreender muitos pythonistas:
-um verificador de tipo estático muitas vezes encontra erros em código que sabemos que vai funcionar quanto executado.
+um checador de tipos estático muitas vezes encontra erros em código que sabemos que vai funcionar quanto executado.
 
 Entretanto, se daqui a alguns meses você for encarregado de estender o exemplo bobo do pássaro,
 você agradecerá ao Mypy.
@@ -731,7 +731,7 @@ aparentemente inútil, mas de uma importância fundamental.
 A((("Any type", id="anytype08")))((("dynamic type", id="dynamic08")))((("gradual type system", "Any type",
 id="GTSany08"))) pedra fundamental de qualquer sistema de tipagem gradual é o tipo `Any`,
 também conhecido como o _tipo dinâmico_.
-Quando um verificador de tipo vê um função sem tipo como esta:
+Quando um checador de tipos vê um função sem tipo como esta:
 
 [source, python]
 ----
@@ -758,7 +758,7 @@ def double(x: object) -> object:
 
 Essa função também aceita argumentos de todos os tipos, porque todos os tipos são _subtipo-de_ `object`.
 
-Entretanto, um verificador de tipo vai rejeitar essa função:
+Entretanto, um checador de tipos vai rejeitar essa função:
 [source, python]
 ----
 def double(x: object) -> object:
@@ -781,10 +781,10 @@ que por sua vez implementa menos operações que `list`.
 Mas `Any` é um tipo mágico que reside tanto no topo quanto na base da hierarquia de tipos.
 Ele é simultaneamente o tipo mais geral—então um argumento `n: Any` aceita valores de
 qualquer tipo—e o tipo mais especializado, suportando assim todas as operações possíveis.
-Pelo menos é assim que o verificador de tipo entende `Any`.
+Pelo menos é assim que o checador de tipos entende `Any`.
 
 Claro, nenhum tipo consegue suportar qualquer operação possível,
-então usar `Any` impede o verificador de tipo de cumprir sua missão:
+então usar `Any` impede o checador de tipos de cumprir sua missão:
 detectar operações que podem falhar antes que
 seu programa levante uma exceção durante a execução.((("", startref="GTSany08")))
 
@@ -1685,7 +1685,7 @@ def mode(data: Iterable[Hashable]) -> Hashable:
 
 Agora o problema é que o tipo do item retornado é `Hashable`:
 um ABC que implementa apenas o método `+__hash__+`.
-Então o verificador de tipo não vai permitir que façamos nada com o valor retornado,
+Então o checador de tipos não vai permitir que façamos nada com o valor retornado,
 exceto chamar seu método `hash()`. Não é muito útil.
 
 A solução está em outro parâmetro opcional de `TypeVar`:
@@ -1755,7 +1755,7 @@ id="GTSstatic08")))((("static protocols", "type hints (type annotations)", id="s
 programação orientada a objetos, o conceito de um "protocolo" como uma interface informal é tão antigo quanto Smalltalk,
 e tem sido parte essencial de Python desde o início.
 Entretanto, no contexto de dicas de tipo, um protocolo é uma subclasse de `typing.Protocol`,
-definindo uma interface que um verificador de tipo pode analisar.
+definindo uma interface que um checador de tipos pode analisar.
 Os dois tipos de protocolo são tratados no <<ch_ifaces_prot_abc>>.
 Aqui apresento apenas uma rápida introdução no contexto de anotações de função.
 ====
@@ -1763,12 +1763,12 @@ Aqui apresento apenas uma rápida introdução no contexto de anotações de fun
 O((("Protocol type", id="proto08"))) tipo `Protocol`, como descrito em
 https://fpy.li/pep544[PEP 544—Protocols: Structural subtyping (static duck typing)] (EN),
 é similar às interfaces em Go: um tipo protocolo é definido especificando um ou mais métodos,
-e o verificador de tipo analisa se aqueles métodos estão implementados onde um tipo daquele protocolo é exigido.
+e o checador de tipos analisa se aqueles métodos estão implementados onde um tipo daquele protocolo é exigido.
 
 Em Python, uma definição de protocolo é escrita como uma subclasse de `typing.Protocol`.
 Entretanto, classes que _implementam_ um protocolo não precisam herdar,
 registrar ou declarar qualquer relação com a classe que _define_ o protocolo.
-É função do verificador de tipo encontrar os tipos de protocolos disponíveis e verificar sua utilização.
+É função do checador de tipos encontrar os tipos de protocolos disponíveis e verificar sua utilização.
 
 Abaixo temos um problema que pode ser resolvido com a ajuda de `Protocol` e `TypeVar`.
 Suponha que você quisesse criar uma função `top(it, n)`, que retorna os `n` maiores elementos do iterável `it`:
@@ -1935,7 +1935,7 @@ ou tipos implementados em bases de código que não estão sob nosso controle.
 Eu não tenho que derivar ou registrar `str`, `tuple`, `float`, `set`, etc.
 com `SupportsLessThan` para usá-los onde um parâmetro `SupportsLessThan` é esperado.
 Eles só precisam implementar `+__lt__+`.
-E o verificador de tipo ainda será capaz de realizar seu trabalho,
+E o checador de tipos ainda será capaz de realizar seu trabalho,
 porque `SupportsLessThan` está explicitamente declarado como um
 `Protocol`—diferente dos protocolos implícitos comuns no duck typing,
 que são invisíveis para o checador de tipos.
@@ -1948,7 +1948,7 @@ a solução para anotar o parâmetro `series` de `top` era dizer "O tipo nominal
 desde que ele implemente o método `+__lt__+`."
 Em Python, o duck typing sempre permitiu dizer isso de forma implícita,
 deixando os checadores de tipos estáticos sem ação.
-Um verificador de tipo não consegue ler o código-fonte em C do CPython,
+Um checador de tipos não consegue ler o código-fonte em C do CPython,
 ou executar experimentos no console para descobrir que `sorted` só requer que seus elementos suportem `<`.
 
 Agora podemos tornar o duck typing explícito para os verificadores estáticos de tipo.
@@ -2200,7 +2200,7 @@ Em geral, dicas de tipo não são úteis para localizar erros na lógica do neg�
 Dadas essas ressalvas, dicas de tipo não podem ser o pilar central da qualidade do software,
 e torná-las obrigatórias sem qualquer exceção só amplificaria os aspectos negativos.
 
-Considere o verificador de tipo estático como uma das ferramentas
+Considere o checador de tipos estático como uma das ferramentas
 na infraestrutura moderna de integração de código, ao lado de testadores,
 analisadores de código (_linters_), etc.
 O objetivo de uma estrutura de produção de integração de código é reduzir as falhas no software,
@@ -2300,7 +2300,7 @@ https://fpy.li/8-43["Hypermodern Python Chapter 4: Typing"] (EN), de Claudio Jol
 
 Para uma abordagem mais aprofundada, a https://fpy.li/8-44[documentação do Mypy]
 é a melhor fonte.
-Ela é útil independente do verificador de tipo que você esteja usando, pois tem páginas de tutorial e de referência sobre tipagem em Python em geral - não apenas sobre o próprio Mypy.
+Ela é útil independente do checador de tipos que você esteja usando, pois tem páginas de tutorial e de referência sobre tipagem em Python em geral - não apenas sobre o próprio Mypy.
 
 Lá você também encontrará uma conveniente
 https://fpy.li/8-45[página de referência (ou _cheat sheet)] (EN)

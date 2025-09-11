@@ -580,13 +580,13 @@ Vamos revisar os operadores aritméticos suportados pelo Python antes de mergulh
 === Resumindo os operadores aritméticos
 
 Ao implementar `+`, `*`, e `@`, vimos((("operator overloading", "infix operator method names"))) os padrões de programação mais comuns para operadores infixos.
-As técnicas descritas são aplicáveis a todos os operadores listados na <<infix_operator_names_tbl>> (os operadores "no mesmo lugar" serão tratados em <<augmented_assign_ops>>).
+As técnicas descritas são aplicáveis a todos os operadores listados na <<infix_operator_names_tbl>> (os operadores internos serão tratados em <<augmented_assign_ops>>).
 
 [[infix_operator_names_tbl]]
-.Nomes dos métodos de operadores infixos (os operadores "no mesmo lugar" são usados para atribuição aumentada; operadores de comparação estão na <<reversed_rich_comp_op_tbl>>)
+.Nomes dos métodos de operadores infixos (os operadores internos são usados para atribuição aumentada; operadores de comparação estão na <<reversed_rich_comp_op_tbl>>)
 [options="header"]
 |=================================================================================================
-| Operador  | Direto   | Reverso   | No mesmo lugar  | Descrição
+| Operador  | Direto   | Reverso   | Interno  | Descrição
 | `+`       | `+__add__+`   | `+__radd__+`  | `+__iadd__+`  | Adição ou concatenação
 | `-`       | `+__sub__+`   | `+__rsub__+`  | `+__isub__+`  | Subtração
 | `*`       | `+__mul__+`   | `+__rmul__+`  | `+__imul__+`  | Multiplicação ou repetição
@@ -803,19 +803,20 @@ Vector([55.0, 77.0, 99.0])
 <7> Executa a multiplicação aumentada.
 <8> Novamente, o resultado é o esperado, mas um novo `Vector` foi criado.
 
-Se uma classe não implementa os operadores "no mesmo lugar" listados na <<infix_operator_names_tbl>>, os operadores de atribuição aumentada funcionam como açúcar sintático: `a += b` é avaliado exatamente como `a = a + b`. Esse é o comportamento esperado para tipos imutáveis, e se você fornecer
+Se uma classe não implementa os operadores internos listados na <<infix_operator_names_tbl>>, os operadores de atribuição aumentada funcionam como açúcar sintático: `a += b` é avaliado exatamente como `a = a + b`. Esse é o comportamento esperado para tipos imutáveis, e se você fornecer
 `+__add__+`, então `+=` funcionará sem qualquer código adicional.
 
-Entretanto, se você implementar um operador "no mesmo lugar" tal como
+Entretanto, se você implementar um operador interno tal como
 `+__iadd__+`, aquele método será chamado para computar o resultado de `a += b`.
-Como indica seu nome, se espera que esses operadores modifiquem o operando à esquerda do operador no mesmo lugarfootnote:[NT: O "i" nos nomes desses operadores se refere a "_in-place_"], e não criem um novo objeto como resultado.
+Como indica seu nome, espera-se que esses operadores modifiquem internamente o operando da esquerdafootnote:[NT: O "i" nos nomes desses operadores se refere a "_in-place_"], e não criem um novo objeto como resultado.
 
 [WARNING]
 ====
-Os métodos especiais de atualização no mesmo lugar não devem nunca ser implementados para tipos imutáveis como nossa classe `Vector`. Isso é bastante óbvio, mas vale a pena enfatizar.
+Os métodos especiais de atualização interna não devem nunca ser implementados para tipos imutáveis como nossa classe `Vector`.
+Pode ser óbvio, mas vale a pena enfatizar.
 ====
 
-Para mostrar o código de um operador de atualização no mesmo lugar, vamos estender a classe `BingoCage` do <<ex_tombola_bingo>> para implementar
+Para mostrar o código de um operador de atualização interno, vamos estender a classe `BingoCage` do <<ex_tombola_bingo>> para implementar
 `+__add__+` e `+__iadd__+`.
 
 Vamos chamar a subclasse de `AddableBingoCage`. O <<demo_addable_bingo_add>> mostra o comportamento esperado para o operador `+`.
@@ -852,7 +853,7 @@ include::../code/16-op-overloading/bingoaddable.py[tags=ADDABLE_BINGO_IADD_DEMO]
 <5> Durante todo esse exemplo, `globe` sempre se refere ao mesmo objeto que `globe_orig`.
 <6> Tentar adicionar um não-iterável a uma `AddableBingoCage` falha com uma mensagem de erro apropriada.
 
-Observe que o operador `++=+` é mais liberal que `+++` quanto ao segundo operando. Com `+++`, queremos que ambos os operandos sejam do mesmo tipo (nesse caso, `AddableBingoCage`), pois se aceitássemos tipos diferentes, isso poderia causar confusão quanto ao tipo do resultado. Com o `++=+`, a situação é mais clara: o objeto à esquerda do operador é atualizado no mesmo lugar, então não há dúvida quanto ao tipo do resultado.
+Observe que o operador `++=+` é mais liberal que `+++` quanto ao segundo operando. Com `+++`, queremos que ambos os operandos sejam do mesmo tipo (nesse caso, `AddableBingoCage`), pois se aceitássemos tipos diferentes, isso poderia causar confusão quanto ao tipo do resultado. Com o `++=+`, a situação é mais clara: o objeto à esquerda do operador é atualizado internamente, então não há dúvida quanto ao tipo do resultado.
 
 [TIP]
 ====
@@ -879,7 +880,7 @@ include::../code/16-op-overloading/bingoaddable.py[tags=ADDABLE_BINGO]
 <6> Se chegamos até aqui, podemos carregar o `other_iterable` para `self`.
 <7> Muito importante: os métodos especiais de atribuição aumentada de objetos mutáveis devem devolver `self`. É o que os usuários esperam.
 
-Podemos resumir toda a ideia dos operadores de atualização no mesmo lugar comparando as instruções `return` que produzem os resultados em `+__add__+` e em `+__iadd__+` no <<ex_addable_bingo>>:
+Podemos resumir toda a ideia dos operadores de atualização internos comparando as instruções `return` que produzem os resultados em `+__add__+` e em `+__iadd__+` no <<ex_addable_bingo>>:
 
 `+__add__+`:: O resultado é produzido chamando o construtor `AddableBingoCage` para criar uma nova instância.
 
@@ -913,9 +914,20 @@ Além disso, se uma ABC implementa o `+__subclasshook__+`, objetos podem então 
 O próximo tópico tratado foram os operadores de comparação cheia. Implementamos `==` com
 `+__eq__+` e descobrimos que Python oferece uma implementação conveniente de `!=` no `+__ne__+` herdado da classe base `object`. A forma como Python avalia esses operadores, bem como `>`, `<`, `>=`, e `<=`, é um pouco diferente, com uma lógica especial para a escolha do método reverso, e um tratamento alternativo para `==` e `!=` que nunca gera erros, pois Python compara os IDs dos objetos como último recurso.
 
-Na última seção, nos concentramos nos operadores de atribuição aumentada. Vimos que Python os trata, por default, como uma combinação do operador simples seguido de uma atribuição, isto é:
-`a += b` é avaliado exatamente como `a = a + b`. Isso sempre cria um novo objeto, então funciona para tipos mutáveis ou imutáveis. Para objetos mutáveis, podemos implementar métodos especiais de atualização no mesmo lugar, tal como `+__iadd__+` para `+=`, e alterar o valor do operando à esquerda do operador. Para demonstrar isso na prática, deixamos para trás a classe imutável `Vector` e trabalhamos na implementação de uma subclasse de `BingoCage`, suportando `+=` para adicionar itens ao reservatório de itens para sorteio, de modo similar à forma como o tipo embutido `list` suporta
-`+=` como um atalho para o método `list.extend()`. Enquanto fazíamos isso, discutimos como `+` tende a ser mais estrito que `+=` em relação aos tipos aceitos. Para tipos de sequências, `+` normalmente exige que ambos os operandos sejam do mesmo tipo, enquanto `+=` muitas vezes aceita qualquer iterável como o operando à direita do operador.
+Na última seção, nos concentramos nos operadores de atribuição aumentada.
+Vimos que Python os trata, por default, como uma combinação do operador simples seguido de uma atribuição, isto é:
+`a += b` é avaliado exatamente como `a = a + b`.
+Isso sempre cria um novo objeto, então funciona para tipos mutáveis ou imutáveis.
+Para objetos mutáveis, podemos implementar métodos especiais de atualização interna,
+tal como `+__iadd__+` para `+=`, e alterar o valor do operando à esquerda do operador.
+Para demonstrar isso na prática, deixamos para trás a classe imutável `Vector` e
+trabalhamos na implementação de uma subclasse de `BingoCage`,
+suportando `+=` para adicionar itens ao reservatório de itens para sorteio,
+de modo similar à forma como o tipo embutido `list` suporta
+`+=` como um atalho para o método `list.extend()`.
+Enquanto fazíamos isso, discutimos como `+` tende a ser mais estrito que `+=` em relação aos tipos aceitos.
+Para tipos de sequências, `+` normalmente exige que ambos os operandos sejam do mesmo tipo,
+enquanto `+=` muitas vezes aceita qualquer iterável como o operando à direita do operador.
 
 [[further_reading_op_sec]]
 === Leitura complementar

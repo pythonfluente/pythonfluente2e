@@ -647,7 +647,7 @@ Entretanto, `reversed(my_tuple)` funciona sem esse método; ele serve apenas par
 |================================================================================================================================================
 |                         | `list` | `tuple` | &#xa0;
 |       `+s.__add__(s2)+` |   ●   |   ●   | `s + s2`—concatenação
-|      `+s.__iadd__(s2)+` |   ●   |       | `+s += s2+`—concatenação no mesmo lugar
+|      `+s.__iadd__(s2)+` |   ●   |       | `+s += s2+`—concatenação interna
 |           `s.append(e)` |   ●   |       | Acrescenta um elemento após o último
 |             `s.clear()` |   ●   |       | Apaga todos os itens
 |   `+s.__contains__(e)+` |   ●   |   ●   | `e in s`
@@ -662,7 +662,7 @@ Entretanto, `reversed(my_tuple)` funciona sem esse método; ele serve apenas par
 |        `+s.__iter__()+` |   ●   |   ●   | Obtém um iterador
 |         `+s.__len__()+` |   ●   |   ●   | `+len(s)+`—número de itens
 |        `+s.__mul__(n)+` |   ●   |   ●   | `+s * n+`—concatenação repetida
-|       `+s.__imul__(n)+` |   ●   |       | `+s *= n+`—concatenação repetida no mesmo lugar
+|       `+s.__imul__(n)+` |   ●   |       | `+s *= n+`—concatenação repetida interna
 |       `+s.__rmul__(n)+` |   ●   |   ●   | `+n * s+`—concatenação repetida inversafootnote:[Operadores invertidos são explicados no <<ch_op_overload>>.]
 |            `s.pop([p])` |   ●   |       | Remove e devolve o último item ou o item na posição opcional `p`
 |           `s.remove(e)` |   ●   |       | Remove o primeiro elemento de valor igual a `e`
@@ -1629,7 +1629,7 @@ Para simplificar a discussão, vamos primeiro nos concentrar na adição aumenta
 mas os conceitos se aplicam a `*=` e a outros operadores de atribuição aumentada.
 
 O método especial que faz `\+=` funcionar
-chama-se `++__iadd__++` , que significa _in-place addition_ (adição no mesmo lugar).
+chama-se `++__iadd__++` , que significa _in-place addition_ (adição interna).
 
 Entretanto, se `+__iadd__+` não estiver implementado, Python usa `+__add__+` como antes de fazer a atribuição.
 Considere essa expressão simples:
@@ -1798,10 +1798,10 @@ startref="augasop02")))((("", startref="stareq02")))((("", startref="additonassi
 
 O((("sequences", "list.sort versus sorted built-in", id="Slistsort02")))((("lists",
 "list.sort versus sorted built-in", id="Llistsort")))((("sorted function", id="sortfun02")))
-método `list.sort` ordena uma lista no mesmo lugar—isto é, sem criar uma cópia.
+método `list.sort` ordena uma lista internamente—isto é, sem criar uma cópia.
 Ele devolve `None` para nos lembrar que muda a própria instância e não cria uma nova lista.
 Essa é uma convenção importante da API de Python:
-funções e métodos que mudam um objeto no mesmo lugar deve devolver `None`,
+funções e métodos que mudam um objeto internamente devem devolver `None`,
 para deixar claro a quem chamou que o
 receptorfootnote:[Receptor (_receiver_) é o alvo de uma chamada a um método,
 o objeto vinculado a `self` no corpo do método.]
@@ -1814,7 +1814,7 @@ isto é, mudando a posição dos itens dentro da própria sequência.
 
 [NOTE]
 ====
-A convenção de devolver `None` para sinalizar mudanças no mesmo lugar tem uma desvantagem:
+A convenção de devolver `None` para sinalizar mudanças internas tem uma desvantagem:
 não podemos encadear chamadas a esses métodos.
 Em contraste, métodos que devolvem novos objetos (todos os métodos de `str`, por exemplo)
 podem ser cascateados no estilo de uma interface fluente.
@@ -1885,7 +1885,7 @@ Como o algoritmo de ordenação é estável, "grape" e "apple," ambas com tamanh
 <5> Essas são strings ordenadas por tamanho em ordem descendente.
 Não é o inverso do resultado anterior porque a ordenação é estável e então, novamente, "grape" aparece antes de "apple."
 <6> Até aqui, a ordenação da lista `fruits` original não mudou.
-<7> Isso ordena a lista no mesmo lugar, devolvendo `None` (que o console omite).
+<7> Isso ordena a lista internamente, devolvendo `None` (que o console omite).
 <8> Agora `fruits` está ordenada.
 
 [WARNING]
@@ -2014,7 +2014,7 @@ comparando as características de `list` e `array.array`.
 |================================================================================================================================================
 |                       | list  | array | &#xa0;
 |       `+s.__add__(s2)+` |   ●   |   ●   | `++s + s2++`—concatenação
-|      `+s.__iadd__(s2)+` |   ●   |   ●   | `++s += s2++`—concatenação no mesmo lugar
+|      `+s.__iadd__(s2)+` |   ●   |   ●   | `++s += s2++`—concatenação interna
 |         `s.append(e)` |   ●   |   ●   | Acrescenta um elemento após o último
 |        `s.byteswap()` |       |   ●   | Permuta os bytes de todos os itens do array para conversão de _endianness_ (ordem de interpretação bytes)
 |           `s.clear()` |   ●   |       | Apaga todos os itens
@@ -2035,14 +2035,14 @@ comparando as características de `list` e `array.array`.
 |        `+s.__iter__()+` |   ●   |   ●   | Obtém iterador
 |         `+s.__len__()+` |   ●   |   ●   | `++len(s)++`—número de itens
 |        `+s.__mul__(n)+` |   ●   |   ●   | `++s * n++`—concatenação repetida
-|       `+s.__imul__(n)+` |   ●   |   ●   | `++s *= n++`—concatenação repetida no mesmo lugar
+|       `+s.__imul__(n)+` |   ●   |   ●   | `++s *= n++`—concatenação repetida interna
 |       `+s.__rmul__(n)+` |   ●   |   ●   | ++n * s++—concatenação repetida invertidafootnote:[Operadores invertidos são explicados no <<ch_op_overload>>.]
 |          `s.pop([p])` |   ●   |   ●   | Remove e devolve o item na posição `p` (default: o último)
 |         `s.remove(e)` |   ●   |       | Remove o primeiro elemento de valor igual a `e`
-|         `s.reverse()` |   ●   |   ●   | Reverte a ordem dos itens no mesmo lugar
+|         `s.reverse()` |   ●   |   ●   | Reverte a ordem dos itens internamente
 |    `+s.__reversed__()+` |   ●   |       | Obtém iterador para percorrer itens do último até o primeiro
 | `+s.__setitem__(p, e)+` |   ●   |   ●   | ++s[p] = e++—coloca `e` na posição `p`, sobrescrevendo item ou fatia existente
-|`s.sort([key], [reverse])` |   ●   |       | Ordena itens no mesmo lugar, com os argumentos nomeados opcionais `key` e `reverse`
+|`s.sort([key], [reverse])` |   ●   |       | Ordena itens internamente, com os argumentos nomeados opcionais `key` e `reverse`
 |         `s.tobytes()` |       |   ●   | Devolve itens como valores de máquina compactos em um objeto `bytes`
 |         `s.tofile(f)` |       |   ●   | Grava itens como valores de máquina compactos no arquivo binário `f`
 |          `s.tolist()` |       |   ●   | Devolve os itens como objetos numéricos em uma `list`
@@ -2357,7 +2357,7 @@ então `deque` pode ser usado de forma segura como uma fila FIFO em aplicações
 |==================================================================================================================================================
 |                         | list  | deque | &#xa0;
 |       `+s.__add__(s2)+` |   ●   |       | `++s + s2++`—concatenação
-|      `+s.__iadd__(s2)+` |   ●   |   ●   | `++s += s2++`—concatenação no mesmo lugar
+|      `+s.__iadd__(s2)+` |   ●   |   ●   | `++s += s2++`—concatenação interna
 |           `s.append(e)` |   ●   |   ●   | Acrescenta um elemento à direita (após o último)
 |       `s.appendleft(e)` |       |   ●   | Acrescenta um elemento à esquerda (antes do primeiro)
 |             `s.clear()` |   ●   |   ●   | Apaga todos os itens
@@ -2374,16 +2374,16 @@ então `deque` pode ser usado de forma segura como uma fila FIFO em aplicações
 |        `+s.__iter__()+` |   ●   |   ●   | Obtém iterador
 |         `+s.__len__()+` |   ●   |   ●   | `++len(s)++`—número de itens
 |        `+s.__mul__(n)+` |   ●   |       | `++s * n++`—concatenação repetida
-|       `+s.__imul__(n)+` |   ●   |       | `++s *= n++`—concatenação repetida no mesmo lugar
+|       `+s.__imul__(n)+` |   ●   |       | `++s *= n++`—concatenação repetida interna
 |       `+s.__rmul__(n)+` |   ●   |       | `++n * s`++—concatenação repetida invertidafootnote:[Operadores invertidos são explicados no <<ch_op_overload>>.]
 |               `s.pop()` |   ●   |   ●   | Remove e devolve último itemfootnote:[`a_list.pop(p)` permite remover da posição `p`, mas `deque` não suporta essa opção.]
 |           `s.popleft()` |       |   ●   | Remove e devolve primeiro item
 |           `s.remove(e)` |   ●   |       | Remove o primeiro elemento de valor igual a `e`
-|           `s.reverse()` |   ●   |   ●   | Inverte a ordem do itens no mesmo lugar
+|           `s.reverse()` |   ●   |   ●   | Inverte a ordem do itens internamente
 |    `+s.__reversed__()+` |   ●   |   ●   | Obtém iterador para percorrer itens, do último para o primeiro
 |           `s.rotate(n)` |       |   ●   | Move `n` itens de um lado para o outro
 |    `+s.__setitem__(p, e)+` |   ●   |   ●   | `++s[p] = e++`—coloca `e` na posição `p`, sobrescrevendo item ou fatia existentes
-| `s.sort([key], [reverse])` |   ●   |       | Ordena os itens no mesmo lugar, com os argumentos nomeados opcionais `key` e `reverse`
+| `s.sort([key], [reverse])` |   ●   |       | Ordena os itens internamente, com os argumentos nomeados opcionais `key` e `reverse`
 |==================================================================================================================================================
 
 Além((("queues", "implementing"))) de `deque`, outros pacotes da biblioteca padrão de Python implementam filas:
