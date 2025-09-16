@@ -4,12 +4,12 @@ Glifos são as figuras dos caracteres. Na falta de um glifo,
 o software usado para exibir o texto mostra um caractere alternativo,
 geralmente um retângulo branco apelidado de "tofu".
 
-Nem todos os caracteres que usei no *Python Fluente Segunda Edição* têm
-os glifos necessários nas fontes usadas por padrão pelo `asciidoctor-pdf`,
-então o PDF exibe vários tofu, e o PDF foi a base do livro impresso.
+As fontes padrão do `asciidoctor-pdf` não têm os glifos de
+todos os caracteres que usei no *Python Fluente Segunda Edição*.
+Por isso inicialmente o PDF para imprimir exibia dúzias de tofu.
 
-O problema não acontece nos navegadores exibindo o livro em HTML:
-https://pythonfluente.com.
+> O problema não acontece nos navegadores exibindo o livro em HTML:
+> https://pythonfluente.com.
 
 ## Diagnosticar o problema
 
