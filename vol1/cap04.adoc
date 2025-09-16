@@ -11,7 +11,7 @@ Computadores falam em bytes.footnote:[Slide 12 da palestra "Character Encoding a
 ____
 
 
-Python 3 introduziu uma forte distinção entre strings de texto humano e sequências de bytes em estado bruto.
+O Python 3 introduziu uma forte distinção entre strings de texto humano e sequências de bytes em estado bruto.
 A conversão automática((("implicit conversion"))) de sequências de bytes para
 texto Unicode ficou para trás no Python 2.
 Este capítulo trata de strings Unicode, sequências de bytes,
@@ -428,7 +428,7 @@ para verificar se seu texto Unicode é 100% ASCII.
 Se for, você deve ser capaz de codificá-lo para bytes em qualquer codificação sem gerar um `UnicodeEncodeError`.
 
 
-
+[[decode_error_sec]]
 ==== Tratando o UnicodeDecodeError
 
 Nem((("UnicodeDecodeError"))) todo byte contém um caractere ASCII válido,
@@ -440,13 +440,27 @@ Por outro lado, várias codificações de 8 bits antigas, como a `'cp1252'`, a `
 são capazes de decodificar qualquer série de bytes, incluindo ruído aleatório, sem reportar qualquer erro.
 Portanto, se seu programa presumir a codificação de 8 bits errada, ele vai decodificar lixo silenciosamente.
 
-
+.Gremlins, mojibake, e tofu
 [TIP]
 ====
-Caracteres truncados ou distorcidos são conhecidos como "gremlins" ou "mojibake" (文字化け—"texto modificado" em japonês).
+Caracteres trocados ou distorcidos são conhecidos como "gremlins" ou "mojibake"
+("caractere transformado", em japonês).
+Outro defeito comum ocorre quando a codificação está certa,
+mas a fonte não tem o glifo (desenho) de um caractere.
+Nesse caso ele aparece como um retângulo branco apelidado de "tofu"
+entre os especialistas em fontes.footnote:[Agradeço ao Felipe Sanches do Garoa Hacker Clube por
+me ensinar o termo "tofu", e me contar que a «coleção de fontes Noto» [.small]#&#91;fpy.li/5s&#93;#.
+é um projeto permanente para juntar todos os glifos necessários para evitar tofu em textos Unicode.
+"Noto" refere-se ao ideal "no tofu" (sem tofu).]
+Por exemplo, a palavra mojibake em japonês pode aparecer como quatro tofus: 文字化け.
+O motivo é que o programa `asciidoctor-pdf` que usei para gerar o livro impresso
+usa um subconjunto da fonte Noto que não tem glifos kanji.
+Lamento essa falha técnica. Pesquisei muito, mas não consegui resolver a tempo.
+Pelo menos a versão HTML está sem tofu, nos principais navegadores modernos.
+Confira «esta página lá no PythonFluente.com» [.small]#&#91;fpy.li/5r&#93;#.
 ====
 
-O <<ex_decoding>> ilustra a forma como o uso do codec errado pode produzir gremlins ou um `UnicodeDecodeError`.
+O <<ex_decoding>> ilustra como o uso do codec errado pode produzir gremlins ou um `UnicodeDecodeError`.
 
 [[ex_decoding]]
 .Decodificando de `str` para bytes: sucesso e tratamento de erro
@@ -927,7 +941,18 @@ o valor de `sys.stdout.encoding`, e esses três caracteres:
 
 * `'…'` `HORIZONTAL ELLIPSIS`—existe no CP 1252, mas não no CP 437.
 * `'∞'` `INFINITY`—existe no CP 437, mas não no CP 1252.
-* `'㊷'` `CIRCLED NUMBER FORTY TWO`—não existe nem no CP, 1252 nem no CP 437.
+* `'㊷'` `CIRCLED NUMBER FORTY TWO`—não existe nem no CP 1252 nem no CP 437 (nem na fonte padrão que usei para gerar esta edição do livro).
+
+[WARNING]
+====
+Este livro foi escrito em UTF-8, portanto em tese eu posso usar qualquer caractere Unicode.
+Porém, a fonte padrão do Asciidoc para gerar o PDF não tem todos os caracteres Unicode.
+Não consegui achar o caractere `CIRCLED NUMBER FORTY TWO` em outra fonte,
+então no livro impresso ele aparece como tofu.
+Mas no livro em HTML, está tudo certo.
+Veja o número 42 dentro de um círculo neste mesmo exemplo, no «PythonFluente.com»
+[.small]#&#91;fpy.li/5t&#93;#.
+====
 
 Quando executo _stdout_check.py_ no PowerShell ou no _cmd.exe_, funciona como visto na <<fig_stdout_check>>.
 
@@ -1171,7 +1196,7 @@ Assim, NFKC ou NFKD podem perder ou distorcer informações,
 mas podem produzir representações intermediárias convenientes para buscas ou indexação.
 
 Infelizmente, com o Unicode tudo é sempre mais complicado do que parece à primeira vista.
-Para o `VULGAR FRACTION ONE HALF`, a normalização NFKC produz 1 e 2 unidos pelo `FRACTION SLASH`,
+Para o `VULGAR FRACTION ONE HALF`, a normalização NFKC produz 1 e 2 unidos pelo `FRACTION SLASH`footnote:[Este caractere está aparecendo como tofu no livro impresso, sinto muito. No HTML está OK.],
 em vez do `SOLIDUS`, também conhecido como "barra" ("slash" em inglês)—o familiar caractere com código decimal 47 em ASCII.
 Portanto, buscar pela sequência ASCII de três caracteres `'1/2'`
 não encontraria a sequência Unicode normalizada.
@@ -1830,13 +1855,12 @@ https://fpy.li/4-28["Pragmatic Unicode, or, How Do I Stop the Pain?"
 (_Unicode Pragmático, ou, Como Eu Fiz a Dor Sumir?_)] (EN), foi marcante.
 Ned é tão profissional que forneceu uma transcrição completa da palestra, além dos slides e do vídeo.
 
-"Character encoding and Unicode in Python: How to (╯°□°)╯︵ ┻━┻ with dignity"
-(_Codificação de caracteres e o Unicode no Python: como (╯°□°)╯︵ ┻━┻ com dignidade_)
+"Character encoding and Unicode in Python"
+(_Codificação de caracteres e o Unicode no Python_)
 («slides» [.small]#&#91;fpy.li/4-1&#93;#, «vídeo» [.small]#&#91;fpy.li/4-2&#93;#) (EN)
 foi uma excelente palestra de Esther Nam e Travis Fischer na PyCon 2014,
 e foi onde encontrei a concisa epígrafe desse capítulo:
-"Humanos usam texto.
-Computadores falam em bytes."
+"Humanos usam texto. Computadores falam em bytes."
 
 Lennart Regebro--um dos revisores técnicos da primeira edição desse livro--compartilha seu
 "Useful Mental Model of Unicode (UMMU)" (_Modelo Mental Útil do Unicode_) em um post curto,

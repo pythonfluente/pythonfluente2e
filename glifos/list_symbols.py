@@ -61,7 +61,7 @@ def compact_display(characters, row_width):
             print('|'+cell, end='')
         print()
 
-def detail_display(counter, key=None):
+def detail_display(counter, sortkey=None):
     uchars: list[UniChar] = []
 
     for char, count in ((c, n) for c, n in counter.items()
@@ -70,8 +70,8 @@ def detail_display(counter, key=None):
         categ = unicodedata.category(char)
         uchars.append(UniChar(char, name, categ, count))
 
-    if key is not None:
-        uchars.sort(key=key)
+    if sortkey is not None:
+        uchars.sort(key=sortkey)
 
     print('[cols=">2,^1,11,1,>1"]')
     print('|====')
@@ -98,13 +98,13 @@ def main():
     # compact_display(used.keys(), num_cols)
     # print('|====')
 
-    detail_display(used, key=lambda uc: -uc.count)
+    detail_display(used, sortkey=lambda uc: -uc.count)
 
     print('\n## Other')
 
     detail_display({c : n for c, n in non_ascii.items() 
                           if (ord(c) >= 256) and c not in cp1252},
-                   key=attrgetter('categ', 'count'))
+                   sortkey=attrgetter('categ', 'count'))
 
 
 if __name__ == '__main__':
