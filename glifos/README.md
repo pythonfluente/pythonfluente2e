@@ -6,14 +6,16 @@ geralmente um retângulo branco apelidado de "tofu".
 
 As fontes padrão do `asciidoctor-pdf` não têm os glifos de
 todos os caracteres que usei no *Python Fluente Segunda Edição*.
-Por isso inicialmente o PDF para imprimir exibia dúzias de tofu.
+Por isso inicialmente o PDF exibia dúzias de tofu.
+O PDF é o miolo do livro que vai para gráfica.
+Tem tudo menos as capas.
 
 > O problema não acontece nos navegadores exibindo o livro em HTML:
 > https://pythonfluente.com.
 
 ## Diagnosticar o problema
 
-Para diagnosticar o problema, escrevi o script `list_symbols.py` que lê
+Para diagnosticar o problema, escrevi `list_symbols.py` que lê
 `stdin` ou arquivos de uma lista de argumentos na linha de comando,
 e gera no `stdout` um arquivo `.adoc` com cada um dos caracteres
 não-ASCII que aparecem nos arquivos de entrada, bem como sua contagem.
@@ -36,7 +38,8 @@ Eu poderia editar a fonte Noto que vem com o `asciidoctor-pdf` para
 incluir algumas dúzias de glifos necessários para o *Python Fluente*,
 mas a documentação do Asciidoctor alerta que há vários truques necessários
 para que uma fonte moderna como a Noto funcionem com a biblioteca
-`prawn` em Ruby, usada pelo `asciidoctor-pdf`.
+`prawn` em Ruby, usada pelo `asciidoctor-pdf`, que depende de informações
+consideradas obsoletas, que as fontes modernas não têm.
 
 Como não sou especialista em fontes, esse plano ficou inviável.
 
