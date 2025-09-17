@@ -27,9 +27,10 @@ não-ASCII que aparecem nos arquivos de entrada, bem como sua contagem.
 O ideal seria configurar o `asciidoctor-pdf` para usar o conceito
 de *fallback font*: uma ou mais fonte alternativas onde encontrar
 os glifos faltando.
-Em tese, todos os glifos necessários existem na coleção de fontes Noto.
+Em tese, todos os glifos necessários existem na
+[coleção de fontes Noto](https://github.com/notofonts/notofonts.github.io).
 
-Mas a fonte Noto usada pelo `asciidoctor-pdf` não tem todos os glifos,
+Mas a fonte Noto distribuída com o `asciidoctor-pdf` não tem todos os glifos,
 e minhas tentativas de usar fallback fracassaram.
 
 ### Plano B
