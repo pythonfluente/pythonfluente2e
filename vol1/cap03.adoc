@@ -60,14 +60,14 @@ resumem o que você precisa saber sobre isso para usar bem essas estruturas.
 [NOTE]
 ====
 Após((("dictionaries and sets", "internals of"))) acrescentar mais de 200 páginas a essa segunda edição, transferi a seção opcional
-«"Internals of sets and dicts" (_As entranhas dos sets e dos dicts_)» [.small]#&#91;fpy.li/hashint&#93;# (EN)
+"Internals of sets and dicts" (_As entranhas dos sets e dos dicts_)
 para o http://fluentpython.com, o site que complementa o livro.
-O «post de 18 páginas» [.small]#&#91;fpy.li/hashint&#93;# (EN) foi atualizado e expandido, e inclui explicações e diagramas sobre:
+Atualizei e expandi «post de 18 páginas» [.small]#&#91;fpy.li/hashint&#93;# com diagramas e explicações sobre:
 
-* O algoritmo de tabela de hash e as estruturas de dados, começando por seu uso em `set`, que é mais simples de entender.
-* A otimização de memória que preserva a ordem de inserção de chaves em instâncias de `dict` (desde o Python 3.6) .
+* O algoritmo de tabela de hash, começando por seu uso em `set`, que é mais simples de entender.
+* A otimização de memória que preserva a ordem de inserção de chaves em objetos `dict` (desde o Python 3.6) .
 * O layout do compartilhamento de chaves em dicionários que mantêm atributos de
-instância—o `+__dict__+` de objetos definidos pelo usuário (otimização implementada no Python 3.3).
+instância, o `+__dict__+` de objetos definidos pelo usuário (otimização implementada no Python 3.3).
 ====
 
 
@@ -314,7 +314,6 @@ O((("dictionaries and sets", "standard API of mapping types", id="DASapi03")))((
 módulo `collections.abc` contém as ABCs `Mapping` e `MutableMapping`,
 descrevendo as interfaces de `dict` e de tipos similares.
 Veja a <<mapping_uml>>.((("UML class diagrams", "simplified for MutableMapping and superclasses")))
-
 A maior utilidade dessas ABCs é documentar e formalizar as interfaces padrão para os mapeamentos,
 e servir de critério para testes com `isinstance` em código que precise suportar mapeamentos de forma geral:
 
@@ -344,21 +343,21 @@ A classe `collections.UserDict` e todas as classes concretas de mapeamentos da b
 encapsulam o `dict` básico em suas implementações, que por sua vez é criado sobre uma tabela de hash.
 Assim, todas elas compartilham a mesma limitação:
 as((("keys", "hashability"))) chaves precisam ser _hashable_
-(os valores não precisam ser hashable, só as chaves).
+(os valores não precisam ser_hashable_, só as chaves).
 Se você precisa de uma recapitulação, a próxima seção explica isso.
 
 [[what_is_hashable]]
 ==== O que é hashable?
 
-Aqui((("hashable, definition of"))) está parte da definição de hashable, adaptada do
+Aqui((("hashable, definition of"))) está parte da definição de_hashable_, adaptada do
 «Glossário de Python» [.small]#&#91;fpy.li/32&#93;#:
 
 [quote]
 ____
-Um objeto é hashable se tem um código de hash que nunca muda durante seu ciclo de vida
+Um objeto é_hashable_ se tem um código de hash que nunca muda durante seu ciclo de vida
 (precisa ter um método `+__hash__+`) e pode ser comparado com outros objetos
 (precisa ter um método `+__eq__+`).
-Objetos hashable que são comparados como iguais devem ter o mesmo código de hash.footnote:[O
+Objetos_hashable_ que são comparados como iguais devem ter o mesmo código de hash.footnote:[O
 verbete para "hashable" no
 «_Glossário_ de Python» [.small]#&#91;fpy.li/32&#93;#
 usa o termo "valor de hash" em vez de((("hash code, versus hash value"))) _código de hash_.
@@ -368,10 +367,10 @@ Então pode ser confuso se referir ao código de hash como um valor.
 Nesse livro usarei apenas _código de hash_.]
 ____
 
-Tipos numéricos((("numeric types", "hashability of"))) e os tipos planos imutáveis `str` e `bytes` são todos hashable.
-Tipos contêineres são hashable se forem imutáveis e se todos os objetos por eles contidos forem também hashable.
-Um `frozenset` é sempre hashable, pois todos os elementos que ele contém devem ser, por definição, hashable.
-Uma `tuple` é hashable apenas se todos os seus itens também forem.
+Tipos numéricos((("numeric types", "hashability of"))) e os tipos planos imutáveis `str` e `bytes` são todos_hashable_.
+Tipos contêineres são_hashable_ se forem imutáveis e se todos os objetos por eles contidos forem também_hashable_.
+Um `frozenset` é sempre_hashable_, pois todos os elementos que ele contém devem ser, por definição,_hashable_.
+Uma `tuple` é_hashable_ apenas se todos os seus itens também forem.
 Observe as tuplas `tt`, `tl`, and `tf`:
 
 [source, python]
@@ -398,7 +397,7 @@ O código de hash de um objeto corretamente implementado tem a garantia de ser c
 Tipos definidos pelo usuário são hashble por default, pois seu código de hash é seu `id()`, e o método `+__eq__()+`
 herdado da classe `object` apenas compara os IDs dos objetos.
 Se um objeto implementar seu próprio `+__eq__()+`, que leve em consideração seu estado interno,
-ele será hashable apenas se seu `+__hash__()+` sempre devolver o mesmo código de hash.
+ele será_hashable_ apenas se seu `+__hash__()+` sempre devolver o mesmo código de hash.
 Na prática, isso exige que `+__eq__()+` e `+__hash__()+` levem em conta apenas
 atributos de instância que nunca mudem durante a vida do objeto.
 
@@ -416,9 +415,9 @@ A <<mapping_methods_tbl>> mostra os métodos implementados por `dict` e pelas va
 [role="pagebreak-before less_space"]
 [[mapping_methods_tbl]]
 .Métodos do tipos de mapeamento `dict`, `collections.defaultdict`, e `collections.OrderedDict` (métodos comuns de `object` omitidos por concisão); argumentos opcionais então entre `[…]`
-[options="header", cols="7,^2,^3,^3,15"]
+[options="header", cols="7,^2,^3,^4,15"]
 |===========================================================================================================================================================================================================================================================================
-|                             |dict  |defaultdict  |OrderedDict  | &#xa0;
+|                             |dict  |default dict  |Ordered Dict  | &#xa0;
 |                 `d.clear()` |  ●   |      ●      |      ●      | Remove todos os itens.
 |         `+d.__contains__(k)+` |  ●   |      ●      |      ●      | `k in d`
 |                  `d.copy()` |  ●   |      ●      |      ●      | Cópia rasa
@@ -439,7 +438,7 @@ A <<mapping_methods_tbl>> mostra os métodos implementados por `dict` e pelas va
 |       `d.pop(k, [default])` |  ●   |      ●      |      ●      | Remove e devolve valor em `k`, ou `default` ou `None`, se `k` não existir
 |               `d.popitem()` |  ●   |      ●      |      ●      | Remove e devolve, na forma `(chave, valor)`, o último item inseridofootnote:[`OrderedDict.popitem(last=False)` remove o primeiro item inserido (FIFO). O argumento nomeado `last` não é suportado por `dict` ou `defaultdict`, pelo menos até Python 3.10b3.]
 |          `+d.__reversed__()+` |  ●   |      ●      |      ●      | Suporte a `reverse(d)`—devolve um iterador de chaves, da última para a primeira a serem inseridas
-|          `+d.__ror__(other)+` |  ●   |      ●      |      ●      | Suporte a `other \| dd`—operador de união invertido (Python ≥ 3.9)footnote:[Operadores reversos são tratados no Capítulo 16 [.small]#&#91;vol.2, fpy.li/4r&#93;.&#93;#
+|          `+d.__ror__(other)+` |  ●   |      ●      |      ●      | Suporte a `other \| dd`—operador de união reverso (Python ≥ 3.9)footnote:[Operadores reversos são tratados no Capítulo 16 [.small]#&#91;vol.2, fpy.li/4r&#93;.&#93;#
 |`d.setdefault(k, [default])` |  ●   |      ●      |      ●      | Se `k in d`, devolve `d[k]`; senão, atribui `d[k] = default` e devolve isso
 |       `+d.__setitem__(k, v)+` |  ●   |      ●      |      ●      | `d[k] = v`—coloca `v` em `k`
 |   `d.update(m, [**kwargs])` |  ●   |      ●      |      ●      | Atualiza `d` com itens de um mapeamento ou iterável de pares `(chave, valor)`
@@ -514,6 +513,7 @@ include::../code/03-dict-set/index0.py[tags=INDEX0]
 para que a função `sorted` possa usá-lo para normalizar as palavras antes de ordená-las.footnote:[Isso
 é um exemplo do uso de um método como uma função de primeria classe, o assunto do <<ch_func_objects>>.]
 
+<<<
 As três linhas tratando de `occurrences` no <<index0_ex>> podem ser substituídas por uma única linha
 usando `dict.setdefault`. O <<index_ex>> fica mais próximo do código apresentado por Alex Martelli.
 
@@ -537,6 +537,7 @@ my_dict.setdefault(key, []).append(new_value)
 
 ...é o mesmo que executar...
 
+<<<
 [source, python]
 ----
 if key not in my_dict:
@@ -593,8 +594,9 @@ produzir o valor ausente, que neste caso é uma `list` vazia,
 que então é atribuída a `index[word]` e devolvida, de forma que a operação
 `.append(location)` é sempre bem sucedida.
 
-Se nenhum `default_factory` é fornecido, o `KeyError` usual é gerado para chaves ausente.
+Se nenhum `default_factory` é fornecido, chaves ausentes geram `KeyError`, como esperado.
 
+<<<
 [WARNING]
 ====
 O `default_factory` de um `defaultdict` só é invocado para fornecer valores default para chamadas a `+__getitem__+`,
@@ -631,6 +633,7 @@ mas também é conveniente buscar uma porta por número, como em `meu-arduino.po
 para evitar que iniciantes tropecem quando quiserem fazer piscar o LED na porta 13 de seus Arduinos.
 O <<ex_strkeydict0_tests>> mostra como tal mapeamento funcionaria.
 
+<<<
 [[ex_strkeydict0_tests]]
 .Ao buscar por uma chave não-string, `StrKeyDict0` a converte para `str` quando ela não é encontrada
 ====
@@ -676,6 +679,7 @@ Na última linha de `+__missing__+`, `self[str(key)]` chamaria `+__getitem__+`,
 passando aquela chave `str`, e `+__getitem__+`, por sua vez, chamaria
 `+__missing__+` novamente.
 
+<<<
 O((("&#x005F;&#x005F;contains&#x005F;&#x005F;"))) método `+__contains__+` também é necessário para que
 o comportamento nesse exemplo seja consistente, pois a operação `k in d` o chama,
 mas o método herdado de `dict` não invoca `+__missing__+` com chaves ausentes.
@@ -703,6 +707,7 @@ Classes definidas pelo usuário derivadas de mapeamentos da biblioteca padrão p
 como explicado na próxima seção.
 ====
 
+<<<
 [[inconsistent_missing]]
 ==== O uso inconsistente de `+__missing__+` na biblioteca padrão
 
@@ -732,8 +737,7 @@ subclasse de `abc.Mapping` com `+__getitem__+` chamando `+__missing__+`::
 Veja
 «_missing.py_» [.small]#&#91;fpy.li/3-7&#93;#
 no repositório de exemplos de código para demonstrações dos cenários descritos acima.
-
-Os quatro cenários que acabo de descrever supõem implementações mínimas.
+Estes cenários supõem implementações mínimas.
 Se a sua subclasse implementa `+__getitem__+`, `get`, e `+__contains__+`,
 então você pode ou não fazer tais métodos usarem `+__missing__+`, dependendo de suas necessidades.
 O ponto aqui é mostrar que é preciso ter cuidado ao criar subclasses dos mapeamentos da biblioteca padrão
@@ -832,7 +836,7 @@ um interpretador parcial da linguagem de programação Scheme.
 
 Um((("collections.abc module", "Counter")))((("Counter"))) mapeamento que mantém uma contagem para cada chave.
 Atualizar uma chave existente adiciona à sua contagem.
-Isso pode ser usado para contar instâncias de objetos hashable ou como um _multiset_ (conjunto múltiplo),
+Isso pode ser usado para contar instâncias de objetos_hashable_ ou como um _multiset_ (conjunto múltiplo),
 discutido adiante nessa seção.
 `Counter` implementa os operadores `+` e `-` para combinar contagens,
 e outros métodos úteis tal como o `most_common([n])`,
@@ -1114,12 +1118,12 @@ Agora vamos ver algumas regras e dicas baseadas na forma como `dict` é
 implementado debaixo dos panos.((("", startref="DASviews03")))
 
 [[consequences_dict_internals]]
-=== Consequências práticas da forma como dict funciona
+=== Consequências da implementação de dicts
 
 A((("dictionaries and sets", "consequences of how dict works"))) implementação da tabela de hash do
 `dict` de Python é muito eficiente, mas é importante entender os efeitos práticos desse design:
 
-* Chaves((("keys", "practical consequences of using dict"))) devem ser objetos hashable.
+* Chaves((("keys", "practical consequences of using dict"))) devem ser objetos_hashable_.
 Eles devem implementar métodos `+__hash__+` e `+__eq__+` apropriados, como descrito na <<what_is_hashable>>.
 * O acesso aos itens através da chave é muito rápido.
 Mesmo que um `dict` tenha milhões de chaves, Python pode localizar uma chave diretamente,
@@ -1182,10 +1186,11 @@ Uma grande utilidade dos conjuntos é descartar itens duplicados:
 ['eggs', 'spam', 'bacon']
 ----
 
+<<<
 [TIP]
 ====
 Para remover elementos duplicados preservando a ordem da primeira ocorrência de cada item,
-você pode fazer isso com um `dict` simples, assim:
+você pode usar um `dict` simples, assim:
 [source, python]
 ----
 >>> dict.fromkeys(l).keys()
@@ -1196,8 +1201,8 @@ dict_keys(['spam', 'eggs', 'bacon'])
 ====
 
 Elementos de um conjunto devem ser _hashable_.
-O tipo `set` não é hashable, então não é possível criar um `set` com instâncias aninhadas de `set`.
-Mas `frozenset` é hashable, então você pode ter instâncias de `frozenset` dentro de um `set`.
+O tipo `set` não é_hashable_, então não é possível criar um `set` com instâncias aninhadas de `set`.
+Mas `frozenset` é_hashable_, então você pode ter instâncias de `frozenset` dentro de um `set`.
 
 Além de garantir que cada elemento é único,
 os tipos conjunto implementam muitas operações entre conjuntos como operadores infixos.
@@ -1355,7 +1360,7 @@ Os((("dictionaries and sets", "consequences of how set works")))((("sets", "cons
 tipos `set` e `frozenset` são ambos implementados com um tabela de hash.
 Isso tem os seguintes efeitos:
 
-* Elementos de conjuntos precisam ser objetos hashable.
+* Elementos de conjuntos precisam ser objetos_hashable_.
 Eles precisam implementar métodos `+__hash__+` e `+__eq__+` adequados, como descrido na <<what_is_hashable>>.
 * O teste de existência de um elemento é muito eficiente.
 Um conjunto pode ter milhões de elementos, mas um elemento pode ser localizado diretamente,
@@ -1379,6 +1384,10 @@ Agora vamos revisar a vasta seleção de operações oferecidas pelos conjuntos.
 [[set_op_section]]
 ==== Operações de conjuntos
 
+[[set_uml]]
+.Diagrama de classes UML simplificado para `MutableSet` e suas superclasses em `collections.abc` (nomes em itálico são classes e métodos abstratos; métodos de operadores reversos foram omitidos por concisão).
+image::../images/flpy_0302.png[align="center",pdfwidth=11cm]
+
 A <<set_uml>> dá((("dictionaries and sets", "set operations", id="DASset03-ops")))((("sets",
 "set operations", id="Soper03")))((("UML class diagrams", "simplified for MutableSet and superclasses")))
 uma visão geral dos métodos disponíveis em conjuntos mutáveis e imutáveis.
@@ -1397,50 +1406,47 @@ Os operadores infixos na <<set_operators_tbl>> exigem que os dois operandos seja
 mas todos os outros métodos recebem um ou mais argumentos iteráveis.
 Por exemplo, para produzir a união de quatro coleções, `a`, `b`, `c`, e `d`, você pode chamar
 `a.union(b, c, d)`, onde `a` precisa ser um `set`,
-mas `b`, `c`, e `d` podem ser iteráveis de qualquer tipo que produza itens hashable.
+mas `b`, `c`, e `d` podem ser iteráveis de qualquer tipo que produza itens_hashable_.
 Para criar um novo conjunto com a união de quatro iteráveis,
 desde o Python 3.5 você pode escrever `{*a, *b, *c, *d}` ao invés de atualizar um conjunto existente, graças à
 «PEP 448—Additional Unpacking Generalizations (_Generalizações de Desempacotamento Adicionais_)» [.small]#&#91;fpy.li/pep448&#93;#.
 
 ====
 
-[[set_uml]]
-.Diagrama de classes UML simplificado para `MutableSet` e suas superclasses em `collections.abc` (nomes em itálico são classes e métodos abstratos; métodos de operadores reversos foram omitidos por concisão).
-image::../images/flpy_0302.png[Diagrama de classe UML para `Set` e `MutableSet`]
-
 [[set_operators_tbl]]
 .Operações matemáticas com conjuntos: esses métodos produzem um novo conjunto ou atualizam o conjunto alvo internamente, se ele for mutável
-[options="header", cols="^3,8,16"]
-|=====================================================================================================================================================================================
+[options="header", cols="^4,11,16"]
+|====
 |operador| método                           | 
 | `s & z`  |                        `+s.__and__(z)+` | Intersecção de `s` e `z`
-| `z & s`  |                       `+s.__rand__(z)+` | Operador `&` invertido
+| `z & s`  |                       `+s.__rand__(z)+` | Operador `&` reverso
 |          |               `s.intersection(it, …)` | Intersecção de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 | `s &= z` |                       `+s.__iand__(z)+` | `s` atualizado com a intersecção de `s` e `z`
 |          |        `s.intersection_update(it, …)` | `s`  atualizado com a intersecção de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 | `s \| z` |                         `+s.__or__(z)+` | União de `s` e `z`
-| `z \| s` |                        `+s.__ror__(z)+` | `\|` invertido
+| `z \| s` |                        `+s.__ror__(z)+` | `\|` reverso
 |          |                      `s.union(it, …)` | União de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 | `s \|= z`|                        `+s.__ior__(z)+` | `s` atualizado com a união de `s` e `z`
 |          |                     `s.update(it, …)` | `s` atualizado com a união de `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 | `s - z`  |                        `+s.__sub__(z)+` | Complemento relativo ou diferença entre `s` e `z`
-| `z - s`  |                       `+s.__rsub__(z)+` | Operador `-` invertido
+| `z - s`  |                       `+s.__rsub__(z)+` | Operador `-` reverso
 |          |                 `s.difference(it, …)` | Diferença entre `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 | `s -= z` |                       `+s.__isub__(z)+` | `s` atualizado com a diferença entre `s` e `z`
 |          |          `s.difference_update(it, …)` | `s` atualizado com a diferença entre `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
 | `s ^ z`  |                        `+s.__xor__(z)+` | Diferença simétrica (o complemento da intersecção `s & z`)
-| `z ^ s`  |                       `+s.__rxor__(z)+` | Operador `^` invertido
+| `z ^ s`  |                       `+s.__rxor__(z)+` | Operador `^` reverso
 |          |          `s.symmetric_difference(it)` | Complemento de `s & set(it)`
 | `s ^= z` |                       `+s.__ixor__(z)+` | `s` atualizado com a diferença simétrica de `s` e `z`
 |          |`s.symmetric_difference_update(it, …)` | `s` atualizado com a diferença simétrica de  `s` e todos os conjuntos construídos a partir de iteráveis `it`, etc.
-|=====================================================================================================================================================================================
+|====
 
 A <<set_comparison_tbl>> lista predicados de conjuntos: operadores e métodos que devolvem `True` ou `False`.
 
+<<<
 [[set_comparison_tbl]]
-.Operadores e métodos de comparação de conjuntos que devolvem um booleano
-[options="header",cols="^3,8,16"]
-|===============================================================================================================
+.Operadores e métodos de comparação de conjuntos
+[options="header",cols="^4,7,16"]
+|====
 |operador| método              | 
 | `e in s`      | `+s.__contains__(e)+` | Elemento `e` é membro de `s`
 | `s \<= z`      |       `+s.__le__(z)+` | `s` é um subconjunto do conjunto `z`
@@ -1450,16 +1456,15 @@ A <<set_comparison_tbl>> lista predicados de conjuntos: operadores e métodos qu
 |               |  `s.issuperset(it)` | `s` é um superconjunto do conjunto criado a partir do iterável `it`
 | `s > z`       |       `+s.__gt__(z)+` | `s` é um superconjunto próprio do conjunto `z`
 |               |   `s.isdisjoint(z)` | `s` e `z` são disjuntos (não tem elementos em comum)
-|===============================================================================================================
-
+|====
 
 Além de operadores e métodos derivados da teoria matemática dos conjuntos,
 os tipos conjunto implementam outros métodos para tornar seu uso prático, resumidos na <<set_methods_tbl>>.
 
 [[set_methods_tbl]]
 .Métodos adicionais de conjuntos
-[options="header",cols="5,^2,^3,15"]
-|===================================================================================================================
+[options="header",cols="5,^2,^4,15"]
+|====
 |                   | set | frozenset| &#xa0;
 |        `s.add(e)` |  ●  |           | Adiciona elemento `e` a `s`
 |       `s.clear()` |  ●  |           | Remove todos os elementos de `s`
@@ -1469,7 +1474,7 @@ os tipos conjunto implementam outros métodos para tornar seu uso prático, resu
 |     `+s.__len__()+` |  ●  |     ●     | `len(s)`
 |         `s.pop()` |  ●  |           | Remove e devolve um elemento de `s`, gerando um `KeyError` se `s` estiver vazio
 |     `s.remove(e)` |  ●  |           | Remove elemento `e` de `s`, gerando um `KeyError` se `e` não existir em `s`
-|===================================================================================================================
+|====
 
 
 Isso encerra nossa visão geral dos recursos dos conjuntos.
@@ -1489,11 +1494,11 @@ de dict são notavelmente similares a um `frozenset`.
 
 [[view_methods_tbl]]
 .Métodos implementados por `frozenset`, `dict_keys`, e `dict_items`
-[options="header",cols="10,^5,^5,^5,15"]
+[options="header",cols="10,^5,^5,^6,15"]
 |========================================================================================================================
 |                                 | frozenset | dict_keys | dict_items | 
 |                  `+s.__and__(z)+` |     ●     |     ●     |     ●      | `s & z` (interseção de  `s` e `z`)
-|                 `+s.__rand__(z)+` |     ●     |     ●     |     ●      | operador `&` invertido
+|                 `+s.__rand__(z)+` |     ●     |     ●     |     ●      | operador `&` reverso
 |              `+s.__contains__()+` |     ●     |     ●     |     ●      | `e in s`
 |                      `s.copy()` |     ●     |           |            | Cópia rasa de `s`
 |           `s.difference(it, …)` |     ●     |           |            | Diferença entre `s` e os iteráveis `it`, etc.
@@ -1504,14 +1509,14 @@ de dict são notavelmente similares a um `frozenset`.
 |                  `+s.__iter__()+` |     ●     |     ●     |     ●      | obtém iterador para `s`
 |                   `+s.__len__()+` |     ●     |     ●     |     ●      | `len(s)`
 |                   `+s.__or__(z)+` |     ●     |     ●     |     ●      | `s \| z` (união de `s` e `z`)
-|                   `+s.__ror__()+` |     ●     |     ●     |     ●      | Operador `\|` invertido
+|                   `+s.__ror__()+` |     ●     |     ●     |     ●      | Operador `\|` reverso
 |              `+s.__reversed__()+` |           |     ●     |     ●      | Obtém iterador para `s` com a ordem invertida
-|                 `+s.__rsub__(z)+` |     ●     |     ●     |     ●      | Operador `-` invertido
+|                 `+s.__rsub__(z)+` |     ●     |     ●     |     ●      | Operador `-` reverso
 |                  `+s.__sub__(z)+` |     ●     |     ●     |     ●      | `s - z` (diferença entre `s` e `z`)
 |    `s.symmetric_difference(it)` |     ●     |           |            | Complemento de `s & set(it)`
 |                `s.union(it, …)` |     ●     |           |            | União de `s` com iteráveis `it`, etc.
 |                   `+s.__xor__()+` |     ●     |     ●     |     ●      | `s ^ z` (diferença simétrica de `s` e `z`)
-|                  `+s.__rxor__()+` |     ●     |     ●     |     ●      | Operador `^` invertido
+|                  `+s.__rxor__()+` |     ●     |     ●     |     ●      | Operador `^` reverso
 |========================================================================================================================
 
 Especificamente, `dict_keys` e `dict_items` implementam os métodos especiais para suportar as poderosas operações de conjuntos
@@ -1540,14 +1545,15 @@ Veja isso:
 {'a', 'c', 'b', 'd', 'i', 'e'}
 ----
 
+<<<
 [WARNING]
 ====
-Uma view obtida de `dict_items` só funciona como um conjunto se todos os valores naquele `dict` são hashable.
+Uma view obtida de `dict_items` só funciona como um conjunto se todos os valores naquele `dict` são_hashable_.
 Tentar executar operações de conjuntos sobre uma view devolvida por `dict_items` que
 contenha valores não-hashable gera um `TypeError: unhashable type 'T'`, sendo `T` o tipo do valor rejeitado.
 
 Por outro lado, uma view devolvida por `dict_keys` sempre pode ser usada como um conjunto,
-pois todas as chaves são hashable—por definição.
+pois todas as chaves são_hashable_—por definição.
 ====
 
 Usar operações de conjunto com views pode evitar a necessidade de muitos loops e ifs
@@ -1561,8 +1567,8 @@ Com isso, encerramos esse capítulo.
 === Resumo do capítulo
 
 Dicionários((("dictionaries and sets", "overview of"))) são a pedra fundamental de Python.
-Ao longo dos anos, a sintaxe literal familiar `{k1: v1, k2: v2}`
-foi aperfeiçoada para suportar desempacotamento com `**` e pattern matching, bem como com compreensões de `dict`.
+Ao longo dos anos, a sintaxe literal `{k1: v1, k2: v2}`
+passou a suportar desempacotamento com `**` e pattern matching, bem como com compreensões de `dict`.
 
 Além do `dict` básico, a biblioteca padrão oferece mapeamentos práticos prontos para serem usados,
 como o `defaultdict`, o `ChainMap`, e o `Counter`, todos definidos no módulo `collections`.
