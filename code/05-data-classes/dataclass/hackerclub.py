@@ -2,9 +2,9 @@
 """
 ``HackerClubMember`` objects accept an optional ``handle`` argument::
 
-    >>> anna = HackerClubMember('Anna Ravenscroft', handle='AnnaRaven')
+    >>> anna = HackerClubMember('Anna Ravenscroft', handle='raven')
     >>> anna
-    HackerClubMember(name='Anna Ravenscroft', guests=[], handle='AnnaRaven')
+    HackerClubMember(name='Anna Ravenscroft', guests=[], handle='raven')
 
 If ``handle`` is omitted, it's set to the first part of the member's name::
 
@@ -12,7 +12,7 @@ If ``handle`` is omitted, it's set to the first part of the member's name::
     >>> leo
     HackerClubMember(name='Leo Rochael', guests=[], handle='Leo')
 
-Members must have a unique handle. The following ``leo2`` will not be created,
+Handles must be unique. The following ``leo2`` will not be created,
 because its ``handle`` would be 'Leo', which was taken by ``leo``::
 
     >>> leo2 = HackerClubMember('Leo DaVinci')

@@ -25,11 +25,14 @@ def tokenize(text: str) -> Iterator[str]:  # <1>
     for match in RE_WORD.finditer(text):
         yield match.group().upper()
 
-def name_index(start: int = 32, end: int = STOP_CODE) -> dict[str, set[str]]:
+def name_index(
+    start: int = 32, end: int = STOP_CODE
+) -> dict[str, set[str]]:
     index: dict[str, set[str]] = {}  # <2>
     for char in (chr(i) for i in range(start, end)):
         if name := unicodedata.name(char, ''):  # <3>
             for word in tokenize(name):
                 index.setdefault(word, set()).add(char)
     return index
+
 # end::CHARINDEX[]
