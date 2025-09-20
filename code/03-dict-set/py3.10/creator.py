@@ -27,14 +27,14 @@ ValueError: Invalid record: 'Spam, spam, spam'
 # tag::DICT_MATCH[]
 def get_creators(record: dict) -> list:
     match record:
-        case {'type': 'book', 'api': 2, 'authors': [*names]}:  # <1>
+        case {'type': 'book', 'api': 2, 'authors': [*names]}:       # <1>
             return names
-        case {'type': 'book', 'api': 1, 'author': name}:  # <2>
+        case {'type': 'book', 'api': 1, 'author': name}:            # <2>
             return [name]
-        case {'type': 'book'}:  # <3>
+        case {'type': 'book'}:                                      # <3>
             raise ValueError(f"Invalid 'book' record: {record!r}")
-        case {'type': 'movie', 'director': name}:  # <4>
+        case {'type': 'movie', 'director': name}:                   # <4>
             return [name]
-        case _:  # <5>
+        case _:                                                     # <5>
             raise ValueError(f'Invalid record: {record!r}')
 # end::DICT_MATCH[]
