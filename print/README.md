@@ -22,7 +22,7 @@ Como veremos na _Seção 11.3_ [vol.2, fpy.li/3f]
 
 1. Eliminar duplicação de atributos entre cabeçalhos de `capN.adoc`, `atributos-pt_BR.adoc`, `Livro.adoc`, `vol1.adoc`...
 2. Encurtar links já presentes
-3. Quebrar linhas longas (semantic linebreaks)
+3. Quebrar linhas longas (semantic linebreaks se possível, hard-wrap como plano B)
 4. Retirar inline pass macros[^1]
 
 5. Gerar PDF para impressão
