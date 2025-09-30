@@ -81,7 +81,7 @@ Este((("interfaces", "significant changes to")))((("protocols", "significant cha
 * <<two_kinds_protocols_sec>> explica as semelhanças e diferenças entre protocolos dinâmicos e estáticos.
 * <<defensive_duck_prog_sec>> praticamente reproduz o conteúdo da primeira edição, mas foi atualizada e agora tem um título de seção que enfatiza sua importância.
 * <<static_protocols_sec>> é toda nova. Ela se apoia na apresentação inicial em <<protocols_in_fn_sec>> (<<ch_type_hints_def>>).
-* Os diagramas de classe de `collections.abc` nas Figuras pass:[<a href="#sequence_uml_repeat" data-type="xref" data-xrefstyle="select:labelnumber">#sequence_uml_repeat</a>], pass:[<a href="#mutablesequence_uml" data-type="xref" data-xrefstyle="select:labelnumber">#mutablesequence_uml</a>], and pass:[<a href="#collections_uml" data-type="xref" data-xrefstyle="select:labelnumber">#collections_uml</a>] foram atualizados para incluir a `Collection` ABC, de Python 3.6.
+* Os diagramas de classe de `collections.abc` neste capítulo foram atualizados para incluir a `Collection` ABC, do Python 3.6.
 
 A primeira edição de _Python Fluente_ tinha uma seção encorajando o uso das ABCs  `numbers` para goose typing.
 Na <<numbers_abc_proto_sec>> eu explico porque, em vez disso, você deve usar protocolos numéricos estáticos do módulo `typing` se você planeja usar checadores de tipos estáticos, ou checagem durante a execução no estilo da goose typing.
@@ -485,7 +485,13 @@ class Lottery:
     def draw(self): ...
 ----
 
-Obviamente, a mera existência de um método chamado `draw`, chamado sem argumentos, [.keep-together]#está longe# de ser suficiente para garantir que dois objetos `x` e `y`, da forma como `x.draw()` e `y.draw()` podem ser chamados, são de qualquer forma intercambiáveis ou abstratamente pass:[equivalentes &mdash;<span class="keep-together"> nada</span>] sobre a similaridade da semântica resultante de tais chamadas pode ser inferido. Na verdade, é necessário um programador inteligente para, de alguma forma, _assegurar_ positivamente que tal equivalência é verdadeira em algum nível.
+Obviamente, a mera existência de um método chamado `draw`, sem parâmetros,
+não é suficiente para garantir que dois objetos `x` e `y`,
+que aceitem as invocações `x.draw()` e `y.draw()`,
+são de qualquer forma intercambiáveis ou abstratamente equivalentes—nada
+pode ser inferido sobre a similaridade da semântica resultante de tais chamadas.
+Na verdade, é necessário um programador inteligente para,
+de alguma forma, _assegurar_ positivamente que tal equivalência é verdadeira em algum nível.
 
 Em biologia (e outras disciplinas), este problema levou à emergência (e, em muitas facetas, à dominância) de uma abordagem alternativa à _fenética_, conhecida como ((("cladistics"))) __cladística__ — que baseia as escolhas taxinômicas em características herdadas de ancestrais comuns em vez daquelas que evoluíram de forma independente (o sequenciamento de DNA cada vez mais barato e rápido vem tornando a cladística bastante prática em mais casos).
 
@@ -672,8 +678,7 @@ Essa ABC não tem nenhum método próprio, mas foi acrescentada no Python 3.6 pa
 `Sequence`, `Mapping`, `Set`::
 Esses são os principais tipos de coleções imutáveis, e cada um tem uma subclasse mutável.
 Um diagrama detalhado de `MutableSequence` é apresentado em <<mutablesequence_uml>>;
-para `MutableMapping` e `MutableSet`, veja as Figuras pass:[<a data-type="xref" href="#mapping_uml" data-xrefstyle="select: labelnumber">#mapping_uml</a>] e
-pass:[<a data-type="xref" href="#set_uml" data-xrefstyle="select: labelnumber">#set_uml</a>] em <<ch_dicts_sets>>.
+para `MutableMapping` e `MutableSet`, veja a <<mapping_uml>> e a <<set_uml>> em <<ch_dicts_sets>>.
 
 `MappingView`::
 No Python 3, os objetos retornados pelos métodos de mapeamentos `.items()`, `.keys()`, e `.values()`
@@ -756,11 +761,14 @@ Os métodos concretos são:
 `.inspect()`:: Retorna uma `tuple` construída a partir dos itens atualmente no container, sem modificar o conteúdo (a ordem interna não é preservada).
 
 A <<tombola_uml>> mostra a ABC `Tombola` e três implementações concretas.
+Vale notar que _registered_ (registarada) e _virtual subclass_ (subclasse virtual)
+não são termos da UML padrão, mas representam uma relação de classe específica de Python,
+como veremos na <<virtual_subclass_sec>>.
 
 [role="width-80"]
 [[tombola_uml]]
-
-.Diagrama UML para uma ABC e três subclasses. O nome da ABC `Tombola` e de seus métodos abstratos estão escritos em _itálico_, segundo as convenções da UML. A seta tracejada é usada para implementações de interface - as estou usando aqui para mostrar que `TomboList` implementa não apenas a interface `Tombola`, mas também está registrada como uma _subclasse virtual_ de `Tombola` - como veremos mais tarde nesse capítulo.pass:[<span data-type="footnote"><span class="roman">«registrada» and «subclasse virtual» não são termos da UML padrão. Estão sendo usados para representar uma relação de classe específica de Python.</span></span>]
+.Diagrama UML para uma ABC e três subclasses. O nome da ABC `Tombola` e de seus métodos abstratos estão escritos em _itálico_, segundo as convenções da UML. A seta tracejada indica que `TomboList` implementa a interface `Tombola`, e também está registrada como _subclasse virtual_.
+`TomboList` também está registrada como uma _subclasse virtual_ de `Tombola`.
 image::../images/flpy_1305.png[UML for Tombola]
 
 O <<ex_tombola_abc>> mostra a definição da ABC `Tombola`.
@@ -1861,13 +1869,16 @@ Beazley and Jones's pass:[<em><a class="orm:hideurl" href="https://fpy.li/pycook
 tem uma seção sobre como definir uma ABC (Recipe 8.12).
 O livro foi escrito antes de Python 3.4,
 então eles não usam a atual sintaxe preferida para declarar ABCs, criar uma subclasse de `abc.ABC`
-(em vez disso, eles usam a palavra-chave `metaclass`, da qual  só vamos precisar mesmo em<<ch_class_metaprog>>).
+(em vez disso, eles usam a palavra-chave `metaclass`, da qual só vamos precisar mesmo em<<ch_class_metaprog>>).
 Tirando esse pequeno detalhe, a receita cobre os principais recursos das ABCs muito bem.
 
 _The Python Standard Library by Example_ by Doug Hellmann (Addison-Wesley),
 tem um capítulo sobre o módulo `abc`.
-Ele também esta disponível na web, no excelente site do Doug https://fpy.li/13-51[_PyMOTW_&mdash;Python Module of the Week] (EN).
-Hellmann também usa a declaração de ABC no estilo antigo:`PluginBase(metaclass=abc.ABCMeta)` em vez do mais simples `PluginBase(abc.ABC)`, disponível desde o Python 3.4.
+Ele também esta disponível na web, em
+https://fpy.li/13-51[_PyMOTW—Python Module of the Week_].
+Hellmann usa a declaração de ABC no estilo
+antigo:`PluginBase(metaclass=abc.ABCMeta)`
+em vez de `PluginBase(abc.ABC)`, suportada desde o Python 3.4.
 
 Quando usamos ABCs, herança múltipla não é apenas comum mas praticamente inevitável,
 porque cada uma das ABCs fundamentais de coleções (`Sequence`, `Mapping`, `Set`)

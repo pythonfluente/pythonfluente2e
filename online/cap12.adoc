@@ -75,7 +75,9 @@ Quando um `Vector` tem mais de seis componentes, a string produzida por `repr()`
 `\...`, como visto na última linha do <<ex_vector_demo>>. Isso é fundamental para qualquer tipo de coleção que possa conter um número grande de itens, pois `repr` é usado na depuração—e você não quer que um único objeto grande ocupe milhares de linhas em seu console ou arquivo de log. Use o módulo `reprlib` para produzir representações de tamanho limitado, como no <<ex_vector_v1>>. O módulo `reprlib` se chamava `repr` no Python 2.7.
 ====
 
-O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector` (esse exemplo usa como base o código mostrado no pass:[<a data-type="xref" href="#ex_vector2d_v0" data-xrefstyle="select: labelnumber">#ex_vector2d_v0</a>] e no pass:[<a data-type="xref" href="#ex_vector2d_v1" data-xrefstyle="select: labelnumber">#ex_vector2d_v1</a>] do <<ch_pythonic_obj>>).
+O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector`
+(esse exemplo usa como base o código mostrado no <<ex_vector2d_v0>> e
+<<ex_vector2d_v1>> do <<ch_pythonic_obj>>).
 
 [[ex_vector_v1]]
 .vector_v1.py: derived from vector2d_v1.py
@@ -520,13 +522,12 @@ class Vector:
     # more lines omitted...
 ----
 ====
-[role="pagebreak-before less_space"]
 <1> Importa `functools` para usar `reduce`.
 <2> Importa `operator` para usar `xor`.
 <3> Não há mudanças em `+__eq__+`; listei-o aqui porque é uma boa prática manter `+__eq__+` e
 `+__hash__+` próximos no código-fonte, pois eles precisam trabalhar juntos.
 <4> Cria uma expressão geradora para computar sob demanda o _hash_ de cada componente.
-<5> Alimenta `reduce` com `hashes` e a função `xor`, para computar o código _hash_ agregado; o terceiro argumento, `0`, é o inicializador (veja o próximo aviso).
+<5> Alimenta `reduce` com `hashes` e a função `xor`, para computar o código _hash_ agregado; o terceiro argumento, `0`, é o inicializador (veja o aviso a seguir).
 
 [WARNING]
 ====
@@ -585,14 +586,22 @@ Uma forma melhor de comparar um `Vector` com outro `Vector` ou iterável seria o
         return True  # <4>
 ----
 ====
-<1> Se as `len` dos objetos são diferentes, eles não são iguais.
-<2> `zip` produz um gerador de tuplas criadas a partir dos itens em cada argumento iterável. Veja a caixa <<zip_box>>, se `zip` for novidade para você. Em pass:[<img src="callouts/1.png" alt="1"/>], a comparação com `len` é necessária porque `zip` para de produzir valores sem qualquer aviso quando uma das fontes de entrada se exaure.
+<1> Se as `len` dos objetos são diferentes, eles não são iguais. Este teste é importante porque o `zip` encerra a iteração
+assim que o primeiro argumento é consumido.
+<2> `zip` produz um gerador de tuplas criadas a partir dos itens em cada argumento iterável. Veja a caixa <<zip_box>>, se `zip` for novidade para você.
 <3> Sai assim que dois componentes sejam diferentes, devolvendo `False`.
 <4> Caso contrário, os objetos são iguais.
 
 [TIP]
 ====
-O((("zip() function")))((("functions", "zip() function"))) nome da função `zip` vem de zíper, pois esse objeto físico funciona engatando pares de dentes tomados dos dois lados do zíper, uma boa analogia visual para o que faz `zip(left, right)`. Nenhuma relação com arquivos comprimidos.
+O((("zip() function")))((("functions", "zip() function"))) nome da função `zip` vem de zíper,
+pois esse objeto físico funciona engatando pares de dentes a partir de duas sequências,
+uma boa analogia visual para o que faz `zip(esquerda, direita)`.
+Nenhuma relação com arquivos comprimidos. Por padrão, `zip` para de gerar tuplas assim que um de seus argumentos
+é consumido até o fim, e ele não levanta uma exceção, a menos que o argumento `strict=True` for passado.
+Esse argumento foi introduzido no Python 3.10, mas para preservar a compatibilidade,
+o default é `strict=False`.
+Isto pode causar falhas silenciosas quando um iterável termina antes dos demais.
 ====
 
 O <<ex_eq_loop>> é eficiente, mas a função `all` pode produzir a mesma computação de um agregado do loop `for` em apenas uma linha:
@@ -751,7 +760,13 @@ O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+`
 
 Como fizemos no <<ch_pythonic_obj>>, muitas vezes aqui olhamos como os objetos padrão de Python se comportam, para emulá-los e dar a `Vector` uma aparência "pythônica".
 
-No <<ch_op_overload>> vamos implemenar vários operadores infixos em `Vector`. A matemática será mais simples que aquela no método `angle()` daqui, mas explorar como os operadores infixos funcionam no Python é uma grande lição sobre design orientado a objetos. Mas antes de chegar à sobrecarga de operadores, vamos parar um pouco de trabalhar com uma única classe e olhar para a organização de múltiplas classes com interfaces e herança, os assuntos dos capítulos pass:[<a data-type="xref" href="#ch_ifaces_prot_abc" data-xrefstyle="select: labelnumber">#ch_ifaces_prot_abc</a>] e pass:[<a data-type="xref" href="ch_inheritance" data-xrefstyle="select: labelnumber">ch_inheritance</a>].
+No <<ch_op_overload>> vamos implemenar vários operadores infixos em `Vector`.
+A matemática será mais simples que aquela no método `angle()` daqui,
+mas explorar como os operadores infixos funcionam no Python
+é uma grande lição sobre design orientado a objetos.
+Mas antes de chegar à sobrecarga de operadores em uma classe,
+vamos estudar a organização de várias classes com interfaces e herança,
+os assuntos dos capítulos <<ch_ifaces_prot_abc>> e <<ch_inheritance>>.
 
 
 === Para saber mais
