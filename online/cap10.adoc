@@ -63,19 +63,19 @@ funções de primeira classe, Norvig sugere repensar os padrões
 clássicos conhecidos como _Strategy_ (Estratégia), _Command_ (Comando), 
 _Template Method_ (Método Gabarito) e _Visitor_ (Visitante).
 
-O objetivo desse capítulo é mostrar como—em alguns casos—as funções podem
-realizar o mesmo trabalho das classes, com um código mais legível e mais
-conciso. Vamos refatorar uma implementaçao de Estratégia usando funções como
-objetos, removendo muito código redundante. Vamos também discutir uma abordagem
-similar para simplificar o padrão Comando.
+O objetivo desse capítulo é mostrar como, em certos casos, funções podem
+realizar o mesmo trabalho de classes, com menos código e mais clareza.
+Vamos refatorar uma implementaçao de Estratégia usando funções como
+objetos, removendo muito código redundante.
+Vamos também discutir uma abordagem similar para simplificar o padrão Comando.
 
 === Novidades neste capítulo
 
 Movi((("functions, design patterns with first-class", "significant changes to")))
 este capítulo para o final da Parte II, para poder então aplicar o
 decorador de registro na <<decorated_strategy>>, e também usar dicas de tipo nos
-exemplos. A maior parte das dicas de tipo usadas nesse capítulo não são
-complicadas, e ajudam na legibilidade.
+exemplos. A maior parte das dicas de tipo usadas nesse capítulo são simples,
+e ajudam na legibilidade.
 
 [[strategy_case_study]]
 === Estudo de caso: refatorando Estratégia
@@ -85,9 +85,8 @@ strategies", id="FDPrefactor10"))) é um bom exemplo de um padrão de projeto qu
 pode ser mais simples em Python, usando funções como objetos de primeira classe.
 Na próxima seção vamos descrever e implementar Estratégia usando a estrutura
 "clássica" descrita em _Padrões de Projetos_. Se você estiver familiarizado com
-o padrão clássico, pode pular direto para <<pythonic_strategy>>, onde
-refatoramos o código usando funções, reduzindo significativamente o número de
-linhas.
+o padrão original, pode pular direto para <<pythonic_strategy>>, onde
+refatoramos o código usando funções, eliminando várias linhas.
 
 ==== Estratégia clássica
 
@@ -98,8 +97,8 @@ de classes UML na <<strategy_uml>> retrata um arranjo de classes exemplificando
 o padrão Estratégia.
 
 [[strategy_uml]]
-.Diagrama de classes UML para o processamento de descontos em um pedido, implementado com o padrão de projeto Estratégia.
-image::../images/flpy_1001.png[Cálculos de desconto de um pedido como estratégias]
+.Diagrama de classes UML para calcular descontos em pedidos, com o padrão de projeto Estratégia.
+image::../images/flpy_1001.png[align="center",pdfwidth=10cm]
 
 O padrão Estratégia é resumido assim em _Padrões de Projetos_:
 
@@ -125,9 +124,9 @@ Para simplificar, vamos assumir que apenas um desconto pode ser aplicado a cada 
 O diagrama de classes UML para o padrão Estratégia aparece na <<strategy_uml>>. Seus participantes são:
 
 Contexto (_Context_):: Oferece um serviço delegando parte do processamento para
-componentes intercambiáveis, que implementam algoritmos alternativos. No exemplo
-de ecommerce, o contexto é uma classe `Order`, configurada para aplicar um
-desconto promocional de acordo com um de vários algoritmos.
+componentes intercambiáveis, que implementam algoritmos alternativos.
+Neste exemplo, o contexto é uma classe `Order`, configurada para aplicar um
+desconto promocional de acordo com um algoritmo entre vários possíveis.
 
 Estratégia (_Strategy_):: A interface comum dos componentes que implementam
 diferentes algoritmos. No nosso exemplo, esse papel cabe a uma classe abstrata
@@ -140,7 +139,7 @@ estratégias concretas implementadas.
 O código no <<ex_classic_strategy>> segue o modelo da <<strategy_uml>>. Como
 descrito em _Padrões de Projetos_, a estratégia concreta é escolhida pelo
 cliente da classe de contexto. No nosso exemplo, antes de instanciar um pedido,
-o sistema deveria, de alguma forma, selecionar o estratégia de desconto
+o sistema deveria, de alguma forma, selecionar a estratégia de desconto
 promocional e passá-la para o construtor de `Order`. A seleção da estratégia
 está fora do escopo do padrão.
 
@@ -178,10 +177,9 @@ include::../code/10-dp-1class-func/classic_strategy.py[tags=CLASSIC_STRATEGY_TES
 <7> O `long_cart` tem 10 itens diferentes, cada um custando $1,00.
 <8> `joe` recebe um desconto de 7% no pedido total, por causa da `LargerOrderPromo`.
 
-O <<ex_classic_strategy>> funciona perfeitamente bem, mas a mesma funcionalidade
-pode ser implementada com menos linhas de código em Python, se usarmos funções
-como objetos. Veremos como fazer isso na próxima seção.((("",
-startref="stratpat10")))((("", startref="classicref10")))((("",
+O <<ex_classic_strategy>> funciona, mas podemos implementar a mesma funcionalidade
+com menos linhas de código usando funções como objetos.
+Vejamos como.((("", startref="stratpat10")))((("", startref="classicref10")))((("",
 startref="RSclassic10")))
 
 [[pythonic_strategy]]
@@ -222,8 +220,8 @@ include::../code/10-dp-1class-func/strategy.py[tags=STRATEGY]
 
 <1> Essa dica de tipo diz: `promotion` pode ser `None`, ou pode ser um invocável
 que recebe uma `Order` como argumento e devolve um `Decimal`.
-<2> Para calcular o desconto, chama o invocável `self.promotion`,
-passando `self` como um argumento. Veja a razão disso logo abaixo.
+<2> Para calcular o desconto, invocamos `self.promotion`,
+passando `self` como argumento. Veja a razão disso logo abaixo.
 <3> Nenhuma classe abstrata.
 <4> Cada estratégia é uma função.
 
@@ -237,8 +235,8 @@ busca aquele invocável. Mas, ao invocá-lo, precisamos fornecer uma instância 
 expressão.
 
 A <<methods_are_descriptors_sec>> vai explicar o mecanismo que vincula
-automaticamente métodos a instâncias. Mas isso não se aplica a `promotion`, pois
-ela não é um método.
+automaticamente métodos a instâncias. Mas isso não se aplica a `promotion`,
+pois este atributo não é um método.
 ====
 
 O código no <<ex_strategy>> é mais curto que o do <<ex_classic_strategy>>. Usar
@@ -254,26 +252,28 @@ include::../code/10-dp-1class-func/strategy.py[tags=STRATEGY_TESTS]
 ----
 ====
 <1> Mesmos dispositivos de teste do <<ex_classic_strategy>>.
-<2> Para aplicar uma estratégia de desconto a uma `Order`, basta passar a função de promoção como argumento.
+<2> Para aplicar uma estratégia de desconto a uma `Order`, passamos a função de promoção como argumento.
 <3> Uma função de promoção diferente é usada aqui e no teste seguinte.
 
 
 Observe os textos explicativos do <<ex_strategy_tests>>: não há necessidade
-de instanciar um novo objeto `promotion` com cada novo pedido: as funções já
-estão disponíveis para serem usadas.
+de instanciar um novo objeto `promotion` com cada novo pedido:
+as funções já estão prontas para usar.
 
 É interessante notar que no _Padrões de Projetos_, os autores sugerem que:
 "Objetos Estratégia muitas vezes são bons "peso mosca"
 (_flyweight_)".footnote:[veja a página 323 da edição em inglês de _Padrões de
-Projetos_.] Uma definição do padrão _Peso Mosca_ em outra parte daquele texto
-afirma: "Um _peso mosca_ é um objeto compartilhado que pode ser usado em
-múltiplos contextos simultaneamente."footnote:[Ibid., p. 196.] O
-compartilhamento é recomendado para reduzir o custo da criação de um novo objeto
-concreto de estratégia, quando a mesma estratégia é aplicada repetidamente a
-cada novo contexto—no nosso exemplo, a cada nova instância de `Order`. Então,
-para contornar uma desvantagem do padrão Estratégia—seu custo durante a
-execução—os autores recomendam a aplicação de mais outro padrão. Enquanto isso,
-o número de linhas e custo de manutenção de seu código vão se acumulando.
+Projetos_.] O padrão _Peso Mosca_ é definido em outra parte do livro
+assim: "Um _peso mosca_ é um objeto compartilhado que pode ser usado em
+múltiplos contextos simultaneamente."footnote:[Ibid., p. 196.]
+O compartilhamento é recomendado para reduzir o custo da criação de um novo
+objeto concreto de estratégia, quando a mesma estratégia é aplicada repetidamente
+a cada novo contexto—no nosso exemplo, a cada nova instância de `Order`. 
+Se uma loja que recebe 100.000 pedidos por dia, cada estratégia concreta
+será instanciada milhares de vezes.
+Então, para reduzir o custo de processamento do padrão Estratégia,
+os autores recomendam a aplicação de mais um padrão. Enquanto isso,
+o número de linhas e o custo de manutenção de seu código vai aumentando.
 
 Um caso de uso mais espinhoso, com estratégias concretas complexas mantendo
 estados internos, pode exigir a combinação de todas as partes dos padrões de
@@ -284,7 +284,7 @@ um só metodo implementando uma interface de um só método declarada em outra
 classe diferente. Uma função pesa menos que uma instância de uma classe definida
 pelo usuário, e não há necessidade do Peso Mosca, pois cada função da estratégia
 é criada apenas uma vez por processo Python, quando o módulo é carregado. Uma
-função simples também é um "objeto compartilhado que pode ser usado em múltiplos
+função também é um "objeto compartilhado que pode ser usado em múltiplos
 contextos simultaneamente".
 
 Uma vez implementado o padrão Estratégia com funções, outras possibilidades nos
@@ -295,7 +295,7 @@ abordagens que se valem de funções e módulos vistos como objetos.((("",
 startref="RSfunction10")))((("", startref="funcorient01")))
 
 
-==== Escolhendo a melhor estratégia: uma abordagem simples
+==== Escolhendo a melhor estratégia: abordagem simples
 
 Dados((("refactoring strategies", "choosing the best"))) os mesmos clientes e
 carrinhos de compras dos testes no <<ex_strategy_tests>>, vamos agora
@@ -311,10 +311,9 @@ include::../code/10-dp-1class-func/strategy_best.py[tags=STRATEGY_BEST_TESTS]
 ====
 <1> `best_promo` selecionou a `larger_order_promo` para o cliente `joe`.
 <2> Aqui `joe` recebeu o desconto de `bulk_item_promo`, por comprar muitas bananas.
-<3> Encerrando a compra com um carrinho simples,
-`best_promo` deu à cliente fiel `ann` o desconto da `fidelity_promo`.
+<3> Neste caso `best_promo` deu à cliente fiel `ann` o desconto de fidelidade: `fidelity_promo`.
 
-A implementação de `best_promo` é muito simples. Veja o <<ex_strategy_best>>.
+A implementação de `best_promo` é simples. Veja o <<ex_strategy_best>>.
 
 [[ex_strategy_best]]
 .`best_promo` encontra o desconto máximo iterando sobre uma lista de funções
@@ -329,10 +328,10 @@ include::../code/10-dp-1class-func/strategy_best.py[tags=STRATEGY_BEST]
 <3> Usando uma expressão geradora, aplicamos cada uma das funções de `promos` a `order`,
 e devolvemos o maior desconto encontrado.
 
-O <<ex_strategy_best>> é bem direto: `promos` é uma `list` de funções. Depois
-que você se acostuma à ideia de funções como objetos de primeira classe, o
-próximo passo é notar que construir estruturas de dados contendo funções muitas
-vezes faz todo sentido.
+O <<ex_strategy_best>> é bem direto: `promos` é uma `list` de funções.
+Quando você se acostuma à ideia de funções como objetos de primeira classe, o
+próximo passo é notar como pode ser útil construir estruturas de dados
+contendo funções.
 
 Apesar do <<ex_strategy_best>> funcionar e ser fácil de ler, há alguma
 duplicação que poderia levar a um bug sutil: para adicionar uma nova estratégia,
@@ -350,10 +349,10 @@ padrão oferece várias funções para lidar com eles. A((("functions", "globals
 function")))((("globals() function"))) função embutida `globals` é descrita
 assim na documentação de Python:
 
-`globals()`:: Devolve um dicionário representando a tabela de símbolos globais
-atual. Isso é sempre o dicionário do módulo atual (dentro de uma função ou
-método, esse é o módulo onde a função ou método foram definidos, não o módulo de
-onde são chamados).
+`globals()`:: Devolve um dicionário representando a tabela de nomes do
+escopo global. Isso é sempre o dicionário do módulo atual
+(dentro de uma função, é o módulo onde ela foi definida, não o módulo
+onde é invocada).
 
 O <<ex_strategy_best2>> é uma forma um tanto _hacker_ de usar `globals` para
 ajudar `best_promo` a encontrar automaticamente outras funções `*_promo`
@@ -370,7 +369,7 @@ include::../code/10-dp-1class-func/strategy_best2.py[tags=STRATEGY_BEST2]
 <1> Importa as funções de promoções, para que fiquem disponíveis no espaço de
 nomes global.footnote:[Tanto o flake8 quanto o VS Code reclamam que esses nomes
 são importados mas não são usados. Por definição, ferramentas de análise
-estática não conseguem entender a natureza dinâmica de Python. Se seguirmos
+estática não conseguem lidar com a natureza dinâmica de Python. Se seguirmos
 todos os conselhos dessas ferramentas, logo estaremos escrevendo programas
 austeros e prolixos similares aos de Java, mas com a sintaxe de Python.]
 <2> Itera sobre cada item no `dict` devolvido por `globals()`.
@@ -385,8 +384,8 @@ nele todas as funções de estratégia, exceto `best_promo`.
 No <<ex_strategy_best3>>, a única mudança significativa é que a lista de funções
 de estratégia é criada pela introspecção de um módulo separado chamado
 `promotions`. Veja que o <<ex_strategy_best3>> depende da importação do módulo
-`promotions` bem como de `inspect`, que fornece funções de introspecção de alto
-nível.
+`promotions` bem como de funções de introspecção de alto
+nível do módolo `inspect` da biblioteca padrão.
 
 
 [[ex_strategy_best3]]
@@ -400,10 +399,10 @@ include::../code/10-dp-1class-func/strategy_best3.py[tags=STRATEGY_BEST3]
 
 A função `inspect.getmembers` devolve os atributos de um objeto—neste caso, o
 módulo `promotions`—opcionalmente filtrados por um predicado (uma função
-booleana). Usamos `inspect.isfunction` para obter apenas as funções do módulo.
+booleana). Usamos `inspect.isfunction` para obter apenas as funções.
 
-O <<ex_strategy_best3>> funciona independente dos nomes dados às funções; tudo o
-que importa é que o módulo `promotions` contém apenas funções que, dado um
+O <<ex_strategy_best3>> funciona independente dos nomes dados às funções;
+o que importa é que o módulo `promotions` contém apenas funções que, dado um
 pedido, calculam os descontos. Claro, isso é uma suposição implícita do código.
 Se alguém criasse uma função com uma assinatura diferente no módulo
 `promotions`, `best_promo` geraria um erro ao tentar aplicá-la a um pedido.
@@ -419,7 +418,7 @@ startref="FDPrefactor10")))((("", startref="RSfind10")))
 
 
 [[decorated_strategy]]
-=== Padrão Estratégia melhorado com decorador
+=== Estratégia melhorado com decorador
 
 Lembre-se((("functions, design patterns with first-class", "decorator-enhanced
 strategy pattern", id="FDPdecorator10")))((("refactoring strategies",
@@ -429,8 +428,8 @@ strategy pattern", id="decenh10"))) que nossa principal objeção ao
 na lista `promos`, usada pela função `best_promo` para determinar o maior
 desconto aplicável. A repetição é problemática porque alguém pode acrescentar
 uma nova função de estratégia promocional e esquecer de adicioná-la manualmente
-à lista `promos`—caso em que `best_promo` vai silenciosamente ignorar a nova
-estratégia, introduzindo no sistema um bug sutil. O <<ex_strategy_best31>>
+à lista `promos`—caso em que `best_promo` vai ignorar a nova
+estratégia, introduzindo um bug silencioso. O <<ex_strategy_best31>>
 resolve esse problema com a técnica vista na <<registration_deco_sec>>.
 
 [[ex_strategy_best31]]
@@ -473,20 +472,20 @@ com o uso de funções passadas como argumentos. A <<command_uml>> mostra o
 arranjo das classes nesse padrão.
 
 [[command_uml]]
-.Diagrama de classes UML para um editor de texto controlado por menus, implementado com o padrão de projeto Comando. Cada comando pode ter um receptor (_receiver_) diferente: o objeto que implementa a ação. Para `PasteCommand`, o receptor é Document. Para `OpenCommand`, o receptor á a aplicação.
-image::../images/flpy_1002.png[Aplicação do padrão Comando a um editor de texto]
+.Diagrama de classes UML para um editor de texto controlado por menus, implementado com o padrão de projeto Comando. Cada comando pode ter um receptor diferente: o objeto que implementa a ação. Para `PasteCommand`, o receptor é Document. Para `OpenCommand`, o receptor é a aplicação.
+image::../images/flpy_1002.png[align="center",pdfwidth=12cm]
 
 O objetivo de Comando é desacoplar um objeto que invoca uma operação (o
-_invoker_ ou remetente) do objeto fornecedor que implementa aquela operação (o
-_receiver_ ou receptor). No exemplo em _Padrões de Projetos_, cada remetente é
-um item de menu em uma aplicação gráfica, e os receptors são o documento sendo
+_invoker_ ou solicitante) do objeto fornecedor que implementa aquela operação (o
+_receiver_ ou receptor). No exemplo em _Padrões de Projetos_, cada solicitante é
+um item de menu em uma aplicação gráfica, e os receptores são o documento sendo
 editado ou a própria aplicação.
 
 A ideia é colocar um objeto `Command` entre os dois, implementando uma interface
 com um único método, `execute`, que chama algum método no receptor para executar
-a operação desejada. Assim, o remetente não precisa conhecer a interface do
+a operação desejada. Assim, o solicitante não precisa conhecer a interface do
 receptor, e receptors diferentes podem ser adaptados com diferentes subclasses
-de `Command`. O remetente é configurado com um comando concreto, e o opera
+de `Command`. O solicitante é configurado com um comando concreto, e o opera
 chamando seu método `execute`. Observe na <<command_uml>> que `MacroCommand`
 pode armazenar um sequência de comandos; seu método `execute()` chama o mesmo
 método em cada comando armazenado.
@@ -495,11 +494,11 @@ Citando _Padrões de Projetos_, "Comandos são um substituto orientado a objetos
 para _callbacks_." A pergunta é: precisamos de um substituto orientado a objetos
 para _callbacks_? Algumas vezes sim, mas nem sempre.
 
-Em vez de dar ao remetente uma instância de `Command`, podemos simplesmente dar
-a ele uma função. Em vez de chamar `command.execute()`, o remetente pode apenas
-chamar `command()`. O `MacroCommand` pode ser programado como uma classe que
+Em vez de dar ao solicitante uma instância de `Command`, podemos dar
+a ele uma função. Em vez de invocar `command.execute()`, o solicitante pode
+apenas invoca `command()`. O `MacroCommand` pode ser programado como uma classe que
 implementa `+__call__+`. Instâncias de `MacroCommand` seriam invocáveis, cada
-uma mantendo uma lista de funções para invocação futura, como implementado no
+uma contendo uma lista de comandos para invocação futura, como implementado no
 <<ex_macro_command>>.
 
 
@@ -533,13 +532,13 @@ Python oferece algumas alternativas que merecem ser consideradas:
 manter qualquer estado que seja necessário, e oferecer outros métodos além de
 `+__call__+`.
 
-* Uma clausura pode ser usada para manter o estado interno de uma função entre
+* Uma clausura pode ser usada para armazenar algum estado interno em uma função entre
 invocações.
 
 Isso encerra nossa revisão do padrão Comando usando funções de primeira classe.
 Por alto, a abordagem aqui foi similar à que aplicamos a Estratégia: substituir
-as instâncias de uma classe participante que implementava uma interface de
-método único por invocáveis. Afinal, todo invocável de Python implementa uma
+por funções as instâncias de uma classe participante que implementava uma interface
+de método único. Afinal, todo invocável de Python implementa uma
 interface de método único, e esse método se chama `+__call__+`.((("",
 startref="RScmmnd10")))((("", startref="cmmd10")))((("",
 startref="FDPcommand10")))
@@ -551,26 +550,24 @@ startref="FDPcommand10")))
 Como((("functions, design patterns with first-class", "overview of"))) apontou
 Peter Norvig alguns anos após o surgimento do clássico _Padrões de Projetos_,
 "16 dos 23 padrões têm implementações qualitativamente mais simples em Lisp ou
-Dylan que em {cpp}, pelo menos para alguns usos de cada padrão" (slide 9 da
-apresentação de Norvig, https://fpy.li/10-4["Design Patterns in Dynamic
-Languages" presentation] (_Padrões de Projetos em Linguagens Dinâmicas_)).
+Dylan que em {cpp}, pelo menos para alguns usos de cada padrão".
 Python compartilha alguns dos recursos dinâmicos das linguagens Lisp e Dylan,
-especialmente funções de primeira classe, nosso foco nesse capítulo.
+especialmente funções de primeira classe, nosso foco neste capítulo.
 
 Na mesma palestra citada no início deste capítulo, refletindo sobre o 20º
 aniversário de _Padrões de Projetos: Soluções Reutilizáveis de Software
 Orientados a Objetos_, Ralph Johnson afirmou que um dos defeitos do livro é:
 "Excesso de ênfase nos padrões como linhas de chegada, em vez de como etapas em
-um processo de design".footnote:["Root Cause Analysis of Some Faults in Design
-Patterns" (_Análise das Causas Básicas de Alguns Defeitos em Padrões de
-Projetos_), palestra apresentada por Johnson no IME/CCSL da Universidade de São
+um processo de design".footnote:[_Root Cause Analysis of Some Faults in Design
+Patterns_ (Análise das Causas Básicas de Alguns Defeitos em Padrões de
+Projetos), palestra apresentada por Johnson no IME/CCSL da Universidade de São
 Paulo, em 15 de novembro de 2014.] Neste capítulo usamos o padrão Estratégia
 como ponto de partida: uma solução que funcionava, mas que simplificamos usando
 funções de primeira classe.
 
 Em muitos casos, funções ou objetos invocáveis oferecem um caminho mais natural
 para implementar _callbacks_ em Python que a imitação dos padrões Estratégia ou
-Comando como descritos por Gamma, Helm, Johnson, e Vlissides em _Padrões de
+Comando como descritos pela Gangue dos Quatro em _Padrões de
 Projetos_. A refatoração de Estratégia e a discussão de Comando nesse capítulo
 são exemplos de uma ideia mais geral: algumas vezes você pode encontrar uma
 padrão de projeto ou uma API que exigem que seus componentes implementem uma
@@ -582,44 +579,41 @@ funções como objetos de primeira classe.
 [[dp_further]]
 === Para saber mais
 
-A "Receita 8.21. Implementando o Padrão Visitante" (_Receipt 8.21. Implementing
-the Visitor Pattern_) no((("functions, design patterns with first-class",
-"further reading on"))) pass:[<a class="orm:hideurl"
-href="https://fpy.li/pycook3"><em>Python Cookbook</em>, 3ª ed.</a>] (EN), mostra
-uma implementação elegante do padrão Visitante, na qual uma classe `NodeVisitor`
+A((("functions, design patterns with first-class", "further reading on")))
+Receita 8.21. _Implementing the Visitor Pattern_ (Implementando o Padrão
+Visitante) no _Python Cookbook 3rd ed_, mostra uma implementação elegante
+do padrão Visitante, na qual uma classe `NodeVisitor`
 trata métodos como objetos de primeira classe.
 
 Sobre o tópico mais geral de padrões de projetos, a oferta de leituras para o
 programador Python não é tão numerosa quando aquela disponível para as
 comunidades de outras linguagens.
 
-_Learning Python Design Patterns_ ("Aprendendo os Padrões de Projeto de
-Python"), de Gennadiy Zlobin (Packt), é o único livro inteiramente dedicado a
+_Learning Python Design Patterns_, de Gennadiy Zlobin (Packt),
+é o único livro inteiramente dedicado a
 padrões em Python que encontrei. Mas o trabalho de Zlobin é muito breve (100
 páginas) e trata de apenas 8 dos 23 padrões de projeto originais.
 
-_Expert Python Programming_ ("Programação Avançada em Python"), de Tarek Ziadé
-(Packt), é um dos melhores livros de Python de nível intermediário, e seu
-capítulo final, "Useful Design Patterns" (_Padrões de Projetos Úteis_),
-apresenta vários dos padrões clássicos de uma perspectiva pythônica.
+_Expert Python Programming_, de Tarek Ziadé (Packt), é um dos melhores livros
+sobre Python em nível intermediário, e seu capítulo final,
+_Useful Design Patterns_ (Padrões de Projetos Úteis),
+apresenta vários padrões clássicos com uma abordagem pythônica.
 
 Alex Martelli já apresentou várias palestras sobre padrões de projetos em
 Python. Há um vídeo de sua https://fpy.li/10-5[apresentação na EuroPython] (EN)
 e um https://fpy.li/10-6[conjunto de slides em seu site pessoal] (EN). Ao longo
 dos anos, encontrei diferentes jogos de slides e vídeos de diferentes tamanhos,
 então vale a pena tentar uma busca mais ampla com o nome dele e as palavras
-"Python Design Patterns". Um editor me contou que Martelli está trabalhando em
-um livro sobre esse assunto. Eu certamente comprarei meu exemplar assim que
-estiver disponível.
+"Python Design Patterns".
 
-Há muitos livros sobre padrões de projetos no contexto de Java mas, dentre todos
-eles, meu preferido é _Head First Design Patterns_ ("Mergulhando de Cabeça nos
-Padrões de Projetos"), 2ª ed., de Eric Freeman e Elisabeth Robson (O'Reilly).
-Esse volume explica 16 dos 23 padrões clássicos. Se você gosta do estilo
+Há muitos livros sobre padrões de projetos com ênfase em Java.
+Meu preferido é _Head First Design Patterns_ (Use a Cabeça: 
+Padrões de Projeto), 2ª ed., de Eric Freeman e Elisabeth Robson (O'Reilly).
+Eles explicam 16 dos 23 padrões clássicos. Se você gosta do estilo
 amalucado da série _Head First_ e precisa de uma introdução a esse tópico, vai
-adorar esse livro. Ele é centrado em Java, mas a segunda edição foi atualizada
-para refletir a introdução de funções de primeira classe naquela linguagem,
-tornando alguns dos exemplos mais próximos de código que escreveríamos em
+adorar esse livro. A segunda edição foi atualizada
+para incorporar o uso de funções de primeira classe em Java,
+tornando alguns dos exemplos mais próximos do modo como escreveríamos em
 Python.
 
 Para um olhar moderno sobre padrões, do ponto de vista de uma linguagem dinâmica
@@ -629,27 +623,26 @@ ideias aplicáveis também ao Python. A despeito de suas muitas diferenças
 sintáticas, no nível semântico Python e Ruby estão mais próximos entre si que de
 Java ou do {cpp}.
 
-
-Em https://fpy.li/norvigdp["Design Patterns in Dynamic Languages" (_Padrões de
-Projetos em Linguagens Dinâmicas_)] (slides), Peter Norvig mostra como funções
-de primeira classe (e outros recursos dinâmicos) tornam vários dos padrões de
+No slides de https://fpy.li/norvigdp[_Design Patterns in Dynamic Languages_] (Padrões de
+Projetos em Linguagens Dinâmicas), Peter Norvig mostra como funções
+de primeira classe e outros recursos dinâmicos tornam vários dos padrões de
 projeto originais mais simples ou mesmo desnecessários.
 
 A "Introdução" do _Padrões de Projetos_ original, de Gamma et al. já vale o
 preço do livro—mais até que o catálogo de 23 padrões, que inclui desde receitas
 muito importantes até algumas raramente úteis. Alguns princípios de projetos de
-software muito citados, como "Programe para uma interface, não para uma
-implementação" e "Prefira a composição de objetos à herança de classe", vem
-ambos daquela introdução.
+software muito conhecidos, como "Programe para uma interface, não para uma
+implementação" e "Prefira a composição de objetos à herança de classe",
+são citações daquela introdução.
 
-A aplicação de padrões a projetos se originou com o arquiteto Christopher
-Alexander et al., e foi apresentada  no livro _A Pattern Language_ ("Uma
+A ideia de padrões de projetos se originou com o arquiteto Christopher
+Alexander et al., e foi apresentada no livro _A Pattern Language_ ("Uma
 Linguagem de Padrões") (Oxford University Press). A ideia de Alexander é criar
 um vocabulário padronizado, permitindo que equipes compartilhem decisões comuns
-em projetos de edificações. M. J. Dominus wrote https://fpy.li/10-7[“‘Design
-Patterns’ Aren't” (_Padrões de Projetos Não São_)], uma curiosa apresentação de
-slides acompanhada de um texto, argumentando que a visão original de Alexander
-sobre os padrões é mais profunda e mais humanista e também aplicável à
+em projetos de edificações. M. J. Dominus wrote https://fpy.li/10-7[_"Design
+Patterns" Aren't_] (Padrões de Projetos Não São), uma curiosa apresentação de
+slides acompanhada de um texto argumentando que a visão original de Alexander
+sobre os padrões é mais profunda e mais humanista, e também se aplica à
 engenharia de software.
 
 .Ponto de vista
@@ -660,42 +653,35 @@ engenharia de software.
 Python((("functions, design patterns with first-class", "Soapbox
 discussion")))((("Soapbox sidebars", "design patterns"))) tem funções de
 primeira classe e tipos de primeira classe, e Norvig afima que esses recursos
-afetam 10 dos 23 padrões (no slide 10 de https://fpy.li/norvigdp["Design
-Patterns in Dynamic Languages" (_Padrões de Projetos em Linguagens
-Dinâmicas_)]). No <<ch_closure_decorator>>, vimos que Python também tem funções
-genéricas (na <<generic_functions>>), uma forma limitada dos multi-métodos do
+afetam 10 dos 23 padrões (slide 10 de
+https://fpy.li/norvigdp[_Design Patterns in Dynamic Languages_]).
+Na <<generic_functions_sec>>, vimos que Python também tem funções
+genéricas de despacho único, uma forma limitada dos multi-métodos do
 CLOS, que Gamma et al. sugerem como uma maneira mais simples de implementar o
 padrão clássico Visitante (_Visitor_). Norvig, por outro lado, diz (no slide 10)
-que os multi-métodos simplificam o padrão Construtor (_Builder_). Ligar padrões
-de projetos a recursos de linguagens não é uma ciência exata.
+que os multi-métodos simplificam o padrão Construtor (_Builder_).
+Ligar padrões de projetos a recursos de linguagens não é uma ciência exata.
 
 Em cursos a redor do mundo todo, padrões de projetos são frequentemente
 ensinados usando exemplos em Java. Ouvi mais de um estudante dizer que eles
 foram levados a crer que os padrões de projeto originais são úteis qualquer que
 seja a linguagem usada na implementação. A verdade é que os 23 padrões
 "clássicos" de _Padrões de Projetos_ se aplicam muito bem ao Java, apesar de
-terem sido apresentados principalmente no contexto do {cpp}—no livro, alguns
-deles têm exemplos em Smalltalk. Mas isso não significa que todos aqueles
+terem sido apresentados principalmente no contexto do {cpp} (no livro, há alguns
+exemplos em Smalltalk). Mas isso não significa que todos aqueles
 padrões podem ser aplicados de forma igualmente satisfatória a qualquer
 linguagem. Os autores dizem explicitamente, logo no início de seu livro, que
 "alguns de nossos padrões são suportados diretamente por linguagens orientadas a
 objetos menos conhecidas" (a citação completa apareceu na primeira página deste
 capítulo).
 
-A bibliografia de Python sobre padrões de projetos é muito pequena, se comparada
-à existente para Java, {cpp} ou Ruby. Na <<dp_further>>, mencionei _Learning
-Python Design Patterns_ ("Aprendendo Padrões de Projeto de Python"), de Gennadiy
-Zlobin, que foi publicado apenas em novembro de 2013. Para se ter uma ideia,
-_Design Patterns in Ruby_ ("Padrões de Projetos em Ruby"), de Russ Olsen, foi
-publicado em 2007 e tem 384 páginas—284 a mais que a obra de Zlobin.
-
 Agora que Python está se tornando cada vez mais popular no ambiente acadêmico,
-podemos esperar que novos livros sobre padrões de projetos sejam escritos no
-contexto de nossa linguagem. Além disso, o Java 8 introduziu referências a
+podemos esperar que novos livros sobre padrões de projetos sejam escritos com
+foco nesta linguagem. Além disso, o Java 8 introduziu referências a
 métodos e funções anônimas, e esses recursos muito esperados devem incentivar o
 surgimento de novas abordagens aos padrões em Java—reconhecendo que, à medida
-que as linguagens evoluem, nosso entendimento sobre a forma de aplicação dos
-padrões de projetos clássicos deve também evoluir.
+que as linguagens evoluem, também é preciso evoluir nosso entendimento sobre
+quando e como aplicar os padrões de projetos clássicos.
 
 [role="soapbox-title"]
 **O chamado da natureza**
@@ -708,7 +694,7 @@ Leonardo Rochael pensou:
 Se funções têm um método `+__call__+`, e métodos também são invocáveis, será que
 os métodos `+__call__+` também tem um método `+__call__+`?
 
-Não sei se a descoberta dele tem alguma utilidade, mas eis um fato curioso:
+Não sei se a descoberta do Leo é util, mas com certeza é curiosa:
 
 [source, python]
 ----
@@ -729,17 +715,22 @@ Não sei se a descoberta dele tem alguma utilidade, mas eis um fato curioso:
 'eggs'
 >>> turtle.__call__.__call__.__call__.__call__.__call__.__call__()
 'eggs'
->>> turtle.__call__.__call__.__call__.__call__.__call__.__call__.__call__()
-'eggs'
 ----
 
-https://fpy.li/10-8[Turtles all the way down]footnote:[NT: Literalmente
-"_Tartarugas até embaixo_" ou algo como "_Tartarugas até onde a vista alcança_"
-ou "_Uma torre infinita de tartarugas_". Curiosamente, um livro com esse nome
-foi publicado no Brasil com o título "Mil vezes adeus", na tradição brasileira
-de traduzir nomes de obras de forma preguiçosa ou aleatória (especialmente para
-filmes).]
+https://fpy.li/10-8[_Turtles all the way down!_]footnote:[NT:
+Literalmente: "Tartarugas até lá embaixo".
+Esta é uma forma poética de falar sobre regressão infinita,
+em alusão ao mito de que a Terra 
+se apoia sobre uma tartaruga gigante,
+que se apoia sobre outra tartaruga gigante,
+que se apoia sobre outra tartaruga gigante,
+que se apoia sobre outra tartaruga gigante,
+que se apoia sobre outra tartaruga gigante,
+que se apoia sobre outra tartaruga gigante,
+que se apoia sobre outra tartaruga gigante,
+que se apoia sobre outra tartaruga gigante...]
 
 
 ****
 
+<<<

@@ -41,13 +41,13 @@
 # tag::STRATEGY_BEST3[]
 
 from decimal import Decimal
-import inspect
+from inspect import getmembers, isfunction
 
 from strategy import Order
 import promotions
 
 
-promos = [func for _, func in inspect.getmembers(promotions, inspect.isfunction)]
+promos = [func for _, func in getmembers(promotions, isfunction)]
 
 
 def best_promo(order: Order) -> Decimal:
