@@ -12,25 +12,25 @@ sleep(0.2) dt=0.201s
 # tag::CLOCKDECO_PARAM[]
 import time
 
-DEFAULT_FMT = '[{elapsed:0.8f}s] {name}({args}) -> {result}'
+DEFAULT_FMT = '[{elapsed:0.8f}s] {name}({args}) -> {result}'  # <1>
 
-def clock(fmt=DEFAULT_FMT):  # <1>
-    def decorate(func):      # <2>
-        def clocked(*_args): # <3>
+def clock(fmt=DEFAULT_FMT):  # <2>
+    def decorate(func):      # <3>
+        def clocked(*_args): # <4>
             t0 = time.perf_counter()
-            _result = func(*_args)  # <4>
+            _result = func(*_args)  # <5>
             elapsed = time.perf_counter() - t0
             name = func.__name__
-            args = ', '.join(repr(arg) for arg in _args)  # <5>
-            result = repr(_result)  # <6>
-            print(fmt.format(**locals()))  # <7>
-            return _result  # <8>
-        return clocked  # <9>
-    return decorate  # <10>
+            args = ', '.join(repr(arg) for arg in _args)  # <6>
+            result = repr(_result)  # <7>
+            print(fmt.format(**locals()))  # <8>
+            return _result  # <9>
+        return clocked  # <10>
+    return decorate  # <11>
 
 if __name__ == '__main__':
 
-    @clock()  # <11>
+    @clock()  # <12>
     def snooze(seconds):
         time.sleep(seconds)
 

@@ -516,17 +516,22 @@ Para fazer metaprogramação de classes, precisamos saber quando o interpretador
 [[import_v_runtime_sec]]
 === O que acontece quando: importação versus execução
 
-Programadores Python((("class metaprogramming", "import time versus runtime", id="CMimport24")))((("import time versus runtime"))) falam de "importação" (_import time_) versus "execução" (_runtime_), mas estes termos não têm definições precisas e há uma zona cinzenta entre eles.
+Programadores Python((("class metaprogramming", "import time versus runtime", id="CMimport24")))((("import time versus runtime"))) falam de "momento da importação" (_import time_) versus "momento de execução" (_run time_), mas estes termos não têm definições precisas e há uma zona cinzenta entre eles.
 
-Na importação, o interpretador:
+No momento da importação, o interpretador:
 
-. Analisa o código-fonte de módulo _.py_ em uma passagem, de cima até embaixo. É aqui que um `SyntaxError` pode ocorrer.
+. Analisa o código-fonte de módulo _.py_ em uma passagem, da primeira até a última linha. É aqui que um `SyntaxError` pode ocorrer.
 . Compila o _bytecode_ a ser executado.
 . Executa o código no nível superior do módulo compilado.
 
-Se existir um arquivo _.pyc_ atualizado no `+__pycache__+` local, a análise e a compilação são omitidas, pois o _bytecode_ está pronto para ser executado.
+Se existir um arquivo _.pyc_ atualizado no `+__pycache__+` local,
+a análise e a compilação são omitidas, pois o _bytecode_ está pronto para ser executado.
 
-Apesar da análise e a compilação serem definitivamente atividades de "importação", outras coisas podem acontecer durante o processo, pois quase todos os comandos ou instruções no Python são executáveis, no sentido de poderem potencialmente rodar código do usuário e modificar o estado do programa do usuário.
+Apesar da análise e a compilação serem definitivamente atividades de "importação",
+outras coisas podem acontecer durante este processo,
+pois quase todos os comandos ou instruções no Python são executáveis,
+no sentido de poderem potencialmente rodar código do usuário
+e modificar o estado do programa do usuário.
 
 Em especial, a instrução `import` não é meramente uma declaraçãofootnote:[Compare com a instrução `import` em Java, que é apenas uma declaração para informar o compilador que determinados pacotes são necessários.], pois na verdade ela executa todo o código no nível superior de um módulo, quando este é importado para o processo pela primeira vez. Importações posteriores do mesmo módulo usarão um _cache_, e então o único efeito será a vinculação dos objetos importados a nomes no módulo cliente. Aquele código no primeiro nível pode fazer qualquer coisa, incluindo ações típicas da "execução", como escrever em um arquivo de log ou conectar-se a um banco de dados.footnote:[Não estou dizendo que é uma boa ideia abrir uma conexão com um banco de dados só porque o módulo foi importado, apenas apontando que isso pode ser feito.]
 Por isso a fronteira entre a "importação" e a "execução" é difusa: `import` pode acionar todo tipo de comportamento de "execução", porque a instrução `import` e a função embutida
