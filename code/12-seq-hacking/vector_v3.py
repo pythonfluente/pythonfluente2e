@@ -176,7 +176,7 @@ class Vector:
         return str(tuple(self))
 
     def __bytes__(self):
-        return (bytes([ord(self.typecode)]) +
+        return (self.typecode.encode('ascii') +
                 bytes(self._components))
 
     def __eq__(self, other):

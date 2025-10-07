@@ -89,7 +89,7 @@ class Vector2d:
         return str(tuple(self))
 
     def __bytes__(self):
-        return (bytes([ord(self.typecode)]) +
+        return (self.typecode.encode('ascii') +
                 bytes(array(self.typecode, self)))
 
     def __eq__(self, other):

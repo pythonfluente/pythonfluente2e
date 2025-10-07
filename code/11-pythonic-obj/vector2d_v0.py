@@ -50,7 +50,7 @@ class Vector2d:
         return str(tuple(self))  # <5>
 
     def __bytes__(self):
-        return (bytes([ord(self.typecode)]) +  # <6>
+        return (self.typecode.encode('ascii') +  # <6>
                 bytes(array(self.typecode, self)))  # <7>
 
     def __eq__(self, other):

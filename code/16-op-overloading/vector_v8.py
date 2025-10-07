@@ -323,7 +323,7 @@ class Vector:
         return str(tuple(self))
 
     def __bytes__(self):
-        return (bytes([ord(self.typecode)]) +
+        return (self.typecode.encode('ascii') +
                 bytes(self._components))
 
 # tag::VECTOR_V8_EQ[]
