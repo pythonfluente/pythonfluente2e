@@ -6,7 +6,7 @@
 [quote, Martijn Faassen, criador de frameworks Python e JavaScript]
 ____
 Para uma biblioteca ou framework, ser pythônica significa tornar tão fácil e tão
-natural quanto possível que uma programadora Python descubra como realizar uma
+natural quanto possível que um programador Python descubra como realizar uma
 tarefa.footnote:[Do post no blog de Faassen intitulado https://fpy.li/11-1[_What
 is Pythonic?_ (O que é Pythônico?)]]
 ____
@@ -19,7 +19,7 @@ comportarão da forma esperada.
 
 Nos capítulos anteriores, estudamos o comportamento de vários objetos embutidos.
 Vamos agora criar classes definidas pelo usuário que se portam como objetos
-Python reais. As classes na sua aplicação provavelmente não precisam nem devem
+Python nativos. As classes na sua aplicação provavelmente não precisam
 implementar tantos métodos especiais quanto os exemplos nesse capítulo. Mas se
 você estiver escrevendo uma biblioteca ou um framework, os programadores que
 usarão suas classes talvez esperem que elas se comportem como as classes
@@ -38,7 +38,7 @@ exemplo, `repr()`, `bytes()`, `complex()`, etc.)
 * Estender a mini-linguagem de formatação usada pelas f-strings, pela função
 embutida `format()` e pelo método `str.format()`
 * Fornecer acesso a atributos apenas para leitura
-* Tornar um objetos _hashable_, para uso em _sets_ e como chaves de `dict`
+* Tornar um objetos _hashable_, para uso em conjuntos e como chaves de `dict`
 * Economizar memória com `+__slots__+`
 
 Vamos fazer tudo isso enquanto desenvolvemos `Vector2d`, um tipo simples de
@@ -54,17 +54,17 @@ A evolução do exemplo incluirá dois tópicos conceituais importantes:
 
 Acrescentei((("Pythonic objects", "significant changes to"))) uma nova epígrafe
 e também algumas palavras ao segundo parágrafo do capítulo, para falar do
-conceito de "pythônico"—que na primeira edição era discutido apenas no final do
+conceito de "pythônico"—que na primeira edição era mencionado só no final do
 livro.
 
-A <<format_display_sec>> foi atualizada para mencionar as f-strings,
+Atualizei a <<format_display_sec>> para mencionar as f-strings,
 introduzidas no Python 3.6. É uma mudança pequena, pois as f-strings suportam a
 mesma mini-linguagem de formatação que a função embutida `format()` e o método
 `str.format()`, então quaisquer métodos `+__format__+` implementados antes vão
 funcionar também com as f-strings.
 
 O resto do capítulo quase não mudou—os métodos especiais são praticamente os mesmos
-desde o Python 3.0, e as ideias centrais apareceram no Python 2.2.
+desde o Python 3.0, e a maioria existe desde o Python 2.2.
 
 Vamos começar pelos métodos de representação de objetos.
 
@@ -80,22 +80,22 @@ uma string representando o objeto como o desenvolvedor quer vê-lo. É o que
 aparece quando o console de Python ou um depurador mostram um objeto.
 
 `str()`:: Devolve((("str() function")))((("functions", "str() function"))) uma
-string representando o objeto como o usuário quer vê-lo. É o que aparece quando
-se passa um objeto como argumento para `print()`.
+string representando o objeto de uma forma amigável para o usuário final.
+É o que aparece quando se passa um objeto como argumento para `print()`.
 
 Os((("&#x005F;&#x005F;repr&#x005F;&#x005F;")))((("&#x005F;&#x005F;str&#x005F;&#x005F;")))
 métodos especiais `+__repr__+` e `+__str__+` suportam `repr()` e `str()`, como
 vimos no <<ch_data_model>>.
 
 Existem((("&#x005F;&#x005F;bytes&#x005F;&#x005F;")))((("&#x005F;&#x005F;format&#x005F;&#x005F;")))
-dois métodos especiais adicionais para suportar representações alternativas de
+mais dois métodos especiais para gerar representações alternativas de
 objetos, `+__bytes__+` e `+__format__+`. O método `+__bytes__+` é análogo a
 `+__str__+`: ele é chamado por `bytes()` para obter um objeto representado como
 uma sequência de bytes. Já `+__format__+` é usado por f-strings, pela função
 embutida `format()` e pelo método `str.format()`. Todos eles chamam
-`obj.__format__(format_spec)` para obter versões de exibição de objetos usando
-códigos de formatação especiais. Vamos tratar de `+__bytes__+` na próxima seção
-e de `+__format__+` logo depois.
+`obj.__format__(fmt_spec)` 
+para gerar uma string exibindo o objeto conforme códigos de formatação especiais.
+Vamos tratar de `+__bytes__+` na próxima seção e de `+__format__+` logo depois.
 
 
 [WARNING]
@@ -124,17 +124,15 @@ instância de `Vector2d`.
 include::../code/11-pythonic-obj/vector2d_v0.py[tags=VECTOR2D_V0_DEMO]
 ----
 ====
-[role="pagebreak-before less_space"]
-
 <1> Os componentes de um `Vector2d` podem ser acessados diretamente como
 atributos (não é preciso invocar métodos _getter_).
 <2> Um `Vector2d` pode ser desempacotado para uma tupla de variáveis.
-<3> O `repr` de um `Vector2d` emula o código-fonte usado para construir a instância.
+<3> O `repr` de um `Vector2d` imita o código-fonte usado para construir a instância.
 <4> Usar `eval` aqui mostra que o `repr` de um `Vector2d` é uma representação
-fiel da chamada a seu construtor.footnote:[Usei `eval` para clonar o objeto aqui
-apenas para mostrar uma característica de `repr`; para clonar uma instância, a
+fiel da chamada a seu construtor.footnote:[Usei `eval` para clonar o objeto
+apenas para demonstrar a sintaxe da string gerada por `repr`; para clonar uma instância, a
 função `copy.copy` é mais segura e rápida.]
-<5> `Vector2d` suporta a comparação com `==`; isso é útil para testes.
+<5> `Vector2d` suporta a comparação com `==` (muito útil para testes).
 <6> `print` chama `str`, que no caso de `Vector2d` exibe um par ordenado.
 <7> `bytes` usa o método `+__bytes__+` para produzir uma representação binária.
 <8> `abs` usa o método `+__abs__+` para devolver a magnitude do `Vector2d`.
@@ -161,11 +159,11 @@ include::../code/11-pythonic-obj/vector2d_v0.py[tags=VECTOR2D_V0]
 `Vector2d` de/para `bytes`.
 
 <2> Converter `x` e `y` para `float` em `+__init__+` captura erros mais rápido,
-algo útil quando `Vector2d` é chamado com argumentos inadequados.
+algo útil quando `Vector2d` é chamado com argumentos não numéricos.
 
 <3> `+__iter__+` torna um `Vector2d` iterável; é isso que faz o desempacotamento
-funcionar (por exemplo, `x, y = my_vector`). Vamos implementá-lo aqui usando uma
-expressão geradora para produzir os componentes, um após outro.footnote:[Essa
+funcionar (por exemplo, `x, y = my_vector`). Usamos uma
+expressão geradora para produzir os dois componentes, um após outro.footnote:[Essa
 linha também poderia ser escrita assim: `yield self.x; yield.self.y`. Terei mais
 a dizer sobre o método especial `+__iter__+`, sobre expressões geradoras e sobre
 a palavra reservada `yield` no <<ch_generators>>.]
@@ -174,20 +172,20 @@ a palavra reservada `yield` no <<ch_generators>>.]
 obter seus `repr`; como `Vector2d` é iterável, `*self` alimenta `format` com os
 componentes `x` e `y`.
 
-<5> Dado um iterável `Vector2d`, é fácil criar uma `tuple` para exibição como um
+<5> Como `Vector2d` é iterável, é fácil criar uma `tuple` para exibição como um
 par ordenado.
 
 <6> Para gerar `bytes`, convertemos o typecode para `bytes` e concatenamos...
 
-<7> ...`bytes` convertidos a partir de um `array` criada iterando sobre a
+<7> ...`bytes` convertidos a partir de um `array` criado iterando sobre a
 instância.
 
-<8> Para comparar rapidamente todos os componentes, cria tuplas a partir dos
+<8> Para comparar facilmente todos os componentes, criamos tuplas a partir dos
 operandos. Isso funciona para operandos que sejam instâncias de `Vector2d`, mas
 tem problemas. Veja o alerta abaixo.
 
-<9> A magnitude é o comprimento da hipotenusa do triângulo retângulo de catetos
-formados pelos componentes `x` e `y`.
+<9> A magnitude é o comprimento da hipotenusa do triângulo retângulo
+com os catetos formados pelos componentes `x` e `y`.
 
 <10> `+__bool__+` usa `abs(self)` para computar a magnitude, então a converte
 para `bool`; assim, `0.0` se torna `False`, qualquer valor diferente de zero é
@@ -253,20 +251,20 @@ Vamos então falar um pouco disso.
 O((("Pythonic objects", "classmethod versus staticmethod")))((("classmethod
 decorator")))((("staticmethod decorator")))((("decorators and closures",
 "classmethod versus staticmethod"))) decorador `classmethod` não é mencionado no
-tutorial de Python, nem tampouco o `staticmethod`. Qualquer um que tenha
-aprendido OO com Java pode se perguntar porque Python tem esses dois
-decoradores, e não apenas um deles.
+tutorial de Python, nem tampouco o `staticmethod`.
+Quem OO com Java pode se perguntar porque Python tem esses dois
+decoradores, e não apenas `staticmethod`.
 
 Vamos começar com `classmethod`. O <<ex_vector2d_v1>> mostra seu uso: definir um
 método que opera na classe, e não em suas instâncias. O `classmethod` muda a
 forma como o método é chamado, então recebe a própria classe como primeiro
 argumento, em vez de uma instância. Seu uso mais comum é em construtores
 alternativos, como `frombytes` no <<ex_vector2d_v1>>. Observe como a última
-linha de `frombytes` de fato usa o argumento `cls`, invocando-o para criar uma
+linha de `frombytes` o argumento `cls`, invocando-o para criar uma
 nova instância: `cls(*memv)`.
 
 O decorador `staticmethod`, por outro lado, muda um método para que ele não
-receba qualquer primeiro argumento especial. Essencialmente, um método estático
+receba um argumento automaticamente. Essencialmente, um método estático
 é apenas uma função simples que por acaso mora no corpo de uma classe, em vez de
 ser definida no nível do módulo. O <<ex_class_staticmethod>> compara a operação
 de `classmethod` e `staticmethod`.
@@ -303,10 +301,11 @@ a classe `Demo` como primeiro argumento.
 [NOTE]
 ====
 O decorador `classmethod` é obviamente útil mas, em minha experiência, bons
-casos de uso para `staticmethod` são raros. Talvez a função, mesmo sem
-nunca tocar na classe, seja intimamente relacionada a essa última. Daí você pode
-querer que ela fique próxima no seu código. E mesmo assim, definir a função logo
-antes ou logo depois da classe, no mesmo módulo, é perto o suficiente na maioria
+casos de uso para `staticmethod` são raros. Talvez a função
+seja intimamente relacionada a classe, mesmo sem nunca usá-la em seu corpo.
+Daí você pode querer que ela fique próxima no código-fonte.
+Mesmo assim, definir a função logo antes ou logo depois da classe,
+no mesmo módulo, é perto o suficiente na maioria
 dos casos.footnote:[Leonardo Rochael, um dos revisores técnicos deste livro,
 discorda de minha opinião desabonadora sobre o `staticmethod`, e recomenda como
 contra-argumento o post de blog https://fpy.li/11-2["The Definitive Guide on How
@@ -329,16 +328,16 @@ As((("Pythonic objects", "formatted displays", id="POformat11")))((("functions",
 method")))((("&#x005F;&#x005F;format&#x005F;&#x005F;")))((("f-string syntax",
 "delegation of formatting by")))((("displays, formatting", id="dispform11")))
 f-strings, a função embutida `format()` e o método `str.format()` delegam a
-formatação efetiva para cada tipo, chamando seu método
-`+.__format__(format_spec)+`. O `format_spec` especifica a formatação desejada,
-e é:
+lógica da formatação para cada tipo, chamando seu método
+`+.__format__(fmt_spec)+`.
+A string `fmt_spec` especifica a formatação desejada.
+Esta especificação é:
 
-* O segundo argumento em `format(my_obj, format_spec)`, ou
+* O segundo argumento em `format(my_obj, fmt_spec)`, ou
 
-* O que quer que apareça após os dois pontos (`:`) em um campo de substituição
-delimitado por `{}` dentro de uma f-string ou o `fmt` em `fmt.str.format()`
+* O que aparece após os dois pontos (`:`) em um campo de substituição
+delimitado por `{}` dentro de uma f-string ou no gabarito `g` em `g.format()`
 
-[role="pagebreak-before less_space"]
 Por exemplo:
 
 [source, python]
@@ -354,21 +353,21 @@ Por exemplo:
 '1 USD = 4.82 BRL'
 ----
 
-<1> A formatação especificada é `'0.4f'`.
+<1> A especificação de formato é `'0.4f'`.
 
-<2> A formatação especificada é `'0.2f'`. O `rate` no campo de substituição não
+<2> A especificação de formato é `'0.2f'`. O `rate` no campo de substituição não
 é parte da especificação de formato. Ele determina qual argumento nomeado de
-`.format()` entra no campo de substituição.
+`.format()` entra naquele campo de substituição.
 
 <3> Novamente, a especificação é `'0.2f'`. A expressão `1 / brl` não é parte
 dela.
 
-O segundo e o terceiro textos explicativos apontam um fato importante: uma
-string de formatação tal como`'{0.mass:5.3e}'` na verdade usa duas notações
+O segundo e o terceiro comentário apontam um fato importante: uma
+string de formatação tal como `'{0.mass:5.3e}'` usa duas notações
 separadas. O `'0.mass'` à esquerda dos dois pontos é a parte `field_name` da
 sintaxe de campo de substituição, e pode ser uma expressão arbitrária em uma
-f-string. O `'5.3e'` após os dois pontos é a especificação do formato. A notação
-usada na especificação do formato é chamada
+f-string. O `'5.3e'` após os dois pontos é a especificação do formato.
+A notação usada na especificação de formato é chamada
 https://fpy.li/63[Mini-Linguagem de
 Especificação de Formato].
 
@@ -379,13 +378,14 @@ Se f-strings, `format()` e `str.format()` são novidades para você, minha
 experiência como professor me informa que é melhor estudar primeiro a função
 embutida `format()`, que usa apenas a
 https://fpy.li/63[Mini-Linguagem de
-Especificação de Formato]. Após pegar o jeito desta última, leia
-https://fpy.li/64["Literais
-de string formatados"] e
-https://fpy.li/65["Sintaxe
-das string de formato"], para aprender sobre a notação de campo de substituição
+Especificação de Formato].
+Após pegar o jeito dela, leia
+https://fpy.li/64["Literais de string formatados"] e
+https://fpy.li/65["Sintaxe das string de formato"],
+para aprender sobre a notação de campo de substituição
 (`{:}`), usada em f-strings e no método `str.format()` (incluindo os marcadores
-de conversão `!s`, `!r`, e `!a`). F-strings não tornam `str.format()` obsoleto:
+de conversão `!s`, `!r`, e `!a`). F-strings não tornam o método `str.format()`
+obsoleto:
 na maioria dos casos f-strings resolvem o problema, mas algumas vezes é melhor
 especificar a string de formatação em outro arquivo (diferente de onde ela será
 utilizada).
@@ -407,9 +407,10 @@ fixo, e `%`, para exibir porcentagens:
 ----
 
 A Mini-Linguagem de Especificação de Formato é extensível, porque cada classe
-interpreta o argumento `format_spec` como quiser. Por exemplo, as classes no
-módulo `datetime` usam os mesmos códigos de formatação nas funções  `strftime()`
-e em seus métodos `+__format__+`. Veja abaixo alguns exemplos de uso da função
+interpreta o argumento `fmt_spec` como quiser. Por exemplo, as classes no
+módulo `datetime` usam em seus métodos `+__format__+` os mesmos códigos
+de formatação das funções `strftime()`, que são mais antigas.
+Veja abaixo alguns exemplos de uso da função
 `format()` e do método `str.format()`:
 
 [source, python]
@@ -422,8 +423,9 @@ e em seus métodos `+__format__+`. Veja abaixo alguns exemplos de uso da funçã
 "It's now 06:49 PM"
 ----
 
-Se a classe não possuir um `+__format__+`, o método herdado de `object` devolve
-`str(my_object)`. Como `Vector2d` tem um `+__str__+`, isso funciona:
+Se a classe não implementar um `+__format__+`,
+o método herdado de `object` devolve `str(my_object)`.
+Como `Vector2d` tem um `+__str__+`, isso funciona:
 
 [source, python]
 ----
@@ -432,8 +434,8 @@ Se a classe não possuir um `+__format__+`, o método herdado de `object` devolv
 '(3.0, 4.0)'
 ----
 
-Entretanto, se você passar um especificador de formato, `+object.__format__+`
-gera um `TypeError`:
+Entretanto, se você passar um especificador de formato,
+`+object.__format__+` gera um `TypeError`:
 
 [source, python]
 ----
@@ -443,8 +445,8 @@ Traceback (most recent call last):
 TypeError: non-empty format string passed to object.__format__
 ----
 
-Vamos corrigir isso implementando nossa própria mini-linguagem de formatação. O
-primeiro passo será presumir que o especificador de formato fornecido pelo
+Vamos corrigir isso implementando nossa própria mini-linguagem de formatação.
+O primeiro passo será presumir que o especificador de formato fornecido pelo
 usuário tem por objetivo formatar cada componente `float` do vetor. Esse é o
 resultado esperado:
 
@@ -1295,9 +1297,9 @@ pelo método de mesmo nome na classe `array.array`.
 Vimos que a
 https://fpy.li/63[Mini-Linguagem de
 Especificação de Formato] é extensível, ao implementarmos um método
-`+__format__+` que analisa uma `format_spec` fornecida à função embutida
-`format(obj, format_spec)` ou dentro de campos de substituição
-`'{:«format_spec»}'` em f-strings ou ainda strings usadas com o método
+`+__format__+` que analisa uma `fmt_spec` fornecida à função embutida
+`format(obj, fmt_spec)` ou dentro de campos de substituição
+`'{:«fmt_spec»}'` em f-strings ou ainda strings usadas com o método
 `str.format()`.
 
 Para preparar a transformação de instâncias de `Vector2d` em _hashable_, fizemos
