@@ -33,7 +33,7 @@ Tests with 2-dimensions (same results as ``vector2d_v1.py``)::
     (True, False)
 
 
-Test of ``.frombytes()`` class method:
+Test of `.frombytes()` class method:
 
     >>> v1_clone = Vector.frombytes(bytes(v1))
     >>> v1_clone
@@ -70,7 +70,7 @@ Tests with many dimensions::
     9.53939201...
 
 
-Test of ``.__bytes__`` and ``.frombytes()`` methods::
+Test of ``.__bytes__`` and `.frombytes()` methods::
 
     >>> v1 = Vector([3, 4, 5])
     >>> v1_clone = Vector.frombytes(bytes(v1))

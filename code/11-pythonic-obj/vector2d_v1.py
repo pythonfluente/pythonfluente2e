@@ -23,7 +23,7 @@ A 2-dimensional vector class
     (True, False)
 
 
-Test of ``.frombytes()`` class method:
+Test of `.frombytes()` class method:
 
     >>> v1_clone = Vector2d.frombytes(bytes(v1))
     >>> v1_clone

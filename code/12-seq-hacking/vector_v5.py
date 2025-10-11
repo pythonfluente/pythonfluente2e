@@ -34,7 +34,7 @@ Tests with two dimensions (same results as ``vector2d_v1.py``)::
     (True, False)
 
 
-Test of ``.frombytes()`` class method:
+Test of `.frombytes()` class method:
 
     >>> v1_clone = Vector.frombytes(bytes(v1))
     >>> v1_clone
@@ -71,7 +71,7 @@ Tests with many dimensions::
     9.53939201...
 
 
-Test of ``.__bytes__`` and ``.frombytes()`` methods::
+Test of ``.__bytes__`` and `.frombytes()` methods::
 
     >>> v1 = Vector([3, 4, 5])
     >>> v1_clone = Vector.frombytes(bytes(v1))
@@ -147,7 +147,7 @@ Most hash codes of non-integers vary from a 32-bit to 64-bit CPython build::
     True
 
 
-Tests of ``format()`` with Cartesian coordinates in 2D::
+Tests of `format()` with Cartesian coordinates in 2D::
 
     >>> v1 = Vector([3, 4])
     >>> format(v1)
@@ -158,7 +158,7 @@ Tests of ``format()`` with Cartesian coordinates in 2D::
     '(3.000e+00, 4.000e+00)'
 
 
-Tests of ``format()`` with Cartesian coordinates in 3D and 7D::
+Tests of `format()` with Cartesian coordinates in 3D and 7D::
 
     >>> v3 = Vector([3, 4, 5])
     >>> format(v3)
@@ -167,7 +167,7 @@ Tests of ``format()`` with Cartesian coordinates in 3D and 7D::
     '(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)'
 
 
-Tests of ``format()`` with spherical coordinates in 2D, 3D and 4D::
+Tests of `format()` with spherical coordinates in 2D, 3D and 4D::
 
     >>> format(Vector([1, 1]), 'h')  # doctest:+ELLIPSIS
     '<1.414213..., 0.785398...>'

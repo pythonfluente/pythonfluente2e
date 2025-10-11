@@ -336,7 +336,7 @@ Esta especificação é:
 * O segundo argumento em `format(my_obj, fmt_spec)`, ou
 
 * O que aparece após os dois pontos (`:`) em um campo de substituição
-delimitado por `{}` dentro de uma f-string ou no gabarito `g` em `g.format()`
+delimitado por `{}` dentro de uma f-string ou na string `s` em `s.format()`
 
 Por exemplo:
 
@@ -423,7 +423,7 @@ Veja abaixo alguns exemplos de uso da função
 "It's now 06:49 PM"
 ----
 
-Se a classe não implementar um `+__format__+`,
+Se a classe não implementar `+__format__+`,
 o método herdado de `object` devolve `str(my_object)`.
 Como `Vector2d` tem um `+__str__+`, isso funciona:
 
@@ -479,7 +479,7 @@ O <<ex_format_t1>> implementa `+__format__+` para produzir as formatações vist
 <1> Usa a função embutida `format` para aplicar o `fmt_spec` a cada componente
 do vetor, criando um iterável de strings formatadas.
 
-<2> Insere as strings formatadas na fórmula `'(x, y)'`.
+<2> Insere as strings formatadas no gabarito `'(x, y)'`.
 
 Agora vamos acrescentar um código de formatação customizado à nossa
 mini-linguagem: se o especificador de formato terminar com `'p'`, vamos exibir o
@@ -524,10 +524,10 @@ polares. Veja o <<ex_format_t2>>.
 include::../code/11-pythonic-obj/vector2d_v2_fmt_snippet.py[tags=VECTOR2D_V2_FORMAT]
 ----
 ====
-<1> O formato termina com `'p'`: usa coordenadas polares.
+<1> O formato termina com `'p'`: usar coordenadas polares.
 <2> Remove o sufixo `'p'` de `fmt_spec`.
 <3> Cria uma `tuple` de coordenadas polares: `(magnitude, angle)`.
-<4> Configura o formato externo com chaves de ângulo.
+<4> Configura o formato externo com colchetes angulares `< >`.
 <5> Caso contrário, usa os componentes `x, y` de `self` para coordenadas retângulares.
 <6> Configura o formato externo com parênteses.
 <7> Gera um iterável cujos componentes são strings formatadas.
@@ -550,8 +550,8 @@ Como mostrou essa seção, não é difícil estender a Mini-Linguagem de
 Especificação de Formato para suportar tipos definidos pelo usuário.
 
 Vamos agora passar a um assunto que vai além das aparências: tornar nosso
-`Vector2d` _hashable_, para podermos criar conjuntos de vetores ou usá-los como
-chaves em um `dict`.((("", startref="dispform11")))((("",
+`Vector2d` _hashable_, para podermos colocar vetores em conjuntos 
+ou usá-los como chaves em um `dict`.((("", startref="dispform11")))((("",
 startref="POformat11")))
 
 
@@ -577,9 +577,9 @@ TypeError: unhashable type: 'Vector2d'
 ----
 
 Para tornar um `Vector2d` _hashable_, precisamos implementar `+__hash__+`
-(`+__eq__+` também é necessário, mas já temos esse método). Além disso,
+(`+__eq__+` também é necessário; já codamos esse método). Além disso,
 precisamos tornar imutáveis as instâncias do vetor, como vimos na
-<<what_is_hashable>>.
+<<what_is_hashable_sec>>.
 
 Nesse momento, qualquer um pode fazer `v1.x = 7`,
 e não há nada no código sugerindo que é proibido modificar um `Vector2d`.
@@ -613,7 +613,7 @@ atributos privados são assunto da <<private_protected_sec>>, mais adiante.]
 
 <2> O decorador `@property` marca o método _getter_ de uma propriedade.
 
-<3> O método _getter_ é nomeado de acordo com o nome da propriedade pública que
+<3> O método _getter_ tem nome da propriedade pública que
 ele expõe: `x`.
 
 <4> Apenas devolve `self.__x`.
@@ -669,19 +669,17 @@ Com o acréscimo do método `+__hash__+`, temos agora vetores _hashable_:
 
 [TIP]
 ====
-
 Não é estritamente necessário implementar propriedades ou proteger de alguma
 forma os atributos de instância para criar um tipo _hashable_. Só é necessário
-implementar corretamente `+__hash__+` e `+__eq__+`. Mas, supostamente, o valor
-de um objeto _hashable_ nunca deveria mudar, então isso me dá uma boa desculpa
-para falar sobre propriedades apenas para leitura.
-
+implementar corretamente `+__hash__+` e `+__eq__+`. Mas, como o valor
+de um objeto _hashable_ nunca deve mudar, é um bom motivo para aprender
+a criar propriedades apenas para leitura (_read only_).
 ====
 
-Se você estiver criando um tipo com um valor numérico escalar que faz sentido,
-você pode também implementar os métodos `+__int__+` e `+__float__+`, invocados
+Se você criar um tipo com que tem um valor numérico escalar,
+você pode implementar os métodos `+__int__+` e `+__float__+`, invocados
 pelos construtores `int()` e `float()`, que são usados, em alguns contextos,
-para coerção de tipo. Há também o método `+__complex__+`, para suportar o
+para conversão de tipo. Há também o método `+__complex__+`, para suportar o
 construtor embutido `complex()`. Talvez `Vector2d` pudesse oferecer o
 `+__complex__+`, mas deixo isso como um exercício para vocês.((("",
 startref="POhash11")))
@@ -732,8 +730,8 @@ class Vector2d:
     # etc...
 ----
 
-Agora podemos economizar alguma digitação ao escrever padrões para usar contra
-sujeitos `Vector2d`, como se vê no <<vector_match_positional_ex>>.
+Agora podemos escrever menos código ao criar padrões para casar com
+sujeitos `Vector2d`, como no <<vector_match_positional_ex>>.
 
 [[vector_match_positional_ex]]
 .Padrões posicionais para sujeitos `Vector2d`—requer Python 3.10
@@ -750,7 +748,7 @@ obrigatórios e opcionais, que são depois vinculados a atributos de instância,
 pode ser razoável nomear apenas os argumentos obrigatórios em
 `+__match_args__+`, omitindo os opcionais.
 
-Vamos dar um passo atrás e revisar tudo o que programamos até aqui no `Vector2d`.
+Agora vamos revisar tudo o que programamos até aqui no `Vector2d`.
 
 
 === Listagem completa Vector2d, versão 3

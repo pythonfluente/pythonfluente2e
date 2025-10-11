@@ -25,7 +25,7 @@ A two-dimensional vector class
     (True, False)
 
 
-Test of ``.frombytes()`` class method:
+Test of `.frombytes()` class method:
 
     >>> v1_clone = Vector2d.frombytes(bytes(v1))
     >>> v1_clone
@@ -34,7 +34,7 @@ Test of ``.frombytes()`` class method:
     True
 
 
-Tests of ``format()`` with Cartesian coordinates:
+Tests of `format()` with Cartesian coordinates:
 
     >>> format(v1)
     '(3.0, 4.0)'
@@ -44,7 +44,7 @@ Tests of ``format()`` with Cartesian coordinates:
     '(3.000e+00, 4.000e+00)'
 
 
-Tests of the ``angle`` method::
+Tests of the `.angle()` method::
 
     >>> Vector2d(0, 0).angle()
     0.0
@@ -57,7 +57,7 @@ Tests of the ``angle`` method::
     True
 
 
-Tests of ``format()`` with polar coordinates:
+Tests of `format()` with polar coordinates:
 
     >>> format(Vector2d(1, 1), 'p')  # doctest:+ELLIPSIS
     '<1.414213..., 0.785398...>'
