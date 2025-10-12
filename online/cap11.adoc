@@ -308,12 +308,12 @@ Mesmo assim, definir a função logo antes ou logo depois da classe,
 no mesmo módulo, é perto o suficiente na maioria
 dos casos.footnote:[Leonardo Rochael, um dos revisores técnicos deste livro,
 discorda de minha opinião desabonadora sobre o `staticmethod`, e recomenda como
-contra-argumento o post de blog https://fpy.li/11-2["The Definitive Guide on How
-to Use Static, Class or Abstract Methods in Python" (_O Guia Definitivo sobre
-Como Usar Métodos Estáticos, de Classe ou Abstratos em Python_)] (EN), de Julien
-Danjou. O post de Danjou é muito bom; recomendo sua leitura. Mas ele não foi
+contra-argumento o post de blog https://fpy.li/11-2[_The Definitive Guide on How
+to Use Static, Class or Abstract Methods in Python_] (O Guia Definitivo sobre
+Como Usar Métodos Estáticos, de Classe ou Abstratos em Python), de Julien
+Danjou. O post de Danjou é muito bom; recomendo sua leitura. Mas não foi
 suficiente para mudar meu ponto de vista sobre `staticmethod`. Você terá que
-decidir por si mesmo.]
+decidir por conta própria se vale ou não a pena usar `staticmethod`.]
 ====
 
 Agora que vimos para que serve o `classmethod` (e que o `staticmethod` não é
@@ -768,29 +768,29 @@ include::../code/11-pythonic-obj/vector2d_v3.py[]
 ----
 ====
 
+{nbsp}
+
 Recordando, nessa seção e nas anteriores vimos alguns dos métodos especiais
-essenciais que você pode querer implementar para obter um objeto completo.
+essenciais que você pode querer implementar para oferecer um objeto completo.
 
 [NOTE]
 ====
-
-Você deve implementar esses métodos especiais apenas se sua aplicação precisar
-deles. Os usuários finais não se importam se os objetos que compõem uma
-aplicação são pythônicos ou não.
+Você deve implementar os métodos especiais que forem úteis em sua aplicação.
+Os usuários finais não se importam se os objetos que da aplicação são
+pythônicos ou não.
 
 Por outro lado, se suas classes são parte de uma biblioteca para ser usada por
-outros programadores Python, você não tem como adivinhar como eles vão usar seus
-objetos. E eles estarão esperando ver esses comportamentos pythônicos que
-descrevemos aqui.
-
+outros programadores Python, você não tem como adivinhar como eles vão usar
+seus objetos. E os usuários de sua biblioteca estarão esperando os
+comportamentos pythônicos que descrevemos aqui.
 ====
 
 Como programado no  <<ex_vector2d_v3_full>>, `Vector2d` é um exemplo didático
-com uma lista extensiva de métodos especiais relacionados à representação de
-objetos, não um modelo para qualquer classe definida pelo usuário.
+com uma longa lista de métodos especiais relacionados à representação de
+objetos, não um modelo para qualquer classe que você vai escrever.
 
 Na próxima seção, deixamos o `Vector2d` de lado por um tempo para discutir o
-design e as desvantagens do mecanismo de atributos privados no Python—o prefixo
+design e as limitações do mecanismo de atributos privados no Python—o prefixo
 de duplo sublinhado em `self.__x`.((("", startref="POvectorfull11")))((("",
 startref="V2dfull11")))
 
@@ -816,12 +816,12 @@ sublinhado seguido do nome da classe. Na classe `Dog`, por exemplo, `__mood` se
 torna `+_Dog__mood+` e em `Beagle` ele será `+_Beagle__mood+`.
 
 Esse recurso da linguagem é conhecido pela encantadora alcunha de((("name
-mangling"))) _desfiguração de nome_ ("name mangling").
+mangling"))) "desfiguração de nome" (_name mangling_).
 
 O <<name_mangling_ex>> mostra o resultado na classe `Vector2d` do <<ex_vector2d_v3>>.
 
 [[name_mangling_ex]]
-.Nomes de atributos privados são "desfigurados", prefixando-os com o `_` e o nome da classe
+.Nomes de atributos privados são "desfigurados" no `__dict__`
 ====
 [source, python]
 ----
@@ -833,25 +833,29 @@ O <<name_mangling_ex>> mostra o resultado na classe `Vector2d` do <<ex_vector2d_
 ----
 ====
 
-A desfiguração do nome é sobre alguma proteção, não sobre segurança: ela foi
-projetada para evitar acesso acidental, não ataques maliciosos. A <<safety_fig>>
-ilustra outro dispositivo de proteção.
+A desfiguração do nome oferece proteção, não segurança:
+ela pode evitar acessos acidentais, mas não ataques intencionais.
+A <<safety_fig>> ilustra outro dispositivo de proteção.
+
+[[safety_fig]]
+.A capa sobre um interruptor é um dispositivo de proteção, não de segurança: previne acidentes, não sabotagem
+image::../images/flpy_1101.png[interruptores com coberturas de proteção]
 
 Qualquer um que saiba como os nomes privados são modificados pode ler o atributo
-privado diretamente, como mostra a última linha do <<name_mangling_ex>>—isso na
-verdade é útil para depuração e serialização. Isso também pode ser usado para
+privado diretamente, como mostra a última linha do <<name_mangling_ex>>.
+Este conhecimento é útil para depuração e serialização. Também pode ser usado para
 atribuir um valor a um componente privado de um `Vector2d`, escrevendo
-`v1._Vector2d__x = 7`. Mas se você estiver fazendo isso com código em produção,
+`v1._Vector2d__x = 7`. Mas se você estiver fazendo isso num código em produção,
 não poderá reclamar se alguma coisa explodir.
 
 A funcionalidade de desfiguração de nomes não é amada por todos os pythonistas,
 nem tampouco a aparência estranha de nomes escritos como `self.__x`. Muitos
 preferem evitar essa sintaxe e usar apenas um sublinhado no prefixo para
-"proteger" atributos da forma convencional (por exemplo, `self._x`). Críticos da
-desfiguração automática com o sublinhado duplo sugerem que preocupações com
-modificações acidentais a atributos deveriam ser tratadas através de convenções
-de nomenclatura. Ian Bicking—criador do pip, do virtualenv e de outros
-projetos—escreveu:
+"proteger" atributos por convenção: `self._x`. Críticos da
+desfiguração automática com o sublinhado duplo dizem que preocupações com
+modificações acidentais a atributos devem ser tratadas através de convenções
+de nomenclatura. O criador do _pip_, _virtualenv_ e outros
+projetos importantes, Ian Bicking, escreveu:
 
 [quote]
 ____
@@ -859,15 +863,12 @@ ____
 Nunca, de forma alguma, use dois sublinhados como prefixo. Isso é irritantemente
 privado. Se colisão de nomes for uma preocupação, use desfiguração explícita de
 nomes em seu lugar (por exemplo,`+_MyThing_blahblah+`). Isso é essencialmente a
-mesma coisa que o sublinhado duplo, mas é transparente onde o sublinhado duplo é
-obscuro.footnote:[Do https://fpy.li/11-8["Paste Style Guide" (_Guia de Estilo do
-Paste_)].]
+mesma coisa que o sublinhado duplo, mas é transparente enquanto o sublinhado duplo é
+obscuro.footnote:[Do https://fpy.li/11-8[_Paste Style Guide_] (Guia de Estilo do
+Paste).]
 
 ____
 
-[[safety_fig]]
-.Uma cobertura sobre um interruptor é um dispositivo de proteção, não de segurança: ele previne acidentes, não sabotagem
-image::../images/flpy_1101.png[interruptores com coberturas de proteção]
 
 O prefixo de sublinhado único não tem nenhum significado especial para o
 interpretador Python, quando usado em nomes de atributo. Mas essa é uma
@@ -884,8 +885,8 @@ fácil respeitar a convenção de tratar como constantes as variáveis com nomes
 inteiramente em maiúsculas.
 
 Atributos com um único `+_+` como prefixo são chamados "protegidos" em algumas
-partes da documentação de Python.footnote:[Um exemplo é a
-https://fpy.li/68[documentação do módulo gettext].]
+partes da documentação de Python, por exemplo na documentação do módulo 
+https://fpy.li/68[_gettext_].
 A prática de "proteger" atributos por convenção com a forma
 `self._x` é muito difundida, mas chamar isso de atributo "protegido" não é tão
 comum. Alguns até falam em atributo "privado" nesses casos.
@@ -898,9 +899,9 @@ Java nesse aspecto, nem leia minha discussão sobre a força relativa do
 modificador `private` de Java no <<pythonic_soapbox>>.]
 
 Vamos agora voltar à nossa classe `Vector2d`. Na próxima seção trataremos de um
-atributo (e não um método) especial que afeta o armazenamento interno de um
-objeto, com um imenso impacto potencial sobre seu uso de memória, mas pouco
-efeito sobre sua interface pública: `+__slots__+`.((("",
+atributo especial (e não um método) que afeta o armazenamento interno de um
+objeto, reduzindo o uso de memória, mas sem afetar muito
+sua interface pública: `+__slots__+`.((("",
 startref="Aprivate11")))((("", startref="POprivate11")))
 
 
@@ -912,10 +913,10 @@ Por((("Pythonic objects", "saving memory with
 id="POslot11")))((("&#x005F;&#x005F;slots&#x005F;&#x005F;",
 id="slots11")))((("memory, saving with &#x005F;&#x005F;slots&#x005F;&#x005F;",
 id="memsave11"))) default, Python armazena os atributos de cada instância em um
-`dict` chamado `+__dict__+`. Como vimos em <<consequences_dict_internals>>, um
+`dict` chamado `+__dict__+`. Como vimos em <<conseq_dict_internal_sec>>, um
 `dict` ocupa um espaço significativo de memória, mesmo com as otimizações
 mencionadas naquela seção. Mas se você definir um atributo de classe chamado
-`+__slots__+`, que mantém uma sequência de nomes de atributos, Python usará um
+`+__slots__+` com uma sequência de nomes de atributos, Python usará um
 modelo alternativo de armazenamento para os atributos de instância: os atributos
 nomeados em `+__slots__+` serão armazenados em um array de referências oculto,
 que usa menos memória que um `dict`. Vamos ver como isso funciona através de
@@ -932,11 +933,11 @@ include::../code/11-pythonic-obj/slots.rst[tags=PIXEL]
 ====
 
 <1> `+__slots__+` deve estar presente quando a classe é criada; acrescentá-lo ou
-modificá-lo posteriormente não tem qualquer efeito. Os nomes de atributos podem
+modificá-lo posteriormente não tem efeito. Os nomes de atributos podem
 estar em uma `tuple` ou em uma `list`. Prefiro usar uma `tuple`, para deixar
 claro que não faz sentido modificá-la.
 
-<2> Cria uma instância de `Pixel`, pois os efeitos de `+__slots__+` são vistos
+<2> Cria uma instância de `Pixel` para testar, pois os efeitos de `+__slots__+` são vistos
 nas instâncias.
 
 <3> Primeiro efeito: instâncias de `Pixel` não têm um `+__dict__+`.
@@ -998,22 +999,22 @@ de suas superclasses, mas nenhum outro.
 Curiosamente, também é possível colocar o nome `'+__dict__+'` em  `+__slots__+`.
 Neste caso, as instâncias vão manter os atributos nomeados em `+__slots__+` num
 array de referências da instância, mas também vão aceitar atributos criados
-dinamicamente, que serão armazenados no habitual `+__dict__+`. Isso é necessário
-para usar o decorador `@cached_property` (tratado na
+dinamicamente, que serão armazenados `+__dict__+`, como de costume.
+Isso é necessário para usar o decorador `@cached_property` (tratado na
 <<caching_properties_sec>>).
 
-Naturalmente, incluir `+__dict__+` em `+__slots__+` pode desviar completamente
-do objetivo deste último, dependendo do número de atributos estáticos e
-dinâmicos em cada instância, e de como eles são usados. Otimização descuidada é
-pior que otimização prematura: adiciona complexidade sem colher qualquer
-benefício.
+Naturalmente, incluir `+__dict__+` em `+__slots__+` pode anular a economia
+de memória, dependendo do número de atributos estáticos e
+dinâmicos em cada instância, e de como eles são usados.
+Otimização descuidada é pior que otimização prematura:
+aumenta a complexidade sem trazer benefícios.
 
-Outro atributo de instância especial que você pode querer manter é
+Outro atributo de instância especial que você pode querer incluir é
 `+__weakref__+`, necessário para que objetos suportem referências fracas
 (mencionadas brevemente na <<del_sec>>). Esse atributo existe por default em
 instâncias de classes definidas pelo usuário. Entretanto, se a classe define
 `+__slots__+`, e é necessário que as instâncias possam ser alvo de referências
-fracas, então é preciso incluir  `+__weakref__+`  entre os atributos nomeados em
+fracas, então é preciso incluir  `+__weakref__+` entre os atributos nomeados em
 `+__slots__+`.
 
 Vejamos agora o efeito da adição de `+__slots__+` a `Vector2d`.
@@ -1083,7 +1084,7 @@ Se você precisa manipular milhões de objetos com dados numéricos, deveria na
 verdade estar usando os arrays da NumPy (veja a <<numpy_sec>>), que são
 eficientes no de uso de memória, e também tem funções para processamento
 numérico extremamente otimizadas, muitas das quais operam sobre o array inteiro
-ao mesmo tempo. Projetei a classe `Vector2d` apenas como um contexto para a
+em paralelo. Projetei a classe `Vector2d` apenas como um contexto para a
 discussão de métodos especiais, pois sempre que possível tento evitar exemplos
 vagos com `Foo` e `Bar`.
 
@@ -1119,34 +1120,33 @@ Um((("Pythonic objects", "overriding class attributes",
 id="POoverride11")))((("attributes", "overriding class attributes",
 id="Aover11"))) recurso característico de Python é a forma como atributos de
 classe podem ser usados como valores default para atributos de instância.
-`Vector2d` contém o atributo de classe `typecode`. Ele é usado duas vezes no
-método `+__bytes__+`, mas é lido intencionalmente como `self.typecode`. As
-instâncias de `Vector2d` são criadas sem um atributo `typecode` próprio, então
-`self.typecode` vai, por default, se referir ao atributo de classe
+`Vector2d` contém o atributo de classe `typecode`.
+No método `+__bytes__+` eu o acesso como `self.typecode` de propósito.
+As instâncias de `Vector2d` são criadas sem um atributo `typecode` próprio,
+então a expressão `self.typecode` vai, por default, ler atributo de classe
 `Vector2d.typecode`.
 
-Mas se incluirmos um atributo de instância que não existe, estamos criando um
-novo atributo de instância—por exemplo, um atributo de instância `typecode`—e o
-atributo de classe com o mesmo nome permanece intocado. Entretanto, daí em
-diante, sempre que algum código referente àquela instância contiver
-`self.typecode`, o `typecode` da instância será usado, na prática escondendo o
+Agora, quando atribuimos valor a um atributo na instância—por exemplo,
+um atributo `typecode` na instância—o atributo de classe com o mesmo nome
+não é alterado.
+Mas daí em diante, sempre a expressão `self.typecode` aparecer,
+o `typecode` da instância será usado, na prática escondendo o
 atributo de classe de mesmo nome. Isso abre a possibilidade de customizar uma
-instância individual com um `typecode` diferente.
+instância individual com um `typecode` diferente do padrão definido
+na classe `Vector2d`.
 
 O `Vector2d.typecode` default é `'d'`: isso significa que cada componente do
-vetor será representado como um número de ponto flutuante de dupla precisão e 8
+vetor será representado como um número de ponto flutuante de precisão dupla e 8
 bytes de tamanho quando for exportado para `bytes`. Se definirmos o `typecode`
 de uma instância `Vector2d` como `'f'` antes da exportação, cada componente será
 exportado como um número de ponto flutuante de precisão simples e 4 bytes de
-tamanho.. O <<typecode_instance_demo>> demonstra isso.
+tamanho. O <<typecode_instance_demo>> demonstra isso.
 
 [NOTE]
 ====
-
-Estamos falando do acréscimo de um atributo de instância, assim o
+Estamos falando de criar um novo atributo em uma instância, por isso o
 <<typecode_instance_demo>> usa a implementação de `Vector2d` sem `+__slots__+`,
 como aparece no <<ex_vector2d_v3_full>>.
-
 ====
 
 [[typecode_instance_demo]]
@@ -1179,7 +1179,8 @@ b'f\xcd\xcc\x8c?\xcd\xcc\x0c@'
 apenas a instância `v1` usa o `typecode` `'f'`.
 
 Isso deixa claro porque a exportação para `bytes` de um `Vector2d` tem um
-prefixo `typecode`: queríamos suportar diferentes formatos de exportação.
+prefixo `typecode`: queríamos suportar a exportação de vetores com
+números de diferentes precisões.
 
 Para modificar um atributo de classe, é preciso redefini-lo diretamente na
 classe, e não através de uma instância. Poderíamos modificar o `typecode`
@@ -1237,9 +1238,9 @@ como `ShortVector2d` teriam que sobrescrever `+__repr__+` só para mudar o
 `class_name`. Lendo o nome do `type` da instância, tornei `+__repr__+` mais
 seguro de ser herdado.
 
-Aqui termina nossa conversa sobre a criação de uma classe simples, que se vale
-do modelo de dados para se adaptar bem ao restante de Python: oferecendo
-diferentes representações do objeto, fornecendo um código de formatação
+Aqui termina nossa conversa sobre a criação de uma classe simples, que
+aproveita modelo de dados de Python para se adaptar bem ao restante da linguagem:
+oferecendo diferentes representações do objeto, fornecendo um código de formatação
 customizado, expondo atributos somente para leitura e suportando `hash()` para
 se integrar a conjuntos e mapeamentos.((("", startref="Aover11")))((("",
 startref="POoverride11")))
@@ -1253,28 +1254,29 @@ bem comportada.
 
 Será _vector2d_v3.py_ (do <<ex_vector2d_v3_full>>) mais pythônica que
 _vector2d_v0.py_ (do <<ex_vector2d_v0>>)? A classe `Vector2d` em
-_vector2d_v3.py_ com certeza utiliza mais recursos de Python. Mas decidir qual
-das duas implementações de `Vector2d` é mais adequada, a primeira ou a última,
-depende do contexto onde a classe será usada. O "Zen of Python" (_Zen de
-Python_), de Tim Peter, diz:
+_vector2d_v3.py_ com certeza utiliza mais recursos de Python.
+Mas, decidir qual das duas implementações de `Vector2d` é mais adequada,
+depende do contexto onde a classe será usada. No _Zen of Python_,
+Tim Peter escreveu:
 
 [quote]
 ____
 Simples é melhor que complexo.
 ____
 
-Um objeto deve ser tão simples quanto seus requerimentos exigem—e não um desfile
-de recursos da linguagem. Se o código for parte de uma aplicação, ele deveria se
-concentrar naquilo que for necessário para suportar os usuários finais, e nada
+Um objeto deve ser tão simples quanto seus requisitos exigem—e não um desfile
+de recursos da linguagem. Se o código é parte de uma aplicação, deve se
+concentrar no que é necessário para atender os usuários finais, e nada
 mais. Se o código for parte de uma biblioteca para uso por outros programadores,
-então é razoável implementar métodos especiais que suportam comportamentos
-esperados por pythonistas. Por exemplo, `+__eq__+` pode não ser necessário para
-suportar um requisito do negócio, mas torna a classe mais fácil de testar.
+então é razoável oferecer comportamentos esperados por pythonistas,
+implementados através de métodos especiais.
+Por exemplo, `+__eq__+` pode não ser um requisito do negócio,
+mas torna a classe mais fácil de testar.
 
-Minha meta, ao expandir o código do `Vector2d`, foi criar um contexto para a
-discussão dos métodos especiais e das convenções de programação em Python. Os
-exemplos neste capítulo demonstraram vários dos métodos especiais vistos antes
-na <<special_names_tbl>> (<<ch_data_model>>):
+Ao expandir o código do `Vector2d` meu objetivo foi criar um contexto para a
+discussão dos métodos especiais e outras convenções de programação em Python.
+Os exemplos neste capítulo demonstraram vários dos métodos especiais vistos
+antes na <<special_names_tbl>> (<<ch_data_model>>):
 
 * Métodos de representação de strings e bytes: `+__repr__+`, `+__str__+`,
 `+__format__+` e `+__bytes__+`
@@ -1282,12 +1284,11 @@ na <<special_names_tbl>> (<<ch_data_model>>):
 * Métodos para reduzir um objeto a um número: `+__abs__+`, `+__bool__+` e
 `+__hash__+`
 
-* O operador `+__eq__+`, para suportar testes e _hashing_ (juntamente com
-`+__hash__+`)
-
+* O operador `+__eq__+`, para facilitar testes e permitir _hashing_
+(juntamente com `+__hash__+`)
 
 Quando suportamos a conversão para `bytes`, também implementamos um construtor
-alternativo, `Vector2d.frombytes()`, que nos deu um contexto para falar dos
+alternativo, `Vector2d.frombytes()`, que nos deu motivo para falar dos
 decoradores `@classmethod` (muito conveniente) e `@staticmethod` (não tão útil:
 funções a nível do módulo são mais simples). O método `frombytes` foi inspirado
 pelo método de mesmo nome na classe `array.array`.
@@ -1295,16 +1296,16 @@ pelo método de mesmo nome na classe `array.array`.
 Vimos que a
 https://fpy.li/63[Mini-Linguagem de
 Especificação de Formato] é extensível, ao implementarmos um método
-`+__format__+` que analisa uma `fmt_spec` fornecida à função embutida
-`format(obj, fmt_spec)` ou dentro de campos de substituição
-`'{:«fmt_spec»}'` em f-strings ou ainda strings usadas com o método
-`str.format()`.
+`+__format__+` que analisa uma especificação de formato passada para 
+a função embutida `format(obj, fmt_spec)`, ou dentro de campos
+de substituição `f'{expr:fmt_spec}'` em f-strings, ou
+ainda strings usadas como alvo do método `str.format()`.
 
-Para preparar a transformação de instâncias de `Vector2d` em _hashable_, fizemos
+Para preparar que instâncias de `Vector2d` sejam _hashable_, fizemos
 um esforço para torná-las imutáveis, ao menos prevenindo modificações
 acidentais, programando os atributos `x` e `y` como privados, e expondo-os como
-propriedades apenas para leitura. Então implementamos `+__hash__+` usando a
-técnica recomendada, aplicar o operador xor aos _hashes_ dos atributos da
+propriedades para leitura apenas. Então implementamos `+__hash__+` usando a
+técnica recomendada, aplicando o operador `^` (xor) aos _hashes_ dos atributos da
 instância.
 
 Discutimos a seguir a economia de memória e as ressalvas de se declarar um
@@ -1337,26 +1338,23 @@ primárias são as mesmas do <<ch_data_model>>, onde tivemos uma ideia geral do
 mesmo tópico. Por conveniência, vou repetir aquelas quatro recomendações
 anteriores aqui, e acrescentar algumas outras:
 
-O https://fpy.li/2j[capítulo "Modelo de
-Dados"] em _A Referência da Linguagem Python_:: A maioria dos métodos usados
-neste capítulo estão documentados em
-https://fpy.li/69["Customização básica"].
+Modelo de Dados, em A Referência da Linguagem Python::
+A maioria dos métodos usados neste capítulo estão
+documentados em https://fpy.li/69["Customização básica"].
 
-pass:[<a class="orm:hideurl" href="https://fpy.li/pynut3"><em>Python in a
-Nutshell</em>, 3ª ed.,</a>] de Alex Martelli, Anna Ravenscroft, e Steve Holden::
+_Python in a Nutshell_, 3rd ed. (Martelli, Ravenscroft & Holden)::
 Trata com profundidade dos métodos especiais .
 
-pass:[<a class="orm:hideurl" href="https://fpy.li/pycook3"><em>Python
-Cookbook</em>, 3ª ed.</a>], de David Beazley e Brian K. Jones:: Práticas
-modernas de Python demonstradas através de receitas. Especialmente o Capítulo 8,
+_Python Cookbook_, 3rd ed. (Beazley & Jones):: 
+Práticas modernas de Python demonstradas através de receitas. Especialmente o Capítulo 8,
 "Classes and Objects" (_Classes e Objetos_), que contém várias receitas
 relacionadas às discussões deste capítulo.
 
-_Python Essential Reference_, 4ª ed., de David Beazley:: Trata do modelo de
-dados em detalhes, apesar de falar apenas de Python 2.6 e do 3.0 (na quarta
-edição). Todos os conceitos fundamentais são os mesmos, e a maior parte das APIs
-do Modelo de Dados não mudou nada desde Python 2.2, quando os tipos embutidos e
-as classes definidas pelo usuário foram unificados.
+_Python Essential Reference_, 4th ed. (Beazley)::
+Trata do modelo de dados em detalhes, apesar de falar apenas de Python 2.6 e do 3.0
+(na quarta edição). Todos os conceitos fundamentais são os mesmos,
+e a maior parte das APIs do Modelo de Dados não mudou nada desde Python 2.2,
+quando aconteceu a unificação dos tipos embutidos e classes definidas pelo usuário.
 
 Em 2015—o ano que terminei a primeira edição de _Python Fluente_—Hynek Schlawack
 começou a desenvolver o pacote `attrs`. Da documentação de `attrs`:
@@ -1370,25 +1368,28 @@ classes*, liberando você do tedioso trabalho de implementar protocolos de objet
 ____
 
 Mencionei `attrs` como uma alternativa mais poderosa ao `@dataclass` na
-<<further_data_class>>. As fábricas de classes de dados do <<ch_dataclass>>,
-assim como `attrs`, equipam suas classes automaticamente com vários métodos
+<<dataclass_further_sec>>. As fábricas de classes de dados do <<ch_dataclass>>,
+assim como `attrs`, automaticamente equipam suas classes com vários métodos
 especiais. Mas saber como programar métodos especiais ainda é essencial para
 entender o que aqueles pacotes fazem, para decidir se você realmente precisa
-deles e para—quando necessário—sobrescrever os métodos que eles geram.
+deles e para sobrescrever os métodos que eles geram, quando necessário.
 
 Vimos neste capítulo todos os métodos especiais relacionados à representação de
 objetos, exceto `+__index__+` e `+__fspath__+`. Discutiremos `+__index__+` no
 <<ch_seq_methods>>, na <<slice_aware_sec>>. Não vou tratar de `+__fspath__+`.
-Para aprender sobre esse método, veja a https://fpy.li/pep519[PEP 519—Adding a
-file system path protocol (_Adicionando um protocolo de caminho de sistema de
-arquivos_)] (EN).
+Para aprender sobre esse método, veja a https://fpy.li/pep519[_PEP 519—Adding a
+file system path protocol_] (Adicionando um protocolo de caminho de sistema de
+arquivos).
 
 Uma percepção precoce da necessidade de strings de representação diferentes para
-objetos apareceu  em Smalltalk. O artigo de 1996 https://fpy.li/11-13["How to
-Display an Object as a String: printString and displayString" (_Como Mostrar um
-Objeto como uma String: printString and displayString_)] (EN), de Bobby Woolf,
-discute a implementação dos métodos `printString` e `displayString` naquela
-linguagem. Foi desse artigo que peguei emprestado as expressivas descrições
+objetos apareceu  em Smalltalk.
+
+O artigo https://fpy.li/11-13[_How to
+Display an Object as a String: printString and displayString_]
+(Como Exibir um Objeto como uma String: printString e displayString), de Bobby Woolf,
+discute a implementação dos métodos `printString` e `displayString`
+na linguagem Smalltalk em 1996.
+Foi de lá que peguei as descrições
 "como o desenvolvedor quer vê-lo" e "como o usuário quer vê-lo" para definir
 `repr()` e `str()`, na <<object_repr_sec>>.
 
@@ -1418,10 +1419,10 @@ Continuamos podendo acessar `my_vector.x` and `my_vector.y`.
 
 Isso mostra que podemos sempre iniciar o desenvolvimento de nossas classes da
 maneira mais simples possível, com atributos públicos, pois quando (ou se) for
-preciso impor mais depois, com _getters_ e _setters_, estes métodos podem ser
+preciso impor restrições depois, com _getters_ e _setters_, eles podem ser
 implementados usando propriedades, sem mudar nada no código que já interage com
 nossos objetos através dos nomes que eram, inicialmente, simples atributos
-públicos (`x` e `y`, por exemplo).
+públicos como `x` e `y` em nosso exemplo.
 
 Essa abordagem é o oposto daquilo que é encorajado pela linguagem Java: um
 programador Java não pode começar com atributos públicos simples e apenas mais
@@ -1451,18 +1452,18 @@ Apenas para fazer isso:
 Ward Cunningham, inventor do wiki e um pioneiro da Programação Extrema (_Extreme
 Programming_), recomenda perguntar: "Qual a coisa mais simples que tem alguma
 chance de funcionar?" A ideia é se concentrar no objetivo.footnote:[Veja
-https://fpy.li/11-14["Simplest Thing that Could Possibly Work: A Conversation
-with Ward Cunningham, Part V" (_A Coisa Mais Simples que Poderia Funcionar: Uma
-Conversa com Ward Cunningham, Parte V_).]] Implementar _setters_ e _getters_
-desde o início é uma distração em relação ao objetivo Em Python, podemos
+https://fpy.li/11-14[_Simplest Thing that Could Possibly Work: A Conversation
+with Ward Cunningham, Part V_] (A Coisa Mais Simples que Poderia Funcionar: Uma
+Conversa com Ward Cunningham, Parte V).] Implementar _setters_ e _getters_
+desde o início é um desvio em relação ao objetivo. Em Python, podemos
 simplesmente usar atributos públicos, sabendo que podemos transformá-los mais
-tarde em propriedades, se essa necessidade surgir .
+tarde em propriedades, se essa necessidade surgir.
 
 
 [role="soapbox-title"]
 **Proteção versus segurança em atributos privados**
 
-[quote, Larry Wall, criador do Perl]
+[quote, Larry Wall, criador da linguagem Perl]
 ____
 O Perl não tem nenhum amor por privacidade forçada.
 Ele preferiria que você não entrasse em sua sala de estar [apenas]
@@ -1471,20 +1472,20 @@ não porque ele tem uma espingarda.
 ____
 
 Python((("Soapbox sidebars", "safety versus security in private
-attributes")))((("attributes", "safety versus security in private"))) e o Perl
+attributes")))((("attributes", "safety versus security in private"))) e Perl
 estão em polos opostos em vários aspectos, mas Guido e Larry parecem concordar
 sobre a privacidade de objetos.
 
-Ensinando Python para muitos programadores Java ao longo do anos, descobri que
-muitos deles têm uma fé excessiva nas garantias de privacidade oferecidas pelo
-Java. E na verdade, os modificadores `private` e `protected` de Java normalmente
+Ensinando Python para muitos programadores Java ao longo do anos, percebi que
+muitos deles uma fé excessiva nas garantias de privacidade oferecidas pelo
+Java. Na verdade, os modificadores `private` e `protected` de Java normalmente
 fornecem defesas apenas contra acidentes (isto é, proteção). Eles só oferecem
 segurança contra ataques mal-intencionados se a aplicação for especialmente
-configurada e implantada sob um https://fpy.li/11-15[SecurityManager] (EN) de
-Java, e isso raramente acontece na prática, mesmo em configurações corporativas
-atentas à segurança.
+configurada e implantada sob um https://fpy.li/11-15[`SecurityManager`] de
+Java, e isso raramente acontece na prática, mesmo em instalações corporativas
+preocupadas com segurança.
 
-Para provar meu argumento, gostaria de mostrar essa classe Java (o <<ex_java_confidential_class>>).
+Para provar meu argumento, considere a classe Java a seguir.
 
 [[ex_java_confidential_class]]
 .Confidential.java: uma classe Java com um campo privado chamado `secret`
@@ -1496,11 +1497,11 @@ include::../code/11-pythonic-obj/private/Confidential.java[]
 ====
 
 No <<ex_java_confidential_class>>, armazeno o `text` no campo `secret` após
-convertê-lo todo para caixa alta, só para deixar óbvio que qualquer coisa que
-esteja naquele campo estará escrito inteiramente em maiúsculas.
+convertê-lo todo para caixa alta, para deixar óbvio que o argumento `text`
+passado para o construtor sofre uma transformação antes de ser armazenado.
 
-A verdadeira demonstração consiste em rodar _expose.py_ com Jython. Aquele
-script usa introspecção  ("reflexão"—_reflection_—no jargão de Java) para obter
+A verdadeira demonstração consiste em rodar _expose.py_ com Jython. Este
+script usa introspecção (_reflection_ ou reflexão jargão de Java) para acessar
 o valor de um campo privado. O código aparece no <<ex_expose_py>>.
 
 [[ex_expose_py]]
@@ -1531,14 +1532,14 @@ href="https://fpy.li/code" class="orm:hideurl">repositório de código do
 <em>Python Fluente</em></a>]).
 
 A chamada `.setAccessible(True)` só falhará se o script Jython ou o programa
-principal em Java (por exemplo, a `Expose.class`) estiverem rodando sob a
-supervisão de um https://fpy.li/11-15[`SecurityManager`] (EN). Mas, no mundo
+principal em Java (por exemplo, `Expose.class`) estiverem rodando sob a
+supervisão de um https://fpy.li/11-15[`SecurityManager`]. Mas, no mundo
 real, aplicações Java raramente são implantadas com um `SecurityManager`—com a
-exceção das _applets_ Java, quando elas ainda era suportadas pelos navegadores.
+exceção das _applets_ Java, quando elas ainda eram suportadas pelos navegadores.
 
-Meu ponto: também em Java, os modificadores de controle de acesso são
-principalmente sobre proteção e não segurança, pelo menos na prática. Então
-relaxe e aprecie o poder dado a você pelo Python. E use esse poder com
+Meu ponto: também em Java, na prática os modificadores de controle de acesso
+oferecem proteção mas não segurança. Então relaxe e aprecie o poder dado a
+você pelo Python. E use esse poder com 
 responsabilidade.((("", startref="POsoap11")))
 
 ****
