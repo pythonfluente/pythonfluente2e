@@ -962,16 +962,16 @@ Compare a sintaxe antiga com a nova para a dica de tipo do parâmetro `plural` e
 
 [source, python]
 ----
-plural: Optional[str] = None    # até Python 3.9
-plural: str | None = None       # a partir do Python 3.10
+plural: Optional[str] = None  # Python < 3.10
+plural: str | None = None     # Python >= 3.10
 ----
 
 O operador `|` também funciona com `isinstance` e `issubclass` para declarar o segundo argumento: `isinstance(x, int | str)`.
 Para saber mais, veja «_PEP 604—Complementary syntax for Union&#91;&#93;_» [.small]#&#91;fpy.li/pep604&#93;#.
 ====
 
-A assinatura da função nativa `ord` é um exemplo simples de `Union` - ela aceita `str` or `bytes`,
-e retorna um `int`:footnote:[Para ser mais preciso, `ord` só aceita `str` ou `bytes` com `len(s) == 1`.
+A assinatura da função nativa `ord` é um exemplo simples de `Union`: ela aceita `str` or `bytes`,
+e devolve um `int`.footnote:[Para ser mais preciso, `ord` só aceita `str` ou `bytes` com `len(s) == 1`.
 Mas no momento o sistema de tipagem não consegue expressar essa restrição.]
 
 [source, python]
@@ -979,7 +979,7 @@ Mas no momento o sistema de tipagem não consegue expressar essa restrição.]
 def ord(c: Union[str, bytes]) -> int: ...
 ----
 
-Veja a seguir um função que aceita uma `str`, mas pode retornar `str` ou `float`:
+Veja a seguir um função que aceita uma `str`, mas pode devolver `str` ou `float`:
 
 <<<
 [source, python]
@@ -993,10 +993,12 @@ def parse_token(token: str) -> Union[str, float]:
         return token
 ----
 
-Se possível, evite criar funções com `Union` no tipo de retorno,
-pois isso exige um esforço extra do usuário:
-para saber o que fazer com o valor recebido da função pode ser necessário verificar o tipo daquele valor durante a execução.
-Mas a `parse_token` no código acima é um caso de uso razoável no contexto de interpretador de expressões simples.
+Se possível, evite criar funções com `Union` no tipo de
+retorno, pois isso exige um esforço extra do usuário:
+para saber o que fazer com o valor recebido da função pode ser
+necessário verificar o tipo daquele valor durante a execução.
+Mas a `parse_token` no código acima é um caso de uso justificado
+no contexto de interpretador de expressões simples.
 
 [TIP]
 ====
@@ -1006,7 +1008,8 @@ Nesses casos, o tipo de retorno é determinado pelo tipo da entrada,
 então `Union` não é uma solução precisa.
 Para anotar tais funções corretamente,
 precisamos usar uma variável de tipo—apresentada em
-<<param_generics_typevar_sec>>—ou sobrecarga (_overloading_), que veremos na «Seção 15.2» [.small]#&#91;vol.2, fpy.li/5f&#93;#.
+<<param_generics_typevar_sec>>—ou sobrecarga (_overloading_),
+que veremos na «Seção 15.2» [.small]#&#91;vol.2, fpy.li/5f&#93;#.
 ====
 
 `Union[]` exige pelo menos dois tipos.
