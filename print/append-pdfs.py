@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from PyPDF2 import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 
 
 def append_pdfs(input_pdf1, input_pdf2, output_pdf):
