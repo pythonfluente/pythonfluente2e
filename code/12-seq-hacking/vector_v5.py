@@ -1,8 +1,8 @@
 # tag::VECTOR_V5[]
 """
-A multidimensional ``Vector`` class, take 5
+A multidimensional `Vector` class, take 5
 
-A ``Vector`` is built from an iterable of numbers::
+A `Vector` is built from an iterable of numbers::
 
     >>> Vector([3.1, 4.2])
     Vector([3.1, 4.2])
@@ -71,7 +71,7 @@ Tests with many dimensions::
     9.53939201...
 
 
-Test of ``.__bytes__`` and `.frombytes()` methods::
+Test of `.__bytes__` and `.frombytes()` methods::
 
     >>> v1 = Vector([3, 4, 5])
     >>> v1_clone = Vector.frombytes(bytes(v1))
