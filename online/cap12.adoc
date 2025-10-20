@@ -26,7 +26,7 @@ Também vamos implementar, com `+__getattr__+`, o acesso dinâmico a atributos,
 como forma de substituir as propriedades apenas para leitura
 que usamos no `Vector2d`&#x2014;apesar disso não ser comum em sequências.
 
-Al´m disso, teremo uma discussão conceitual sobre a ideia de protocolos como uma interfaces informais.
+Além disso, teremos uma discussão conceitual sobre a ideia de protocolos como interfaces informais.
 Vamos discutir a relação entre protocolos e _duck typing_,
 e as implicações práticas disso na criação de seus próprios tipos.
 
@@ -65,7 +65,7 @@ dimensions"))) precisa de vetores com 1.000 dimensões? Vetores N-dimensionais
 (com valores grandes de N) são bastante utilizados em recuperação de informação,
 onde documentos e consultas textuais são representados como vetores, com uma
 dimensão para cada palavra. Isso se chama
-https://pt.wikipedia.org/wiki/Modelo_vetorial_em_sistemas_de_recupera%C3%A7%C3%A3o_da_informa%C3%A7%C3%A3o[Modelo vetorial].
+https://fpy.li/6b[Modelo vetorial].
 Nesse modelo, a métrica fundamental de relevância é a
 __similaridade de cosseno__—o cosseno do ângulo entre um vetor que representa a
 consulta e um vetor representando um documento. Conforme o ângulo diminui, o valor
@@ -93,7 +93,7 @@ Entretanto, pela((("&#x005F;&#x005F;repr&#x005F;&#x005F;")))((("&#x005F;&#x005F;
 O <<ex_vector_demo>> mostra algumas maneiras de instanciar objetos do nosso novo `Vector`.
 
 [[ex_vector_demo]]
-.Testes de pass:[<code>Vector.&#x5f;&#x5f;init&#x5f;&#x5f;</code>] e pass:[<code>Vector.&#x5f;&#x5f;repr&#x5f;&#x5f;</code>]
+.Testes de `+Vector.__init__+` e `+Vector.__repr__+`
 ====
 [source, python]
 ----
@@ -106,7 +106,10 @@ Vector([0.0, 1.0, 2.0, 3.0, 4.0, ...])
 ----
 ====
 
-Exceto pela nova assinatura do construtor, me assegurei que todos os testes realizados com `Vector2d` (por exemplo, `Vector2d(3, 4)`) são bem sucedidos e produzem os mesmos resultados com um `Vector` de dois componentes, como `Vector([3, 4])`.
+Exceto pela nova assinatura do construtor, verifiquei que todos os testes
+realizados com `Vector2d` (por exemplo, `Vector2d(3, 4)`) passam e
+produzem os mesmos resultados com um `Vector` de dois componentes,
+como `Vector([3, 4])`.
 
 [WARNING]
 ====
@@ -184,7 +187,7 @@ Poderíamos criar `Vector` como uma subclasse de `Vector2d`, mas
 escolhi não fazer assim por duas razões. Em primeiro lugar, os construtores
 são incompatíveis, o que torna relação de super/subclasse desaconselhável,
 por violar o
-https://pt.wikipedia.org/wiki/Princ%C3%ADpio_da_substitui%C3%A7%C3%A3o_de_Liskov[princípio de substituição de Liskov].
+https://fpy.li/6c[princípio de substituição de Liskov].
 Seria possível contornar isso como um tratamento engenhoso dos argumenos em
 `+__init__+`, mas a segunda razão é mais importante: eu queria que `Vector` fosse
 um exemplo independente de uma classe que implementa o protocolo de sequência.
@@ -206,8 +209,8 @@ No contexto da programação orientada a objetos, um protocolo é uma interface
 informal, definida apenas na documentação (e não no código). Por exemplo, o
 protocolo de sequência no Python implica apenas no métodos `+__len__+` e
 `+__getitem__+`. Qualquer classe `Spam`, que implemente esses métodos com a
-assinatura e a semântica padrões, pode ser usada em qualquer lugar onde uma
-sequência for esperada. É irrelevante se `Spam` é uma subclasse dessa ou daquela
+assinatura e a semântica padrão, pode ser usada em qualquer lugar onde uma
+sequência é esperada. É irrelevante se `Spam` é uma subclasse dessa ou daquela
 outra classe; tudo o que importa é que ela fornece os métodos necessários. Vimos
 isso no <<ex_pythonic_deck>>, reproduzido aqui no <<ex_pythonic_deck_rep>>.
 
@@ -320,7 +323,7 @@ Vejamos agora como Python transforma a sintaxe `my_seq[1:3]` em argumentos para
 [[how_slicing_works_sec]]
 ==== Como funciona o fatiamento
 
-Uma demonstração vale mais que mil palavras, então  veja o <<ex_slice0>>.
+Uma demonstração vale mais que mil palavras, então veja o <<ex_slice0>>.
 
 [[ex_slice0]]
 .Examinando o comportamento de `+__getitem__+` e fatias
@@ -443,7 +446,7 @@ porque não faz sentido tentar usar um `float` como índice de um array.
 ====
 O uso excessivo de `isinstance` pode ser um sinal de design orientado a objetos ruim, mas tratar fatias em `+__getitem__+` é um caso de uso justificável.
 Na primeira edição, também usei um teste `isinstance` com `key`, para verificar se esse argumento era um inteiro.
-O uso de `operator.index` evita esse teste, e gera um pass:[<code>Type&#x200b;Error</code>] com uma mensagem muito informativa, se não for possível obter o `index` a partir de `key`.
+O uso de `operator.index` evita esse teste, e gera um `TypeError` com uma mensagem muito informativa, se não for possível obter o `index` a partir de `key`.
 Observe a última mensagem de erro no <<ex_vector_v2_demo>>, abaixo.
 ====
 
@@ -576,8 +579,8 @@ Após pensar um pouco sobre essa questão, veja a seguir a explicação para o q
 A inconsistência no <<ex_vector_v3_getattr_bug>> ocorre devido à forma como
 `+__getattr__+` funciona: Python só chama esse método como último recurso,
 quando o objeto não contém o atributo nomeado.
-Entretanto, após atribuirmos `v.x
-= 10`, o objeto `v` agora contém um atributo `x`, e então `+__getattr__+` não
+Entretanto, após atribuirmos `v.x = 10`, o objeto `v` agora contém
+um atributo `x`, e então `+__getattr__+` não
 será mais invocado para obter `v.x`: o interpretador vai apenas devolver o valor
 `10`, que agora está vinculado a `v.x`.
 Por outro lado, nossa implementação de
@@ -908,7 +911,7 @@ Assim que uma comparação é `False`, `all` devolve `False`. O <<ex_eq_all>> mo
 ====
 
 Observe que primeiro comparamos o `len()` dos operandos porque
-não queremos comparar item a item se os vetores tem tamanhos diferentes.
+não queremos comparar item a item se os vetores têm tamanhos diferentes.
 
 O <<ex_eq_all>> é a implementação que escolhemos para `+__eq__+` em
 _vector_v4.py_.((("", startref="eq12")))((("", startref="hash12")))((("",
@@ -972,7 +975,7 @@ A função embutida `enumerate` é outra função geradora usada com frequência
 loops `for`, para evitar manipulação direta de variáveis índice. Quem não
 estiver familiarizado com `enumerate` deve estudar a seção dedicada a ela na
 documentação das
-https://docs.python.org/pt-br/3/library/functions.html#enumerate[Funções embutidas].
+https://fpy.li/6d[Funções embutidas].
 Voltaremos a falar sobre `zip` e `enumerate`, bem como
 várias outras funções geradores na biblioteca padrão, na
 <<stdlib_generators_sec>>.
@@ -1002,8 +1005,7 @@ Por este motivo, mudaremos o sufixo do formato customizado de `'p'` para `'h'`.
 ====
 
 Como vimos na <<format_display_sec>>, ao estender a
-https://docs.python.org/pt-br/3/library/string.html#formatspec[Minilinguagem de
-especificação de formato] é melhor evitar a reutilização dos códigos de formato
+https://fpy.li/63[Minilinguagem de especificação de formato] é melhor evitar a reutilização dos códigos de formato
 usados por tipos embutidos. Em particular, nossa minilinguagens estendida também
 usa os códigos de formato dos números de ponto flutuante (`'eEfFgGn%'`), com seus
 significados originais, então devemos certamente evitar qualquer um daqueles.
@@ -1035,7 +1037,7 @@ Antes de podermos implementar as pequenas mudanças necessárias em
 computar uma das coordenadas angulares (por exemplo, Φ~1~), e `angles()`, para
 devolver um iterável com todas as coordenadas angulares. Não vou descrever a
 matemática aqui; se você tiver curiosidade, a página
-https://fpy.li/nsphere[“_n_-sphere”] da Wikipedia apresenta as
+https://fpy.li/nsphere[_n_-sphere] da Wikipedia apresenta as
 fórmulas que usei para calcular coordenadas esféricas a partir das coordendas
 cartesianas no array de componentes de `Vector`.
 
@@ -1154,7 +1156,7 @@ recursivas. O artigo também inclui uma tabela mostrando funções similares a
 _fold_ em dezenas de linguagens de programação.
 
 Em
-https://docs.python.org/2.5/whatsnew/pep-357.html[_What's New in Python 2.5_]
+https://fpy.li/12-6[_What's New in Python 2.5_]
 (Novidades no Python 2.5) há uma pequena explicação sobre o método `+__index__+`,
 projetado para suportar métodos `+__getitem__+`, como vimos na
 <<slice_aware_sec>>. A 
@@ -1203,7 +1205,7 @@ implementando as partes da interface de arquivo relevantes no presente contexto"
 
 Você poderia achar que implementar apenas parte de um protocolo é um desleixo,
 mas isso tem a vantagem de manter as coisas simples. A
-https://docs.python.org/pt-br/3/reference/datamodel.html#special-method-names[Seção3.3]
+https://fpy.li/6e[Seção3.3]
 do capítulo "Modelo de Dados" na documentação de Python sugere:
 
 [quote]
@@ -1218,7 +1220,7 @@ ____
 Quando((("KISS principle"))) não precisamos escrever métodos inúteis apenas para
 cumprir o contrato de uma interface excessivamente detalhista e satisfazer o
 compilador, fica mais fácil seguir o
-https://pt.wikipedia.org/wiki/Princ%C3%ADpio_KISS[princípio KISS].
+https://fpy.li/6f[princípio KISS].
 
 Por outro lado, se quiser usar um checador de tipos para checar suas
 implementações de protocolos, então uma definição mais estrita de "protocolo" é
@@ -1243,7 +1245,7 @@ checking in python?)" (_polimorfismo (era Re: Verificação de tipo em
 python?_))]. Foi dali que veio a citação no início desse capítulo. Se você tiver
 curiosidade sobre as origens literárias do termo "duck typing", e a aplicação
 desse conceito de orientação a objetos em muitas linguagens, veja a página
-https://pt.wikipedia.org/wiki/Duck_typing["Duck typing"] na Wikipedia.
+https://fpy.li/6g[Duck typing] na Wikipedia.
 
 
 [role="soapbox-title"]
@@ -1385,11 +1387,9 @@ ____
 Fazemos somas com tanta frequência que eu não me importaria de forma
 alguma se Python a tornasse uma função embutida. Mas `reduce(operator.add,
 \...)` não é mesmo uma boa maneira de expressar isso, na minha opinião (e vejam
-que, como um antigo APListafootnote:[NT: Aqui Martelli está se referindo à
-linguagem
-https://pt.wikipedia.org/wiki/APL_(linguagem_de_programa%C3%A7%C3%A3o[APL]]
-e um apreciador da FPfootnote:[NT: E aqui à linguagem
-https://pt.wikipedia.org/wiki/FP_(linguagem_de_programa%C3%A7%C3%A3o[FP]],
+que, como um antigo APListafootnote:[NT: Aqui Martelli refere-se à
+linguagem https://fpy.li/6h[APL]]
+e um apreciador da FPfootnote:[NT: E aqui à linguagem https://fpy.li/6j[FP]],
 eu _deveria_ gostar daquilo, mas não gosto).
 
 ____
