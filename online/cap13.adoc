@@ -58,7 +58,7 @@ Cada uma dessas quatro abordagens dependem de interfaces para funcionarem, mas a
 tipagem estática pode ser implementada de forma limitada usando apenas tipos
 concretos em vez de abstrações de interfaces como protocolos e classes base
 abstratas.
-Este capítulo é sobre tipagem pato, goose typing (_tipagem ganso_), e
+Este capítulo é sobre tipagem pato, tipagem ganso, e
 tipagem pato estática—disciplinas de tipagem com foco em interfaces.
 
 O((("interfaces", "topics covered")))((("protocols", "topics covered")))
@@ -69,9 +69,9 @@ quadrantes no Mapa de Sistemas de Tipagem. (<<type_systems_described>>):
 protocolos +
 —o lado esquerdo do Mapa.
 
-* A <<prog_ducks_sec>> se aprofunda na tipagem pato já familiar para quem programa em Python,
-incluindo como fazê-la mais segura, preservando sua melhor
-qualidade: a flexibilidade.
+* A <<prog_ducks_sec>> se aprofunda na tipagem pato que já é familiar para
+quem programa em Python. Vamos ver como fazê-la mais segura,
+preservando sua melhor qualidade: a flexibilidade.
 
 * A <<goose_typing_sec>> explica o uso de ABCs para um checagem de tipo mais
 estrita durante a execução do código. É a seção mais longa, não por ser a mais
@@ -111,10 +111,11 @@ importância.
 para incluir a `Collection` ABC, do Python 3.6.
 
 A primeira edição de _Python Fluente_ tinha uma seção encorajando o uso das ABCs
-`numbers` para goose typing. Na <<numbers_abc_proto_sec>> eu explico porque, em
-vez disso, você deve usar protocolos numéricos estáticos do módulo `typing` se
+`numbers` para tipagem ganso.
+Na <<numbers_abc_proto_sec>> eu explico porque, atualmente é melhor usar
+protocolos numéricos estáticos do módulo `typing` como `SupportsFloat` se
 você planeja usar checadores de tipos estáticos, ou checagem durante a execução
-no estilo da goose typing.
+no estilo da tipagem ganso.
 
 
 [[two_kinds_protocols_sec]]
@@ -271,9 +272,8 @@ A maior parte das ABCs no módulo `collections.abc` existem para formalizar
 interfaces que são implementadas por objetos nativos e são implicitamente
 suportadas pelo interpretador—objetos e suporte que existem desde antes das
 próprias ABCs. As ABCs são úteis como pontos de partida para novas classes, e
-para permitir checagem de tipo explícita durante a execução (também conhecida
-como _goose typing_), bem como para servirem de dicas de tipo para checadores de
-tipos estáticos.
+para permitir checagem de tipo explícita durante a execução (tipagem ganso),
+bem como para servirem de dicas de tipo para checadores de tipos estáticos.
 
 ====
 
@@ -312,8 +312,8 @@ include::../code/01-data-model/frenchdeck.py[]
 
 Muitos dos exemplos no <<ch_data_model>> funcionam por causa do tratamento
 especial que Python dá a qualquer estrutura vagamente semelhante a uma
-sequência. O protocolo iterável em Python representa uma forma extrema de duck
-typing: o interpretador tenta dois métodos diferentes para iterar sobre objetos.
+sequência. O protocolo iterável em Python representa uma forma extrema de tipagem pato:
+o interpretador tenta dois métodos diferentes para iterar sobre objetos.
 
 Para deixar mais claro, os comportamentos que que descrevi nessa seção estão
 implementados no próprio interpretador, na maioria dos casos em C. Eles não
@@ -524,8 +524,8 @@ variável seja marcada com o tipo `Any`. Quando isso acontece, o checador de
 tipos se torna inútil. Além disso, dicas de tipo não são aplicadas durante a
 execução. Falhar logo é a última linha de defesa.
 
-Código defensivo usando tipos "duck" também podem incluir lógica para lidar com
-tipos diferentes sem usar testes com `isinstance()` e `hasattr()`.
+Código defensivo usando tipagem pato também podem incluir lógica para lidar
+com tipos diferentes sem usar testes com `isinstance()` e `hasattr()`.
 
 Um exemplo é como poderíamos emular o modo como
 https://fpy.li/13-8[`collections.namedtuple`] lida com o argumento
@@ -534,7 +534,7 @@ separados por espaços ou vírgulas, ou uma sequência de identificadores. O
 <<ex_duck_typing_str_list>> mostra como eu faria isso usando tipagem pato.
 
 [[ex_duck_typing_str_list]]
-.Duck typing para lidar com uma string ou um iterável de strings
+.Tipagem pato para lidar com uma string ou um iterável de strings
 ====
 [source, python]
 ----
@@ -548,7 +548,7 @@ separados por espaços ou vírgulas, ou uma sequência de identificadores. O
 ----
 ====
 
-<1> Supõe que é uma string (EAFP—mais fácil pedir perdão que permissão).
+<1> Supõe que é uma string.
 
 <2> Converte vírgulas em espaços e divide o resultado em uma lista de nomes.
 
@@ -564,12 +564,22 @@ também impede que meu código troque os nomes por engano.
 
 <6> Usamos `str.isidentifier` para se assegurar que todos os nomes são válidos.
 
+O passo `②` é uma aplicação de EAFP ou Princípio de Hopper.footnote:[A pioneira
+da computação Grace Hopper dizia que, para inovar em uma burocracia,
+é mais fácil pedir perdão do que permissão
+(_"It's easier to ask forgiveness than permission"_ ou _EAFP_).]
+Em vez de testar se `+field_names+` é uma string,
+invocamos métodos como se fosse uma string,
+e se não der certo, tratamos a exceção.
+Não pedimos licença:
+fazemos o que temos que fazer e pedimos perdão se for necessário.
+
 O <<ex_duck_typing_str_list>> mostra uma situação onde a tipagem pato é mais
 expressiva que dicas de tipo estáticas. Não há como escrever uma dica de tipo
-que diga "`+field_names+` deve ser uma string de identificadores separados por
+que diga "o argumento `field_names` deve ser uma string de identificadores separados por
 espaços ou vírgulas." Esta é a parte relevante da assinatura de `namedtuple` no
-typeshed (veja o código-fonte completo em pass:[<a
-href="https://fpy.li/13-9"><em>stdlib/3/collections/__init__.pyi</em></a>]):
+typeshed (veja o código-fonte completo em 
+https://fpy.li/13-9[_stdlib/3/collections/__init__.pyi_]):
 
 [source, python]
 ----
@@ -577,20 +587,20 @@ href="https://fpy.li/13-9"><em>stdlib/3/collections/__init__.pyi</em></a>]):
         typename: str,
         field_names: Union[str, Iterable[str]],
         *,
-        # rest of signature omitted
+        # outros parâmetros omitidos
 ----
 
-Como se vê, `field_names` está anotado como `Union[str, Iterable[str]]`, que
-serve para seus propósitos, mas não é suficiente para evitar todos os problemas
-possíveis.
+Como se vê, `field_names` está anotado como `Union[str, Iterable[str]]`,
+que ajuda em parte, mas não é suficiente para descrever a estrutura interna da
+string.
 
 Após revisar protocolos dinâmicos, passamos para uma forma mais explícita de
-checagem de tipo durante a execução: goose typing.((("",
+checagem de tipo durante a execução: tipagem ganso.((("",
 startref="Pdefens13")))((("", startref="failfast13")))((("",
 startref="defprog13")))
 
 [[goose_typing_sec]]
-=== Goose typing
+=== Tipagem ganso
 
 [quote, Bjarne Stroustrup, creator of {cpp}]
 ____
@@ -611,14 +621,14 @@ durante a execução—também suportado por checadores de tipos estáticos.
 O verbete
 https://fpy.li/6p[classe base abstrata]
 no Glossário da Documentação de Python tem uma boa explicação do
-valor dessas estruturas para linguagens que usam duck typing:
+valor dessas estruturas para linguagens que usam tipagem pato:
 
 [quote]
 ____
 Classes bases abstratas complementam a tipagem pato, fornecendo uma maneira de definir interfaces quando outras técnicas, como `hasattr()`, seriam desajeitadas ou sutilmente erradas (por exemplo, com métodos mágicos). ABCs introduzem subclasses virtuais, classes que não herdam de uma classe mas ainda são reconhecidas por `isinstance()` e `issubclass()`; veja a documentação do módulo `abc`.footnote:[Consultada em 3 de março de 2023.]
 ____
 
-A goose typing é uma abordagem à checagem de tipo durante a execução que se apoia nas ABCs.
+A tipagem ganso é uma abordagem à checagem de tipo durante a execução que se apoia nas ABCs.
 Vou deixar que Alex Martelli explique, no <<waterfowl_essay>>.
 
 [role="man-height-1-125"]
@@ -638,17 +648,32 @@ para escrever esse ensaio. Segue daí, Alex!
 
 *por Alex Martelli*
 
-Recebi https://fpy.li/13-11[créditos na Wikipedia] por ter ajudado a popularizar o útil meme e a frase de efeito "_duck typing_" (isto é, ignorar o tipo efetivo de um objeto, e em vez disso se dedicar a assegurar que o objeto implementa os nomes, assinaturas e semântica dos métodos necessários para o uso pretendido).
+Fui https://fpy.li/13-11[creditado na Wikipedia] por ajudar a popularizar
+o meme útil e frase de efeito "_duck typing_" (isto é, ignorar o tipo declarado
+de um objeto, e em vez disso se dedicar a assegurar que o objeto implementa os
+nomes, assinaturas e semântica dos métodos necessários para o uso pretendido).
 
-Em Python, isso essencialmente significa evitar o uso de `isinstance` para verificar o tipo do objeto (sem nem mencionar a abordagem ainda pior de verificar, por exemplo, se `type(foo) is bar`&#x2014;que é corretamente considerado um anátema, pois inibe até as formas mais simples de herança!).
+Em Python, isso essencialmente significa evitar o uso de `isinstance` para
+verificar o tipo do objeto (sem nem mencionar a abordagem ainda pior de
+verificar, por exemplo, se `type(foo) is bar`&#x2014;que é corretamente
+considerado um anátema, pois inibe até as formas mais simples de herança!).
 
-No geral, a abordagem da _duck typing_ continua muito útil em inúmeros contextos—mas em muitos outros, um nova abordagem muitas vezes preferível evoluiu ao longo do tempo.
-E aqui começa nossa história...
+No geral, a abordagem da tipagem pato continua muito útil em inúmeros
+contextos—mas em muitos outros, um nova abordagem muitas vezes preferível
+evoluiu ao longo do tempo. E aqui começa nossa história...
 
-Em gerações recentes, a taxinomia de gênero e espécies (incluindo, mas não limitada à família de pássaros aquáticos conhecida como Anatidae) foi guiada principalmente pela _fenética_—uma abordagem focalizada nas similaridades de morfologia e comportamento... principalmente traços _observáveis_.
-A analogia com o "duck typing" era patente.
+Em gerações recentes, a taxinomia de gênero e espécies (incluindo, mas não
+limitada à família de pássaros aquáticos conhecida como Anatidae) foi guiada
+principalmente pela _fenética_—uma abordagem focalizada nas similaridades de
+morfologia e comportamento... principalmente traços _observáveis_. A analogia
+com o "_duck typing_" era patente.
 
-Entretanto, a evolução paralela muitas vezes pode produzir características similares, tanto morfológicas quanto comportamentais, em espécies sem qualquer relação de parentesco, que apenas calharam de evoluir em nichos ecológicos similares, porém separados. "Similaridades acidentais" parecidas acontecem também em programação—por exemplo, considere o [seguinte] exemplo clássico de programação orientada a objetos:
+Entretanto, a evolução paralela muitas vezes pode produzir características
+similares, tanto morfológicas quanto comportamentais, em espécies sem qualquer
+relação de parentesco, que apenas calharam de evoluir em nichos ecológicos
+similares, porém separados. "Similaridades acidentais" parecidas acontecem
+também em programação—por exemplo, considere o [seguinte] exemplo clássico de
+programação orientada a objetos:
 
 [source, python]
 ----
@@ -679,7 +704,7 @@ Mas para outros problemas, tal como a suscetibilidade a diferentes patógenos (s
 
 Então, a partir dessa analogia bem frouxa com as revoluções taxonômicas no mundo das aves aquáticas, estou recomendando suplementar (não substitui inteiramente—em determinados contexto ela ainda servirá) a boa e velha _duck typing_ com... a _goose typing_ (tipagem ganso)!
 
-A _goose typing_ significa o seguinte: `isinstance(obj, cls)` agora é plenamente aceitável... desde que `cls` seja uma classe base abstrata—em outras palavras, a metaclasse de ++cls++ é `abc.ABCMeta`.
+_Goose typing_ significa o seguinte: `isinstance(obj, cls)` agora é plenamente aceitável... desde que `cls` seja uma classe base abstrata—em outras palavras, a metaclasse de ++cls++ é `abc.ABCMeta`.
 
 Você vai encontrar muitas classes abstratas prontas em `collections.abc` (e outras no módulo `numbers` da _Biblioteca Padrão de Python_)footnote:[Você também pode, claro, definir suas próprias ABCs—mas eu não recomendaria esse caminho a ninguém, exceto aos mais avançados pythonistas, da mesma forma que os desencorajaria de definir suas próprias metaclasses customizadas... e mesmo para os ditos "mais avançados pythonistas", aqueles de nós que exibem o domínio de todos os recantos por mais obscuros da linguagem, essas não são ferramentas de uso frequente.
 Este tipo de "metaprogramação profunda", se alguma vez for apropriada, o será no contexto dos autores de frameworks abrangentes, projetadas para serem estendidas de forma independente por inúmeras equipes de desenvolvimento diferentes... menos que 1% dos "mais avançados pythonistas" precisará disso alguma vez na vida!—_A.M_]
@@ -719,7 +744,7 @@ Se você sentir uma forte necessidade de fazer isso, aposto que é um caso da s�
 ****
 
 [role="pagebreak-before less_space"]
-Em((("goose typing", "overview of"))) resumo, _goose typing_ implica:
+Em((("goose typing", "overview of"))) resumo, tipagem ganso implica:
 
 * Criar subclasses de ABCs, para tornar explícito que você está implementando uma interface previamente definida.
 * Checagem de tipo durante a execução usando as ABCs em vez de classes concretas como segundo argumento para `isinstance` e `issubclass`.
@@ -751,8 +776,8 @@ Normalmente _não_ é bom ter uma série de `if/elif/elif` com verificações de
 
 Por outro lado, não há problema em executar uma verificação com `isinstance` contra uma ABC se você quer garantir um contrato de API:
 "Cara, você precisa implementar isso se quiser me chamar," como costuma dizer o revisor técnico Lennart Regebro.
-Isso é especialmente útil em sistemas com arquitetura plug-in.
-Fora dos frameworks, duck typing é muitas vezes mais simples e flexível que verificações de tipo.
+Isso é especialmente útil em sistemas com arquiteturas modulares extensíveis por plug-ins.
+Fora dos frameworks, tipagem pato é muitas vezes mais simples e flexível que verificações de tipo.
 
 Por fim, em seu ensaio Alex reforça mais de uma vez a necessidade de coibir a criação de ABCs.
 Uso excessivo de ABCs imporia cerimônia a uma linguagem que se tornou popular por ser prática e pragmática.
@@ -764,7 +789,7 @@ ABCs servem para encapsular conceitos muito genéricos, abstrações introduzido
 [Os leitores] quase certamente não precisam escrever alguma nova ABC, apenas usar as já existentes de forma correta, para obter 99% dos benefícios sem qualquer risco sério de design mal-feito.
 ____
 
-Agora vamos ver a goose typing na prática.
+Agora vamos ver a tipagem ganso na prática.
 
 ==== Criando uma Subclasse de uma ABC
 
@@ -889,10 +914,15 @@ Isso é explicado no box seguinte.
 [[isinstance_mislead_box]]
 .isinstance com Hashable e Iterable pode enganar você
 ****
-É fácil interpretar errado os resultados de testes usando `isinstance` e `issubclass` com as ABCs `Hashable` and `Iterable`.
-Se `isinstance(obj, Hashable)` retorna `True`, is significa apenas que a classe de `obj` implementa ou herda `+__hash__+`.
-Mas se `obj` é uma tupla contendo itens _unhashable_, então `obj` não é _hashable_, apesar do resultado positivo da verificação com `isinstance`.
-O revisor técnico Jürgen Gmach esclareceu que o _duck typing_ fornece a forma mais precisa de determinar se uma instância é _hashable_: chamar `hash(obj)`.
+
+É fácil interpretar errado os resultados de testes usando `isinstance` e
+`issubclass` com as ABCs `Hashable` and `Iterable`. Se `isinstance(obj,
+Hashable)` retorna `True`, is significa apenas que a classe de `obj` implementa
+ou herda `+__hash__+`. Mas se `obj` é uma tupla contendo itens _unhashable_,
+então `obj` não é _hashable_, apesar do resultado positivo da verificação com
+`isinstance`.
+O revisor técnico Jürgen Gmach mostrou que a tipagem pato oferece
+o modo mais preciso de determinar se uma instância é _hashable_: chamar `hash(obj)`.
 Essa chamada vai levantar um `TypeError` se `obj` não for _hashable_.
 
 Por outro lado, mesmo quando `isinstance(obj, Iterable)` retorna `False`,
@@ -909,7 +939,7 @@ ____
 
 ****
 
-Após vermos algumas das ABCs existentes, vamos praticar goose typing implementando uma ABC do zero, e a colocando em uso.
+Após vermos algumas das ABCs existentes, vamos praticar tipagem ganso implementando uma ABC do zero, e a colocando em uso.
 O objetivo aqui não é encorajar todo mundo a ficar criando ABCs a torto e a direito, mas aprender como ler o código-fonte das ABCs encontradas na biblioteca padrão e em outros pacotes.((("", startref="GTstlib13")))((("", startref="ABCstndlib13")))
 
 [[defining_using_abc_sec]]
@@ -1178,13 +1208,13 @@ e o cliente pode não estar esperando que a lista passada seja
 modificada.footnote:[<<defensive_argument>> (<<ch_refs_mut_mem>>)
 trata da questão de apelidamento que acabamos de evitar aqui.]
 
-Chegamos agora à característica dinâmica crucial da goose typing:
+Chegamos agora à característica dinâmica crucial da tipagem ganso:
 declarar subclasses virtuais com o método `register`((("", startref="GTsubclass13")))((("", startref="ABCsubclass13")))((("", startref="IASsubclass13")))
 
 [[virtual_subclass_sec]]
 ==== Uma subclasse virtual de uma ABC
 
-Uma((("goose typing", "virtual subclasses of ABCs", id="GTvsub13")))((("ABCs (abstract base classes)", "virtual subclasses of ABCs", id="ABCvirt13")))((("virtual subclasses", id="virtsub13")))((("inheritance and subclassing", "virtual subclasses of ABCs", id="IASvirtualabc13"))) característica essencial da goose typing—e uma razão pela qual ela merece um nome de ave aquática—é a habilidade de registrar uma classe como uma _subclasse virtual_ de uma ABC, mesmo se a classe não herde da ABC.
+Uma((("goose typing", "virtual subclasses of ABCs", id="GTvsub13")))((("ABCs (abstract base classes)", "virtual subclasses of ABCs", id="ABCvirt13")))((("virtual subclasses", id="virtsub13")))((("inheritance and subclassing", "virtual subclasses of ABCs", id="IASvirtualabc13"))) característica essencial da tipagem ganso—e uma razão pela qual ela merece um nome de ave aquática—é a habilidade de registrar uma classe como uma _subclasse virtual_ de uma ABC, mesmo se a classe não herde da ABC.
 Ao fazer isso, prometemos que a classe implementa fielmente a interface definida na ABC—e Python vai acreditar em nós sem checar.
 Se mentirmos, vamos ser capturados pelas exceções de tempo de execução conhecidas.
 
@@ -1426,7 +1456,7 @@ Vector([22.0, 24.0, 26.0])
 
 A implementação inicial de dicas de tipo no Python era um sistema de tipos nominal:
 o nome de um tipo em uma anotação tinha que corresponder ao nome do tipo do argumento real—ou com o nome de uma de suas superclasses.
-Como é impossível nomear todos os tipos que implementam um protocolo (suportando as operações requeridas), a duck typing não podia ser descrita por dicas de tipo antes de Python 3.8.
+Como é impossível nomear todos os tipos que implementam um protocolo (suportando as operações requeridas), a tipagem pato não podia ser descrita por dicas de tipo antes de Python 3.8.
 
 Agora, com `typing.Protocol`, podemos informar ao Mypy que `double` recebe um argumento `x` que suporta `x * 2`.
 
@@ -1561,15 +1591,16 @@ então o Mypy pode inferir que dentro do bloco `if`, o tipo do objeto `o` é _co
 ====
 
 [[duck_typing_friend_box]]
-.Escute no pato
+.Confie no pato
 ****
 
 Durante((("duck typing"))) a execução, muitas vezes a tipagem pato é a melhor
 abordagem para checagem de tipos: em vez de chamar `isinstance` ou `hasattr`,
 apenas tente realizar as operações que você precisa com o objeto, e trate as
-exceções conforme necessário. Aqui está um exemplo concreto:
+exceções conforme necessário. Segue um exemplo concreto.
 
-Continuando a discussão anterior, dado um objeto `o` que preciso usar como número complexo,
+Continuando a discussão anterior,
+dado um objeto `o` que preciso usar como número complexo,
 essa seria uma abordagem:
 
 [source, python]
@@ -1580,7 +1611,7 @@ else:
     raise TypeError('o must be convertible to complex')
 ----
 
-A abordagem da goose typing seria usar a ABC `numbers.Complex`:
+A abordagem da tipagem ganso seria usar a ABC `numbers.Complex`:
 
 [source, python]
 ----
@@ -1590,9 +1621,8 @@ else:
     raise TypeError('o must be an instance of Complex')
 ----
 
-Mas eu prefiro aproveitar a tipagem pato e fazer isso usando o princípio
-EAFP—_Easier to Ask Forgiveness than Permission_
-(mais fácil pedir perdão que permissão):
+Mas eu prefiro aproveitar a tipagem pato e pedir perdão
+em vez de permissão (Princípio de Hopper):
 
 [source, python]
 ----
@@ -1621,7 +1651,7 @@ TypeError: complex() first argument must be a string or a number, not 'tuple'
 
 Em português: "O primeiro argumento de `complex()` deve ser uma string ou um número, não 'tuple'".
 
-Acho a abordagem duck typing muito melhor nesse caso.
+Acho a abordagem da tipagem pato muito melhor nesse caso.
 ****
 
 Agora que vimos como usar protocolos estáticos durante a execução com tipos pré-existentes como `complex` e `numpy.complex64`,
@@ -1765,7 +1795,7 @@ Agora vamos criar—e depois estender—um novo protocolo estático.((("", start
 [[designing_static_proto_sec]]
 ==== Projetando um protocolo estático
 
-Quando((("static protocols", "designing", id="SPdesign13"))) estudamos goose typing, vimos a ABC `Tombola` em <<defining_using_abc_sec>>.
+Quando((("static protocols", "designing", id="SPdesign13"))) estudamos tipagem ganso, vimos a ABC `Tombola` em <<defining_using_abc_sec>>.
 Aqui vamos ver como definir uma interface similar usando um protocolo estático.
 
 A ABC `Tombola` especifica dois métodos: `pick` e `load`.
@@ -2006,7 +2036,7 @@ são _consistente-com_ `SupportsComplex`, apesar deles não implementarem `+__co
 
 [TIP]
 ====
-Eu só encontrei resultados inesperados usando verificações com `isinstance` em conjunto com os protocolos numéricos `Supports*` quando fiz experiências de conversão de ou para `complex`.
+Só encontrei resultados inesperados usando verificações com `isinstance` em conjunto com os protocolos numéricos `Supports*` quando fiz experiências de conversão de ou para `complex`.
 Se você não usa números complexos, pode confiar naqueles protocolos em vez das ABCs de `numbers`.
 ====
 
@@ -2023,7 +2053,7 @@ Estamos agora prontos para uma rápida revisão do que vimos nesse capítulo.(((
 O((("interfaces", "overview of")))((("protocols", "overview of")))((("ABCs (abstract base classes)", "overview of"))) Mapa de Tipagem (<<type_systems_described>>) é a chave para entender esse capítulo.
 Após uma breve introdução às quatro abordagens da tipagem,
 comparamos protocolos dinâmicos e estáticos,
-os quais suportam duck typing e tipagem pato estática, respectivamente.
+os quais suportam tipagem pato e tipagem pato estática, respectivamente.
 Os dois tipos de protocolo compartilham uma característica essencial, nunca é exigido de uma classe que ela declare explicitamente o suporte a qualquer protocolo específico.
 Uma classe suporta um protocolo simplesmente implementando os métodos necessários.
 
@@ -2031,10 +2061,10 @@ A próxima grande seção foi a <<prog_ducks_sec>>,
 onde exploramos os esforços que interpretador Python faz para que os protocolos dinâmicos de sequência e iterável funcionem, incluindo a implementação parcial de ambos.
 Então vimos como fazer uma classe implementar um protocolo durante a execução,
 através da adição de métodos extra via _monkey patching_.
-A seção sobre duck typing terminou com sugestões de programação defensiva,
+A seção sobre tipagem pato terminou com sugestões de programação defensiva,
 incluindo a detecção de tipos estruturais sem verificações explícitas com `isinstance` ou `hasattr`, usando `try/except` e falhando rápido.
 
-Após Alex Martelli introduzir o goose typing em <<waterfowl_essay>>,
+Após Alex Martelli introduzir a tipagem ganso em <<waterfowl_essay>>,
 vimos como criar subclasses de ABCs existentes,
 examinamos algumas ABCs importantes da biblioteca padrão,
 e criamos uma ABC do zero,
@@ -2056,7 +2086,7 @@ cada uma com diferentes vantagens e deficiências.
 Você possivelmente encontrará casos de uso adequados para cada esquema de tipagem em qualquer base de código de Python moderno de tamanho significativo.
 Rejeitar qualquer dessas abordagens tornará seu trabalho como programador Python mais difícil que o necessário.
 
-Dito isso, Python ganhou sua enorme popularidade enquanto suportava apenas duck typing.
+Dito isso, Python ganhou sua enorme popularidade enquanto suportava apenas tipagem pato.
 Outras linguagens populares, como Javascript, PHP e Ruby, bem como Lisp, Smalltalk, Erlang e Clojure—essas últimas não muito populares mas extremamente influentes—são todas linguagens que tinham e ainda tem um impacto tremendo aproveitando o poder e a simplicidade da tipagem pato.
 
 [[interfaces_further_reading]]
@@ -2064,8 +2094,8 @@ Outras linguagens populares, como Javascript, PHP e Ruby, bem como Lisp, Smallta
 
 Para((("interfaces", "further reading on")))((("protocols", "further reading on")))((("ABCs (abstract base classes)", "further reading on"))) uma rápida revisão do prós e contras da tipagem, bem como da importância de `typing.Protocol`
 para a saúde de bases de código verificadas estaticamente, eu recomendo fortemente o post de Glyph Lefkowitz
-https://fpy.li/13-42["I Want A New Duck: `typing.Protocol` and the future of duck typing"] (EN).("Eu Quero Um Novo Pato: `typing.Protocol` e o futuro da tipagem pato`").
-Eu também aprendi bastante em seu post
+https://fpy.li/13-42["I Want A New Duck: `typing.Protocol` and the future of duck typing"] ("Quero Um Novo Pato: `typing.Protocol` e o futuro da tipagem pato").
+Também aprendi bastante em seu post
 https://fpy.li/13-43["Interfaces and Protocols"] (EN) ("Interfaces e Protocolos"),
 comparando `typing.Protocol` com `zope.interface` — um mecanismo mais antigo para definir interfaces em sistemas plug-in fracamente acoplados, usado no
 https://fpy.li/13-44[Plone CMS],
@@ -2073,7 +2103,7 @@ na https://fpy.li/13-45[Pyramid web framework], e no framework de programação 
 https://fpy.li/13-46[Twisted],
 um projeto fundado por Glyph.footnote:[Agradeço ao revisor técnico Jürgen Gmach por ter recomentado o post "Interfaces and Protocols".]
 
-Ótimos livros sobre Python tem— quase que por definição—uma ótima cobertura de duck typing.
+Bons livros sobre Python tem—quase que por definição—uma ótima cobertura de tipagem pato.
 Dois de meus livros favoritos de Python tiveram atualizações lançadas após a primeira edição de _Python Fluente_:
 _The Quick Python Book_, 3rd ed., (Manning), de Naomi Ceder; e
 pass:[<a class="orm:hideurl" href="https://fpy.li/pynut3"><em>Python in a Nutshell</em>, 3rd ed.,</a>] de Alex Martelli, Anna Ravenscroft, e Steve Holden (O'Reilly).
@@ -2085,7 +2115,7 @@ https://fpy.li/13-48["Dynamic Typing"] (EN) ("Tipagem Dinâmica"), de Martin Fow
 Ele também escreveu
 https://fpy.li/13-33["Role Interface"] (EN) ("Interface Papel"),
 que mencionei na <<best_protocol_design_sec>>.
-Apesar de não ser sobre duck typing,
+Apesar de não ser sobre tipagem pato,
 aquele post é altamente relevante para o projeto de protocolos em Python,
 pois ele contrasta as interfaces papel estreitas com as interfaces públicas bem mais abrangentes de classes em geral.
 
@@ -2127,7 +2157,7 @@ https://fpy.li/13-56[resposta abrangente no StackOverflow], discutindo formas de
 
 Vou continuar monitorando o Mypy issue
 https://fpy.li/13-55[#3186]
-para os próximos capítulos dessa saga, na esperança de um final feliz que torne a tipagem estática e o goose typing compatíveis, como eles deveriam ser.
+para os próximos capítulos dessa saga, na esperança de um final feliz que torne a tipagem estática e a tipagem ganso compatíveis, como eles deveriam ser.
 
 
 ////
@@ -2190,10 +2220,10 @@ que permitiram que coleções embutidas e da biblioteca padrão aceitem dicas de
 tipo genéricas "de fábrica" no Python 3.9, graças à
 https://fpy.li/pep585[PEP 585—Type Hinting Generics In Standard Collections].
 
-Durante todos esses anos, alguns usuários de Python—incluindo este autor—ficaram
-desapontados com o suporte à tipagem. Após aprender Go, a ausência de duck
-typing estático em Python era incompreensível, em uma linguagem onde o duck
-typing havia sempre sido uma força central.
+Durante todos esses anos, alguns usuários de Python—incluindo eu—ficamos
+desapontados com os tipos estáticos. Após que aprendi Go, a falta de
+tipagem pato estática em Python era incompreensível, 
+pois a tipagem pato sempre foi uma característica marcante desta linguagem.
 
 Mas essa é a natureza dos MVPs: eles podem não satisfazer todos os usuários em
 potencial, mas exigem menos esforço de implementação, e guiam o desenvolvimento
@@ -2222,14 +2252,14 @@ amostra que suportam todas as quatro abordagens.
 
 Go é claramente uma linguagem de tipo estáticos na tradição do Pascal, mas ela
 foi a pioneira da tipagem pato estática—pelo menos entre as linguagens mais
-usadas hoje. Eu também coloquei Go no quadrante do goose typing por causa
+usadas hoje. Também coloquei Go no quadrante da tipagem ganso por causa
 de sua sintaxe especial para verificação de tipo (_type assertion_),
 que permitem tratar tipos dinamicamente durante a execução.
 
 No ano 2000, só existiam linguagens populares nos quadrantes diametralmente opostos 
 da tipagem pato e da tipagem estática.
 Não conheço nenhuma linguagem que suportava tipagem pato estática ou
-goose typing 20 anos atrás, mas pode ser que existam.
+tipagem ganso 20 anos atrás, mas pode ser que existam.
 O fato de cada um dos quatro quadrantes ter pelo
 menos três linguagens populares sugere que muita gente vê benefícios em cada uma
 das quatro abordagens à tipagem.
@@ -2247,9 +2277,11 @@ Mas o monkey patching pode também ser útil, por exemplo, para fazer uma classe
 O design pattern Adaptador resolve o mesmo problema através da implementação de uma nova classe inteira.
 
 É fácil usar monkey patching em código Python, mas há limitações.
-Ao contrário de Ruby e Javascript, Python não permite modificações de tipos embutidos durante a execução.
-Eu na verdade considero isso uma vantagem, pois dá a certeza que um objeto `str` vai sempre ter os mesmos métodos.
-Essa limitação reduz a chance de bibliotecas externas aplicarem correções conflitantes.
+Ao contrário de Ruby e Javascript, Python não permite mudar o comportamento dos tipos embutidos durante a execução.
+Na verdade, considero isto uma vantagem,
+pois dá a certeza que um objeto `str` terá sempre os mesmos métodos.
+Esta limitação reduz a chance de bibliotecas aplicarem
+correções conflitantes quando importadas em seu projeto.
 
 [role="soapbox-title"]
 Metáforas e idiomas em interfaces
