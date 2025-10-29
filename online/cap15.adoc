@@ -178,7 +178,7 @@ include::../code/15-more-types/protocol/mymax/mymax.py[tags=MYMAX_TYPES]
 ====
 
 Minha implementação de `max` em Python tem mais ou menos o mesmo tamanho daquelas importações e declarações de tipo.
-Graças ao _duck typing_, meu código não tem nenhuma verificação usando `isinstance`, e fornece a mesma verificação de erro daquelas dicas de tipo—mas apenas durante a execução, claro.
+Graças ao _duck typing_, meu código não tem nenhuma checagem usando `isinstance`, e fornece a mesma checagem de erro daquelas dicas de tipo—mas apenas durante a execução, claro.
 
 Um benefício fundamental de `@overload` é declarar o tipo devolvido da forma mais precisa possível, de acordo com os tipos dos argumentos recebidos.
 Veremos esse benefício a seguir, estudando as sobreposições de `max`, em grupos de duas ou três por vez.
@@ -313,8 +313,8 @@ Experimentar com `TypedDict` demonstra as limitações da tipagem estática para
 [WARNING]
 ====
 É((("gradual type system", "TypedDict", id="GTStypeddict15")))((("TypedDict", id="typeddict15"))) tentador usar `TypedDict` para se proteger contra erros ao tratar estruturas de dados dinâmicas como as respostas da API JSON.
-Mas os exemplos aqui deixam claro que o tratamento correto do JSON precisa acontecer durante a execução, e não com verificação estática de tipo.
-Para verificar estruturas similares a JSON usando dicas de tipo durante a execução, dê uma olhada no pacote https://fpy.li/15-5[_pydantic_] no PyPI.
+Mas os exemplos aqui deixam claro que o tratamento correto do JSON precisa acontecer durante a execução, e não com checagem estática de tipo.
+Para checar estruturas similares a JSON usando dicas de tipo durante a execução, dê uma olhada no pacote https://fpy.li/15-5[_pydantic_] no PyPI.
 ====
 
 Algumas vezes os dicionários de Python são usados como registros, as chaves interpretadas como nomes de campos e os valores como valores dos campos de diferentes tipos. Considere, por exemplo, um registro descrevendo um livro, em JSON ou Python:
@@ -452,7 +452,7 @@ Found 3 errors in 1 file (checked 1 source file)
 <1> Essa observação é o resultado de `reveal_type(authors)`.
 <2> O tipo da variável `authors` foi inferido a partir do tipo da expressão que a inicializou, `book['authors']`.
 Você não pode atribuir uma `str` para uma variável do tipo `List[str]`.
-Verificadores de tipo em geral não permitem que o tipo de uma variável mude.footnote:[Em maio de 2020, o pytype ainda permite isso.
+Checadores de tipo em geral não permitem que o tipo de uma variável mude.footnote:[Em maio de 2020, o pytype ainda permite isso.
 Mas seu https://fpy.li/15-6[FAQ] (EN) diz que tal operação será proibida no futuro.
 Veja a pergunta "Why didn’t pytype catch that I changed the type of an annotated variable?" (_Por que o pytype não avisou quando eu mudei o tipo de uma variável anotada?_) no https://fpy.li/15-6[FAQ] (EN) do pytype.]
 <3> Não é permitido atribuir a uma chave que não é parte da definição de `BookDict`.
@@ -597,7 +597,7 @@ pistachio  <2>
 ====
 <1> Isso não é um `BookDict` de verdade.
 <2> O valor de `not_book['flavor']`.
-<3> `to_xml` recebe um argumento `BookDict`, mas não há qualquer verificação durante a execução: entra lixo, sai lixo.
+<3> `to_xml` recebe um argumento `BookDict`, mas não há qualquer checagem durante a execução: entra lixo, sai lixo.
 
 O <<bookdict_demo_not_book_run>> mostra que _demo_not_book.py_ devolve bobagens, mas não há qualquer erro durante a execução.
 Usar um `TypedDict` ao tratar dados em formato JSON não resultou em uma tipagem segura.
@@ -618,14 +618,14 @@ Vamos agora voltar nossas atenções para uma função que é melhor evitar, mas
 [[type_casting_sec]]
 === Coerção de Tipo
 
-Nenhum((("gradual type system", "type casting", id="GTStypecast15")))((("type casting", id="typecast15"))) sistema de tipos é perfeito, nem tampouco os verificadores estáticos de tipo, as dicas de tipo no projeto _typeshed_ ou as dicas de tipo em pacotes de terceiros que as oferecem.
+Nenhum((("gradual type system", "type casting", id="GTStypecast15")))((("type casting", id="typecast15"))) sistema de tipos é perfeito, nem tampouco os checadores estáticos de tipo, as dicas de tipo no projeto _typeshed_ ou as dicas de tipo em pacotes de terceiros que as oferecem.
 
 A função especial `typing.cast()` fornece uma forma de lidar com defeitos ou incorreções nas dicas de tipo em código que não podemos consertar.
 A https://fpy.li/15-14[documentação do Mypy 0.930] (EN) explica:
 
 [quote]
 ____
-Coerções são usadas para silenciar avisos espúrios do checador de tipos, e dão uma ajuda ao verificador quando ele não consegue entender direito o que está acontecendo.
+Coerções são usadas para silenciar avisos espúrios do checador de tipos, e dão uma ajuda ao checador quando ele não consegue entender direito o que está acontecendo.
 ____
 
 Durante a execução, `typing.cast` não faz absolutamente nada. Essa é sua
@@ -644,7 +644,7 @@ def cast(typ, val):
 ----
 
 A PEP 484 exige que os checadores de tipos "acreditem cegamente" em `cast`.
-A https://fpy.li/15-16[seção "Casts" (_Coerções_) da PEP 484] mostra um exemplo onde o verificador precisa da orientação de `cast`:
+A https://fpy.li/15-16[seção "Casts" (_Coerções_) da PEP 484] mostra um exemplo onde o checador precisa da orientação de `cast`:
 
 [source, python]
 ----
@@ -1328,7 +1328,7 @@ include::../code/15-more-types/protocol/abs_demo.py[]
 <2> Parametrizar `SupportsAbs` com `float` assegura...
 <3> ...que o Mypy aceite `abs(v)` como primeiro argumento para `math.isclose`.
 <4> Graças a `@runtime_checkable` na definição de `SupportsAbs`, essa é uma asserção válida durante a execução.
-<5> Todo o restante do código passa pelas verificações do Mypy e pelas asserções durante a execução.
+<5> Todo o restante do código passa pelas checagens do Mypy e pelas asserções durante a execução.
 <6> O tipo `int` também é _consistente-com_ `SupportsAbs`.
 De acordo com o https://fpy.li/15-35[_typeshed_],
 `+int.__abs__+` devolve um `int`, o que é _consistente-com_ o parametro de tipo `float` declarado na dica de tipo `is_unit` para o argumento `v`.
@@ -1362,7 +1362,7 @@ as assinaturas sobrecarregadas exigidas para anotar corretamente a função embu
 
 A seguir veio o artefato especial da linguagem `typing.TypedDict`.
 Escolhi tratar dele aqui e não no <<ch_dataclass>>, onde vimos `typing.NamedTuple`, porque `TypedDict` não é uma fábrica de classes; ele é meramente uma forma de acrescentar dicas de tipo a uma variável ou a um argumento que exige um `dict` com um conjunto específico de chaves do tipo string, e tipos específicos para cada chave—algo que acontece quando usamos um `dict` como registro, muitas vezes no contexto do tratamento de dados JSON.
-Aquela seção foi um pouco mais longa porque usar `TypedDict` pode levar a um falso sentimento de segurança, e queria mostrar como as verificações durante a execução e o tratamento de erros são inevitáveis quando tentamos criar registros estruturados estaticamente a partir de mapeamentos, que por natureza são dinâmicos.
+Aquela seção foi um pouco mais longa porque usar `TypedDict` pode levar a um falso sentimento de segurança, e queria mostrar como as checagens durante a execução e o tratamento de erros são inevitáveis quando tentamos criar registros estruturados estaticamente a partir de mapeamentos, que por natureza são dinâmicos.
 
 Então falamos sobre `typing.cast`, uma função projetada para nos permitir guiar o trabalho do checador de tipos. É importante considerar cuidadosamente quando usar `cast`, porque seu uso excessivo atrapalha o checador de tipos.
 

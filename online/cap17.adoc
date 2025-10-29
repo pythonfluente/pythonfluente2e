@@ -185,15 +185,15 @@ True
 
 [TIP]
 ====
-Desde o Python 3.10, a forma mais precisa de verificar se um objeto `x` é iterável é invocar
+Desde o Python 3.10, a forma mais precisa de checar se um objeto `x` é iterável é invocar
 `iter(x)` e tratar a exceção `TypeError` se ele não for.
 Isso é mais preciso que usar `isinstance(x, abc.Iterable)`, porque `iter(x)` também leva em consideração o método legado `+__getitem__+`, enquanto a ABC `Iterable` não considera tal método.
 ====
 
-Verificar explicitamente se um objeto é iterável pode não valer a pena, se você for iterar sobre o objeto logo após a verificação.
+Verificar explicitamente se um objeto é iterável pode não valer a pena, se você for iterar sobre o objeto logo após a checagem.
 Afinal, quando se tenta iterar sobre um não-iterável, a exceção gerada pelo Python é bastante clara: `TypeError: 'C' object is not iterable` (_TypeError: o objeto 'C' não é iterável_).
-Se você puder fazer algo mais além de gerar um `TypeError`, então faça isso em um bloco `try/except` ao invés de realizar uma verificação explícita.
-A verificação explícita pode fazer sentido se você estiver mantendo o objeto para iterar sobre ele mais tarde; nesse caso, capturar o erro mais cedo torna a depuração mais fácil.
+Se você puder fazer algo mais além de gerar um `TypeError`, então faça isso em um bloco `try/except` ao invés de realizar uma checagem explícita.
+A checagem explícita pode fazer sentido se você estiver mantendo o objeto para iterar sobre ele mais tarde; nesse caso, capturar o erro mais cedo torna a depuração mais fácil.
 
 A função embutida `iter()` é usada mais frequentemente pelo Python que no nosso código.
 Há uma segunda maneira de usá-la, mas não é muito conhecida.
@@ -347,7 +347,7 @@ class Iterator(Iterable):
 ----
 ====
 <1> `+__subclasshook__+` suporta a checagem de tipos estrutural com `isinstance` e `issubclass`. Vimos isso na <<subclasshook_sec>>.
-<2> `_check_methods` percorre o parâmetro `+__mro__+` da classe, para verificar se os métodos estão implementados em sua classe base.
+<2> `_check_methods` percorre o parâmetro `+__mro__+` da classe, para checar se os métodos estão implementados em sua classe base.
 Ele está definido no mesmo módulo, __Lib/_collections_abc.py__.
 Se os métodos estiverem implementados, a classe `C` será reconhecida como uma subclasse virtual de `Iterator`.
 Em outras palavras, `issubclass(C, Iterable)` devolverá `True`.
@@ -364,14 +364,14 @@ O código-fonte do módulo https://fpy.li/17-6[_Lib/types.py_] no Python 3.9 tem
 # Iteradores no Python não são uma questão de tipo, mas sim de protocolo. Um número
 # grande e variável de tipos embutidos implementa *alguma* forma de
 # iterador.  Não verifique o tipo! Em vez disso, use `hasattr` para
-# verificar [a existência] de ambos os atributos "__iter__" e "__next__".
+# checar [a existência] de ambos os atributos "__iter__" e "__next__".
 ----
 
 E de fato, é exatamente o que o método `+__subclasshook__+` da ABC `abc.Iterator` faz.
 
 [TIP]
 ====
-Dado o conselho de __Lib/types.py__ e a lógica implementada em __Lib/_collections_abc.py__, a melhor forma de verificar se um objeto `x` é um iterador é invocar `isinstance(x, abc.Iterator)`. Graças ao `+Iterator.__subclasshook__+`, esse teste funciona mesmo se a classe de `x` não for uma subclasse real ou virtual de `Iterator`.
+Dado o conselho de __Lib/types.py__ e a lógica implementada em __Lib/_collections_abc.py__, a melhor forma de checar se um objeto `x` é um iterador é invocar `isinstance(x, abc.Iterator)`. Graças ao `+Iterator.__subclasshook__+`, esse teste funciona mesmo se a classe de `x` não for uma subclasse real ou virtual de `Iterator`.
 ====
 
 Voltando à nossa classe `Sentence` no <<ex_sentence0>>, usando o console de Python é possivel ver claramente como o iterador é criado por `iter()` e consumido por `next()`:
@@ -404,7 +404,7 @@ StopIteration
 <5> Uma vez exaurido, um itereador irá sempre gerar `StopIteration`, o que faz parecer que ele está vazio..
 <6> Para percorrer a sentença novamente é preciso criar um novo iterador.
 
-Como os únicos métodos exigidos de um iterador são `+__next__+` e `+__iter__+`, não há como verificar se há itens restantes, exceto invocando `next()` e capturando `StopIteration`.
+Como os únicos métodos exigidos de um iterador são `+__next__+` e `+__iter__+`, não há como checar se há itens restantes, exceto invocando `next()` e capturando `StopIteration`.
 Além disso, não é possível "reiniciar" um iterador.
 Se for necessário começar de novo, é preciso invocar `iter()` no iterável que criou o iterador original.
 Invocar `iter()` no próprio iterador também não funciona, pois—como já mencionado&mdash;a implementação de pass:[<span class="keep-together"><code>Iterator.&#x5f;&#x5f;iter&#x5f;&#x5f;</code></span>] apenas devolve `self`, e isso não reinicia um iterador exaurido.
@@ -2034,7 +2034,7 @@ include::../code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER]
 ====
 <1> Para essa corrotina, o tipo produzido é `None`, porque ela não produz dados. Ela recebe dados do tipo `SendType` e devolve uma tupla `Result` quando termina o processamento.
 <2> Usar `yield` assim só faz sentido em corrotinas, que são projetadas para consumir dados. Isso produz `None`, mas recebe um `term` de `.send(term)`.
-<3> Se `term` é um `Sentinel`, sai do loop. Graças a essa verificação com `isinstance`...
+<3> Se `term` é um `Sentinel`, sai do loop. Graças a essa checagem com `isinstance`...
 <4> ...Mypy me permite somar `term` a `total` sem sinalizar um erro (que eu não poderia somar um `float` a um objeto que pode ser um `float` ou um `Sentinel`).
 <5> Essa linha só será alcançada de um `Sentinel` for enviado para a corrotina.
 

@@ -593,7 +593,7 @@ Considere a função `is_prime` no <<def_is_prime_ex>>,
 que retorna `True` se o argumento for um número primo, `False` se não for.
 
 [[def_is_prime_ex]]
-.primes.py: uma verificação de números primos fácil de entender, do exemplo em https://docs.python.org/pt-br/3/library/concurrent.futures.html#processpoolexecutor-example[pass:[<code>ProcessPool&#x200b;Executor</code>] na documentação de Python]
+.primes.py: uma checagem de números primos fácil de entender, do exemplo em https://docs.python.org/pt-br/3/library/concurrent.futures.html#processpoolexecutor-example[pass:[<code>ProcessPool&#x200b;Executor</code>] na documentação de Python]
 ====
 [source, python]
 ----
@@ -693,7 +693,7 @@ O <<ch_executors>> apresenta uma forma mais simples de distribuir tarefas para p
 um `ProcessPoolExecutor` do pacote `concurrent.futures`, que internamente usa filas.
 ====
 
-Nessa seção vamos escrever programas para verificar se os números dentro de uma amostra de 20 inteiros são primos. Os números variam de 2 até 9.999.999.999.999.999—isto é, 10^16^ &ndash; 1, ou mais de 2^53^.
+Nessa seção vamos escrever programas para checar se os números dentro de uma amostra de 20 inteiros são primos. Os números variam de 2 até 9.999.999.999.999.999—isto é, 10^16^ &ndash; 1, ou mais de 2^53^.
 A amostra inclui números primos pequenos e grandes, bem como números compostos com fatores primos grandes e pequenos.
 
 O((("sequential.py program"))) programa _sequential.py_ fornece a linha base de desempenho.
@@ -729,13 +729,13 @@ Os resultados aparecem em três colunas:
 
 * O número a ser verificado.
 * `P` se é um número primo, caso contrária, vazia.
-* Tempo decorrido para verificar se aquele número específico é primo.
+* Tempo decorrido para checar se aquele número específico é primo.
 
-Neste exemplo, o tempo total é aproximadamente a soma do tempo de cada verificação,
+Neste exemplo, o tempo total é aproximadamente a soma do tempo de cada checagem,
 mas está computado separadamente, como se vê no <<primes_sequential_ex>>.
 
 [[primes_sequential_ex]]
-.sequential.py: verificação de números primos em um pequeno conjunto de dados
+.sequential.py: checagem de números primos em um pequeno conjunto de dados
 ====
 [source, python]
 ----
@@ -751,7 +751,7 @@ include::../code/19-concurrency/primes/sequential.py[]
 [[proc_based_solution]]
 ==== Solução baseada em processos
 
-O((("process pools", "process-based solution"))) próximo exemplo, _procs.py_, mostra o uso de múltiplos processos para distribuir a verificação de números primos por muitos núcleos da CPU.
+O((("process pools", "process-based solution"))) próximo exemplo, _procs.py_, mostra o uso de múltiplos processos para distribuir a checagem de números primos por muitos núcleos da CPU.
 Esses são os tempos obtidos com _procs.py_:
 
 [source]
@@ -786,19 +786,19 @@ A última linha dos resultados mostra que _procs.py_ foi 4,2 vezes mais rápido 
 
 ==== Entendendo os tempos decorridos
 
-Observe((("process pools", "understanding elapsed times"))) que o tempo decorrido na primeira coluna é o tempo para verificar aquele número específico. Por exemplo, `is_prime(7777777777777753)` demorou quase 8,4s para retornar `True`. Enquanto isso, outros processos estavam verificando outros números em paralelo.
+Observe((("process pools", "understanding elapsed times"))) que o tempo decorrido na primeira coluna é o tempo para checar aquele número específico. Por exemplo, `is_prime(7777777777777753)` demorou quase 8,4s para retornar `True`. Enquanto isso, outros processos estavam verificando outros números em paralelo.
 
 Há 20 números para serem verificados. Escrevi _procs.py_ para iniciar um número de processos de trabalho igual ao número de núcleos na CPU, como determinado por `multiprocessing.cpu_count()`.
 
-O tempo total neste caso é muito menor que a soma dos tempos decorridos para cada verificação individual. Há algum tempo gasto em iniciar processos e na comunicação entre processos, então o resultado final é que a versão multiprocessos é apenas cerca de 4,2 vezes mais rápida que a sequencial. Isso é bom, mas um pouco desapontador, considerando que o código inicia 12 processos, para usar todos os núcleos desse laptop.
+O tempo total neste caso é muito menor que a soma dos tempos decorridos para cada checagem individual. Há algum tempo gasto em iniciar processos e na comunicação entre processos, então o resultado final é que a versão multiprocessos é apenas cerca de 4,2 vezes mais rápida que a sequencial. Isso é bom, mas um pouco desapontador, considerando que o código inicia 12 processos, para usar todos os núcleos desse laptop.
 
 [NOTE]
 ====
-A função `multiprocessing.cpu_count()` retorna `12` no MacBook Pro que estou usando para escrever esse capítulo. Ele é na verdade um i7 com uma CPU de 6 núcleos, mas o SO informa 12 CPUs devido ao _hyperthreading_, uma tecnologia da Intel que executa duas threads por núcleo. Entretanto, _hyperthreading_ funciona melhor quando uma das threads não está trabalhando tão pesado quanto a outra thread no mesmo núcleo—talvez a primeira esteja parada, esperando por dados após uma perda de cache, e a outra está mastigando números. De qualquer forma, não há almoço grátis: este laptop tem o desempenho de uma máquina com 6 CPUs para atividades de processamento intensivo com pouco uso de memória—como essa verificação simples de números primos.
+A função `multiprocessing.cpu_count()` retorna `12` no MacBook Pro que estou usando para escrever esse capítulo. Ele é na verdade um i7 com uma CPU de 6 núcleos, mas o SO informa 12 CPUs devido ao _hyperthreading_, uma tecnologia da Intel que executa duas threads por núcleo. Entretanto, _hyperthreading_ funciona melhor quando uma das threads não está trabalhando tão pesado quanto a outra thread no mesmo núcleo—talvez a primeira esteja parada, esperando por dados após uma perda de cache, e a outra está mastigando números. De qualquer forma, não há almoço grátis: este laptop tem o desempenho de uma máquina com 6 CPUs para atividades de processamento intensivo com pouco uso de memória—como essa checagem simples de números primos.
 ====
 
 [[code_for_multicore_prime_sec]]
-==== Código para o verificador de números primos com múltiplos núcleos
+==== Código para o checador de números primos com múltiplos núcleos
 
 Quando((("process pools", "code for multicore prime checker", id="PPmulticore19"))) delegamos processamento para threads e processos, nosso código não chama a função de trabalho diretamente, então não conseguimos simplesmente retornar um resultado.
 Em vez disso, a função de trabalho é guiada pela biblioteca de threads ou processos, e por fim produz um resultado que precisa ser armazenado em algum lugar.
@@ -814,7 +814,7 @@ pode substituir `SimpleQueue` por `Queue` no <<primes_procs_top_ex>>.
 ====
 
 [[primes_procs_top_ex]]
-.procs.py: verificação de primos com múltiplos processos; importações, tipos, e funções
+.procs.py: checagem de primos com múltiplos processos; importações, tipos, e funções
 ====
 [source, python]
 ----
@@ -825,14 +825,14 @@ include::../code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_TOP]
 Temos que chamar essa `SimpleQueue` para criar uma fila. Por outro lado, não podemos usá-la em dicas de tipo.
 <2> `multiprocessing.queues` contém a classe `SimpleQueue` que precisamos para dicas de tipo.
 <3> `PrimeResult` inclui o número verificado. Manter `n` junto com os outros campos do resultado simplifica a exibição mais tarde.
-<4> Isso é um apelido de tipo para uma `SimpleQueue` que a função `main` (<<primes_procs_main_ex>>) vai usar para enviar os números para os processos que farão a verificação.
+<4> Isso é um apelido de tipo para uma `SimpleQueue` que a função `main` (<<primes_procs_main_ex>>) vai usar para enviar os números para os processos que farão a checagem.
 <5> Apelido de tipo para uma segunda `SimpleQueue` que vai coletar os resultados em `main`. Os valores na fila serão tuplas contendo o número a ser testado e uma tupla `Result`.
 <6> Isso é similar a _sequential.py_.
 <7> `worker` recebe uma fila com os números a serem verificados, e outra para colocar os resultados.
 <8> Nesse código, usei o número `0` como uma _pílula venenosa_: um sinal para que o processo encerre. Se `n` não é `0`, continue com o loop.footnote:[Nesse exemplo, `0` é uma sentinela conveniente. `None` também é comumente usado para essa finalidade, mas usar `0` simplifica a dica de tipo para `PrimeResult` e a implementação de `worker`.]
-<9> Invoca a verificação de número primo e coloca o `PrimeResult` na fila.
+<9> Invoca a checagem de número primo e coloca o `PrimeResult` na fila.
 <10> Devolve um `PrimeResult(0, False, 0.0)`, para informar ao loop principal que esse processo terminou seu trabalho.
-<11> `procs` é o número de processos que executarão a verificação de números primos em paralelo.
+<11> `procs` é o número de processos que executarão a checagem de números primos em paralelo.
 <12> Coloca na fila `jobs` os números a serem verificados.
 <13> Cria um processo filho para cada `worker`. Cada um desses processos executará o loop dentro de sua própria instância da função `worker`, até encontrar um `0` na fila `jobs`.
 <14> Inicia cada processo filho.
@@ -865,7 +865,7 @@ Em março de 2023, é apenas um rascunho.
 Agora vamos estudar a função `main` de _procs.py_ no <<primes_procs_main_ex>>.
 
 [[primes_procs_main_ex]]
-.procs.py: verificação de números primos com múltiplos processos; função `main`
+.procs.py: checagem de números primos com múltiplos processos; função `main`
 ====
 [source, python]
 ----
@@ -1251,7 +1251,7 @@ https://docs.python.org/pt-br/3/library/multiprocessing.html#programming-guideli
 
 Jesse Noller e Richard Oudkerk contribuíram para o pacote `multiprocessing`, introduzido na https://fpy.li/pep371[PEP 371--Addition of the multiprocessing package to the standard library] (EN). A documentação oficial do pacote é um https://docs.python.org/pt-br/3/library/multiprocessing.html[arquivo de 93 KB _.rst_]&mdash;são cerca de 63 páginas—tornando-o um dos capítulos mais longos da biblioteca padrão de Python.
 
-Em pass:[<a href="https://fpy.li/19-56" class="orm:hideurl"><em>High Performance Python</em>, 2nd ed.,</a>] (O'Reilly), os autores Micha Gorelick e Ian Ozsvald incluem um capítulo sobre `multiprocessing` com um exemplo sobre verificação de números primos usando uma estratégia diferente do nosso exemplo _procs.py_. Para cada número, eles dividem a faixa de fatores possíveis-de 2 a `sqrt(n)`—em subfaixas, e fazem cada unidade de execução iterar sobre uma das subfaixas.
+Em pass:[<a href="https://fpy.li/19-56" class="orm:hideurl"><em>High Performance Python</em>, 2nd ed.,</a>] (O'Reilly), os autores Micha Gorelick e Ian Ozsvald incluem um capítulo sobre `multiprocessing` com um exemplo sobre checagem de números primos usando uma estratégia diferente do nosso exemplo _procs.py_. Para cada número, eles dividem a faixa de fatores possíveis-de 2 a `sqrt(n)`—em subfaixas, e fazem cada unidade de execução iterar sobre uma das subfaixas.
 Sua abordagem de dividir para conquistar é típica de aplicações de computação científica, onde os conjuntos de dados são enormes, e as estações de trabalho (ou clusters) tem mais núcleos de CPU que usuários.
 Em um sistema servidor, processando requisições de muitos usuários, é mais simples e mais eficiente deixar cada processo realizar uma tarefa computacional do início ao fim—reduzindo a sobrecarga de comunicação e coordenação entre processos.
 Além de `multiprocessing`, Gorelick e Ozsvald apresentam muitas outras formas de desenvolver e implantar aplicações de ciência de dados de alto desempenho, aproveitando múltiplos núcleos de CPU, GPUs, clusters, analisadores e compiladores como CYthon e Numba. Seu capítulo final, "Lessons from the Field," (_Lições da Vida Real_) é uma valiosa coleção de estudos de caso curtos, contribuição de outros praticantes de computação de alto desempenho em Python.

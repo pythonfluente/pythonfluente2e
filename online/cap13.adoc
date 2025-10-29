@@ -19,19 +19,19 @@ Desde o Python 3.8, temos quatro maneiras de definir e usar interfaces.
 Elas estão ilustradas no _Mapa de Sistemas de Tipagem_ (<<type_systems_described>>).
 
 [[type_systems_described]]
-.Na metade superior, verificações de tipo em tempo de execução usando só o interpretador Python; a metade inferior requer um verificador estático externo como o Mypy, ou um IDE como a PyCharm. Os quadrantes da esquerda se referem a tipagem baseada na estrutura do objeto—isto é, os métodos oferecidos pelo objeto, independente de sua classe ou superclasses; os quadrantes da direita dependem de tipos explicitamente nomeados no código: a classe do objeto, ou suas superclasses.
+.Na metade superior, checagens de tipo dinâmicas (em tempo de execução) usando só o interpretador Python; a metade inferior requer um checador estático externo como o Mypy, ou um IDE como a PyCharm. Os quadrantes da esquerda se referem a tipagem baseada na estrutura do objeto—isto é, os métodos oferecidos pelo objeto, independente de sua classe ou superclasses; os quadrantes da direita dependem de tipos explicitamente nomeados no código: a classe do objeto, ou suas superclasses.
 image::../images/mapa-da-tipagem.png[align="center",pdfwidth=12cm]
 
 Podemos as quatro abordagens assim:
 
 Tipagem pato (_duck typing_)::
     A((("duck typing"))) abordagem default de Python para tipagem desde o início.
-    Estamos estudando tipagem pato desde <<ch_data_model>>.
+    Estamos estudando tipagem pato desde o primeiro capítulo do volume 1.
 Tipagem ganso (_goose typing_)::
     A((("goose typing", "definition of term"))) abordagem suportada pelas classes base abstratas
     (ABCs, _sigla em inglês para Abstract Base Classes_) desde Python 2.6,
-    que depende de verificações dos objetos como as ABCs durante a execução.
-    A _tipagem ganso_ é um dos principais temas desse capítulo.
+    que depende de checar objetos contra ABCs durante a execução.
+    A tipagem ganso é um dos principais temas desse capítulo.
 Tipagem estática::
     A((("static typing"))) abordagem tradicional das linguagens de tipos estáticos como C e Java;
     suportada desde o Python 3.5 pelo módulo `typing`,
@@ -453,7 +453,7 @@ depois.
 
 Quando bem aplicada, tipagem pato não é loucamente insegura ou difícil de depurar e
 manter. A próxima seção mostra alguns padrões de programação úteis para detectar
-protocolos dinâmicos sem recorrer a verificações explícitas.((("",
+protocolos dinâmicos sem recorrer a checagens explícitas.((("",
 startref="monkey13")))((("", startref="Prun13")))
 
 [[defensive_duck_prog_sec]]
@@ -502,7 +502,7 @@ encontrar.
 Naturalmente, seria ruim passar o argumento para `list()` se os dados não devem
 ser copiados, ou por seu tamanho ou porque quem chama a função, por projeto,
 espera que os itens sejam modificados internamente, como no caso de
-`random.shuffle`. Neste caso, uma verificação durante a execução como
+`random.shuffle`. Neste caso, uma checagem durante a execução como
 `isinstance(x, abc.MutableSequence)` seria a melhor opção,
 
 Se você estiver com receio de produzir um gerador infinito—algo que não é um
@@ -654,8 +654,8 @@ de um objeto, e em vez disso se dedicar a assegurar que o objeto implementa os
 nomes, assinaturas e semântica dos métodos necessários para o uso pretendido).
 
 Em Python, isso essencialmente significa evitar o uso de `isinstance` para
-verificar o tipo do objeto (sem nem mencionar a abordagem ainda pior de
-verificar, por exemplo, se `type(foo) is bar`&#x2014;que é corretamente
+checar o tipo do objeto (sem nem mencionar a abordagem ainda pior de
+checar, por exemplo, se `type(foo) is bar`&#x2014;que é corretamente
 considerado um anátema, pois inibe até as formas mais simples de herança!).
 
 No geral, a abordagem da tipagem pato continua muito útil em inúmeros
@@ -732,7 +732,7 @@ Como se vê, `abc.Sized` reconhece `Struggle` como uma `subclasse`, sem necessid
 
 Então, aqui está minha mensagem de despedida: sempre que você estiver implementando uma classe que incorpore qualquer dos conceitos representados nas ABCs de `number`, `collections.abc` ou em outro framework que estiver usando, se assegure (caso necessário) de ser uma subclasse ou de registrar sua classe com a ABC correspondente.
 No início de seu programa usando uma biblioteca ou framework que definam classes que omitiram esse passo, registre você mesmo as classes.
-Daí, quando precisar verificar se (tipicamente) um argumento é, por exemplo, "uma sequência", verifique se:
+Daí, quando precisar checar se (tipicamente) um argumento é, por exemplo, "uma sequência", verifique se:
 [source, python]
 ----
 isinstance(the_arg, collections.abc.Sequence)
@@ -756,7 +756,7 @@ A intenção também pode ficar explícita através do registro de uma subclasse
 [NOTE]
 ====
 Detalhes sobre o uso de `register` são tratados em <<virtual_subclass_sec>>, mais adiante nesse mesmo capítulo.
-Por hora, aqui está um pequeno exemplo: dada a classe `FrenchDeck`, se eu quiser que ela passe em uma verificação como `(FrenchDeck, Sequence)`, posso torná-la uma _subclasse virtual_ da ABC `Sequence` com as seguintes linhas:
+Por hora, aqui está um pequeno exemplo: dada a classe `FrenchDeck`, se eu quiser que ela passe em uma checagem como `(FrenchDeck, Sequence)`, posso torná-la uma _subclasse virtual_ da ABC `Sequence` com as seguintes linhas:
 
 [source, python]
 ----
@@ -766,18 +766,18 @@ Sequence.register(FrenchDeck)
 ====
 
 O uso de `isinstance` e `issubclass` se torna mais aceitável se você está verificando ABCs em vez de classes concretas.
-Se usadas com classes concretas, verificações de tipo limitam o polimorfismo—um recurso essencial da programação orientada a objetos.
+Se usadas com classes concretas, checagens de tipo limitam o polimorfismo—um recurso essencial da programação orientada a objetos.
 Mas com ABCs esses testes são mais flexíveis.
-Afinal, se um componente não implementa uma ABC sendo uma subclasse—mas implementa os métodos necessários—ele sempre pode ser registrado posteriormente e passar naquelas verificações de tipo explícitas.
+Afinal, se um componente não implementa uma ABC sendo uma subclasse—mas implementa os métodos necessários—ele sempre pode ser registrado posteriormente e passar naquelas checagens de tipo explícitas.
 
-Entretanto, mesmo com ABCs, você deve se precaver contra o uso excessivo de verificações com `isinstance`, pois isso poder ser um ((("code smells"))) __code smell__— sintoma de um design ruim.
+Entretanto, mesmo com ABCs, você deve se precaver contra o uso excessivo de checagens com `isinstance`, pois isso poder ser um ((("code smells"))) __code smell__— sintoma de um design ruim.
 
-Normalmente _não_ é bom ter uma série de `if/elif/elif` com verificações de `isinstance` executando ações diferentes, dependendo do tipo de objeto: nesse caso você deveria estar usando polimorfismo—isto é, projetando suas classes para permitir ao interpretador enviar chamadas para os métodos corretos, em vez de codificar diretamente a lógica de envio em blocos `if/elif/elif`.
+Normalmente _não_ é bom ter uma série de `if/elif/elif` com checagens de `isinstance` executando ações diferentes, dependendo do tipo de objeto: nesse caso você deveria estar usando polimorfismo—isto é, projetando suas classes para permitir ao interpretador enviar chamadas para os métodos corretos, em vez de codificar diretamente a lógica de envio em blocos `if/elif/elif`.
 
-Por outro lado, não há problema em executar uma verificação com `isinstance` contra uma ABC se você quer garantir um contrato de API:
+Por outro lado, não há problema em executar uma checagem com `isinstance` contra uma ABC se você quer garantir um contrato de API:
 "Cara, você precisa implementar isso se quiser me chamar," como costuma dizer o revisor técnico Lennart Regebro.
 Isso é especialmente útil em sistemas com arquiteturas modulares extensíveis por plug-ins.
-Fora dos frameworks, tipagem pato é muitas vezes mais simples e flexível que verificações de tipo.
+Fora dos frameworks, tipagem pato é muitas vezes mais simples e flexível que checagens de tipo.
 
 Por fim, em seu ensaio Alex reforça mais de uma vez a necessidade de coibir a criação de ABCs.
 Uso excessivo de ABCs imporia cerimônia a uma linguagem que se tornou popular por ser prática e pragmática.
@@ -919,7 +919,7 @@ Isso é explicado no box seguinte.
 `issubclass` com as ABCs `Hashable` and `Iterable`. Se `isinstance(obj,
 Hashable)` retorna `True`, is significa apenas que a classe de `obj` implementa
 ou herda `+__hash__+`. Mas se `obj` é uma tupla contendo itens _unhashable_,
-então `obj` não é _hashable_, apesar do resultado positivo da verificação com
+então `obj` não é _hashable_, apesar do resultado positivo da checagem com
 `isinstance`.
 O revisor técnico Jürgen Gmach mostrou que a tipagem pato oferece
 o modo mais preciso de determinar se uma instância é _hashable_: chamar `hash(obj)`.
@@ -1304,9 +1304,9 @@ Sequence.register(memoryview)
 Vários outros tipo nativos estão registrados com as ABCs em _&#x5f;collections_abc.py_.
 Esses registros ocorrem apenas quando aquele módulo é importado,
 o que não causa problema, pois você terá mesmo que importar o módulo para obter as ABCs.
-Por exemplo, você precisa importar `MutableMapping` de `collections.abc` para verificar algo como `isinstance(my_dict, MutableMapping)`.
+Por exemplo, você precisa importar `MutableMapping` de `collections.abc` para checar algo como `isinstance(my_dict, MutableMapping)`.
 
-Criar uma subclasse de uma ABC ou se registrar com uma ABC são duas maneiras explícitas de fazer nossas classes passarem verificações com `issubclass` e `isinstance` (que também se apoia em `issubclass`).
+Criar uma subclasse de uma ABC ou se registrar com uma ABC são duas maneiras explícitas de fazer nossas classes passarem checagens com `issubclass` e `isinstance` (que também se apoia em `issubclass`).
 Mas algumas ABCs também suportam tipagem estrutural.
 A próxima seção explica isso.
 
@@ -1369,11 +1369,11 @@ class Sized(metaclass=ABCMeta):
 ====
 <1> Se há um atributo chamado `+__len__+` no `+__dict__+` de qualquer classe listada em `+C.__mro__+` (isto é, `C` e suas superclasses)...
 <2> ...retorna `True`, sinalizando que `C` é uma subclasse virtual de `Sized`.
-<3> Caso contrário retorna `NotImplemented`, para permitir que a verificação de subclasse continue.
+<3> Caso contrário retorna `NotImplemented`, para permitir que a checagem de subclasse continue.
 
 [NOTE]
 ====
-Se você tiver interesse nos detalhes da verificação de subclasse,
+Se você tiver interesse nos detalhes da checagem de subclasse,
 estude o código-fonte do método `+ABCMeta.__subclasscheck__+` no Python 3.6:
 https://fpy.li/13-26[_Lib/abc.py_].
 Cuidado: ele tem muitos ifs e duas chamadas recursivas.
@@ -1384,8 +1384,10 @@ O código-fonte em C relevante está em https://fpy.li/13-28[_cpython/Modules/&#
 ====
 
 É assim que `+__subclasshook__+` permite às ABCs suportarem a tipagem estrutural.
-Você pode formalizar uma interface com uma ABC, você pode fazer `isinstance` verificar com a ABC,
-e ainda ter um classe sem qualquer relação passando uma verificação de `issubclass` porque ela implementa um certo método.
+Você pode formalizar uma interface com uma ABC,
+você pode fazer checagens `isinstance` com aquela ABC,
+e ainda ter um classe sem qualquer relação de herança
+aprovada por uma checagem de `issubclass` porque ela implementa um certo método.
 (ou porque ela faz o que quer que seja necessário para convencer um `+__subclasshook__+` a dar a ela seu aval).
 
 É uma boa ideia implementar `+__subclasshook__+` em nossas próprias ABCs? Provavelmente não.
@@ -1417,7 +1419,7 @@ e checagem de tipos estática sem protocolos não consegue lidar muito bem com a
 ====
 
 Vamos encerrar esse capítulo ilustrando os protocolos estáticos com dois exemplos simples, e uma discussão sobre as ABCs numéricas e protocolos.
-Começaremos mostrando como um protocolo estático torna possível anotar e verificar tipos na função `double()`, que vimos antes na <<types_defined_by_ops_sec>>.
+Começaremos mostrando como um protocolo estático torna possível anotar e checar tipos na função `double()`, que vimos antes na <<types_defined_by_ops_sec>>.
 
 [[typed_double_sec]]
 ==== A função double tipada
@@ -1477,7 +1479,7 @@ Aqui usamos `T` para assegurar que o tipo do resultado é o mesmo tipo de `self`
 Além disso observe que `repeat_count` está limitado nesse protocolo a `int`.
 <3> A variável de tipo `RT` é vinculada pelo protocolo `Repeatable`:
 o checador de tipos vai exigir que o tipo efetivo implemente `Repeatable`.
-<4> Agora o checador de tipos pode verificar que o parâmetro `x` é um objeto que pode ser multiplicado por um inteiro, e que o valor retornado tem o mesmo tipo que `x`.
+<4> Agora o checador de tipos pode checar que o parâmetro `x` é um objeto que pode ser multiplicado por um inteiro, e que o valor retornado tem o mesmo tipo que `x`.
 
 Este exemplo mostra porque o título da https://fpy.li/pep544[PEP 544] é
 "_Protocols: Structural subtyping (static duck typing)._ (Protocolos: Subtipagem estrutural (tipagem pato estática))."
@@ -1487,8 +1489,8 @@ O tipo nominal de `x`, argumento efetivamente passado a `double`, é irrelevante
 [[runtime_checkable_proto_sec]]
 ==== Protocolos estáticos checados durante a Execução
 
-No ((("static protocols", "runtime checkable", id="SPruntime13"))) Mapa de Tipagem (<<type_systems_described>>), `typing.Protocol` aparece na área de verificação estática—a metade inferior do diagrama.
-Entretanto, ao definir uma subclasse de `typing.Protocol`, você pode usar o decorador `@runtime_checkable` para fazer aquele protocolo aceitar verificações com `isinstance/issubclass` durante a execução.
+No ((("static protocols", "runtime checkable", id="SPruntime13"))) Mapa de Tipagem (<<type_systems_described>>), `typing.Protocol` aparece na área de checagem estática—a metade inferior do diagrama.
+Entretanto, ao definir uma subclasse de `typing.Protocol`, você pode usar o decorador `@runtime_checkable` para fazer aquele protocolo aceitar checagens com `isinstance/issubclass` durante a execução.
 Isso funciona porque `typing.Protocol` é uma ABC, assim suporta o `+__subclasshook__+` que vimos na <<subclasshook_sec>>.
 
 No Python 3.9, o módulo `typing` inclui sete protocolos prontos para uso que são verificáveis durante a execução.
@@ -1502,7 +1504,7 @@ Aqui estão dois deles, citados diretamente da https://fpy.li/13-30[documentaç�
     An ABC with one abstract method, `+__float__+`.
     ("Uma ABC com um método abstrato, `+__float__+`.")
 
-Esse((("numeric types", "checking for convertibility"))) protocolos foram projetados para verificar a "convertibilidade" de tipos numéricos:
+Esse((("numeric types", "checking for convertibility"))) protocolos foram projetados para checar a "convertibilidade" de tipos numéricos:
 se um objeto `o` implementa `+__complex__+`,
 então deveria ser possível obter um `complex` invocando `complex(o)`— pois o método especial `+__complex__+` existe para suportar a função embutida [.keep-together]#`complex()`#.
 
@@ -1530,7 +1532,7 @@ A chave é o método abstrato `+__complex__+`.footnote:[O atributo `+__slots__+`
 Durante a checagem de tipo estática, um objeto será considerado _consistente-com_ o protocolo `SupportsComplex` se implementar um método `+__complex__+` que recebe apenas `self` e retorna um `complex`.
 
 Graças ao decorador de classe `@runtime_checkable`, aplicado a `SupportsComplex`,
-aquele protocolo também pode ser utilizado em verificações com `isinstance` no <<repeatable_protocol_demo_ex>>.
+aquele protocolo também pode ser utilizado em checagens com `isinstance` no <<repeatable_protocol_demo_ex>>.
 
 [[repeatable_protocol_demo_ex]]
 .Usando `SupportsComplex` durante a execução
@@ -1585,7 +1587,7 @@ Nessa seção eu queria demonstrar que um protocolo verificável durante a execu
 
 [TIP]
 ====
-Se você estiver usando um checador de tipos externo, há uma vantagem nas verificações explícitas com `isinstance`:
+Se você estiver usando um checador de tipos externo, há uma vantagem nas checagens explícitas com `isinstance`:
 quando você escreve uma instrução `if` onde a condição é `isinstance(o, MyType)`,
 então o Mypy pode inferir que dentro do bloco `if`, o tipo do objeto `o` é _consistente-com_ `MyType`.
 ====
@@ -1658,10 +1660,10 @@ Agora que vimos como usar protocolos estáticos durante a execução com tipos p
 precisamos discutir as limitações de protocolos verificáveis durante a execução.((("", startref="SPruntime13")))
 
 [[protocol_type_hints_ignored]]
-==== Limitações das verificações de protocolo durante a execução
+==== Limitações das checagens de protocolo durante a execução
 
 Vimos((("static protocols", "limitations of runtime protocol checks"))) que dicas de tipo são geralmente ignoradas durante a execução,
-e isso também afeta o uso de verificações com `isinstance` or `issubclass` com protocolos estáticos.
+e isso também afeta o uso de checagens com `isinstance` or `issubclass` com protocolos estáticos.
 
 Por exemplo, qualquer classe com um método `+__float__+`
 é considerada—durante a execução—uma subclasse virtual de `SupportsFloat`,
@@ -1703,7 +1705,7 @@ True
 True
 ----
 
-Então temos resultados enganosos: as verificações durante a execução usando `SupportsFloat`
+Então temos resultados enganosos: as checagens durante a execução usando `SupportsFloat`
 sugerem que você pode converter um `complex` para `float`, mas na verdade isso gera um erro de tipo.
 
 
@@ -1712,11 +1714,11 @@ sugerem que você pode converter um `complex` para `float`, mas na verdade isso 
 O problema específico com o tipo `complex` foi resolvido no Python 3.10.0b4, com a remoção do método `+complex.__float__+`.
 
 Mas o problema geral persiste:
-Verificações com `isinstance`/`issubclass` só olham para a presença ou ausência de métodos,
+checagens com `isinstance`/`issubclass` só olham para a presença ou ausência de métodos,
 sem checar sequer suas assinaturas, muito menos suas anotações de tipo.
 E isso não vai mudar tão cedo, porque este tipo de checagem de tipos durante a execução traria um custo de processamento inaceitável.footnote:[Agradeço a Ivan Levkivskyi,
 co-autor da https://fpy.li/pep544[PEP 544] (sobre Protocolos),
-por apontar que checagem de tipo não é apenas uma questão de verificar se o tipo de `x` é `T`: é sobre determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro.
+por apontar que checagem de tipo não é apenas uma questão de checar se o tipo de `x` é `T`: é sobre determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro.
 Não é de se espantar que o Mypy leve alguns segundos para fazer uma checagem de tipos, mesmo em scripts Python curtos.]
 ====
 
@@ -1932,7 +1934,7 @@ Para encerrar o capítulo, vamos olhar as ABCs numéricas e sua possível substi
 
 Como((("static protocols", "numbers ABCS and numeric protocols", id="SPnumbers13")))((("numbers ABCs", id="number13")))((("numeric protocols", id="numpro13")))((("protocols", "numeric", id="Pnum13"))) vimos em <<numeric_tower_warning>>, as ABCs no pacote `numbers` da biblioteca padrão funcionam bem para checagem de tipos durante a execução.
 
-Se você precisa verificar um inteiro, pode usar `isinstance(x, numbers.Integral)` para aceitar `int`, `bool` (que é subclasse de `int`) ou outros tipos inteiros oferecidos por bibliotecas externas que registram seus tipos como subclasses virtuais das ABCs de `numbers`.
+Se você precisa checar um inteiro, pode usar `isinstance(x, numbers.Integral)` para aceitar `int`, `bool` (que é subclasse de `int`) ou outros tipos inteiros oferecidos por bibliotecas externas que registram seus tipos como subclasses virtuais das ABCs de `numbers`.
 Por exemplo, a NumPy tem https://fpy.li/13-39[21 tipos inteiros] — bem como várias variações de tipos de ponto flutuante registrados como `numbers.Real`, e números complexos com várias amplitudes de bits, registrados como `numbers.Complex`.
 
 [TIP]
@@ -2009,7 +2011,7 @@ Entretanto, na prática, o construtor embutido `complex()` trabalha com instânc
 [(1+0j), (1+0j), (1+0j), (1+0j), (1+0j), (1+0j)]
 ----
 
-Isso mostra que verificações de `SupportsComplex` com `isinstance` sugerem que todas aquelas conversões para `complex` falhariam, mas ela são bem sucedidas.
+Isso mostra que checagens de `SupportsComplex` com `isinstance` sugerem que todas aquelas conversões para `complex` falhariam, mas ela são bem sucedidas.
 Na mailing list typing-sig,
 Guido van Rossum indicou que o `complex` embutido aceita um único argumento,
 e essa é a razão daquelas conversões funcionarem.
@@ -2036,7 +2038,7 @@ são _consistente-com_ `SupportsComplex`, apesar deles não implementarem `+__co
 
 [TIP]
 ====
-Só encontrei resultados inesperados usando verificações com `isinstance` em conjunto com os protocolos numéricos `Supports*` quando fiz experiências de conversão de ou para `complex`.
+Só encontrei resultados inesperados usando checagens com `isinstance` em conjunto com os protocolos numéricos `Supports*` quando fiz experiências de conversão de ou para `complex`.
 Se você não usa números complexos, pode confiar naqueles protocolos em vez das ABCs de `numbers`.
 ====
 
@@ -2062,7 +2064,7 @@ onde exploramos os esforços que interpretador Python faz para que os protocolos
 Então vimos como fazer uma classe implementar um protocolo durante a execução,
 através da adição de métodos extra via _monkey patching_.
 A seção sobre tipagem pato terminou com sugestões de programação defensiva,
-incluindo a detecção de tipos estruturais sem verificações explícitas com `isinstance` ou `hasattr`, usando `try/except` e falhando rápido.
+incluindo a detecção de tipos estruturais sem checagens explícitas com `isinstance` ou `hasattr`, usando `try/except` e falhando rápido.
 
 Após Alex Martelli introduzir a tipagem ganso em <<waterfowl_essay>>,
 vimos como criar subclasses de ABCs existentes,
@@ -2151,7 +2153,7 @@ apresenta a justificativa para as ABCs.
 A https://fpy.li/13-53[PEP 3141--A Type Hierarchy for Numbers] (EN)
 apresenta as ABCs do https://fpy.li/13-54[módulo `numbers`],
 mas a discussão no Mypy issue https://fpy.li/13-55[#3186 "int is not a Number?"]
-inclui alguns argumentos sobre a razão da torre numérica ser inadequada para verificação estática de tipo.
+inclui alguns argumentos sobre a razão da torre numérica ser inadequada para checagem estática de tipo.
 Alex Waygood escreveu uma
 https://fpy.li/13-56[resposta abrangente no StackOverflow], discutindo formas de anotar tipos numéricos.
 
@@ -2201,7 +2203,7 @@ na biblioteca padrão—exceto a adição do módulo `typing`, do qual nenhuma o
 parte da biblioteca padrão dependia.
 
 A PEP 484 suportava apenas tipos nominais com genéricos—similar ao Java—mas com
-a verificação estática efetiva sendo executada por ferramentas externas.
+a checagem estática efetiva sendo executada por ferramentas externas.
 Recursos importantes não existiam, como anotações de variáveis, tipos embutidos
 genéricos, e protocolos.
 
@@ -2253,7 +2255,7 @@ amostra que suportam todas as quatro abordagens.
 Go é claramente uma linguagem de tipo estáticos na tradição do Pascal, mas ela
 foi a pioneira da tipagem pato estática—pelo menos entre as linguagens mais
 usadas hoje. Também coloquei Go no quadrante da tipagem ganso por causa
-de sua sintaxe especial para verificação de tipo (_type assertion_),
+de sua sintaxe especial para checagem de tipo (_type assertion_),
 que permitem tratar tipos dinamicamente durante a execução.
 
 No ano 2000, só existiam linguagens populares nos quadrantes diametralmente opostos 
