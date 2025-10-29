@@ -395,7 +395,7 @@ Vamos voltar ao exemplo de teste de checagem de números primos de<<naive_multip
 [[multicore_prime_redux_sec]]
 ==== Checador de primos multinúcleo redux
 
-Na <<code_for_multicore_prime_sec>>, estudamos _procs.py_, um script que verificava se alguns números grandes eram primos usando `multiprocessing`.
+Na <<code_for_multicore_prime_sec>>, estudamos _procs.py_, um script que checava se alguns números grandes eram primos usando `multiprocessing`.
 No <<proc_pool_py>> resolvemos o mesmo problema com o programa _proc_pool.py_, usando um pass:[<code>ProcessPool&#x200b;Executor</code>]. Do primeiro `import` até a chamada a `main()` no final, _procs.py_ tem 43 linhas de código não-vazias, e _proc_pool.py_ tem 31—28% mais curto.
 
 [[proc_pool_py]]
@@ -411,7 +411,7 @@ include::../code/20-executors/primes/proc_pool.py[tags=PRIMES_POOL]
 <3> Em vez de decidirmos por nós mesmos quantos processos de trabalho serão usados se um argumento não for passado na linha de comando, atribuímos `None` a `workers` e deixamos o `ProcessPoolExecutor` decidir.
 <4> Aqui criei o `ProcessPoolExecutor` antes do bloco `with` em ➐, para poder mostrar o número real de processos na próxima linha.
 <5> `_max_workers_` é um atributo de instância não-documentado de um `ProcessPoolExecutor`. Decidi usá-lo para mostrar o número de processos de trabalho criados quando a variável `workers` é `None`. O _Mypy_ corretamente reclama quando eu acesso esse atributo, então coloquei o comentário `type: ignore` para silenciar a reclamação.
-<6> Ordena os números a serem verificados em ordem descendente. Isso vai mostrar a diferença no comportamento de _proc_pool.py_ quando comparado a _procs.py_. Veja a explicação após esse exemplo.
+<6> Ordena os números a serem checados em ordem descendente. Isso vai mostrar a diferença no comportamento de _proc_pool.py_ quando comparado a _procs.py_. Veja a explicação após esse exemplo.
 <7> Usa o `executor` como um gerenciador de contexto.
 <8> A chamada a `executor.map` retorna as instâncias de `PrimeResult` retornadas por `check` na mesma ordem dos argumentos `numbers`.
 
@@ -465,7 +465,7 @@ Aqui está o motivo para aquele comportamento de _proc_pool.py_:
 * Por default, _proc_pool.py_ usa um número de processos de trabalho igual ao número de CPUs—isso é o que [.keep-together]#`ProcessPoolExecutor`# faz quando `max_workers` é `None`. Nesse laptop são então 12 processos.
 * Como estamos submetendo `numbers` em ordem descendente, o primeiro é 9999999999999999; com 9 como divisor, ele retorna rapidamente.
 * O segundo número é 9999999999999917, o maior número primo na amostra. Ele vai demorar mais que todos os outros para checar.
-* Enquanto isso, os 11 processos restantes estarão verificando outros números, que são ou primos ou compostos com fatores grandes ou compostos com fatores muito pequenos.
+* Enquanto isso, os 11 processos restantes estarão checando outros números, que são ou primos ou compostos com fatores grandes ou compostos com fatores muito pequenos.
 * Quando o processo de trabalho encarregado de 9999999999999917 finalmente determina que ele é primo, todos os outros processos já completaram suas últimas tarefas, então os resultados aparecem logo depois.
 
 [NOTE]

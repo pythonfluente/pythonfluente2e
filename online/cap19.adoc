@@ -727,7 +727,7 @@ Total time: 40.31
 
 Os resultados aparecem em três colunas:
 
-* O número a ser verificado.
+* O número a ser checado.
 * `P` se é um número primo, caso contrária, vazia.
 * Tempo decorrido para checar se aquele número específico é primo.
 
@@ -786,9 +786,9 @@ A última linha dos resultados mostra que _procs.py_ foi 4,2 vezes mais rápido 
 
 ==== Entendendo os tempos decorridos
 
-Observe((("process pools", "understanding elapsed times"))) que o tempo decorrido na primeira coluna é o tempo para checar aquele número específico. Por exemplo, `is_prime(7777777777777753)` demorou quase 8,4s para retornar `True`. Enquanto isso, outros processos estavam verificando outros números em paralelo.
+Observe((("process pools", "understanding elapsed times"))) que o tempo decorrido na primeira coluna é o tempo para checar aquele número específico. Por exemplo, `is_prime(7777777777777753)` demorou quase 8,4s para retornar `True`. Enquanto isso, outros processos estavam checando outros números em paralelo.
 
-Há 20 números para serem verificados. Escrevi _procs.py_ para iniciar um número de processos de trabalho igual ao número de núcleos na CPU, como determinado por `multiprocessing.cpu_count()`.
+Há 20 números para serem checados. Escrevi _procs.py_ para iniciar um número de processos de trabalho igual ao número de núcleos na CPU, como determinado por `multiprocessing.cpu_count()`.
 
 O tempo total neste caso é muito menor que a soma dos tempos decorridos para cada checagem individual. Há algum tempo gasto em iniciar processos e na comunicação entre processos, então o resultado final é que a versão multiprocessos é apenas cerca de 4,2 vezes mais rápida que a sequencial. Isso é bom, mas um pouco desapontador, considerando que o código inicia 12 processos, para usar todos os núcleos desse laptop.
 
@@ -824,16 +824,16 @@ include::../code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_TOP]
 <1> Na tentativa de emular `threading`, `multiprocessing` fornece `multiprocessing.SimpleQueue`, mas esse é um método vinculado a uma instância pré-definida de uma classe de nível mais baixo, `BaseContext`.
 Temos que chamar essa `SimpleQueue` para criar uma fila. Por outro lado, não podemos usá-la em dicas de tipo.
 <2> `multiprocessing.queues` contém a classe `SimpleQueue` que precisamos para dicas de tipo.
-<3> `PrimeResult` inclui o número verificado. Manter `n` junto com os outros campos do resultado simplifica a exibição mais tarde.
+<3> `PrimeResult` inclui o número checado. Manter `n` junto com os outros campos do resultado simplifica a exibição mais tarde.
 <4> Isso é um apelido de tipo para uma `SimpleQueue` que a função `main` (<<primes_procs_main_ex>>) vai usar para enviar os números para os processos que farão a checagem.
 <5> Apelido de tipo para uma segunda `SimpleQueue` que vai coletar os resultados em `main`. Os valores na fila serão tuplas contendo o número a ser testado e uma tupla `Result`.
 <6> Isso é similar a _sequential.py_.
-<7> `worker` recebe uma fila com os números a serem verificados, e outra para colocar os resultados.
+<7> `worker` recebe uma fila com os números a serem checados, e outra para colocar os resultados.
 <8> Nesse código, usei o número `0` como uma _pílula venenosa_: um sinal para que o processo encerre. Se `n` não é `0`, continue com o loop.footnote:[Nesse exemplo, `0` é uma sentinela conveniente. `None` também é comumente usado para essa finalidade, mas usar `0` simplifica a dica de tipo para `PrimeResult` e a implementação de `worker`.]
 <9> Invoca a checagem de número primo e coloca o `PrimeResult` na fila.
 <10> Devolve um `PrimeResult(0, False, 0.0)`, para informar ao loop principal que esse processo terminou seu trabalho.
 <11> `procs` é o número de processos que executarão a checagem de números primos em paralelo.
-<12> Coloca na fila `jobs` os números a serem verificados.
+<12> Coloca na fila `jobs` os números a serem checados.
 <13> Cria um processo filho para cada `worker`. Cada um desses processos executará o loop dentro de sua própria instância da função `worker`, até encontrar um `0` na fila `jobs`.
 <14> Inicia cada processo filho.
 <15> Coloca um `0` na fila de cada processo, para encerrá-los.
@@ -876,12 +876,12 @@ include::../code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_MAIN]
 <2> `jobs` e `results` são as filas descritas no <<primes_procs_top_ex>>.
 <3> Inicia `proc` processos para consumir `jobs` e informar `results`.
 <4> Recupera e exibe os resultados; `report` está definido em pass:[<img src="callouts/6.png" alt="6"/>].
-<5> Mostra quantos números foram verificados e o tempo total decorrido.
+<5> Mostra quantos números foram checados e o tempo total decorrido.
 <6> Os argumentos são o número de `procs` e a fila para armazenar os resultados.
 <7> Percorre o loop até que todos os processos terminem.
 <8> Obtém um `PrimeResult`. Chamar `.get()` em uma fila deixa o processamento bloqueado até que haja um item na fila. Também é possível fazer isso de forma não-bloqueante ou estabelecer um timeout. Veja os detalhes na documentação de https://docs.python.org/pt-br/3/library/queue.html#queue.SimpleQueue.get[`SimpleQueue.get`].
 <9> Se `n` é zero, então um processo terminou; incrementa o contador `procs_done`.
-<10> Senão, incrementa o contador `checked` (para acompanhar os números verificados) e mostra os resultados.
+<10> Senão, incrementa o contador `checked` (para acompanhar os números checados) e mostra os resultados.
 
 Os resultados não vão retornar na mesma ordem em que as tarefas foram submetidas. Por isso for necessário incluir `n` em cada tupla `PrimeResult`.
 De outra forma eu não teria como saber que resultado corresponde a cada número.
