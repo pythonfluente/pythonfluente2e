@@ -22,7 +22,7 @@ depois usa esse mapeamento para evitar computar novamente o resultado quando a
 função é chamada com argumentos já vistos. Isso pode acelerar muito uma
 aplicação.
 
-Para dominar esse recurso é preciso antes entender clausuras (_closures_)—
+Para dominar esse recurso, é preciso antes entender clausuras (_closures_)—
 nome dado à estrutura onde uma função captura variáveis presentes no escopo onde
 a função é definida, necessárias para a execução da função
 futuramente.footnote:[NT: Adotamos a tradução "clausura" para "closure".
@@ -55,7 +55,7 @@ Mas antes de chegar a esse objetivo, precisamos tratar de:
 
 * Como Python analisa a sintaxe de decoradores
 * Como Python decide se uma variável é local
-* Porque clausuras existem e como elas funcionam
+* Por que clausuras existem e como elas funcionam
 * Qual problema é resolvido por `nonlocal`
 
 Após criar essa base, chegaremos aos decoradores:
@@ -67,7 +67,7 @@ Após criar essa base, chegaremos aos decoradores:
 
 === Novidades neste capítulo
 
-Nesta((("decorators and closures", "significant changes to"))) edição
+Nesta((("decorators and closures", "significant changes to"))) edição,
 apresento o decorador de _caching_ `functools.cache` do Python
 3.9 antes do `functools.lru_cache`, que é mais antigo.
 A <<lru_cache_sec>> apresenta também o uso de `lru_cache`
@@ -207,7 +207,7 @@ módulo. Quando `register` é chamada, ela recebe o objeto função a ser decora
 como argumento—por exemplo, `<function f1 at 0x100631bf8>`.
 
 Após o carregamento do módulo, a lista `registry` contém referências para as
-duas funções decoradas: `f1` e `f2`. Essa funções, bem como `f3`, são executadas
+duas funções decoradas: `f1` e `f2`. Essas funções, bem como `f3`, são executadas
 apenas quando chamadas explicitamente por `main`.
 
 Se _registration.py_ for importado (e não executado como um script), a saída é
@@ -230,8 +230,9 @@ Nesse momento, se você inspecionar `registry`, verá isso:
 
 O ponto central do <<registration_ex>> é enfatizar que decoradores de função são
 executados assim que o módulo é importado, mas as funções decoradas só rodam
-quando são invocadas explicitamente. Isso ressalta a diferença entre
-_momento da importação_ e _momento da execução_ na operação de um módulo em Python.
+quando são invocadas explicitamente. Isso ressalta a diferença entre o
+_momento da importação_ e o _momento da execução_
+na operação de um módulo em Python.
 
 [[registration_deco_sec]]
 === Decoradores de registro
@@ -256,7 +257,7 @@ decoradores de registro podem ou não modificar as funções decoradas.
 
 Vamos ver um decorador de registro em ação na <<decorated_strategy>> (<<ch_design_patterns>>).
 
-A maioria dos decoradores modificam a função decorada. Eles normalmente fazem
+A maioria dos decoradores modifica a função decorada. Eles normalmente fazem
 isso definindo e devolvendo uma função interna para substituir a função
 decorada. Código que usa funções internas quase sempre depende de clausuras para
 operar corretamente. Para entender as clausuras, precisamos dar um passo atrás e
@@ -301,7 +302,7 @@ atribuirmos um valor a um `b` global e então chamarmos `f1`, funciona:
 
 Agora vamos ver um exemplo que pode ser surpreendente.
 
-Dê uma olhada na função `f2`, no <<ex_local_unbound>>. As primeiras duas linhas
+Leia com atenção a função `f2`, no <<ex_local_unbound>>. As primeiras duas linhas
 são as mesmas da `f1` do <<ex_global_undef>>, e então ela faz uma atribuição a
 `b`. Mas para com um erro no segundo `print`, antes da atribuição ser executada.
 
@@ -325,15 +326,15 @@ UnboundLocalError: local variable 'b' referenced before assignment
 ----
 ====
 
-Observe que o a saída começa com `3`, provando que o comando `print(a)` foi
+Observe que a saída começa com `3`, provando que o comando `print(a)` foi
 executado. Mas o segundo, `print(b)`, nunca roda. Quando vi isso pela primeira
-vez me espantei, pensava que o `6` deveria ser exibido, pois há uma variável
-global `b`, e a atribuição para a `b` local ocorre após `print(b)`.
+vez, me espantei. Achei que o `6` seria exibido, pois há uma variável
+global `b`, e a atribuição para a variável local `b` ocorre após `print(b)`.
 
-Mas o fato é que, quando Python compila o corpo da função, ele decide que `b` é
+Mas quando Python compila o corpo da função, ele decide que `b` é
 uma variável local, por ser atribuída dentro da função. O bytecode gerado
-reflete essa decisão, e tentará acessar `b` no escopo local. Mais tarde, quando a
-chamada `f2(3)` é realizada, o corpo de `f2` obtém e exibe o valor da variável
+reflete essa decisão. O código tentará acessar `b` no escopo local. Mais tarde, quando a
+chamada `f2(3)` acontece, o corpo de `f2` obtém e exibe o valor da variável
 local `a`, mas ao tentar obter o valor da variável local `b`, descobre que `b`
 não está vinculado a nada.
 
@@ -366,7 +367,7 @@ atribuir um novo valor a ela dentro da função, usamos a declaração `global`:
 
 Nos exemplos anteriores, vimos dois escopos em ação:
 
-O escopo global de módulo:: Composto((("scope", "module global scope"))) por
+O escopo global do módulo:: Composto((("scope", "module global scope"))) por
 nomes atribuídos a valores fora de qualquer bloco de classe ou função.
 
 O escopo local da função f3:: Composto((("scope", "function local scope"))) por
@@ -385,8 +386,8 @@ startref="DACvars09")))((("", startref="vsr09")))((("", startref="Svsr09")))
 ****
 
 O((("dis module")))((("bytecode, disassembling")))((("functions", "disassembling bytecode of")))
-módulo `dis` module oferece uma forma fácil de descompilar o
-bytecode de funções de Python. Leia no <<#ex_f1_dis>> e no <<#ex_f2_dis>> os
+módulo `dis` descompila o bytecode de funções.
+Leia no <<#ex_f1_dis>> e no <<#ex_f2_dis>> os
 bytecodes de `f1` e `f2`, do <<#ex_global_undef>> e do <<#ex_local_unbound>>,
 respectivamente.
 
@@ -445,7 +446,7 @@ natureza da variável—se ela é ou não local—não pode mudar no corpo da fu
 A máquina virtual (VM) do CPython que executa o bytecode é uma máquina de pilha
 (_stack machine_), então as operações `LOAD` e `POP` se referem à pilha. A descrição
 mais detalhada dos opcodes de Python está além da finalidade desse livro, mas
-eles estão documentados junto com o módulo, em
+eles estão documentados com o módulo, em
 https://fpy.li/5x["dis—Disassembler de bytecode de Python"].
 
 ****
@@ -472,9 +473,9 @@ acessar variáveis não-globais definidas fora de seu corpo.
 É um conceito difícil de entender, melhor ilustrado por um exemplo.
 
 Imagine uma função `avg`, para calcular a média de uma série de valores que
-cresce continuamente; por exemplo, o preço de diário de um produto
-através de toda a sua história. A cada dia, um novo preço é acrescentado,
-e a média é computada levando em conta todos os preços até ali.
+cresce continuamente; por exemplo, o preço diário de um produto
+ao longo de toda a sua história. A cada dia, um novo preço é acrescentado,
+e a média é computada levando em conta todos os preços até então.
 
 Começando do zero, `avg` poderia ser usada assim:
 
@@ -493,7 +494,7 @@ Como `avg` é definida, e onde fica o histórico com os valores anteriores?
 Para começar, o <<ex_average_oo>> mostra uma implementação baseada em uma classe.
 
 [[ex_average_oo]]
-.average_oo.py: uma classe para calcular uma média contínua
+.average_oo.py: uma classe para calcular uma média cumulativa
 ====
 [source, python]
 ----
@@ -526,7 +527,7 @@ O <<ex_average_fn>>, a seguir, é uma implementação funcional, usando a funç�
 ordem superior `make_averager`.
 
 [[ex_average_fn]]
-.average.py: uma função de ordem superior para a clacular uma média contínua
+.average.py: uma função de ordem superior para a calcular uma média cumulativa
 ====
 [source, python]
 ----
@@ -604,7 +605,7 @@ que representa o corpo compilado da função. O <<ex_average_demo2>> demonstra i
 
 O valor de `series` é armazenado no atributo `+__closure__+` da função 
 `avg`. Cada item em `+avg.__closure__+` corresponde a um nome em `+__code__+`.
-Esses itens são `cells`, e tem um atributo chamado `cell_contents`, onde o valor
+Esses itens são `cells`, e têm um atributo chamado `cell_contents`, onde o valor
 real pode ser encontrado. O <<ex_average_demo3>> mostra esses atributos.
 
 [[ex_average_demo3]]
@@ -623,7 +624,7 @@ real pode ser encontrado. O <<ex_average_demo3>> mostra esses atributos.
 
 Resumindo: uma clausura é uma função que retém os vínculos das variáveis livres
 que existem quando a função é definida, de forma que elas possam ser usadas mais tarde,
-quando a função for invocada mas o escopo de sua definição não puder mais ser acessado.
+quando a função for invocada, mas o escopo de sua definição não puder mais ser acessado.
 
 Note que a única situação na qual uma função pode ter de lidar com variáveis
 externas não-globais é quando ela estiver aninhada dentro de outra função, e
@@ -635,17 +636,17 @@ startref="DACclos09")))
 
 A((("decorators and closures", "nonlocal declarations",
 id="DACnonlocal09")))((("nonlocal keyword", id="nonlocal09")))((("keywords",
-"nonlocal keyword", id="Knon09"))) implementação anterior de `make_averager` funciona
+"nonlocal keyword", id="Knon09"))) implementação anterior de `make_averager` funciona,
 mas é ineficiente. No <<ex_average_fn>>, armazenamos todos os valores na série
 histórica e calculamos sua `sum` cada vez que `averager` é invocada. Uma
-implementação melhor armazenaria apenas o total e número de itens até aquele
+implementação melhor armazenaria apenas o total e a contagem de itens até aquele
 momento, e calcularia a média com esses dois números.
 
 O <<ex_average_broken>> é uma implementação errada, apenas para ilustrar.
 Consegue ver onde o código quebra?
 
 [[ex_average_broken]]
-.Um função de ordem superior incorreta para calcular um média contínua sem armazenar todo o histórico
+.Função de ordem superior incorreta para calcular uma média cumulativa sem armazenar todo o histórico
 ====
 [source, python]
 ----
@@ -675,9 +676,9 @@ UnboundLocalError: local variable 'count' referenced before assignment
 ----
 
 O problema é que a instrução `count += 1` significa o mesmo que
-`count = count + 1`, quando `count` é um número ou qualquer tipo imutável. Então estamos
-efetivamente atribuindo um valor a `count` no corpo de `averager`, e isso a
-torna uma variável local. O mesmo problema afeta a variável `total`.
+`count = count + 1`, quando `count` é um número ou qualquer tipo imutável.
+Então, estamos realmente atribuindo um valor a `count` no corpo de `averager`,
+e isso a torna uma variável local. O mesmo problema afeta a variável `total`.
 
 Não tivemos esse problema no <<ex_average_fn>>, porque nunca atribuimos nada ao
 nome `series`; apenas chamamos `series.append` e invocamos `sum` e `len` nele.
@@ -692,10 +693,10 @@ A palavra reservada `nonlocal` foi introduzida no Python 3 para contornar esse
 problema. Ela permite declarar uma variável livre, mesmo quando
 a variável é atribuída dentro da função. Se um novo valor é atribuído a uma variável
 `nonlocal`, o valor armazenado na clausura é atualizado. 
-O <<ex_average_fixed>> é a implemetação correta da versão otimizada de `make_averager`.
+O <<ex_average_fixed>> é a implementação correta da versão otimizada de `make_averager`.
 
 [[ex_average_fixed]]
-.Calcula uma média contínua sem armazenar todo o histórico
+.Calcula uma média cumulativa sem armazenar todo o histórico
 ====
 [source, python]
 ----
@@ -726,7 +727,7 @@ Leonardo Rochael por sugerir esse resumo.]
 
 * Se há uma declaração `global x`, então `x` está vinculada à variável global `x`
 do módulo.footnote:[Python não tem um escopo global de programa, apenas escopos globais de módulos.]
-* Se há uma declaração `nonlocal x`, então `x` está vinculdada à variável local `x` na função circundante mais próxima de onde `x` for definida.
+* Se há uma declaração `nonlocal x`, então `x` está vinculada à variável local `x` na função circundante mais próxima de onde `x` for definida.
 * Se `x` é um parâmetro ou tem um valor atribuído a si no corpo da função, então `x` é uma variável local.
 * Se `x` é referenciada mas não atribuída, e não é um parâmetro:
 ** `x` será procurada nos escopos locais do corpos das funções circundantes (os escopos não-locais).
@@ -786,7 +787,7 @@ $ python3 clockdeco_demo.py
 
 ==== Como isso funciona
 
-Lembre-se que esse código:
+Lembre-se de que esse código:
 
 [source, python]
 ----
@@ -819,8 +820,8 @@ dos panos). De fato, se você importar o módulo `clockdeco_demo` e verificar o
 >>>
 ----
 
-Então `factorial` agora tem uma referência para a função `clocked`. Daqui por
-diante, cada vez que `factorial(n)` for chamada, `clocked(n)` será executada.
+O nome `factorial` agora é uma referência para a função `clocked`. Daqui por
+diante, cada vez que `factorial(n)` for invocada, `clocked(n)` será executada.
 Essencialmente, `clocked` faz o seguinte:
 
 . Registra o tempo inicial `t0`.
@@ -847,11 +848,11 @@ No _<<closures_soapbox>>_ escrevi mais sobre esse assunto.
 O decorador `clock` implementado no <<ex_clockdeco0>> tem alguns defeitos: ele
 não aceita argumentos nomeados, e encobre o `+__name__+` e o `+__doc__+` da
 função decorada. O <<ex_clockdeco2>> usa o decorador `functools.wraps` para
-copiar os atributos relevantes de `func` para `clocked`. E nessa nova versão os
-argumentos nomeados também são tratados corretamente.
+copiar os atributos relevantes de `func` para `clocked`.
+Nesta nova versão, os argumentos nomeados também são tratados corretamente.
 
 [[ex_clockdeco2]]
-._clockdeco.py_: um decorador `clock` melhora
+._clockdeco.py_: um decorador `clock` melhorado
 ====
 [source, python]
 ----
@@ -860,7 +861,7 @@ include::../code/09-closure-deco/clock/clockdeco.py[]
 ====
 
 O `functools.wraps` é apenas um dos decoradores prontos para uso da biblioteca
-padrão. Na próxima seção veremos o decorador mais impressionante oferecido por
+padrão. Na próxima seção, veremos o decorador mais útil oferecido por
 `functools`: `cache`.((("", startref="DACdecimp09")))
 
 
@@ -892,7 +893,7 @@ lenta, que gera o __enésimo__ número da sequência de Fibonacci, como mostra o
 <<ex_fibo_demo>>.
 
 [[ex_fibo_demo]]
-.O modo recursivo e extremamente dispendioso de calcular o _enésimo_ número na série de Fibonacci
+.Algoritmo recursivo e ridiculamente dispendioso para calcular o enésimo número na série de Fibonacci
 ====
 [source, python]
 ----
@@ -955,7 +956,7 @@ Veja a <<lru_cache_sec>> para uma alternativa que suporta versões anteriores de
 [TIP]
 ====
 Para((("stacked decorators"))) entender os decoradores empilhados (_stacked decorators_),
-lembre-se que `@` é açúcar sintático para aplicar a função decoradora à função
+lembre-se de que `@` é açúcar sintático para aplicar a função decoradora à função
 abaixo dela. Se houver mais de um decorador, eles se comportam como
 invocações aninhadas.
 
