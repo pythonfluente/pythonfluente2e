@@ -1003,8 +1003,8 @@ Em outro teste, para calcular `fibonacci(30)`, o <<fibo_demo_cache_ex>> fez as
 sem cache, demorou 12,09s em um notebook Intel Core i7, porque chamou
 `fibonacci(1)` 832.040 vezes, num total de 2.692.537 chamadas!
 
-Todos os argumentos recebidos pela função decorada devem ser _hashable_, pois o
-o _cache_ interno usa um `dict` para armazenar os resultados, e as chaves
+Todos os argumentos recebidos pela função decorada devem ser _hashable_,
+pois o _cache_ usa um `dict` para armazenar os resultados, e as chaves
 são formadas pelos argumentos posicionais e nomeados usados nas chamadas.
 
 Além de tornar viáveis esses algoritmos recursivos tolos, `@cache` brilha de
@@ -1143,7 +1143,7 @@ mas são cercados por `<p></p>`, com quebras de linha `<br/>` inseridas antes de
 e a sequência inteira é apresentada como uma lista HTML.
 <5> Apesar de ser um subtipo de `int`, `bool` recebe um tratamento especial.
 <6> Mostra `Fraction` como uma fração.
-<7> Mostra `float` e `Decimal` com a fração equivalemte aproximada.
+<7> Mostra `float` e `Decimal` com a fração equivalente aproximada.
 
 ===== Despacho único de funções
 
@@ -1153,25 +1153,28 @@ tipo de dado que queremos tratar de forma distinta. Uma solução possível em
 Python seria transformar `htmlize` em uma função de despacho, com uma cadeia de
 `if/elif/…` ou `match/case/…` chamando funções especializadas como
 `htmlize_str`, `htmlize_int`, etc. Isso não é extensível pelos usuários de nosso
-módulo, e é desajeitado: com o tempo, a despachante `htmlize` de tornaria grande
-demais, e o acoplamento entre ela e as funções especializadas seria forte demais.
+módulo, e é desajeitado: com o tempo, a função `htmlize` ficaria muito longa,
+e o acoplamento entre ela e as funções especializadas seria forte demais.
 
 O decorador((("functools module", "functools.singledispatch decorator",
 id="functoolssingle09"))) `functools.singledispatch` permite que diferentes
 módulos contribuam para a solução geral, e que você forneça facilmente funções
 especializadas, mesmo para tipos pertencentes a pacotes externos que não possam
-ser editados. Se você decorar um função simples com `@singledispatch`, ela se
-torna o ponto de entrada para uma _função genérica_: Um grupo de funções que
+ser editados. Se você decorar uma função simples com `@singledispatch`, ela se
+torna o ponto de entrada para uma _função genérica_: um grupo de funções que
 executam a mesma operação de formas diferentes, dependendo do tipo do primeiro
-argumento. É isso que signifca o termo _single dispatch_ (despacho único).
+argumento. Este é o significado do termo _single dispatch_ (despacho único).
 Se mais argumentos fossem usados para selecionar a função específica,
-temos despacho múltiplo (_multiple dispatch_).
+teríamos despacho múltiplo (_multiple dispatch_), um recurso nativo em
+linguagens como Common Lisp, Julia e C#.
+
 O <<singledispatch_ex>> mostra como funciona o despacho único.
 
 [WARNING]
 ====
 `functools.singledispatch` existe desde o Python 3.4, mas só passou a suportar
-dicas de tipo no Python 3.7. As últimas duas funções no <<singledispatch_ex>>
+a sintaxe com dicas de tipo no Python 3.7.
+As últimas duas funções no <<singledispatch_ex>>
 ilustram a sintaxe que funciona em todas as versões de Python desde a 3.4.
 ====
 
@@ -1247,7 +1250,7 @@ https://fpy.li/5y[`singledispatch`].
 
 O `@singledispatch` não foi criado para trazer para Python a sobrecarga de
 métodos no estilo de Java. Uma classe única com muitas variações sobrecarregadas
-de um método é melhor que uma única função com uma longa sequênca de blocos
+de um método é melhor que uma única função com uma longa sequência de blocos
 `if/elif/elif/elif`. Mas as duas soluções concentram responsabilidade demais
 em uma única unidade de código—a classe ou a função.
 A vantagem de `@singledispatch` é seu suporte à extensão modular: cada módulo
@@ -1290,7 +1293,7 @@ include::../code/09-closure-deco/registration_abridged.py[tags=REGISTRATION_ABRI
 Para((("registration decorators", id="regdecor09"))) tornar mais fácil a
 habilitação ou desabilitação do registro executado por `register`, faremos esse
 último aceitar um parâmetro opcional `active` que, se `False`, não registra a
-função decorada. Conceitualmente, a nova função `register` não é um decorador
+função decorada. Conceitualmente, a nova função `register` não é um decorador,
 mas uma fábrica de decoradores. Quando chamada, ela devolve o decorador que será
 realmente aplicado à função alvo.
 
@@ -1376,10 +1379,10 @@ funções.((("", startref="regdecor09")))
 
 ==== Um decorador parametrizado de cronometragem
 
-Nessa((("clock decorators", "parameterized", id="CDparam09"))) seção vamos
+Nesta((("clock decorators", "parameterized", id="CDparam09"))) seção vamos
 revisitar o decorador `clock`, acrescentando um recurso: os usuários podem
-passar uma string de formatação, para controlar a saída do relatório sobre
-função cronometrada. Veja o <<clockdeco_param_ex>>.
+passar uma string para formatar o relatório sobre a função cronometrada.
+Veja o <<clockdeco_param_ex>>.
 
 [NOTE]
 ====
@@ -1479,14 +1482,14 @@ snooze(0.123) dt=0.124s
 [NOTE]
 ====
 
-Lennart Regebro—um dos revisores técnicos da primeira edição—argumenta seria
+Lennart Regebro—um dos revisores técnicos da primeira edição—argumenta que seria
 melhor programar decoradores como classes implementando `+__call__+`, e não como
-funções (caso dos exemplos nesse capítulo). Concordo que aquela abordagem é
+funções, como os exemplos neste capítulo. Concordo que aquela abordagem é
 melhor para decoradores não-triviais. Mas para explicar a ideia básica desse
-recurso da linguagem, funções são mais fáceis de entender. Para técnicas
-robustas de criação de decoradores, veja as referências na
-<<decorator_further>>, especialmente o blog de Graham Dumpleton e o módulo
-`wrapt`.
+recurso da linguagem, funções são mais fáceis de entender.
+Para conhecer técnicas mais robustas de criação de decoradores,
+veja as referências na <<decorator_further>>, especialmente o blog
+de Graham Dumpleton e o módulo `wrapt`.
 
 ====
 
@@ -1535,7 +1538,7 @@ Partimos de um decorador simples `@register`, sem uma função interna, e
 terminamos com um `@clock()` parametrizado envolvendo dois níveis de funções
 aninhadas.
 
-Decoradores de registro, apesar de serem essencialmente simples, tem aplicações
+Decoradores de registro, apesar de serem essencialmente simples, têm aplicações
 reais nos frameworks Python. Vamos aplicar a ideia de registro em uma
 implementação do padrão de projeto Estratégia, no <<ch_design_patterns>>.
 
@@ -1587,10 +1590,10 @@ como uma fábrica de decoradores, por exemplo, `@clock` ou `@clock()`. É a
 9.6. Definindo um Decorador Que Recebe um Argumento Opcional_)  desse livro de
 receitas.
 
-Michele Simionato criou um pacote com objetivo de "simplificar o uso de
-decoradores para o programador comum, e popularizar os decoradores através da
-apresentação de vários exemplos não-triviais", de acordo com a documentação. Ele
-está disponível no PyPI, no pacote https://fpy.li/9-9[_decorator_].
+Michele Simionato criou https://fpy.li/9-9[_decorator_],
+um pacote para "simplificar o uso de decoradores para o programador comum,
+e popularizar os decoradores através da apresentação de vários exemplos
+não-triviais", de acordo com sua documentação.
 
 Criada quando os decoradores ainda eram um recurso novo no Python, a página wiki
 https://fpy.li/9-10[_Python Decorator Library_] tem dezenas de exemplos. Como
@@ -1606,23 +1609,25 @@ Ela também inclui uma excelente revisão de como essa questão foi resolvida
 em outras linguagens dinâmicas (Perl, Ruby, JavaScript, etc.)
 e os prós e contras das opções de design disponíveis para Python.
 
-Em um nível mais teórico, a https://fpy.li/9-13[PEP 227--Statically Nested
-Scopes (_Escopos Estaticamente Aninhados_)] (EN) documenta a introdução do
+Em um nível mais teórico, a
+https://fpy.li/9-13[_PEP 227—Statically Nested Scopes_]
+(Escopos estaticamente Aninhados_) documenta a introdução do
 escopo léxico como um opção no Python 2.1 e como padrão no Python 2.2,
 explicando a justificativa e as opções de design para a implementação de
 clausuras no Python.
 
-A https://fpy.li/9-14[PEP 443] (EN) traz a justificativa e uma descrição
+A https://fpy.li/9-14[_PEP 443_] traz a justificativa e uma descrição
 detalhada do mecanismo de funções genéricas de despacho único. Um post de Guido
-van Rossum de março de 2005 https://fpy.li/9-15["Five-Minute Multimethods in
-Python" (_Multi-métodos em Python em Cinco Minutos_)] (EN), mostra os passos
-para uma implementação de funcões genéricas (também chamadas multi-métodos)
+van Rossum de março de 2005
+https://fpy.li/9-15[_Five-Minute Multimethods in Python_]
+(Multi-métodos de cinco minutos em Python_), mostra os passos
+para uma implementação de funções genéricas (também chamadas multi-métodos)
 usando decoradores. O código de multi-métodos de Guido é interessante, mas é
 apenas um exemplo didático. Para conhecer uma implementação de funções genéricas
 de despacho múltiplo moderna e pronta para uso em produção, veja a
-https://fpy.li/9-16[Reg] de Martijn Faassen–autor de
-https://fpy.li/9-17[Morepath], um framework web guiado por modelos e orientado a
-REST.
+https://fpy.li/9-16[_Reg_] de Martijn Faassen–autor de
+https://fpy.li/9-17[_Morepath_], um framework web guiado por modelos
+e orientado a REST.
 
 [[closures_soapbox]]
 .Ponto de vista
@@ -1640,7 +1645,7 @@ uma função é definida dentro de um determinado escopo, mas pode ser invocada 
 outros escopos. O problema é: como avaliar as variáveis livres? A solução
 mais simples de implementar chama-se "escopo dinâmico".
 Isso significa que variáveis livres são avaliadas olhando para dentro
-do ambiente onde a funcão é invocada.
+do ambiente onde a função é invocada.
 
 Se Python tivesse escopo dinâmico e não tivesse clausuras, poderíamos improvisar
 `avg` (similar ao <<ex_average_fn>>) desta forma:
@@ -1665,7 +1670,8 @@ então precisamos saber que `averager` (dentro de `make_averager`)
 se refere a uma lista chamada `series`.
 <2> Por trás da cortina, `series` acumula os valores cuja média será calculada.
 <3> Quando `series = [1]` é executada, a lista anterior é perdida.
-Isso poderia ocorrer por acidente, ao se tratar duas médias continuas independentes ao mesmo tempo.
+Isso poderia ocorrer por acidente,
+ao computar duas médias cumulativas independentes ao mesmo tempo.
 
 O ideal é que funções sejam opacas, sua implementação invisível para os usuários.
 Mas com escopo dinâmico, se a função usa variáveis livres, o programador precisa
@@ -1704,7 +1710,7 @@ escopo léxico não complica demais a definição de `eval`, mas pode tornar mai
 difícil escrever compiladores.
 ____
 
-Atualmente o escopo léxico é o padrão: variáveis livres são avaliadas
+Atualmente, o escopo léxico é o padrão: variáveis livres são avaliadas
 considerando o ambiente onde a função foi definida. O escopo léxico complica a
 implementação de linguagens com funções de primeira classe, pois requer o
 suporte a clausuras. Por outro lado, o escopo léxico torna o código-fonte mais
@@ -1746,7 +1752,7 @@ de forma recursiva, possibilitando assim um número ilimitado de
 responsabilidades adicionais. (p. 175 da edição em inglês)
 ____
 
-No Python, a funcão decoradora faz o papel de uma subclasse concreta de
+No Python, a função decoradora faz o papel de uma subclasse concreta de
 `Decorador`, e a função interna que ela devolve é uma instância do decorador. A
 função devolvida envolve a função a ser decorada, que é análoga ao componente no
 padrão de projeto. A função devolvida é transparente, pois se adapta à interface
@@ -1756,9 +1762,9 @@ empilhar decoradores, possibilitando assim um número ilimitado de comportamento
 adicionais".
 
 Veja que não estou sugerindo que decoradores de função devam ser usados para
-implementar o padrão decorador em programas Python. Apesar disso ser possível em
-situações específicas, em geral o padrão decorador é melhor implementado com
-classes representando o decorador e os componentes que ela vai envolver.((("",
+implementar o padrão decorador em programas Python. Pode até ser possível em
+situações específicas, mas em geral o padrão decorador é melhor implementado
+com classes representando o decorador e os componentes que ela vai envolver.((("",
 startref="DACsoap09")))
 
 ****
