@@ -42,15 +42,15 @@ Test for item assignment using non-string key::
 Tests for update using a `dict` or a sequence of pairs::
 
     >>> d.update({6:'six', '8':'eight'})
-    >>> sorted(d.keys())
-    ['0', '2', '4', '6', '8']
+    >>> list(d.keys())
+    ['2', '4', '0', '6', '8']
     >>> d.update([(10, 'ten'), ('12', 'twelve')])
-    >>> sorted(d.keys())
-    ['0', '10', '12', '2', '4', '6', '8']
-    >>> d.update([1, 3, 5])
+    >>> list(d.keys())
+    ['2', '4', '0', '6', '8', '10', '12']
+    >>> d.update([1, 3, 5])  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    TypeError: 'int' object is not iterable
+    TypeError: ...iterable...
 
 """
 # tag::STRKEYDICT[]
@@ -70,5 +70,4 @@ class StrKeyDict(collections.UserDict):  # <1>
 
     def __setitem__(self, key, item):
         self.data[str(key)] = item   # <4>
-
 # end::STRKEYDICT[]

@@ -2,7 +2,7 @@
 
 # tag::STRKEYDICT0_TESTS[]
 
-Tests for item retrieval using `d[key]` notation::
+Acesso a item com a notação `d[key]`:
 
     >>> d = StrKeyDict0([('2', 'two'), ('4', 'four')])
     >>> d['2']
@@ -14,7 +14,7 @@ Tests for item retrieval using `d[key]` notation::
       ...
     KeyError: '1'
 
-Tests for item retrieval using `d.get(key)` notation::
+Acesso a item com a notação `d.get(key)`:
 
     >>> d.get('2')
     'two'
@@ -24,7 +24,7 @@ Tests for item retrieval using `d.get(key)` notation::
     'N/A'
 
 
-Tests for the `in` operator::
+Operador `in`:
 
     >>> 2 in d
     True
