@@ -41,4 +41,5 @@ def draw(cls):
 
 
 if __name__ == '__main__':
-    draw(BaseException)
+    import numbers
+    draw(numbers.Number)

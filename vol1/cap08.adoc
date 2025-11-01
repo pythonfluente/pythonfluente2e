@@ -1417,23 +1417,32 @@ Para encerrar nossa discussão de ABCs em dicas de tipo, precisamos falar sobre 
 ===== A queda da torre numérica
 
 O((("numbers package")))((("numeric tower"))) pacote «`numbers`» [.small]#&#91;fpy.li/4d&#93;# define a assim chamada _torre numérica_ (_numeric tower_) descrita na «_PEP 3141—A Type Hierarchy for Numbers_» [.small]#&#91;fpy.li/pep3141&#93;#  .
-A torre é uma hierarquia linear de ABCs, com `Number` no topo:
+A torre é uma hierarquia linear de ABCs, com a classe `numbers.Number` no topo:
 
-* `Number`
-* `Complex`
-* `Real`
-* `Rational`
-* `Integral`
+----
+Number
+ │
+ └─ Complex
+       │
+       └─ Real
+             │
+             └─ Rational
+                   │
+                   └─ Integral
+----
 
-Esses ABCs funcionam perfeitamente para checagem de tipo durante a execução, mas eles não são suportados para checagem de tipo estática.
+Esses ABCs funcionam perfeitamente para checagem de tipo durante a execução,
+mas não servem para checagem de tipo estática.
 A seção «_Numeric Tower_» [.small]#&#91;fpy.li_/cardxvi&#93;# da PEP 484 rejeita as ABCs `numbers` e
 manda tratar os tipos nativos `complex`, `float`, e `int` como casos especiais,
 como explicado em <<int_complex_tip>>.
-Voltaremps a essa questão na «Seção 13.6.8» [.small]#&#91;vol.2, fpy.li/5g&#93;#, que é dedicada a comparar protocolos e ABCs
+Voltaremps a essa questão na «Seção 13.6.8» [.small]#&#91;vol.2, fpy.li/5g&#93;#,
+que é dedicada a comparar protocolos e ABCs.
 
-Na prática, se você quiser anotar argumentos numéricos para checagem estática de tipos, há algumas opções:
+Na prática, se você quiser anotar argumentos numéricos para checagem estática de tipos,
+há algumas opções:
 
-. Usar um dos tipos concretos (`int`, `float`, ou `complex`) como recomendado pela PEP 488.
+. Usar um dos tipos concretos (`int`, `float`, ou `complex`) como recomendado pela PEP 484.
 . Declarar um tipo union como `Union[float, Decimal, Fraction]`.
 . Se você quiser evitar a codificação explícita de tipos concretos, usar protocolos numéricos como `SupportsFloat`, tratados na «Seção 13.6.2» [.small]#&#91;vol.2, fpy.li/5h&#93;#.
 
@@ -1590,13 +1599,15 @@ então elas não precisam de algo equivalente à pseudo-classe `TypeVar` de Pyth
 
 Outro exemplo é a função `statistics.mode` da biblioteca padrão, que retorna o ponto de dado mais comum de uma série.
 
-Aqui é um exemplo de uso da «documentação» [.small]#&#91;fpy.li/4e&#93;#:
+Eis um exemplo de uso da «documentação» [.small]#&#91;fpy.li/4e&#93;#:
 
 [source, python]
 ----
 >>> mode([1, 1, 2, 3, 3, 3, 3, 4])
 3
 ----
+
+<<<
 
 Sem o uso de `TypeVar`, `mode` poderia ter uma assinatura como a apresentada no <<mode_float_ex>>.
 
