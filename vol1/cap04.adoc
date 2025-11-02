@@ -45,7 +45,6 @@ O suporte((("Unicode text versus bytes", "significant changes to"))) ao Unicode 
 então o acréscimo mais notável é a <<finding_chars_sec>>,
 descrevendo um utilitário de linha de comando para busca no banco de dados Unicode—uma forma de encontrar
 gatinhos sorridentes ou hieroglifos do Egito antigo.
-
 Vale a pena mencionar que o suporte a Unicode no Windows ficou melhor e mais simples desde o Python 3.6,
 como veremos na <<encoding_defaults>>.
 
@@ -73,11 +72,10 @@ conceito de "string" é simples: uma string é uma sequência de caracteres.
 O problema está na definição de "caractere".
 
 Em 2023, a melhor definição de "caractere" que temos é um caractere Unicode.
-Consequentemente, os itens que compõe um `str` de Python 3 são caracteres Unicode,
+Consequentemente, os itens que compõem uma `str` de Python 3 são caracteres Unicode,
 como os itens de um objeto `unicode` no Python 2.
 Em contraste, os itens de uma `str` no Python 2 são bytes, assim como os itens num objeto `bytes` de Python 3.
 
-<<<
 O padrão Unicode separa explicitamente a identidade dos caracteres de representações binárias específicas:
 
 * A identidade de um caractere é chamada de ((("code points")))ponto de código (__code point__).
@@ -119,16 +117,16 @@ b'caf\xc3\xa9'  # <3>
 <1> A `str` `'café'` tem quatro caracteres Unicode.
 <2> Codifica `str` para `bytes` usando a codificação UTF-8.
 <3> `bytes` literais são prefixados com um `b`.
-<4> `bytes` `b` tem cinco bytes (o ponto de código para "é" é codificado com dois bytes em UTF-8).
+<4> `bytes` `b` tem cinco bytes (a letra acentuada "é" tem dois bytes em UTF-8).
 <5> Decodifica `bytes` para `str` usando a codificação UTF-8.
 
 [TIP]
 ====
-Um jeito fácil de memorizar a distinção entre `.decode()` e `.encode()` é se convencer
-que sequências de bytes podem ser enigmáticos dumps de código de máquina,
-ao passo que objetos `str` Unicode são texto "humano".
-Daí que faz sentido _decodificar_ `bytes` em `str`, para obter texto legível por seres humanos,
-e _codificar_ `str` em `bytes`, para armazenamento ou transmissão.
+Um jeito fácil de memorizar a distinção entre `.decode()` e `.encode()` é
+reconhecer que sequências de bytes podem ser dumps de código de máquina ilegíveis,
+ao passo que objetos `str` Unicode são texto "humano" legível.
+Daí que faz sentido _decodificar_ `bytes` para `str`, para obter texto legível por seres humanos,
+e _codificar_ `str` em `bytes`, para armazenamento ou transmissão por máquinas.
 ====
 
 Apesar do `str` de Python 3 ser praticamente igual ao tipo `unicode` de Python 2 com um novo nome,
@@ -173,7 +171,7 @@ bytearray(b'caf\xc3\xa9')
 bytearray(b'\xa9')
 ----
 ====
-<1> `bytes` pode ser criado a partir de uma `str`, dada uma codificação.
+<1> Podemos criar `bytes` a partir de uma `str`, dada uma codificação.
 <2> Cada item é um inteiro em `range(256)`.
 <3> Fatias de `bytes` também são `bytes`&#x2014;mesmo fatias de um único byte.
 <4> A sintaxe literal para `bytearray` é `bytearray(…)` com um literal `bytes` como argumento.
@@ -187,18 +185,19 @@ Para todos os outros tipos de sequência no Python, um item não é o mesmo que 
 ====
 
 Apesar de sequências binárias serem, na verdade, sequências de inteiros,
-sua notação literal reflete o fato delas frequentemente embutirem texto ASCII.
-Assim, quatro formas diferentes de apresentação são utilizadas, dependendo do valor de cada byte:
+sua notação literal reflete o fato de que elas muitas vezes contêm texto ASCII.
+Assim, quatro formas diferentes de apresentação são utilizadas,
+dependendo do valor de cada byte:
 
-* Para bytes com código decimais de 32 a 126&#x2014;do espaço ao `~` (til)—é usado o próprio caractere ASCII.
+* Para bytes com códigos decimais de 32 a 126&#x2014;do espaço ao `~` (til)—é usado o próprio caractere ASCII.
 * Para os bytes correspondendo a tab, quebra de linha, carriage return (CR) e `\`,
 são usadas as sequências de escape `\t`, `\n`, `\r`, e `\\`.
 * Se os dois delimitadores de string, `'` e `"`, aparecem na sequência de bytes,
 a sequência inteira é delimitada com `'`, e qualquer `'` dentro da sequência é precedida do caractere de escape,
 assim `\'`.footnote:[Trívia: O caractere ASCII "aspas simples",
 que o Python usa como delimitador de strings,
-na verdade, se chama APOSTROPHE no padrão Unicode.
-As aspas simples reais são assimétricas: a da esquerda é U+2018 e a da direita U+2019.]
+é denominado APOSTROPHE no padrão Unicode.
+As verdadeiras aspas simples são assimétricas: a da esquerda é U+2018 e a da direita U+2019.]
 * Para qualquer outro valor do byte, é usada uma sequência de escape hexadecimal (por exemplo, `\x00` é o byte nulo).
 
 É por isso que no <<ex_bytes_bytearray>> vemos `b&#39;caf\xc3\xa9'`:
@@ -296,7 +295,7 @@ utf_16  b'\xff\xfeE\x00l\x00 \x00N\x00i\x00\xf1\x00o\x00'
 
 A <<encodings_demo_fig>> mostra um conjunto de codecs gerando bytes a partir de caracteres
 como a letra "A" e o símbolo musical da clave de sol.
-Observe que as últimas três codificações usam múltplos bytes e tamanho variável.
+Observe que as últimas três codificações usam múltiplos bytes e tamanho variável.
 
 [role="width-90"]
 [[encodings_demo_fig]]
@@ -371,9 +370,10 @@ Para resolver o problema, você primeiro precisa entendê-lo.
 
 ==== Tratando o UnicodeEncodeError
 
-A maioria((("UnicodeEncodeError"))) dos codecs não-UTF entendem apenas um pequeno subconjunto dos caracteres Unicode.
-Ao converter texto para bytes, um `UnicodeEncodeError` será gerado se
-um caractere não estiver definido na codificação alvo,
+A maioria((("UnicodeEncodeError"))) dos codecs não-UTF compreendem
+apenas um pequeno subconjunto dos caracteres Unicode.
+Ao converter texto para bytes, um `UnicodeEncodeError` será gerado
+se um caractere não estiver definido na codificação alvo,
 a menos que seja fornecido um tratamento especial,
 passando um argumento `errors` para o método ou função de codificação.
 O comportamento para tratamento de erro é apresentado no <<ex_encoding>>.
@@ -410,7 +410,7 @@ b'S&#227;o Paulo'
 <3> `cp437` não consegue codificar o `'ã'` ("a" com til).
 O método default de tratamento de erro (`'strict'`) gera um `UnicodeEncodeError`.
 <4> O método de tratamento `errors='ignore'` pula os caracteres que não podem ser codificados;
-isso normalmente é uma péssima ideia, levando a perda silenciosa de informação.
+isso normalmente é uma péssima ideia, levando à perda silenciosa de informação.
 <5> Ao codificar, `errors='replace'` substitui os caracteres não-codificáveis por um `'?'`;
 há perda de informação, mas é mais fácil notar que algo está errado.
 <6> `'xmlcharrefreplace'` substitui os caracteres não-codificáveis por uma entidade XML.
@@ -455,8 +455,9 @@ entre os especialistas em fontes.footnote:[Agradeço ao Felipe Sanches do Garoa 
 me ensinar o termo "tofu", e me contar que a «coleção de fontes Noto» [.small]#&#91;fpy.li/5s&#93;#
 é um projeto permanente para juntar todos os glifos necessários para evitar tofu em textos Unicode.
 "Noto" refere-se ao ideal "no tofu" (sem tofu).]
-Por exemplo, a palavra mojibake em japonês pode aparecer como quatro tofus: 文字化け.
-Aqui, o motivo é que o programa `asciidoctor-pdf` que usei para gerar o livro impresso
+Por exemplo, a palavra mojibake image:../images/mojibake.png[fit=line] pode aparecer como quatro tofus: 文字化け.
+Na frase anterior, os caracteres kanji corretos são uma imagem PNG.
+Infelizmente o programa `asciidoctor-pdf` que usei para gerar o livro impresso
 usa um subconjunto da fonte Noto que não tem glifos kanji.
 Lamento essa falha técnica. Pesquisei muito, mas não consegui resolver a tempo.
 Pelo menos a versão HTML está sem tofu, nos principais navegadores modernos.
@@ -503,12 +504,13 @@ criado exatamente para representar caracteres desconhecidos.
 UTF-8((("SyntaxError"))) é a codificação default para código-fonte no Python 3,
 da mesma forma que ASCII era o default no Python 2.
 Se você carregar um módulo _.py_ contendo dados que não estejam em UTF-8,
-sem declaração codificação, receberá uma mensagem como essa:
+sem declaração de codificação, receberá uma mensagem como essa:
 
 ----
 include::../code/04-text-byte/syntax-msg.txt[]
 ----
 
+<<<
 Como o UTF-8 está amplamente instalado em sistemas GNU/Linux e macOS,
 um cenário onde isso tem mais chance de ocorrer é na abertura de um
 arquivo _.py_ criado no Windows, com `cp1252`.
@@ -538,8 +540,8 @@ e não se preocupar com os comentários `coding`.
 Se seu editor não suporta UTF-8, é hora de trocar de editor.
 ====
 
-Suponha que você tem um arquivo de texto, seja ele código-fonte ou poesia,
-mas não sabe qual codificação foi usada.
+Suponha que você tenha um arquivo de texto, seja ele código-fonte ou poesia,
+mas não saiba qual codificação foi usada.
 Como detectar a codificação correta? Respostas na próxima seção.
 
 
@@ -552,8 +554,8 @@ Você precisa ser informado.
 
 Alguns protocolos de comunicação e formatos de arquivo, como o HTTP e o XML,
 contêm cabeçalhos que nos dizem explicitamente como o conteúdo está codificado.
-Você pode ter certeza que algumas sequências de bytes não estão em ASCII,
-pois elas contêm bytes com valores acima de 127,
+Você pode ter certeza de que algumas sequências de bytes não representam ASCII,
+pois contêm bytes com valores acima de 127,
 e o modo como o UTF-8 e o UTF-16 são construídos também limita as sequências de bytes possíveis.
 
 <<<
@@ -567,7 +569,7 @@ ou mesmo uma sequência não-aleatória de bytes de uma codificação diferente 
 seja acidentalmente decodificada como lixo no UTF-8, ao invés de gerar um `UnicodeDecodeError`.
 
 As razões para isso são que as sequências de escape do UTF-8 nunca usam caracteres ASCII,
-e tais sequências de escape tem padrões de bits que tornam muito difícil que dados aleatórios sejam UTF-8 válido por acidente.
+e tais sequências de escape têm padrões de bits que tornam muito difícil que dados aleatórios sejam UTF-8 válido por acidente.
 Portanto, se você consegue decodificar como UTF-8 alguns bytes com valor maior que 127,
 é altamente provável que o texto esteja em UTF-8.
 
@@ -577,12 +579,13 @@ e tratava um `UnicodeDecodeError` decodificando via `cp1252`.
 É feio, mas funciona.
 ****
 
-Entretanto, considerando que as linguagens humanas também tem suas regras e restrições,
-uma vez que você supõe que uma série de bytes é um((("plain text"))) texto puro,
-pode ser possível intuir sua codificação usando heurística e estatística.
-Por exemplo, se bytes com valor `b'\x00'` bytes forem comuns,
-é provável que seja uma codificação de 16 ou 32 bits, e não um esquema de 8 bits,
-pois caracteres nulos em texto simples são erros.
+Entretanto, considerando que as línguas humanas também têm suas regras e restrições,
+uma vez que você supõe que uma série de bytes é "texto puro" (_plain text_),
+pode ser viável determinar sua codificação usando heurística e estatística.
+Por exemplo, se bytes com valor `b'\x00'` forem comuns,
+é provável que seja uma codificação de 16 ou 32 bits,
+e não UTF-8 ou qualquer codificação de 8 bits,
+pois caracteres nulos não aparecem em texto puro.
 Quando a sequência de bytes \`b'\x20\x00'` aparece com frequência,
 é mais provável que esse seja o caractere de espaço (U+0020) na codificação UTF-16LE,
 e não o obscuro caractere U+2000 (`EN QUAD`)—seja lá o que for isso.
@@ -658,10 +661,10 @@ Se o BOM estiver presente, supõe-se que ele será filtrado pelo codec UTF-16,
 então recebemos apenas o conteúdo textual efetivo do arquivo,
 sem o `ZERO WIDTH NO-BREAK SPACE` inicial.
 
-O padrão Unicode diz que se um arquivo é UTF-16 e não tem um BOM,
+Segundo a norma Unicode, quando um arquivo é UTF-16 e não tem um BOM,
 deve-se presumir que ele é UTF-16BE (_big-endian_).
 Entretanto, a arquitetura x86 da Intel é _little-endian_,
-daí que há uma grande quantidade de UTF-16 _little-endian_ e sem BOM no mundo.
+por isso há muito texto UTF-16 _little-endian_ sem BOM por aí.
 
 Toda essa questão de ordenação dos bytes (_endianness_)
 só afeta codificações que usam palavras de máquina com mais de um byte, como UTF-16 e UTF-32.
@@ -715,10 +718,11 @@ A maioria dos frameworks web funciona assim, e raramente tocamos em `bytes` ao u
 No Django, por exemplo, suas views devem produzir `str` em Unicode;
 o próprio Django se encarrega de codificar a resposta para `bytes`, usando UTF-8 como default.
 
-Python 3 torna mais fácil seguir o conselho do sanduíche de Unicode,
-pois a função `open()` decodifica na leitura e
-a codifica na escrita, ao lidar com arquivos em modo texto.
-Dessa forma, tudo que você recebe de `my_file.read()` e passa para `my_file.write(text)` são objetos `str`.
+O Python 3 facilita seguir o conselho do sanduíche de Unicode,
+pois a função `open()` por padrão abre arquivos em modo texto.
+Neste caso, tudo que você recebe de `my_file.read()` e
+passa para `my_file.write(text)` são objetos `str`.
+A decodificação e a decodificação são automáticas.
 
 Assim, usar arquivos de texto é aparentemente simples.
 Mas se você confiar nas codificações default, pode acabar levando uma mordida.
@@ -743,7 +747,7 @@ os bytes finais foram decodificados como os caracteres `'Ã©'` ao invés de `'�
 
 Executei o <<ex_cafe_file1>> no Python 3.8.1, 64 bits, no Windows 10 (build 18363).
 Os mesmos comandos rodando em um GNU/Linux ou um macOS recentes funcionam perfeitamente,
-pois a codificação default desses sistemas é UTF-8, dando a falsa impressão que tudo está bem.
+pois a codificação default desses sistemas é UTF-8, dando a falsa impressão de que está tudo bem.
 Se o argumento de codificação fosse omitido ao abrir o arquivo para escrita,
 a codificação default do _locale_ seria usada, e poderíamos ler o arquivo corretamente usando a mesma codificação.
 Mas aí o script geraria arquivos com bytes diferentes dependendo da plataforma,
@@ -824,7 +828,7 @@ Há várias fontes de tais defaults, como mostra a próxima seção.
 
 Várias((("encoding", "encoding defaults", id="Edefault04")))
 configurações afetam os defaults de codificação para E/S no Python.
-Veja o script __default_encodings.py__ script no <<ex_default_encodings>>.
+Veja o script __default_encodings.py__ no <<ex_default_encodings>>.
 
 <<<
 [[ex_default_encodings]]
@@ -881,7 +885,7 @@ Active code page: 437
 <1> `chcp` mostra a página de código ativa para o console: `437`.
 <2> Executando __default_encodings.py__, com a saída direcionada para o console.
 <3> `locale.getpreferredencoding()` é a configuração mais importante.
-<4> Arquivos de texto usam`locale.getpreferredencoding()` como default.
+<4> Arquivos de texto usam `locale.getpreferredencoding()` como default.
 <5> A saída está direcionada para o console, então `sys.stdout.isatty()` é `True`.
 <6> Agora, `sys.stdout.encoding` não é a mesma que a página de código informada por `chcp`!
 
@@ -1055,8 +1059,8 @@ Assim, o melhor conselho sobre defaults de codificação é: não confie neles.
 Você evitará muitas dores de cabeça se seguir o conselho do sanduíche de Unicode,
 e sempre tratar codificações de forma explícita em seus programas.
 Infelizmente, o Unicode é trabalhoso mesmo se você converter seus `bytes` para `str` corretamente.
-As duas próximas seções tratam de assuntos que são simples no reino do ASCII,
-mas ficam muito complexos no planeta Unicode: normalização de texto
+As duas próximas seções tratam de assuntos simples no reino do ASCII,
+mas complicados no planeta Unicode: normalização de texto
 (isto é, transformar o texto em uma representação uniforme para comparações)
 e ordenação.((("", startref="Edefault04")))((("", startref="Tfile04")))((("", startref="UTVtext04")))
 
@@ -1066,8 +1070,8 @@ e ordenação.((("", startref="Edefault04")))((("", startref="Tfile04")))((("", 
 
 Comparações de strings((("Unicode text versus bytes", "normalizing Unicode for reliable comparisons",
 id="UTVnormal04")))((("strings", "normalizing Unicode for reliable comparisons", id="Snormal04")))
-são dificultadas pelo fato do Unicode permitir combinações de caracteres:
-sinais diacríticos e outras marcações que são sobrepostas ao caractere anterior,
+são complicadas porque o Unicode tem caracteres combinantes (_combining characters_):
+acentos e outras marcações que são sobrepostas ao caractere anterior,
 ambos aparecendo juntos como um só caractere quando impressos.
 
 Por exemplo, a palavra "café" pode ser composta de duas formas,
@@ -1094,7 +1098,7 @@ A solução é a `unicodedata.normalize()`.
 O primeiro argumento para essa função é uma dessas quatro strings: `'NFC'`, `'NFD'`, `'NFKC'`, e `'NFKD'`.
 Vamos começar pelas duas primeiras.
 
-A Forma Normal C (NFC)((("Normalization Form C (NFC)"))) combina os ponto de código para
+A Forma Normal C (NFC)((("Normalization Form C (NFC)"))) combina os pontos de código para
 produzir a string equivalente mais curta, enquanto a NFD decompõe,
 expandindo os caracteres compostos em caracteres base e separando caracteres combinados.
 Ambas as normalizações fazem as comparações funcionarem da forma esperada, como mostra o próximo exemplo:
@@ -1147,7 +1151,7 @@ True
 ----
 
 As outras duas formas de normalização são a NFKC e a NFKD, a letra K significando "compatibilidade".
-Essas são formas mais fortes de normalizaçào, afetando os assim chamados "caracteres de compatibilidade".
+Estas são formas mais fortes de normalização, afetando os "caracteres de compatibilidade".
 Um dos objetivos do Unicode é oferecer um único ponto de código "canônico" para cada caractere.
 Mas alguns caracteres aparecem mais de uma vez, por compatibilidade com codificações legadas.
 Por exemplo, o `µ` (`MICRO SIGN`, `U+00B5`),
@@ -1283,10 +1287,10 @@ include::../code/04-text-byte/normeq.py[]
 ----
 ====
 
-Além da normalização e do _case folding_ do Unicode—ambos partes desse padrão—algumas
-vezes faz sentido aplicar transformações mais profundas,
+Além da normalização e do _case folding_ da norma Unicode,
+às vezes pode ser útil aplicar transformações mais profundas,
 como, por exemplo, mudar `'café'` para `'cafe'`.
-Vamos ver quando e como na próxima seção.
+Veremos como na próxima seção.
 
 ==== "Normalização" extrema: removendo sinais diacríticos
 
@@ -1349,17 +1353,17 @@ include::../code/04-text-byte/simplify.py[tags=SHAVE_MARKS]
 <1> Apenas as letras "è", "ç", e "í" foram substituídas.footnote:[Perdão pelos tofu neste exemplo,
 são aspas duplas assimétricas e dois quadradinhos preto. 
 O exemplo está correto «PythonFluente.com» [.small]#&#91;fpy.li/5v&#93;#.]
-<2> Tanto "έ" quando "é" foram substituídas.
+<2> Tanto "έ" quanto "é" foram substituídas.
 
 A função `shave_marks` do <<ex_shave_marks>> funciona bem, mas talvez vá longe demais.
 Frequentemente, a razão para remover os sinais diacríticos é transformar texto de
 uma língua latina para ASCII puro, mas `shave_marks` também troca caracteres
-não-latinos–como letras gregas–que nunca se tornarão ASCII apenas pela remoção de acentos.
+não-latinos (como letras gregas) que nunca se tornarão ASCII apenas pela remoção de acentos.
 Então faz sentido analisar cada caractere base e remover as marcações anexas
 apenas se o caractere base for uma letra do alfabeto latino. É isso que o <<ex_shave_marks_latin>> faz.
 
 [[ex_shave_marks_latin]]
-.Função para remover marcações combinadas de caracteres latinos (comando de importação omitidos, pois isso é parte do módulo simplify.py do <<ex_shave_marks>>)
+.Função para remover marcações combinadas de caracteres latinos (imports omitidos, pois isso é parte do módulo simplify.py do <<ex_shave_marks>>)
 ====
 [source, python]
 ----
@@ -1372,13 +1376,13 @@ include::../code/04-text-byte/simplify.py[tags=SHAVE_MARKS_LATIN]
 <4> Detecta um novo caractere base e determina se ele é latino.
 <5> Recompõe todos os caracteres.
 
-Um passo ainda mais radical substituiria os símbolos comuns em textos de línguas européias
-(por exemplo, aspas curvas, travessões, os círculos de _bullet points_, etc)
+Um passo ainda mais radical substituiria os símbolos comuns em textos de línguas europeias
+(por exemplo, aspas curvas, travessões, os círculos de _bullet points_, etc.)
 em seus equivalentes `ASCII`. É isso que a função `asciize` faz no <<ex_asciize>>.
 
 <<<
 [[ex_asciize]]
-.Transforma alguns símbolos tipográficos européias em ASCII (este trecho também é parte do simplify.py do <<ex_shave_marks>>)
+.Transforma alguns símbolos tipográficos europeus em ASCII (este trecho também é parte do simplify.py do <<ex_shave_marks>>)
 ====
 [source, python]
 ----
@@ -1467,7 +1471,7 @@ módulo `locale`] "transforma uma string em uma que pode ser usada em comparaç�
 
 Para poder usar `locale.strxfrm`, você deve primeiro definir um _locale_ adequado para sua aplicação,
 e rezar para que o SO o suporte.
-A sequência de comando no <<ex_locale_sort>> pode funcionar para você.
+A sequência de instruções no <<ex_locale_sort>> pode funcionar para você.
 
 [[ex_locale_sort]]
 ._locale_sort.py_: Usando a função `locale.strxfrm` como chave de ordenamento
@@ -1494,7 +1498,7 @@ antes de usar `locale.strxfrm` como a chave de ordenação.
 Porém, aqui vão algumas ressalvas:
 
 * Como as configurações de _locale_ são globais, não é recomendado chamar `setlocale` em uma biblioteca.
-Sua aplicação ou framework deveria definir o _locale_ no início do processo, e não o mudar mais depois disso.
+Sua aplicação ou framework deveria definir o _locale_ no início do processo, e não mudá-lo depois.
 * O _locale_ desejado deve estar instalado no SO,
 caso contrário `setlocale` gera uma exceção de `locale.Error: unsupported locale setting`.
 * Você precisa saber como escrever corretamente o nome do locale.
@@ -1576,8 +1580,8 @@ não apenas a tabela mapeando pontos de código para nomes de caracteres,
 mas também metadados sobre os caracteres individuais e como eles se relacionam.
 Por exemplo, o banco de dados do Unicode registra se um caractere pode ser impresso,
 se é uma letra, um dígito decimal ou algum outro símbolo numérico.
-É assim que os métodos de `str` `isalpha`, `isprintable`, `isdecimal` e `isnumeric` funcionam.
-`str.casefold` também usa informação de uma tabela do Unicode.
+É assim que os métodos de `str` como `isalpha`, `isprintable`, `isdecimal` e `isnumeric` funcionam.
+O método `str.casefold` também usa informação de uma tabela do Unicode.
 
 [NOTE]
 ====
@@ -1587,10 +1591,10 @@ Os métodos de alto nível de `str` são mais fáceis de usar.
 Por exemplo,
 «`label.isalpha()`» [.small]#&#91;fpy.li/3f&#93;#
 devolve `True` se todos os caracteres em `label`
-pertencerem a uma das seguintes categorias: `Lm`, `Lt`, `Lu`, `Ll`, or `Lo`.
+pertencerem a uma das seguintes categorias: `Lm`, `Lt`, `Lu`, `Ll`, ou `Lo`.
 Para descobrir o que esses códigos significam, veja
 «_General Category_» [.small]#&#91;fpy.li/4-22&#93;#  no artigo «_Unicode character property_» [.small]#&#91;fpy.li/4-23&#93;#
-(EN) da Wikipedia em inglês.
+da Wikipedia em inglês.
 ====
 
 [[finding_chars_sec]]
@@ -1610,7 +1614,7 @@ image::../images/flpy_0405.png[]
 Você pode usar a função `name()` para criar aplicações que permitem aos usuários buscarem caracteres por nome.
 A <<cf_demo_fig>> demonstra o script de linha de comando _cf.py_,
 que recebe como argumentos uma ou mais palavras,
-e lista os caracteres que tem aquelas palavras em seus nomes Unicode oficiais.
+e lista os caracteres que têm aquelas palavras em seus nomes Unicode oficiais.
 O código-fonte completo de _cf.py_ aparece no <<ex_cfpy>>.
 
 [[cf_demo_fig]]
@@ -1664,11 +1668,10 @@ inclui funções para determinar se um caractere Unicode representa um número e
 se for esse o caso, seu valor numérico em termos humanos—em contraste com o número de seu ponto de código.
 
 O <<ex_numerics_demo>> demonstra o uso de `unicodedata.name()` e `unicodedata.numeric()`,
-junto com os métodos `.isdecimal()` e `.isnumeric()` de `str`.
+com os métodos `.isdecimal()` e `.isnumeric()` de `str`.
 
 [[ex_numerics_demo]]
-.Demo do banco de dados Unicode de metadados de caracteres numéricos
-(as notas explicativas descrevem cada coluna da saída)
+.Uso de metadados de caracteres numéricos (as notas explicativas descrevem cada coluna da saída)
 ====
 [source, python]
 ----
@@ -1680,7 +1683,7 @@ include::../code/04-text-byte/numerics_demo.py[tags=NUMERICS_DEMO]
 <3> Mostra `re_dig` se o caractere casa com a regex `r'\d'`.
 <4> Mostra `isdig` se `char.isdigit()` é `True`.
 <5> Mostra `isnum` se `char.isnumeric()` é `True`.
-<6> Valor numérico formatado com tamanho 5 e duas casa decimais.
+<6> Valor numérico formatado com tamanho 5 e duas casas decimais.
 <7> O nome Unicode do caractere.
 
 Executar o <<ex_numerics_demo>> gera a <<numerics_demo_fig>>,
@@ -1692,7 +1695,7 @@ image::../images/flpy_0407.png[Captura de tela de caracteres numéricos]
 
 A sexta coluna da <<numerics_demo_fig>> é o resultado da chamada a `unicodedata.numeric(char)` com o caractere.
 Ela mostra que o Unicode sabe o valor numérico de símbolos que representam números.
-Assim, se você quiser criar uma aplicação de planilha que suporta dígitos tamil ou numerais romanos, vá fundo!
+Assim, se você quiser criar uma aplicação de planilha que suporta numerais romanos ou dígitos da escrita tamil, vá fundo!
 
 A <<numerics_demo_fig>> mostra que a expressão regular `r'\d'` casa com o dígito "1" e com o dígito 3 da escrita devanágari,
 mas não com alguns outros caracteres considerados dígitos pela função `isdigit`.
@@ -1707,7 +1710,7 @@ Ao longo desse capítulo, usamos várias funções de `unicodedata`,
 mas há muitas outras que não mencionamos.
 Veja a documentação da biblioteca padrão para o «módulo `unicodedata`» [.small]#&#91;fpy.li/3g&#93;#.
 
-A seguir vamos dar uma rápida passada pelas APIs de modo dual,
+A seguir daremos uma passada pelas APIs de modo dual,
 com funções que aceitam argumentos `str` ou `bytes` e dão a eles tratamento especial
 dependendo do tipo.((("", startref="Cnumeric04")))((("", startref="UTVdatabase04")))
 
@@ -1723,7 +1726,7 @@ Alguns exemplos podem ser encontrados nos módulos `re` e `os`.
 ==== str versus bytes em expressões regulares
 
 Se((("regular expressions, str versus bytes in"))) você criar uma expressão regular com `bytes`,
-padrões tal como `\d` e `\w` vão casar apenas com caracteres ASCII;
+padrões como `\d` e `\w` vão casar apenas com caracteres ASCII;
 por outro lado, se esses padrões forem passados como `str`,
 eles vão casar com dígitos Unicode ou letras além do ASCII.
 O <<ex_re_demo>> e a <<fig_re_demo>> comparam como letras,
@@ -1744,7 +1747,7 @@ include::../code/04-text-byte/ramanujan.py[tags=RE_DEMO]
 <4> Essa string é unida à anterior no momento da compilação
 (veja https://fpy.li/3h["2.4.2. String literal concatenation"
 (_Concatenação de strings literais_)] em _A Referência da Linguagem Python_).
-<5> Uma string `bytes` é necessária para a busca com as expressões regulares `bytes`.
+<5> Precisamos de uma string de `bytes` para testar as expressões regulares de `bytes`.
 <6> O padrão `str` `r'\d+'` casa com os dígitos ASCII e tamil.
 <7> O padrão `bytes` `rb'\d+'` casa apenas com os bytes ASCII para dígitos.
 <8> O padrão `str` `r'\w+'` casa com letras, superescritos e dígitos tamil e ASCII.
@@ -1769,9 +1772,9 @@ Outro módulo importante é o `os`.
 ==== str versus bytes nas funções de os
 
 O((("os functions, str versus bytes in"))) kernel do GNU/Linux não conhece Unicode então, no mundo real,
-você pode encontrar nomes de arquivo compostos de sequências de bytes que
+você pode encontrar nomes de arquivos compostos de sequências de bytes que
 não são válidas em nenhum esquema razoável de codificação, e não podem ser decodificados para `str`.
-Esta é uma situação comum em servidores de arquivo com clientes usando uma variedade de diferentes
+Esta é uma situação comum em servidores de arquivos com clientes que usam uma variedade de diferentes
 SO.
 
 Para mitigar esse problema, todas as funções do módulo `os` que
@@ -1810,7 +1813,7 @@ o módulo `os` fornece funções especiais de codificação e decodificação,
 Ambas as funções aceitam argumentos dos tipos `str`, `bytes` ou,
 desde o Python 3.6, um objeto que implemente a interface `os.PathLike`.
 
-O Unicode é um buraco de coelho bem fundo.
+O Unicode é uma toca de coelho bem funda.
 É hora de encerrar nossa exploração de `str` e `bytes`.((("", startref="UTVdual04")))((("", startref="Sdual04")))
 
 
@@ -1818,7 +1821,7 @@ O Unicode é um buraco de coelho bem fundo.
 
 Começamos((("Unicode text versus bytes", "overview of")))
 o capítulo descartando a noção de que `1 caractere == 1 byte`.
-A medida que o mundo adota o Unicode,
+À medida que o mundo adota o Unicode,
 precisamos manter o conceito de strings de texto separado das
 sequências binárias que as representam em arquivos, e Python 3 reforça essa separação.
 
@@ -1841,11 +1844,10 @@ Se você não especificar a codificação, terminará com um programa que conseg
 é incompatível entre diferentes plataformas, devido a codificações default conflitantes.
 Expusemos então as diferentes configurações de codificação usadas pelo Python, e como detectá-las.
 
-Uma triste realidade para usuários de Windows é o fato dessas configurações
-muitas vezes terem valores diferentes dentro da mesma máquina,
-e desses valores serem mutuamente incompatíveis;
-usuários do GNU/Linux e do macOS, por outro lado, vivem em um lugar mais feliz,
-onde o UTF-8 é o default por (quase) toda parte.
+Uma triste realidade para usuários de Windows é que tais configurações
+muitas vezes têm valores diferentes e incompatíveis na mesma máquina;
+usuários do GNU/Linux e do macOS, por outro lado, têm a vantagem de
+encontrar o UTF-8 como default por (quase) toda parte.
 
 O Unicode fornece múltiplas formas de representar alguns caracteres,
 então a normalização é um pré-requisito para a comparação de textos.
@@ -1896,7 +1898,7 @@ um valioso estudo de caso, dado que a mudança do antigo tipo `str` para o novo 
 e esta é uma preocupação central em uma biblioteca projetada para detectar codificações.
 
 Se você conhece Python 2, mas é novo no Python 3, o artigo
-«_What's New in Python 3.0_ (O quê há de novo no Python 3.0)» [.small]#&#91;fpy.li/4-36&#93;#,
+«_What's New in Python 3.0_ (O que há de novo no Python 3.0)» [.small]#&#91;fpy.li/4-36&#93;#,
 de Guido van Rossum, tem 15 pontos resumindo as mudanças, com vários links.
 Guido começa com uma afirmação brutal:
 "Tudo que você achava que sabia sobre dados binários e Unicode mudou."
@@ -1912,12 +1914,12 @@ de David Beazley e Brian K. Jones, tem várias receitas tratando de normalizaç�
 sanitização de texto, e execução de operações orientadas para texto em sequências de bytes.
 O capítulo 5 trata de arquivos e E/S, e inclui a
 _Recipe 5.17. Writing Bytes to a Text File_ 
-(Receita 5.17. Escrevendo Bytes em um Arquivo de Texto_),
-mostrando que qualquer arquivo de texto há sempre uma sequência de bytes
+(Escrevendo Bytes em um Arquivo de Texto),
+mostrando que qualquer arquivo de texto contêm no fundo uma sequência de bytes
 que pode ser acessada diretamente quando necessário.
 Mais tarde no mesmo livro, o módulo `struct` é usado na
 _Recipe 6.11. Reading and Writing Binary Arrays of Structures_
-(Receita 6.11. Lendo e Escrevendo Arrays de Registros Binários).
+(Lendo e Escrevendo Arrays de Registros Binários).
 
 O blog "Python Notes" de Nick Coghlan tem dois posts muito relevantes para esse capítulo:
 «_Python 3 and ASCII Compatible Binary Protocols_
@@ -1938,7 +1940,7 @@ Os livros
 de Jukka K. Korpela (O'Reilly) e
 «_Unicode Demystified_ (Unicode Desmistificado)» [.small]#&#91;fpy.li/4-43&#93;#,
 de Richard Gillam (Addison-Wesley) não são específicos sobre Python,
-nas foram muito úteis para meu estudo dos conceitos do Unicode.
+mas foram muito úteis para meu estudo dos conceitos do Unicode.
 «_Programming with Unicode_ (Programando com Unicode)» [.small]#&#91;fpy.li/4-44&#93;#, de Victor Stinner,
 é um livro gratuito, publicado pelo próprio autor, tratando de Unicode em geral,
 bem como de ferramentas e APIs no contexto dos principais sistemas operacionais
@@ -2020,8 +2022,9 @@ e então use todos os caracteres necessários para a ortografia correta.
 [role="soapbox-title"]
 *O que é "texto puro"?*
 
-Para((("Soapbox sidebars", "plain text"))) qualquer um que lide diariamente com texto em línguas diferentes do inglês
-"texto puro" (_plain text_) não significa "ASCII". O «_Unicode Glossary_» [.small]#&#91;fpy.li/4-55&#93;#
+"Texto puro"((("Soapbox sidebars", "plain text"))) (_plain text_) não significa "ASCII"
+para quem lida diariamente com texto em línguas diferentes do inglês.
+O «_Unicode Glossary_» [.small]#&#91;fpy.li/4-55&#93;#
 define((("plain text"))) _plain text_ dessa forma (nossa tradução):
 
 [quote]
@@ -2054,7 +2057,7 @@ O mundo do Unicode está em constante expansão e, nas fronteiras, as ferramenta
 Nem todos os caracteres que eu queria exibir estavam disponíveis nas fontes usadas para renderizar o livro.
 Por isso tive que usar capturas de tela do terminal em alguns exemplos desse capítulo.
 Por outro lado, os terminais do Ubuntu e do macOS exibem a maioria do texto Unicode
-muito bem—incluindo os caracteres kanji da palavra "mojibake": 文字化け.
+muito bem—incluindo os caracteres kanji da palavra "mojibake": image:../images/mojibake-cinza.png[fit=line].
 ****
 
 <<<
@@ -2066,7 +2069,7 @@ muito bem—incluindo os caracteres kanji da palavra "mojibake": 文字化け.
 A((("Soapbox sidebars", "code points")))((("code points"))) documentação oficial de Python
 evita falar sobre como os pontos de código de uma `str` são armazenados na memória.
 Realmente, é um detalhe de implementação.
-Em teoria, não importa: qualquer que seja a representação interna,
+Em teoria, não importa: independentemente da representação interna,
 toda `str` precisa ser codificada para `bytes` na saída.
 
 Na memória, Python 3 armazena cada `str` como uma sequência de pontos de código,
@@ -2087,14 +2090,14 @@ Caso contrário, o interpretador muda para uma representação de tamanho variá
 como aquela do tipo `long` de Python 2.
 É bom ver as boas ideias se espalhando.
 
-Entretanto, sempre podemos contar com pythonista Armin Ronacher para criticar o Python 3.
-Ele me explicou porque, na prática, essa não é uma ideia tão boa assim:
+Entretanto, sempre podemos contar com o pythonista Armin Ronacher para criticar o Python 3.
+Ele me explicou por que, na prática, a PEP 393 é problemática:
 basta um ratinho (`RAT`, `U+1F400`) para inflar um texto,
 que de outra forma seria inteiramente ASCII, e transformá-lo em um array gigante na memória,
 usando quatro bytes por caractere,
 quando um byte seria o suficiente para todos os caracteres exceto o `RAT`.
 Além disso, por causa de todas as formas como os caracteres Unicode se combinam,
-a facilitade de buscar um caractere arbitrário pela posição é
+a facilidade de buscar um caractere arbitrário pela posição é
 superestimada—e extrair fatias arbitrárias de texto Unicode é no mínimo ingênuo,
 e muitas vezes errado, produzindo mojibake.
 Com((("emojis", "increasing issues with"))) os emojis se tornando mais populares,
