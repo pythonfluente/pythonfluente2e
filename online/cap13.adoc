@@ -1898,7 +1898,7 @@ TypeError: complex() first argument must be a string or a number, not 'tuple'
 
 Em português: "O primeiro argumento de `complex()` deve ser uma string ou um número, não 'tuple'".
 
-A abordagem da tipagem pato é mais simples e correta neste caso.
+A abordagem da tipagem pato é simples e correta neste caso.
 ****
 
 Agora que vimos como usar protocolos estáticos durante a execução com tipos
@@ -1915,7 +1915,7 @@ uso de checagens com `isinstance` or `issubclass` com protocolos estáticos.
 
 Por exemplo, qualquer classe com um método `+__float__+`
 é considerada—durante a execução—uma subclasse virtual de `SupportsFloat`,
-mesmo se seu método `+__float__+` não retorne um `float`.
+mesmo se seu método `+__float__+` não devolva um `float`.
 
 Veja essa sessão no console:
 
@@ -1940,7 +1940,7 @@ vimos na <<noreturn_sec>>.
 
 Mas incluir dicas de tipo em `+complex.__float__+` no _typeshed_ não resolveria
 esse problema, porque o interpretador Python em geral ignora dicas de tipo—e
-também não acessa os arquivos stub do _typeshed_.
+também não acessa os arquivos de anotações de tipo do _typeshed_.
 
 Continuando da sessão anterior de Python 3.9:
 
@@ -1962,7 +1962,7 @@ na verdade isso gera um erro de tipo.
 [WARNING]
 ====
 
-O problema específico com o tipo `complex` foi resolvido no Python 3.10.0b4, com
+O problema específico com o tipo `complex` foi resolvido no Python 3.10, com
 a remoção do método `+complex.__float__+`.
 
 Mas o problema geral persiste: checagens com `isinstance`/`issubclass` só olham
@@ -1972,9 +1972,9 @@ tipo de checagem de tipos durante a execução traria um custo de processamento
 inaceitável.footnote:[Agradeço a Ivan Levkivskyi, co-autor da
 https://fpy.li/pep544[PEP 544] (sobre Protocolos), por apontar que checagem de
 tipo não é apenas uma questão de checar se o tipo de `x` é `T`: é sobre
-determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro. Não é
-de se espantar que o Mypy leve alguns segundos para fazer uma checagem de tipos,
-mesmo em scripts Python curtos.]
+determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser custoso.
+Não é de se espantar que o Mypy leve alguns segundos para fazer uma checagem
+de tipos, mesmo em scripts Python curtos.]
 
 ====
 
@@ -2004,7 +2004,7 @@ include::../code/13-protocol-abc/typing/vector2d_v4.py[tags=VECTOR2D_V4_COMPLEX]
 ----
 ====
 
-<1> Presume que `datum` tem atributos `.real` e `.imag`. Veremos uma
+<1> Presume que `n` tem atributos `.real` e `.imag`. Veremos uma
 implementação melhor no <<ex_vector2d_complex_v5>>.
 
 Dado o código acima, e o método `+__abs__+` que o `Vector2d` já tinha em
@@ -2041,17 +2041,18 @@ include::../code/13-protocol-abc/typing/vector2d_v5.py[tags=VECTOR2D_V5_COMPLEX]
 ----
 ====
 
-<1> A anotação de retorno `float` é necessária, senão o Mypy infere `Any`, e não
+<1> A anotação de resultado `float` é necessária, senão o Mypy infere `Any`, e não
 checa o corpo do método.
 
-<2> Mesmo sem a anotação, o Mypy foi capaz de inferir que isso retorna um
-`complex`. A anotação evita um aviso, dependendo da sua configuração do Mypy.
+<2> Mesmo sem a anotação, o Mypy inferiu que isto devolve um
+`complex`. A anotação evita um aviso, dependendo da configuração do Mypy.
 
-<3> Aqui `SupportsComplex` garante que `datum` é conversível.
+<3> Aqui `SupportsComplex` garante que `n` é conversível.
 
-<4> Essa conversão explícita é necessária, pois o tipo `SupportsComplex` não
-declara os atributos `.real` e `.img`, usados na linha seguinte. Por exemplo,
-`Vector2d` não tem esses atributos, mas implementa `+__complex__+`.
+<4> Esta conversão explícita é necessária, pois um tipo _consistente-com_ 
+`SupportsComplex` não necessariamente tem os atributos `.real` e `.img`,
+que usamos na linha seguinte. A própria classe `Vector2d` não tem estes
+atributos, mas implementa `+__complex__+`.
 
 O tipo de retorno de `fromcomplex` pode ser `Vector2d` se a linha `from
 __future__ import annotations` aparecer no início do módulo. Aquela importação
@@ -2081,13 +2082,13 @@ A ABC `Tombola` especifica dois métodos: `pick` e `load`. Poderíamos também
 definir um protocolo estático com esses dois métodos, mas aprendi com a
 comunidade Go que protocolos de apenas um método tornam a tipagem pato estática
 mais útil e flexível. A biblioteca padrão do Go tem inúmeras interfaces, como
-`Reader`, uma interface para I/O que requer apenas um método `read`. Após algum
-tempo, se você entender que um protocolo mais complexo é necessário, você pode
-combinar dois ou mais protocolos para definir um novo.
+`Reader`, uma interface para E/S que requer apenas um método `read`. 
+Depois, se você concluir que um protocolo mais complexo é necessário,
+pode combinar dois ou mais protocolos para definir um novo.
 
 Usar um container que escolhe itens aleatoriamente pode ou não exigir o
-recarregamento do container, mas ele certamente precisa de um método para fazer
-a efetiva escolha do item, então o método `pick` será o escolhido para o
+recarregamento do container, mas ele certamente precisa de um método para 
+sortear um item, então escolhi o método `pick` para o
 protocolo mínimo `RandomPicker`. O código do protocolo está no
 <<ex_randompick_protocol>>, e seu uso é demonstrado por testes no
 <<ex_randompick_protocol_demo>>.
@@ -2104,7 +2105,7 @@ include::../code/13-protocol-abc/typing/randompick.py[]
 [NOTE]
 ====
 
-O método `pick` retorna `Any`. Em <<implementing_generic_static_proto_sec>>
+O método `pick` retorna `Any`. Na <<implementing_generic_static_proto_sec>>
 veremos como tornar `RandomPicker` um tipo genérico, com um parâmetro que
 permite aos usuários do protocolo especificarem o tipo de retorno do método
 `pick`.
@@ -2121,41 +2122,41 @@ include::../code/13-protocol-abc/typing/randompick_test.py[]
 ====
 
 <1> Não é necessário importar um protocolo estático para definir uma classe que
-o implementa, Aqui eu importei `RandomPicker` apenas para usá-lo em
+o implementa; aqui eu importei `RandomPicker` apenas para usá-lo em
 `test_isinstance` mais tarde.
 
-<2> `SimplePicker` implementa `RandomPicker` — mas não é uma subclasse dele.
+<2> `SimplePicker` implementa `RandomPicker`, mas não é uma subclasse dele.
 Isso é a tipagem pato estática em ação.
 
 <3> `Any` é o tipo de retorno default, então essa anotação não é estritamente
 necessária, mas deixa mais claro que estamos implementando o protocolo
 `RandomPicker`, como definido em <<ex_randompick_protocol>>.
 
-<4> Não esqueça de acrescentar dicas `-> None` aos seus testes, se você quiser
+<4> Não esqueça de acrescentar dicas `-&#62; None` aos seus testes, se quiser
 que o Mypy olhe para eles.
 
 <5> Acrescentei uma dica de tipo para a variável `popper`, para mostrar que o
 Mypy entende que o `SimplePicker` é _consistente-com_.
 
-<6> Esse teste prova que uma instância de `SimplePicker` também é uma instância
+<6> Teste provando que uma instância de `SimplePicker` também é uma instância
 de `RandomPicker`. Isso funciona por causa do decorador `@runtime_checkable`
 aplicado a `RandomPicker`, e porque o `SimplePicker` tem um
 método `pick`, como exigido.
 
-<7> Esse teste invoca o método `pick` de `SimplePicker`, verifica que ele
+<7> Este teste invoca o método `pick` de `SimplePicker`, verifica que ele
 retorna um dos itens dados a `SimplePicker`, e então realiza testes estáticos e
 de execução sobre o item obtido.
 
-<8> Essa linha gera uma obervação no relatório do Mypy.
+<8> Esta linha gera uma obervação no relatório do Mypy.
 
 Como vimos no <<top_protocol_test>>, `reveal_type` é uma função "mágica"
 reconhecida pelo Mypy. Por isso ela não é importada e  só conseguimos chamá-la
 de dentro de blocos `if` protegidos por `typing.TYPE_CHECKING`, que só é `True`
-para os olhos de um checador de tipos estático, mas é `False` durante a
+aos olhos de um checador de tipos estático, mas é `False` durante a
 execução.
 
-Os dois testes em <<ex_randompick_protocol_demo>> passam.
-O Mypy também não vê nenhum erro naquele código,
+Os dois testes no <<ex_randompick_protocol_demo>> passam.
+O Mypy também não encontra erro naquele código,
 e mostra o resultado de `reveal_type` sobre o `item`
 retornado por `pick`:
 
@@ -2175,24 +2176,25 @@ Após((("static protocols", "best practices for protocol design"))) 10 anos de
 experiência com tipagem pato estática em Go, está claro que protocolos estreitos
 são mais úteis—muitas vezes tais protocolos têm um único método, raramente mais
 que um par de métodos. Martin Fowler descreve uma boa ideia para se ter em mente
-ao desenvolver protocolos: a https://fpy.li/13-33[Role Interface], (__interface
-papel__footnote:[NT: "papel" aqui é usado no sentido de incorporação de um
-personagem]). A ideia é que um protocolo deve ser definido em termos de um papel
+ao desenvolver protocolos: a https://fpy.li/13-33[_Role Interface_],
+(interface papel—no sentido de incorporar uma personagem).
+A ideia é que um protocolo deve ser definido em termos de um papel
 que um objeto pode desempenhar, e não em termos de uma classe específica.
 
-Além disso, é comum ver um protocolo definido próximo a uma função que o usa-ou seja,
-definido em "código do cliente" em vez de ser definido em uma biblioteca separada.
+Além disso, é comum ver um protocolo definido próximo a uma função que o usa
+para anotar um argumento, em, vez de forçar os clientes da função a importar
+uma definição de interface de alguma biblioteca central.
 Isso torna mais fácil criar novos tipos para chamar aquela função,
-bom para a extensibilidade e para testes com simulações ou protótipos.
+favorecendo a extensibilidade e facilitando testes com _mocks_
+(simulacros).
 
-Ambas as práticas, protocolos estreitos e protocolos em código cliente, evitam
-um acoplamento muito firme, em acordo com o https://fpy.li/6v[Princípio da
+As duas práticas, protocolos estreitos e protocolos em código cliente, evitam
+um acoplamento muito forte, em acordo com o https://fpy.li/6v[Princípio da
 Segregação de Interface], que podemos resumir como "Clientes não devem ser
 forçados a depender de interfaces que não usam."
 
-A página https://fpy.li/13-35["Contributing to typeshed"] (EN) recomenda a
-seguinte convenção de nomenclatura para protocolos estáticos (os três pontos a
-seguir foram traduzidos o mais fielmente possível):
+A página https://fpy.li/13-35[_Contributing to typeshed_] (Colaborando com o typeshed)
+recomenda a seguinte convenção de nomenclatura para protocolos estáticos:
 
 * Use nomes simples para protocolos que representam um conceito claro (e.g.,
 `Iterator`, `Container`).
@@ -2203,32 +2205,32 @@ método pode ser chamado, então essa recomendação não diz muito. Talvez "for
 um ou dois métodos"? De qualquer forma, é uma recomendação, não uma regra
 absoluta.]
 
-* Use `HasX` para protocolos que tem atributos que podem ser lidos ou escritos,
-ou métodos _getter/setter_(e.g., `HasItems`, `HasFileno`).
+* Use `HasX` para protocolos que têm atributos de dados que podem ser lidos ou
+escritos, ou métodos _getter/setter_(e.g., `HasItems`, `HasFileno`).
 
-A biblioteca padrão do Go tem uma convenção de nomenclatura que gosto: para
+A biblioteca padrão do Go tem uma convenção de nomenclatura que eu gosto: para
 protocolos de método único, se o nome do método é um verbo, acrescente o sufixo
 adequado (em inglês, "-er" ou "-or", em geral) para torná-lo um substantivo. Por
 exemplo, em vez de `SupportsRead`, temos `Reader`. Outros exemplos incluem
 `Formatter`, `Animator`, e `Scanner`. Para se inspirar, veja
-https://fpy.li/13-36["Go (Golang) Standard Library Interfaces (Selected)"] (EN)
+https://fpy.li/13-36["Go (Golang) Standard Library Interfaces (Selected)"]
 de Asuka Kenji.
 
-Uma boa razão para se criar protocolos minimalistas é a habilidade de
-estendê-los posteriormente, se necessário. Veremos a seguir que não é difícil
-criar um protocolo derivado com um método adicional
+Uma boa razão para se criar protocolos minimalistas é que eles servem de base
+para protocolos mas complexos, quando necessário. Veremos a seguir que não é
+difícil criar um protocolo derivado com um método adicional
 
 ==== Estendendo um Protocolo
 
 Como((("static protocols", "extending"))) mencionei na seção anterior, os
-desenvolvedores Go defendem que, quando em dúvida, melhor escolher o minimalismo
+desenvolvedores Go defendem que, na dúvida, melhor escolher o minimalismo
 ao definir interfaces—o nome usado para protocolos estáticos naquela linguagem.
 Muitas das interfaces Go mais usadas têm um único método.
 
-Quando a prática revela que um protocolo com mais métodos seria útil,
-em vezz de adicionar métodos ao protocolo original,
-é melhor derivar dali um novo protocolo.
-Estender um protocolo estático em Python tem algumas ressalvas, como mostra o <<ex_randompickload_protocol>> shows.
+Quando a prática revela que um protocolo com mais métodos seria útil, em vez de
+adicionar métodos ao protocolo original, é melhor derivar dali um novo
+protocolo. Estender um protocolo estático em Python tem algumas ressalvas, como
+mostra o <<ex_randompickload_protocol>>.
 
 [[ex_randompickload_protocol]]
 ._randompickload.py_: estendendo `RandomPicker`
@@ -2238,41 +2240,70 @@ Estender um protocolo estático em Python tem algumas ressalvas, como mostra o <
 include::../code/13-protocol-abc/typing/randompickload.py[]
 ----
 ====
-<1> Se você quer que o protocolo derivado possa ser checado durante a execução, você precisa aplicar o decorador novamente—seu comportamento não é herdado.footnote:[Para detalhes e justificativa, veja por favor a seção sobre https://fpy.li/13-37[`@runtime_checkable`] (EN)
-na PEP 544—Protocols: Structural subtyping (static duck typing).]
-<2> Todo protocolo deve nomear explicitamente `typing.Protocol` como uma de suas classes base, além do protocolo que estamos estendendo. Isso é diferente da forma como herança funciona em Python.footnote:[Novamente, leia por favor https://fpy.li/13-38["Merging and extending protocols"] (EN) na PEP 544 para os detalhes e justificativas.]
-<3> De volta à programação orientada a objetos "normal": só precisamos declarar o método novo no protocolo derivado. A declaração do método `pick` é herdada de `RandomPicker`.
 
-Isso conclui o último exemplo sobre definir e usar um protocolo estático neste capítulo.
+<1> Se você quer que o protocolo derivado possa ser checado durante a execução,
+precisa aplicar o decorador `@runtime_checkable` novamente—pois os
+comportamentos definidos em decoradores de classes não são
+herdados.footnote:[Para detalhes e justificativa, veja a seção sobre
+https://fpy.li/13-37[`@runtime_checkable`] na PEP 544—Protocols: Structural
+subtyping (static duck typing).]
 
-Para encerrar o capítulo, vamos olhar as ABCs numéricas e sua possível substituição por protocolos numéricos.
+<2> Todo protocolo deve nomear explicitamente `typing.Protocol` como uma de suas
+classes base, além do protocolo que estamos estendendo. Isto é diferente da
+forma como herança funciona de modo geral.footnote:[Novamente, leia 
+https://fpy.li/13-38[_Merging and extending protocols_] na PEP 544 para os
+detalhes e justificativa.]
+
+<3> De volta à programação orientada a objetos "normal": só precisamos declarar
+o método novo no protocolo derivado. A declaração do método `pick` é herdada de
+`RandomPicker`.
+
+Isto conclui o último exemplo sobre definir e usar um protocolo estático neste
+capítulo. Para encerrar, vamos olhar as ABCs numéricas e sua possível
+substituição por protocolos numéricos.
 
 
 [[numbers_abc_proto_sec]]
 ==== As ABCs em numbers e os novos protocolos numéricos
 
-Como((("static protocols", "numbers ABCS and numeric protocols", id="SPnumbers13")))((("numbers ABCs", id="number13")))((("numeric protocols", id="numpro13")))((("protocols", "numeric", id="Pnum13"))) vimos em <<numeric_tower_warning>>, as ABCs no pacote `numbers` da biblioteca padrão funcionam bem para checagem de tipos durante a execução.
+Como((("static protocols", "numbers ABCS and numeric protocols",
+id="SPnumbers13")))((("numbers ABCs", id="number13")))((("numeric protocols",
+id="numpro13")))((("protocols", "numeric", id="Pnum13"))) vimos em
+<<numeric_tower_warning>>, as ABCs no pacote `numbers` da biblioteca padrão
+funcionam bem para checagem de tipos durante a execução.
 
-Se você precisa checar um inteiro, pode usar `isinstance(x, numbers.Integral)` para aceitar `int`, `bool` (que é subclasse de `int`) ou outros tipos inteiros oferecidos por bibliotecas externas que registram seus tipos como subclasses virtuais das ABCs de `numbers`.
-Por exemplo, a NumPy tem https://fpy.li/13-39[21 tipos inteiros] — bem como várias variações de tipos de ponto flutuante registrados como `numbers.Real`, e números complexos com várias amplitudes de bits, registrados como `numbers.Complex`.
+Se você precisa checar um inteiro, pode usar `isinstance(x, numbers.Integral)`
+para aceitar `int`, `bool` (que é subclasse de `int`) ou outros tipos inteiros
+oferecidos por bibliotecas externas que registram seus tipos como subclasses
+virtuais das ABCs de `numbers`. Por exemplo, a NumPy tem
+https://fpy.li/13-39[21 tipos inteiros]—bem como diversos tipos de ponto flutuante
+registrados como `numbers.Real`, e números complexos com várias amplitudes de
+bits, registrados como `numbers.Complex`.
 
 [TIP]
 ====
-De forma algo surpreendente, `decimal.Decimal` não é registrado como uma subclasse virtual de `numbers.Real`.
-A razão para isso é que, se você precisa da precisão de `Decimal` no seu programa,
-então você quer estar protegido da mistura acidental de números decimais e de números de ponto flutuante (que são menos precisos).
+
+De forma algo surpreendente, `decimal.Decimal` não é registrado como uma
+subclasse virtual de `numbers.Real`. A razão para isso é que, se você precisa da
+precisão de `Decimal` no seu programa, então você quer estar protegido da
+mistura acidental de números decimais e de números de ponto flutuante (que são
+menos precisos).
+
 ====
 
 Infelizmente, a torre numérica não foi projetada para checagem de tipo estática.
-A ABC raiz—`numbers.Number`—não tem métodos,
-então se você declarar `x: Number`, o Mypy não vai deixar você fazer operações aritméticas ou chamar qualquer método com `X`.
+A ABC raiz—`numbers.Number`—não tem métodos, então se você declarar `x: Number`,
+o Mypy não vai deixar você fazer operações aritméticas ou chamar qualquer método
+com `X`.
 
-Se as ABCs de `numbers` não tem suporte, quais as opções?
+Quando as ABCs de `numbers` não servem, quais as opções?
 
-Um bom lugar para procurar soluções de tipagem é no projeto _typeshed_.
-Como parte da biblioteca padrão de Python, o módulo `statistics` tem um arquivo stub correspondente no _typeshed_ com dicas de tipo, o https://fpy.li/13-40[_statistics.pyi_],
+Um bom lugar para procurar soluções de tipagem é no projeto _typeshed_. Como
+parte da biblioteca padrão de Python, o módulo `statistics` tem um arquivo stub
+correspondente no _typeshed_ com dicas de tipo, o
+https://fpy.li/13-40[_statistics.pyi_].
 
-Lá você encontrará as seguintes definições, que são usadas para anotar várias funções:
+Lá você encontrará as seguintes definições, que são usadas para anotar diversas funções:
 
 [source, python]
 ----
@@ -2282,23 +2313,26 @@ _NumberT = TypeVar('_NumberT', float, Decimal, Fraction)
 
 Essa abordagem está correta, mas é limitada.
 Ela não suporta((("numeric types", "support for"))) tipos numéricos
-fora da biblioteca padrão, que as ABCs de `numbers` suportam durante a execução -
-quando tipos numéricos são registrados como subclasses virtuais.
+fora da biblioteca padrão, que as ABCs de `numbers` suportam durante a
+execução—quando tipos numéricos são registrados como subclasses virtuais.
 
 A tendência atual é recomendar os protocolos numéricos fornecidos pelo módulo `typing`,
-que discutimos na <<runtime_checkable_proto_sec>>.
+como `SupportsFloat`, que discutimos na <<runtime_checkable_proto_sec>>.
 
-Infelizmente, durante a execução os protocolos numéricos podem deixar você na mão.
-Como mencionado em <<protocol_type_hints_ignored>>,
-o tipo `complex` no Python 3.9 implementa `+__float__+`,
-mas o método existe apenas para lançar uma `TypeError` com uma mensagem explícita:
-"can't convert complex to float." ("não é possível converter complex para float")
-Por alguma razão, ele também implementa `+__int__+`.
-A presença desses métodos faz `isinstance` produzir resultados enganosos no Python 3.9. No Python 3.10, os métodos de `complex` que geravam `TypeError` incondicionalmente foram removidos.footnote:[ver
-https://fpy.li/13-41[Issue #41974—Remove `+complex.__float__+`, `+complex.__floordiv__+`, etc].]
+Infelizmente, durante a execução os protocolos numéricos podem deixar você na
+mão. Como mencionado em <<protocol_type_hints_ignored>>, o tipo `complex` no
+Python 3.9 implementa `+__float__+`, mas o método existe apenas para lançar uma
+`TypeError` com uma mensagem explícita: "can't convert complex to float" (não é
+possível converter complex para float). Por alguma razão, ele também implementa
+`+__int__+`. A presença destes métodos faz `isinstance` produzir resultados
+enganosos no Python 3.9. No Python 3.10, os métodos de `complex` que geravam
+`TypeError` incondicionalmente foram removidos.footnote:[ver
+https://fpy.li/13-41[Issue #41974—Remove `+complex.__float__+`,
+`+complex.__floordiv__+`, etc].]
 
-Por outro lado, os tipos complexos da NumPy implementam métodos `+__float__+` e `+__int__+` que funcionam,
-emitindo apenas um aviso quando cada um deles é usado pela primeira vez:
+Por outro lado, os tipos complexos da NumPy implementam métodos `+__float__+` e
+`+__int__+` que funcionam, emitindo apenas um aviso quando cada um deles é usado
+pela primeira vez:
 
 [source, python]
 ----
@@ -2313,11 +2347,15 @@ discards the imaginary part
 ----
 
 O problema oposto também acontece:
-Os tipos embutidos `complex`, `float`, e `int`, além `numpy.float16` e `numpy.uint8`, não
-tem um método `+__complex__+`, então `isinstance(x, SupportsComplex)` retorna `False` para eles.footnote:[Eu não testei todas as outras variantes de _float_ e _integer_ que a NumPy oferece.]
-Os tipo complexos da NumPy, tal como `np.complex64`, implementam `+__complex__+` para conversão em um `complex` embutido.
+os tipos embutidos `complex`, `float`, e `int`, além `numpy.float16` e
+`numpy.uint8`, não tem um método `+__complex__+`, então `isinstance(x,
+SupportsComplex)` retorna `False` para eles.footnote:[Eu não testei todas as
+outras variantes de _float_ e _integer_ que a NumPy oferece.] Os tipo complexos
+da NumPy, tal como `np.complex64`, implementam `+__complex__+` para conversão em
+um `complex` embutido.
 
-Entretanto, na prática, o construtor embutido `complex()` trabalha com instâncias de todos esses tipos sem erros ou avisos.
+Entretanto, na prática, o construtor embutido `complex()` trabalha com
+instâncias de todos esses tipos sem erros ou avisos.
 
 [source, python]
 ----
@@ -2330,12 +2368,13 @@ Entretanto, na prática, o construtor embutido `complex()` trabalha com instânc
 [(1+0j), (1+0j), (1+0j), (1+0j), (1+0j), (1+0j)]
 ----
 
-Isso mostra que checagens de `SupportsComplex` com `isinstance` sugerem que todas aquelas conversões para `complex` falhariam, mas ela são bem sucedidas.
-Na mailing list typing-sig,
-Guido van Rossum indicou que o `complex` embutido aceita um único argumento,
-e essa é a razão daquelas conversões funcionarem.
+Isso mostra que checagens de `SupportsComplex` com `isinstance` sugerem que
+todas aquelas conversões para `complex` falhariam, mas ela são bem sucedidas. Na
+mailing list typing-sig, Guido van Rossum indicou que o `complex` embutido
+aceita um único argumento, e essa é a razão daquelas conversões funcionarem.
 
-Por outro lado, o Mypy aceita argumentos de todos esses seis tipos em uma chamada à função `to_complex()`, definida assim:
+Por outro lado, o Mypy aceita argumentos de todos esses seis tipos em uma
+chamada à função `to_complex()`, definida assim:
 
 [source, python]
 ----
@@ -2343,155 +2382,188 @@ def to_complex(n: SupportsComplex) -> complex:
     return complex(n)
 ----
 
-No momento em que escrevo isso, a NumPy não tem dicas de tipo, então seus tipos numéricos são todos `Any`.footnote:[Os tipos numéricos da NumPy são todos registrados com as ABCs apropriadas de `numbers`, que o Mypy ignora.]
-Por outro lado, o Mypy de alguma maneira "sabe" que o `int` e o `float` embutidos podem ser convertidos para `complex`,
-apesar de, no _typeshed_, apenas a classe embutida `complex` ter o método `+__complex__+`.footnote:[Isso é uma mentira bem intencionada da parte do typeshed: a partir de Python 3.9, o tipo embutido `complex` na verdade não tem mais um método `+__complex__+`.]
+No momento em que escrevo isso, a NumPy não tem dicas de tipo, então seus tipos
+numéricos são todos `Any`.footnote:[Os tipos numéricos da NumPy são todos
+registrados com as ABCs apropriadas de `numbers`, que o Mypy ignora.] Por outro
+lado, o Mypy de alguma maneira "sabe" que o `int` e o `float` embutidos podem
+ser convertidos para `complex`, apesar de, no _typeshed_, apenas a classe
+embutida `complex` ter o método `+__complex__+`.footnote:[Isso é uma mentira bem
+intencionada da parte do typeshed: a partir de Python 3.9, o tipo embutido
+`complex` na verdade não tem mais um método `+__complex__+`.]
 
-Concluindo, apesar((("numeric types", "checking for convertibility"))) da impressão que a checagem de tipos para tipos numéricos não deveria ser difícil,
-a situação atual é a seguinte:
-as dicas de tipo da PEP 484
-https://fpy.li/cardxvi[evitam] (EN) a torre numérica
-e recomendam implicitamente que os checadores de tipos codifiquem explicitamente as relações de tipo entre os `complex`, `float`, e `int` embutidos.
-O Mypy faz isso, e também, pragmaticamente, aceita que `int` e `float`
-são _consistente-com_ `SupportsComplex`, apesar deles não implementarem `+__complex__+`.
+Concluindo, apesar((("numeric types", "checking for convertibility"))) da
+expectativa de que a checagem de tipos numéricos não seria difícil, a situação
+atual é a seguinte: as dicas de tipo da PEP 484
+https://fpy.li/cardxvi[desprezam] a torre numérica e recomendam implicitamente
+que os checadores de tipos tratem como casos especiais as relações de tipo entre
+os `complex`, `float`, e `int` embutidos. O Mypy faz isso, e também,
+pragmaticamente, aceita que `int` e `float` são _consistente-com_
+`SupportsComplex`, apesar deles não implementarem `+__complex__+`.
 
 [TIP]
 ====
-Só encontrei resultados inesperados usando checagens com `isinstance` em conjunto com os protocolos numéricos `Supports*` quando fiz experiências de conversão de ou para `complex`.
-Se você não usa números complexos, pode confiar naqueles protocolos em vez das ABCs de `numbers`.
+Só encontrei resultados inesperados usando checagens com `isinstance` em
+conjunto com os protocolos numéricos `Supports*` quando fiz experiências de
+conversão de ou para `complex`. Se você não usa números complexos, pode confiar
+naqueles protocolos em vez das ABCs de `numbers`.
 ====
 
 As principais lições dessa seção são:
 
-* As ABCs de `numbers` são boas para checagem de tipos durante a execução, mas inadequadas para tipagem estática.
-* Os protocolos numéricos estáticos `SupportsComplex`, `SupportsFloat`, etc. funcionam bem para tipagem estática, mas são pouco confiáveis para checagem de tipos durante a execução se números complexos estiverem envolvidos.
+* As ABCs de `numbers` são boas para checagem de tipos durante a execução, mas
+não servem para tipagem estática.
 
-Estamos agora prontos para uma rápida revisão do que vimos nesse capítulo.((("", startref="Pstatic13")))((("", startref="Pnum13")))((("", startref="numpro13")))((("", startref="number13")))((("", startref="SPnumbers13")))
+* Os protocolos numéricos estáticos `SupportsComplex`, `SupportsFloat`, etc.
+funcionam bem para tipagem estática, mas são pouco confiáveis para checagem de
+tipos durante a execução se números complexos estiverem envolvidos.
+
+Estamos agora prontos para a revisão dos temas deste capítulo.((("",
+startref="Pstatic13")))((("", startref="Pnum13")))((("",
+startref="numpro13")))((("", startref="number13")))((("",
+startref="SPnumbers13")))
 
 
 === Resumo do capítulo
 
-O((("interfaces", "overview of")))((("protocols", "overview of")))((("ABCs (abstract base classes)", "overview of"))) Mapa de Tipagem (<<type_systems_described>>) é a chave para entender esse capítulo.
-Após uma breve introdução às quatro abordagens da tipagem,
-comparamos protocolos dinâmicos e estáticos,
-os quais suportam tipagem pato e tipagem pato estática, respectivamente.
-Os dois tipos de protocolo compartilham uma característica essencial, nunca é exigido de uma classe que ela declare explicitamente o suporte a qualquer protocolo específico.
-Uma classe suporta um protocolo simplesmente implementando os métodos necessários.
+O((("interfaces", "overview of")))((("protocols", "overview of")))((("ABCs (abstract base classes)",
+"overview of"))) Mapa de Tipagem (<<type_systems_described>>) 
+é a chave para entender este capítulo. Após uma breve introdução às quatro
+abordagens da tipagem, comparamos protocolos dinâmicos e estáticos, que
+suportam tipagem pato e tipagem pato estática, respectivamente. Os dois tipos de
+protocolo compartilham uma característica essencial: nunca é exigido de uma
+classe que ela declare explicitamente o suporte a qualquer protocolo.
+Uma classe suporta um protocolo apenas implementando os métodos necessários.
 
-A próxima grande seção foi a <<prog_ducks_sec>>,
-onde exploramos os esforços que interpretador Python faz para que os protocolos dinâmicos de sequência e iterável funcionem, incluindo a implementação parcial de ambos.
-Então vimos como fazer uma classe implementar um protocolo durante a execução,
-através da adição de métodos extra via _monkey patching_.
-A seção sobre tipagem pato terminou com sugestões de programação defensiva,
-incluindo a detecção de tipos estruturais sem checagens explícitas com `isinstance` ou `hasattr`, usando `try/except` e falhando rápido.
+A próxima parada foi a <<prog_ducks_sec>>, onde exploramos os esforços que
+interpretador Python faz para que os protocolos dinâmicos de sequência e
+iterável funcionem, incluindo a implementação parcial de ambos. Então vimos como
+fazer uma classe implementar um protocolo durante a execução, através da adição
+de métodos extra via _monkey patching_. A seção sobre tipagem pato terminou com
+sugestões de programação defensiva, incluindo a detecção de tipos estruturais
+sem checagens explícitas com `isinstance` ou `hasattr`, usando `try/except` e
+falhando logo.
 
-Após Alex Martelli introduzir a tipagem ganso em _<<waterfowl_essay>>_,
-vimos como criar subclasses de ABCs existentes,
-examinamos algumas ABCs importantes da biblioteca padrão,
-e criamos uma ABC do zero,
-que  então implementamos da forma tradicional, criando subclasses, e por registro.
-Finalizamos aquela seção vendo como o método especial `+__subclasshook__+` permite às ABCs suportarem a tipagem estrutural, pelo reconhecimento de classes não-relacionadas, mas que fornecem os métodos que preenchem os requisitos da interface definida na ABC.
+Após Alex Martelli introduzir a tipagem ganso em _<<waterfowl_essay>>_, vimos
+como criar subclasses de ABCs existentes, examinamos algumas ABCs importantes da
+biblioteca padrão, e criamos uma ABC do zero, que então implementamos por
+herança e por registro. Finalizamos aquela seção vendo como o método especial
+`+__subclasshook__+` permite que ABCs suportem a tipagem estrutural, pelo
+reconhecimento de classes não-relacionadas, mas que fornecem os métodos 
+exigidos pela interface declarada na ABC.
 
-A última grande seção foi a <<static_protocols_sec>>,
-onde retomamos o estudo da tipagem pato estática, que havia começado no <<ch_type_hints_def>>, em <<protocols_in_fn_sec>>.
-Vimos como o decorador `@runtime_checkable` também aproveita o `+__subclasshook__+` para suportar tipagem estrutural durante a execução—mesmo que o melhor uso dos protocolos estáticos seja com checadores de tipos estáticos,
-que podem levar em consideração as dicas de tipo, tornando a tipagem estrutural mais confiável.
-Então falamos sobre o projeto e a codificação de um protocolo estático e como estendê-lo.
-O capítulo terminou com <<numbers_abc_proto_sec>>,
-que conta a triste história do abandono da torre numérica e das limitações da alternativa proposta:
-os protocolos numéricos estáticos tal como `SupportsFloat` e outros,
-adicionados ao módulo `typing` no Python 3.8.
+Retomamos o estudo da tipagem pato estática na <<static_protocols_sec>>, que
+havia começado no <<ch_type_hints_def>>, em <<protocols_in_fn_sec>>. Vimos como
+o decorador `@runtime_checkable` também aproveita o `+__subclasshook__+` para
+suportar tipagem estrutural durante a execução—mesmo que o melhor uso dos
+protocolos estáticos seja com checadores de tipos estáticos, que podem levar em
+consideração as dicas de tipo, tornando a tipagem estrutural mais confiável.
+Então falamos sobre o projeto e a codificação de um protocolo estático e como
+estendê-lo. O capítulo terminou com a triste história do abandono da torre
+numérica e das limitações da alternativa proposta: os protocolos numéricos
+estáticos tal como `SupportsFloat` e outros, adicionados ao módulo `typing` no
+Python 3.8.
 
-A mensagem principal desse capítulo é que temos quatro maneiras complementares de programar com interfaces no Python moderno,
-cada uma com diferentes vantagens e deficiências.
-Você possivelmente encontrará casos de uso adequados para cada esquema de tipagem em qualquer base de código de Python moderno de tamanho significativo.
-Rejeitar qualquer dessas abordagens tornará seu trabalho como programador Python mais difícil que o necessário.
+A mensagem principal deste capítulo é que temos quatro maneiras complementares
+de programar com interfaces no Python moderno, cada uma com diferentes vantagens
+e deficiências. Você encontrará casos de uso adequados para cada esquema de
+tipagem em qualquer base de código moderna de tamanho significativo. Rejeitar
+qualquer destas abordagens tornará seu trabalho como programador Python mais
+difícil e limitado.
 
-Dito isso, Python ganhou sua enorme popularidade enquanto suportava apenas tipagem pato.
-Outras linguagens populares, como Javascript, PHP e Ruby, bem como Lisp, Smalltalk, Erlang e Clojure—essas últimas não muito populares mas extremamente influentes—são todas linguagens que tinham e ainda tem um impacto tremendo aproveitando o poder e a simplicidade da tipagem pato.
+Dito isso, Python ganhou sua enorme popularidade enquanto suportava apenas
+tipagem pato. Outras linguagens populares, como Javascript, PHP e Ruby, bem como
+Lisp, Smalltalk, Erlang, Elixir e Clojure—essas últimas não muito populares mas
+bastante influentes—são todas linguagens que aproveitam o poder e a simplicidade
+da tipagem pato.
 
 [[interfaces_further_reading]]
 === Para saber mais
 
-Para((("interfaces", "further reading on")))((("protocols", "further reading on")))((("ABCs (abstract base classes)", "further reading on"))) uma rápida revisão do prós e contras da tipagem, bem como da importância de `typing.Protocol`
-para a saúde de bases de código checadas estaticamente, eu recomendo fortemente o post de Glyph Lefkowitz
-https://fpy.li/13-42["I Want A New Duck: `typing.Protocol` and the future of duck typing"] ("Quero Um Novo Pato: `typing.Protocol` e o futuro da tipagem pato").
+Para((("interfaces", "further reading on")))((("protocols",
+"further reading on")))((("ABCs (abstract base classes)", "further reading on")))
+uma rápida revisão do prós e contras da tipagem, bem como da importância de
+`typing.Protocol` para a saúde de bases de código checadas estaticamente,
+recomendo fortemente o post de Glyph Lefkowitz
+https://fpy.li/13-42[_I Want A New Duck: `typing.Protocol` and the future of duck typing_]
+(Quero um novo pato: `typing.Protocol` e o futuro da tipagem pato").
 Também aprendi bastante em seu post
-https://fpy.li/13-43["Interfaces and Protocols"] (EN) ("Interfaces e Protocolos"),
-comparando `typing.Protocol` com `zope.interface` — um mecanismo mais antigo para definir interfaces em sistemas plug-in fracamente acoplados, usado no
-https://fpy.li/13-44[Plone CMS],
-na https://fpy.li/13-45[Pyramid web framework], e no framework de programação assíncrona
+https://fpy.li/13-43[_Interfaces and Protocols_],
+comparando `typing.Protocol` com `zope.interface`—um mecanismo mais antigo
+para definir interfaces em sistemas plug-in fracamente acoplados, usado no
+https://fpy.li/13-44[Plone CMS], no framework Web
+na https://fpy.li/13-45[Pyramid], e no framework de programação assíncrona
 https://fpy.li/13-46[Twisted],
-um projeto fundado por Glyph.footnote:[Agradeço ao revisor técnico Jürgen Gmach por ter recomentado o post "Interfaces and Protocols".]
+um projeto fundado por Glyph.footnote:[Agradeço ao revisor técnico Jürgen Gmach
+por ter recomentado o post "Interfaces and Protocols".]
 
-Bons livros sobre Python tem—quase que por definição—uma ótima cobertura de tipagem pato.
-Dois de meus livros favoritos de Python tiveram atualizações lançadas após a primeira edição de _Python Fluente_:
-_The Quick Python Book_, 3rd ed., (Manning), de Naomi Ceder; e
-pass:[<a class="orm:hideurl" href="https://fpy.li/pynut3"><em>Python in a Nutshell</em>, 3rd ed.,</a>] de Alex Martelli, Anna Ravenscroft, e Steve Holden (O'Reilly).
+Bons livros sobre Python tem—quase que por definição—uma ótima cobertura de
+tipagem pato. Dois de meus livros favoritos de Python tiveram atualizações
+lançadas após a primeira edição de _Python Fluente_: _The Quick Python Book_,
+3rd ed., (Manning), de Naomi Ceder; e _Python in a Nutshell_, 3rd ed., de
+Alex Martelli, Anna Ravenscroft, e Steve Holden (O'Reilly).
 
-Para uma discussão sobre os prós e contras da tipagem dinâmica, veja a entrevista de Guido van Rossum com Bill Venners em
-https://fpy.li/13-47["Contracts in Python: A Conversation with Guido van Rossum, Part IV"] (EN) ("Contratos em Python: Uma Conversa com Guido van Rossum, Parte IV").
-O post
-https://fpy.li/13-48["Dynamic Typing"] (EN) ("Tipagem Dinâmica"), de Martin Fowler, traz uma avaliação perspicaz e equilibrada deste debate.
+Para uma discussão sobre os prós e contras da tipagem dinâmica, veja a
+entrevista de Guido van Rossum com Bill Venners em
+https://fpy.li/13-47[_Contracts in Python: A Conversation with Guido van Rossum, Part IV_]
+(Contratos em Python: uma conversa com Guido van Rossum").
+O post https://fpy.li/13-48[_Dynamic Typing_], de Martin Fowler,
+traz uma avaliação perspicaz e equilibrada deste debate.
 Ele também escreveu
-https://fpy.li/13-33["Role Interface"] (EN) ("Interface Papel"),
-que mencionei na <<best_protocol_design_sec>>.
-Apesar de não ser sobre tipagem pato,
-aquele post é altamente relevante para o projeto de protocolos em Python,
-pois ele contrasta as interfaces papel estreitas com as interfaces públicas bem mais abrangentes de classes em geral.
+https://fpy.li/13-33[_Role Interface_] (_interface _apel"), que
+mencionei na <<best_protocol_design_sec>>. Apesar de não ser sobre tipagem pato,
+aquele post é altamente relevante para o projeto de protocolos em Python, pois
+ele contrasta as interfaces papel estreitas com as interfaces públicas bem mais
+abrangentes de classes em geral.
 
 A documentação do Mypy é, muitas vezes, a melhor fonte de informação sobre
 qualquer tema relacionado a tipagem estática em Python,
-incluindo a tipagem pato estática, tratada no capítulo
-https://fpy.li/13-50[_Protocols and structural subtyping_] (Protocolos e subtipagem estrutural).
+incluindo a tipagem pato estática, tratada em
+https://fpy.li/13-50[_Protocols and structural subtyping_].
 
 As demais referências são sobre tipagem ganso.
 
-O pass:[<em><a class="orm:hideurl" href="https://fpy.li/pycook3">Python Cookbook</a></em>], 3rd ed. (O'Reilly)
-tem uma seção sobre como definir uma ABC (Recipe 8.12).
-O livro foi escrito antes de Python 3.4,
-então eles não usam a atual sintaxe preferida para declarar ABCs, criar uma subclasse de `abc.ABC`
-(em vez disso, eles usam a palavra-chave `metaclass`, da qual só vamos precisar mesmo em<<ch_class_metaprog>>).
-Tirando esse pequeno detalhe, a receita cobre os principais recursos das ABCs muito bem.
+O _Python Cookbook_, 3rd ed. de Beazley & Jones (O'Reilly) tem uma seção sobre
+como definir uma ABC (Recipe 8.12). O livro foi escrito antes de Python 3.4,
+então eles não usam a atual sintaxe preferida para declarar ABCs, criar uma
+subclasse de `abc.ABC` (em vez disso, eles usam a palavra-chave `metaclass`, da
+qual só vamos precisar mesmo no <<ch_class_metaprog>>). Tirando esse pequeno
+detalhe, a receita cobre os principais recursos das ABCs muito bem.
 
-_The Python Standard Library by Example_ by Doug Hellmann (Addison-Wesley),
-tem um capítulo sobre o módulo `abc`.
-Ele também esta disponível na web, em
-https://fpy.li/13-51[_PyMOTW—Python Module of the Week_].
-Hellmann usa a declaração de ABC no estilo
-antigo:`PluginBase(metaclass=abc.ABCMeta)`
-em vez de `PluginBase(abc.ABC)`, suportada desde o Python 3.4.
+_The Python Standard Library by Example_ de Doug Hellmann (Addison-Wesley), tem
+um capítulo sobre o módulo `abc`. Ele também esta disponível na web, em
+https://fpy.li/13-51[_PyMOTW—Python Module of the Week_]. Hellmann usa a
+declaração de ABC no estilo antigo: `++PluginBase(metaclass=abc.ABCMeta)++` em vez de
+`PluginBase(abc.ABC)`, suportada desde o Python 3.4.
 
-Quando usamos ABCs, herança múltipla não é apenas comum mas praticamente inevitável,
-porque cada uma das ABCs fundamentais de coleções (`Sequence`, `Mapping`, `Set`)
-estendem `Collection`, que por sua vez estende múltiplas ABCs
-(veja <<collections_uml>>). Assim, o <<ch_inheritance>> é um complemento importante ao presente capítulo.
+Quando usamos ABCs, herança múltipla não é apenas comum mas praticamente
+inevitável, porque cada uma das ABCs fundamentais de coleções (`Sequence`,
+`Mapping`, `Set`) estendem `Collection`, que por sua vez estende múltiplas ABCs
+(veja <<collections_uml>>). Assim, o <<ch_inheritance>> é um complemento
+importante ao presente capítulo.
 
-A https://fpy.li/13-52[PEP 3119--Introducing Abstract Base Classes] (EN)
+A https://fpy.li/13-52[_PEP 3119–Introducing Abstract Base Classes_]
 apresenta a justificativa para as ABCs.
-A https://fpy.li/13-53[PEP 3141--A Type Hierarchy for Numbers] (EN)
+A https://fpy.li/13-53[_PEP 3141–A Type Hierarchy for Numbers_]
 apresenta as ABCs do https://fpy.li/13-54[módulo `numbers`],
-mas a discussão no Mypy issue https://fpy.li/13-55[#3186 "int is not a Number?"]
-inclui alguns argumentos sobre a razão da torre numérica ser inadequada para checagem estática de tipo.
+mas a discussão no Mypy issue https://fpy.li/13-55[#3186] intitulado
+"int is not a Number?" (int não é um número?)
+inclui alguns argumentos sobre porque a torre numérica não serve
+para checagem estática de tipo.
 Alex Waygood escreveu uma
 https://fpy.li/13-56[resposta abrangente no StackOverflow], discutindo formas de anotar tipos numéricos.
 
 Vou continuar monitorando o Mypy issue
 https://fpy.li/13-55[#3186]
-para os próximos capítulos dessa saga, na esperança de um final feliz que torne a tipagem estática e a tipagem ganso compatíveis, como eles deveriam ser.
+para os próximos capítulos dessa saga,
+na esperança de um final feliz que torne a tipagem estática
+e a tipagem ganso compatíveis, como deveriam ser.
 
-
-////
-PROD: Please check for orphans within the Soapbox.
-I could not use section titles, so I faked them with sentences in bold type, but sometimes a page break may appear between a "title" and the next paragraph.
-////
 
 [role="pagebreak-before less_space"]
 [[interfaces_soapbox]]
 .Ponto de vista
 ****
 
-[role="soapbox-title"]
 **A Jornada MVP da tipagem estática em Python**
 
 Trabalhei((("interfaces", "Soapbox discussion", id="Isoap13")))((("protocols",
@@ -2504,25 +2576,25 @@ _Minimum Viable Product_ (Produto Mínimo Viável),
 "uma versão simples de um produto, que é oferecida para
 os usuários com o objetivo de validar hipóteses centrais do negócio,"
 conforme a definição de Paulo Caroli em
-https://fpy.li/13-58[Lean Inception],
+https://fpy.li/13-58[_Lean Inception_],
 um artigo no
 https://fpy.li/13-59[blog coletivo] editado por Martin Fowler.
 
 Guido van Rossum e os outros mantenedores que projetaram e implementaram a
 tipagem estática tem seguido a estratégia do MVP desde 2006. Primeiro, a
-https://fpy.li/pep3107[PEP 3107—Function Annotations] foi implementada no Python
-3.0 com uma semântica bastante limitada: apenas sintaxe para anexar anotações a
-parâmetros e retornos de funções, armazenadas no objeto função.
+https://fpy.li/pep3107[_PEP 3107—Function Annotations_] foi implementada no Python
+3.0 com uma semântica bastante limitada: apenas uma sintaxe para anexar
+anotações a parâmetros e resultados de funções, armazenadas no objeto função.
 Isso foi feito para explicitamente permitir experimentação e
 receber feedback—os principais benefícios de um MVP.
 
-Oito anos depois, a https://fpy.li/pep484[PEP 484—Type Hints] foi proposta e
+Oito anos depois, a https://fpy.li/pep484[_PEP 484—Type Hints_] foi proposta e
 aprovada. Sua implementação, no Python 3.5, não exigiu mudanças na linguagem ou
 na biblioteca padrão—exceto a adição do módulo `typing`, do qual nenhuma outra
 parte da biblioteca padrão dependia.
 
 A PEP 484 suportava apenas tipos nominais com genéricos—similar ao Java—mas com
-a checagem estática efetiva sendo executada por ferramentas externas.
+a checagem estática sendo executada por ferramentas externas.
 Recursos importantes não existiam, como anotações de variáveis, tipos embutidos
 genéricos, e protocolos.
 
@@ -2532,14 +2604,14 @@ em Python, como a Dropbox, o Google e o Facebook, bem como apoio de IDEs
 profissionais como o https://fpy.li/13-60[PyCharm], o
 https://fpy.li/13-61[Wing], e o https://fpy.li/13-62[VS Code].
 
-A https://fpy.li/pep526[PEP 526—Syntax for Variable Annotations] foi o primeiro
+A https://fpy.li/pep526[_PEP 526—Syntax for Variable Annotations_] foi o primeiro
 passo evolutivo que exigiu mudanças no interpretador, no Python 3.6. Mais
-mudanças no interpretador de Python 3.7 foram feitas para suportar a
-https://fpy.li/pep563[PEP 563—Postponed Evaluation of Annotations] e a
-https://fpy.li/pep560[PEP 560—Core support for typing module and generic types],
+mudanças no interpretador foram feitas na versão 3.7 para suportar a
+https://fpy.li/pep563[_PEP 563—Postponed Evaluation of Annotations_] e a
+https://fpy.li/pep560[_PEP 560—Core support for typing module and generic types_],
 que permitiram que coleções embutidas e da biblioteca padrão aceitem dicas de
 tipo genéricas "de fábrica" no Python 3.9, graças à
-https://fpy.li/pep585[PEP 585—Type Hinting Generics In Standard Collections].
+https://fpy.li/pep585[_PEP 585—Type Hinting Generics In Standard Collections_].
 
 Durante todos esses anos, alguns usuários de Python—incluindo eu—ficamos
 desapontados com os tipos estáticos. Após que aprendi Go, a falta de
@@ -2556,13 +2628,11 @@ esperar pelo Python 4—se é que existirá—para tornar Python mais atrativo p
 grandes empresas, onde os benefícios da tipagem estática superam a complexidade
 adicional.
 
-[role="soapbox-title"]
 **Abordagens à tipagem em linguagens populares**
 
-
 A <<type_systems_languages>> é((("Soapbox sidebars", "typing map")))((("typing
-map"))) uma variação do Mapa de Tipagem(<<type_systems_described>>) com 
-algumas linguagem populares que suportam cada um dos modos de tipagem.
+map"))) uma variação do Mapa de Tipagem (<<type_systems_described>>) com 
+algumas linguagem conhecidas que suportam cada um dos modos de tipagem.
 
 [[type_systems_languages]]
 .Quatro abordagens para checagem de tipos e algumas linguagens que as usam.
@@ -2571,11 +2641,11 @@ image::../images/mapa-da-tipagem-linguagens.png[align="center",pdfwidth=12cm]
 TypeScript e Python ≥ 3.8 são as únicas linguagem em minha pequena e arbitrária
 amostra que suportam todas as quatro abordagens.
 
-Go é claramente uma linguagem de tipo estáticos na tradição do Pascal, mas ela
+Go é claramente uma linguagem de tipos estáticos na tradição do Pascal, mas ela
 foi a pioneira da tipagem pato estática—pelo menos entre as linguagens mais
 usadas hoje. Também coloquei Go no quadrante da tipagem ganso por causa
 de sua sintaxe especial para checagem de tipo (_type assertion_),
-que permitem tratar tipos dinamicamente durante a execução.
+que permitem tratar tipos nominais dinamicamente durante a execução.
 
 No ano 2000, só existiam linguagens populares nos quadrantes diametralmente opostos 
 da tipagem pato e da tipagem estática.
@@ -2585,17 +2655,21 @@ O fato de cada um dos quatro quadrantes ter pelo
 menos três linguagens populares sugere que muita gente vê benefícios em cada uma
 das quatro abordagens à tipagem.
 
-
-[role="soapbox-title pagebreak-before less_space"]
 **Monkey patching**
 
-Monkey patching((("Soapbox sidebars", "monkey-patching")))((("monkey-patching"))) tem uma reputação ruim.
-Se usado com exagero, pode gerar sistemas difíceis de entender e manter.
-A correção está normalmente intimamente ligada a seu alvo, tornando-se frágil.
-Outro problema é que duas bibliotecas que aplicam correções deste tipo durante a execução podem pisar nos pés uma da outra, com a segunda biblioteca a rodar destruindo as correções da primeira.
+Monkey patching((("Soapbox sidebars",
+"monkey-patching")))((("monkey-patching"))) tem uma reputação ruim. Se usado com
+exagero, pode gerar sistemas difíceis de entender e manter. O remendo (_patch_)
+dinâmico está
+normalmente fortemente acoplado ao seu alvo, tornando-se quebradiço quando o código
+evolui. Outro problema é
+que duas bibliotecas que aplicam remendos deste tipo durante a execução podem
+pisar nos pés uma da outra, com a segunda biblioteca a rodar destruindo os
+remendos da primeira.
 
-Mas o monkey patching pode também ser útil, por exemplo, para fazer uma classe implementar um protocolo durante a execução.
-O design pattern Adaptador resolve o mesmo problema através da implementação de uma nova classe inteira.
+Mas o monkey patching pode também ser útil, por exemplo, para fazer uma classe
+implementar um protocolo durante a execução. O design pattern Adaptador resolve
+o mesmo problema de modo mais verboso implementando toda uma nova classe.
 
 É fácil usar monkey patching em código Python, mas há limitações.
 Ao contrário de Ruby e Javascript, Python não permite mudar o comportamento dos tipos embutidos durante a execução.
@@ -2604,28 +2678,42 @@ pois dá a certeza que um objeto `str` terá sempre os mesmos métodos.
 Esta limitação reduz a chance de bibliotecas aplicarem
 correções conflitantes quando importadas em seu projeto.
 
-[role="soapbox-title"]
-Metáforas e idiomas em interfaces
+**Metáforas e idiomas em interfaces**
 
-Uma((("Soapbox sidebars", "interfaces"))) metáfora promove o entendimento tornando restrições e acessos visíveis.
-Esse é o valor das palavras "stack" (_pilha_) e "queue" (_fila_) para descrever estruturas de dados fundamentais: elas tornam claras aa operações permitidas, isto é, como os itens podem ser adicionados ou removidos.
-Por outro lado, Alan Cooper et al. escrevem em _About Face, the Essentials of Interaction Design_, 4th ed. (Wiley):
+Uma((("Soapbox sidebars", "interfaces"))) metáfora promove o entendimento
+tornando restrições e acessos visíveis. Esse é o valor das palavras _stack_
+(pilha) e _queue_ (fila) para descrever estruturas de dados fundamentais:
+elas tornam claras aa operações permitidas, isto é, como os itens podem ser
+adicionados ou removidos. Por outro lado, Alan Cooper et al. escrevem em _About
+Face, the Essentials of Interaction Design_, 4th ed. (Wiley):
 
 [quote]
 ____
-Fidelidade estrita a metáforas liga interfaces de forma desnecessariamente firme aos mecanismos do mundo físico.
+
+Fidelidade estrita a metáforas liga interfaces de forma desnecessariamente firme
+aos mecanismos do mundo físico.
+
 ____
 
-Eles está falando de interface de usuário, mas a advertência se aplica também a APIs.
-Mas Cooper admite que quando uma metáfora "verdadeiramente apropriada" "cai no nosso colo," podemos usá-la (ele escreve "cai no nosso colo" porque é tão difícil encontrar metáforas adequadas que ninguém deveria perder tempo tentando encontrá-las ativamente).
-Acredito que a imagem da máquina de bingo que usei nesse capítulo é apropriada e eu a defenderei.
+Eles está falando de interface de usuário, mas a advertência se aplica também a
+APIs. Cooper admite que quando "cai no nosso colo" uma metáfora "verdadeiramente
+apropriada", podemos usá-la (ele escreve "cai no nosso colo" porque é tão
+difícil encontrar metáforas adequadas que ninguém deveria perder tempo tentando
+encontrá-las). Acredito que a imagem da máquina de bingo que usei
+nesse capítulo é apropriada.
 
-_About Face_ é, de longe, o melhor livro sobre design de UI que já li—e eu li uns tantos.
-Abandonar as metáforas como paradigmas de design, as substituindo por "interfaces idiomáticas", foi a lição mais valiosa que aprendi com o trabalho de Cooper.
+_About Face_ é, disparado, o melhor livro sobre design de UI que já li—e eu li
+uns tantos. Abandonar as metáforas como paradigmas de design, as substituindo
+por "interfaces idiomáticas", foi a lição mais valiosa que aprendi com o
+trabalho de Cooper.
 
-Em _About Face_, Cooper não lida com APIs, mas quanto mais penso em suas ideias, mais vejo como se aplicam ao Python.
-Os protocolos fundamentais da linguagem são o que Cooper chama de "idiomas."
-Uma vez que aprendemos o que é uma "sequência", podemos aplicar esse conhecimento em diferentes contextos.
-Esse é o tema principal de _Python Fluente_: ressaltar os idiomas fundamentais da linguagem, para que o seu código seja conciso, efetivo e legível—para um Pythonista fluente.((("", startref="ABCsoap13")))((("", startref="Psoap13")))((("", startref="Isoap13")))
+Em _About Face_, Cooper não lida com APIs, mas quanto mais penso em suas ideias,
+mais vejo como se aplicam ao Python. Os protocolos fundamentais da linguagem são
+o que Cooper chama de "idiomas." Uma vez que aprendemos o que é uma "sequência",
+podemos aplicar esse conhecimento em diferentes contextos. Esse é o tema
+principal de _Python Fluente_: ressaltar os idiomas fundamentais da linguagem,
+para que o seu código seja conciso, efetivo e legível para um pythonista
+fluente.((("", startref="ABCsoap13")))((("", startref="Psoap13")))((("",
+startref="Isoap13")))
 
 ****
