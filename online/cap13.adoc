@@ -630,7 +630,7 @@ reconhecidas por `isinstance()` e `issubclass()`; veja a documentação do módu
 ____
 
 A tipagem ganso é uma abordagem à checagem de tipo durante a execução que se
-apoia nas ABCs. Vou deixar que Alex Martelli explique, no <<waterfowl_essay>>.
+apoia nas ABCs. Vou deixar que Alex Martelli explique, no texto _<<waterfowl_essay>>_.
 
 [NOTE]
 ====
@@ -1017,12 +1017,12 @@ Se `insinstance(obj, Hashable)` devolver `False`, pode ter certeza que
 Isso é explicado no box seguinte.
 
 [[isinstance_mislead_box]]
-.isinstance com Hashable e Iterable pode enganar você
+.`isinstance` com `Hashable` e `Iterable` pode te enganar
 ****
 
 É fácil interpretar errado os resultados de testes usando `isinstance` e
 `issubclass` com as ABCs `Hashable` and `Iterable`. Se `isinstance(obj,
-Hashable)` retorna `True`, is significa apenas que a classe de `obj` implementa
+Hashable)` devolve `True`, is significa apenas que a classe de `obj` implementa
 ou herda `+__hash__+`. Mas se `obj` é uma tupla contendo itens _unhashable_,
 então `obj` não é _hashable_, apesar do resultado positivo da checagem com
 `isinstance`.
@@ -1324,19 +1324,20 @@ nossa instância de `SystemRandom`.
 <5> `pick` é implementado como no <<ex_bingo_callable>>.
 
 <6> `+__call__+` também é do <<ex_bingo_callable>>. Ele não é necessário para
-satisfazer a interface de `Tombola`, mas não há problema em adicionar
+satisfazer a interface de `Tombola`, mas é comum que subclasses tenham mais
 métodos.
 
 `BingoCage` herda o custoso método `loaded` e o tolo `inspect` de `Tombola`.
 Ambos poderiam ser sobrescritos com métodos de uma linha mais rápidos, como no
-<<ex_lotto>>. A questão é: podemos ser preguiçosos e escolher apenas herdar os
-método concretos menos que ideais de uma ABC. Os métodos herdados de `Tombola`
+<<ex_lotto>>. A questão é: podemos decidir apenas herdar os
+método concretos de uma ABC. Os métodos herdados de `Tombola`
 não são tão rápidos quanto poderia ser em `BingoCage`, mas fornecem os
 resultados esperados para qualquer subclasse de `Tombola` que implemente `pick`
 e `load` corretamente.
 
-O <<ex_lotto>> mostra uma implementação muito diferente mas igualmente válida da interface de `Tombola`.
-Em vez de misturar as "bolas" e tirar a última, `LottoBlower` tira um item de uma posição aleatória..
+O <<ex_lotto>> mostra uma implementação muito diferente mas igualmente válida da
+interface de `Tombola`. Em vez de misturar as "bolas" e tirar a última,
+`LottoBlower` tira um item de uma posição aleatória..
 
 [[ex_lotto]]
 .lotto.py: `LottoBlower` é uma subclasse concreta que sobrecarrega os métodos `inspect` e `loaded` de `Tombola`
@@ -1360,28 +1361,41 @@ faz no <<ex_tombola_abc>>). Podemos fazer isso mais rápido acessando
 <5> Sobrescreve `inspect` com uma linha de código.
 
 O <<ex_lotto>> ilustra um idioma que vale a pena mencionar:
-em `+__init__+`, `self._balls` armazena `list(iterable)`, e não apenas uma referência para `iterable`
-(isto é, nós não meramente atribuímos `self._balls = iterable`, apelidando o argumento).
-Como mencionado na <<defensive_duck_prog_sec>>, isso torna nossa `LottoBlower` flexível, pois o argumento `iterable` pode ser de qualquer tipo iterável.
-Ao mesmo tempo, garantimos que os itens serão armazenados em uma `list`, da onde podemos `pop` os itens.ƒ
+em `+__init__+`, `self._balls` armazena `list(iterable)`, e não apenas uma
+referência para `iterable` (isto é, nós não apenas atribuímos
+`self._balls = iterable`, apelidando o argumento).
+Como mencionado na <<defensive_duck_prog_sec>>, isso torna a `LottoBlower`
+flexível, pois o argumento `iterable` pode ser de qualquer tipo iterável.
+Ao mesmo tempo, garantimos que os itens serão armazenados em uma `list`,
+de onde podemos retirar itens com `.pop()`.
 E mesmo se nós sempre recebêssemos listas no argumento `iterable`,
 `list(iterable)` produz uma cópia do argumento, o que é uma boa prática,
-considerando que vamos remover itens dali,
-e o cliente pode não estar esperando que a lista passada seja
-modificada.footnote:[<<defensive_argument>> (<<ch_refs_mut_mem>>)
-trata da questão de apelidamento que acabamos de evitar aqui.]
+considerando que vamos remover itens dali, e o cliente pode não estar esperando
+que a lista passada seja modificada.footnote:[<<defensive_argument>>
+(<<ch_refs_mut_mem>>) trata do problema de apelidamento que acabamos de evitar
+aqui.]
 
-Chegamos agora à característica dinâmica crucial da tipagem ganso:
-declarar subclasses virtuais com o método `register`((("", startref="GTsubclass13")))((("", startref="ABCsubclass13")))((("", startref="IASsubclass13")))
+Chegamos agora à característica dinâmica da tipagem ganso:
+declarar subclasses virtuais com o método `register`.
+((("", startref="GTsubclass13")))((("", startref="ABCsubclass13")))((("", startref="IASsubclass13")))
 
 [[virtual_subclass_sec]]
 ==== Uma subclasse virtual de uma ABC
 
-Uma((("goose typing", "virtual subclasses of ABCs", id="GTvsub13")))((("ABCs (abstract base classes)", "virtual subclasses of ABCs", id="ABCvirt13")))((("virtual subclasses", id="virtsub13")))((("inheritance and subclassing", "virtual subclasses of ABCs", id="IASvirtualabc13"))) característica essencial da tipagem ganso—e uma razão pela qual ela merece um nome de ave aquática—é a habilidade de registrar uma classe como uma _subclasse virtual_ de uma ABC, mesmo se a classe não herde da ABC.
-Ao fazer isso, prometemos que a classe implementa fielmente a interface definida na ABC—e Python vai acreditar em nós sem checar.
-Se mentirmos, vamos ser capturados pelas exceções de tempo de execução conhecidas.
+Uma((("goose typing", "virtual subclasses of ABCs", id="GTvsub13")))((("ABCs
+(abstract base classes)", "virtual subclasses of ABCs",
+id="ABCvirt13")))((("virtual subclasses", id="virtsub13")))((("inheritance and subclassing",
+"virtual subclasses of ABCs", id="IASvirtualabc13")))
+característica essencial da tipagem ganso—e uma razão pela qual ela merece um
+nome de ave aquática—é a habilidade de registrar uma classe como uma _subclasse
+virtual_ de uma ABC, mesmo se a classe não herde da ABC. Ao fazer isso,
+prometemos que a classe implementa fielmente a interface definida na ABC—e
+Python vai acreditar em nós sem checar. Se mentirmos, vamos enfrentar
+exceções de tempo de execução.
 
-Isso é feito invocando um método de classe `register` da ABC, e será reconhecido assim por `issubclass`, mas não implica na herança de qualquer método ou atributo da ABC.
+Isso é feito invocando um método de classe `register` da ABC.
+A subclasse registrada será reconhecida por `issubclass`,
+mas herdará qualquer método ou atributo da ABC.
 
 [WARNING]
 ====
@@ -1392,14 +1406,16 @@ E mais, neste momento checadores de tipos estáticos não conseguem tratar subcl
 Mais detalhes em https://fpy.li/13-22[Mypy issue 2922—ABCMeta.register support].
 ====
 
-O método `register` normalmente é invocado como uma função comum (veja <<register_usage>>),
-mas também pode ser usado como decorador.
-No ((("UML class diagrams", "TomboList"))) <<ex_tombolist>>, usamos a sintaxe de decorador e implementamos `TomboList`, uma subclasse virtual de `Tombola`, ilustrada em <<tombolist_uml>>.
+O método `register` normalmente é invocado como uma função comum (veja a
+<<register_usage>>), mas também pode ser usado como decorador.
+No ((("UML class diagrams", "TomboList"))) <<ex_tombolist>>,
+usamos a sintaxe de decorador e implementamos `TomboList`,
+uma subclasse virtual de `Tombola`, ilustrada em <<tombolist_uml>>.
 
 [role="width-50"]
 [[tombolist_uml]]
 .Diagrama de classe UML para `TomboList`, subclasse real de `list` e subclassse virtual de `Tombola`.
-image::../images/flpy_1307.png[align="center",pdfwidth=5cm]
+image::../images/flpy_1307.png[align="center",pdfwidth=5.5cm]
 
 [[ex_tombolist]]
 .tombolist.py: a classe `TomboList` é uma subclasse virtual de `Tombola`
@@ -1411,7 +1427,7 @@ include::../code/13-protocol-abc/tombolist.py[]
 ====
 <1> `TomboList` é registrada como subclasse virtual de `Tombola`.
 <2> `TomboList` estende `list`.
-<3> `TomboList` herda seu comportamento booleano de `list`, e isso retorna `True` se a lista não estiver vazia.
+<3> `TomboList` herda seu comportamento booleano de `list`, e isso devolve `True` se a lista não estiver vazia.
 <4> Nosso `pick` chama `self.pop`, herdado de `list`, passando um índice aleatório para um item.
 <5> `TomboList.load` é o mesmo que `list.extend`.
 <6> `loaded` delega para `bool`.footnote:[O truque usado com `load()` não funciona com `loaded()`, pois o tipo `list` não implementa `+__bool__+`, o método que eu teria de vincular a `loaded`. O `bool()` nativo não precisa de `+__bool__+` para funcionar, porque pode também usar `+__len__+`. Veja https://fpy.li/2g["4.1. Teste do Valor Verdade"] no capítulo "Tipos Embutidos" da documentação de Python.]
@@ -1448,13 +1464,17 @@ Isso conclui nosso estudo de caso da ABC `Tombola`.
 Na próxima seção, vamos falar sobre como a função `register` das ABCs é usada na vida real.((("", startref="GTvsub13")))((("", startref="ABCvirt13")))((("", startref="virtsub13")))((("", startref="IASvirtualabc13")))
 
 [[register_usage]]
-==== O Uso de register na Prática
+==== O uso de `register` na prática
 
-No <<ex_tombolist>>, usamos((("goose typing", "usage of register")))((("ABCs (abstract base classes)", "usage of register"))) `Tombola.register` como um decorador de classe.
-Antes de Python 3.3, `register` não podia ser usado dessa forma—ele tinha que ser invocado como uma função normal após a definição da classe, como sugerido pelo comentário no final do <<ex_tombolist>>.
-Entretanto, ainda hoje ele mais usado como uma função para registrar classes definidas em outro lugar.
-Por exemplo, no https://fpy.li/13-24[código-fonte] do módulo `collections.abc`,
-os tipos nativos `tuple`, `str`, `range`, e `memoryview` são registrados como subclasses virtuais de `Sequence` assim:
+No <<ex_tombolist>>, usamos((("goose typing", "usage of register")))((("ABCs (abstract base classes)",
+"usage of register"))) `Tombola.register` como um
+decorador de classe. Antes de Python 3.3, `register` não podia ser usado dessa
+forma—ele tinha que ser invocado como uma função normal após a definição da
+classe, como sugerido pelo comentário no final do <<ex_tombolist>>. Mas `register`
+continua sendo usado como uma função para registrar classes definidas em
+outro lugar. Por exemplo, no https://fpy.li/13-24[código-fonte] do módulo
+`collections.abc`, os tipos nativos `tuple`, `str`, `range`, e `memoryview` são
+registrados como subclasses virtuais de `Sequence` assim:
 
 [source, python]
 ----
@@ -1476,19 +1496,25 @@ A próxima seção explica isso.
 [[subclasshook_sec]]
 ==== Tipagem estrutural com ABCs
 
-As ABCs((("goose typing", "structural typing with ABCs", id="GTstruct13")))((("ABCs (abstract base classes)", "structural typing with", id="ABCstruct13")))((("structural typing", id="strtype13")))
+As ABCs((("goose typing", "structural typing with ABCs", id="GTstruct13")))((("ABCs (abstract base classes)",
+"structural typing with", id="ABCstruct13")))((("structural typing", id="strtype13")))
 são usadas principalmente com tipagem nominal.
 
-Quando uma classe `Sub` herda explicitamente de `AnABC`, ou está registrada com `AnABC`, o nome de
-`AnABC` fica ligado ao da classe `Sub`— e é assim que, durante a execução, `issubclass(AnABC, Sub)` retorna `True`.
+Quando uma classe `Sub` herda explicitamente de `UmaABC`, ou está registrada com
+`UmaABC`, o nome de `UmaABC` fica ligado ao da classe `Sub`—é assim que, durante
+a execução, `issubclass(UmaABC, Sub)` devolve `True`.
 
-Em contraste, a tipagem estrutural diz respeito a olhar para a estrutura da interface pública de um objeto para determinar seu tipo:
-um objeto é _consistente-com_ um tipo se implementa os métodos definidos no tipo.footnote:[O conceito de consistência de tipo é explicado na <<consistent_with_sec>>.]
-A tipagem pato estática e a tipagem pato dinâmica são duas abordagens à tipagem estrutural.
+Em contraste, a tipagem estrutural diz respeito a olhar para a estrutura da
+interface pública de um objeto para determinar seu tipo: um objeto é
+_consistente-com_ um tipo se implementa os métodos definidos no tipo.footnote:[O
+conceito de consistência de tipo é explicado na <<consistent_with_sec>>.] A
+tipagem pato estática e a tipagem pato dinâmica são duas abordagens à tipagem
+estrutural.
 
-E ocorre que algumas ABCs também suportam tipagem estrutural,
-Em seu ensaio, <<waterfowl_essay>>, Alex mostra que uma classe pode ser reconhecida como subclasse de uma ABC mesmo sem registro.
-Aqui está novamente o exemplo dele, com um teste adicional usando `issubclass`:
+Acontece que algumas ABCs também suportam tipagem estrutural.
+Em seu ensaio _<<waterfowl_essay>>_, Alex mostra que uma classe pode ser
+reconhecida como subclasse de uma ABC mesmo sem registro. Aqui está novamente o
+exemplo dele, com um teste adicional usando `issubclass`:
 
 [source, python]
 ----
@@ -1531,7 +1557,7 @@ class Sized(metaclass=ABCMeta):
 ----
 ====
 <1> Se há um atributo chamado `+__len__+` no `+__dict__+` de qualquer classe listada em `+C.__mro__+` (isto é, `C` e suas superclasses)...
-<2> ...retorna `True`, sinalizando que `C` é uma subclasse virtual de `Sized`.
+<2> ...devolve `True`, sinalizando que `C` é uma subclasse virtual de `Sized`.
 <3> Caso contrário retorna `NotImplemented`, para permitir que a checagem de subclasse continue.
 
 [NOTE]
@@ -1546,27 +1572,34 @@ A implementação atual de `+ABCMeta.__subclasscheck__+` simplesmente chama `_ab
 O código-fonte em C relevante está em https://fpy.li/13-28[_cpython/Modules/&#x5f;abc.c#L605_].
 ====
 
-É assim que `+__subclasshook__+` permite às ABCs suportarem a tipagem estrutural.
-Você pode formalizar uma interface com uma ABC,
-você pode fazer checagens `isinstance` com aquela ABC,
-e ainda ter um classe sem qualquer relação de herança
-aprovada por uma checagem de `issubclass` porque ela implementa um certo método.
-(ou porque ela faz o que quer que seja necessário para convencer um `+__subclasshook__+` a dar a ela seu aval).
+É assim que `+__subclasshook__+` permite às ABCs suportarem a tipagem
+estrutural. Você pode formalizar uma interface com uma ABC, pode fazer checagens
+`isinstance` com aquela ABC, e ainda ter um classe sem qualquer relação de
+herança aprovada por uma checagem de `issubclass` porque ela implementa um certo
+método (ou porque ela faz o necessário para convencer o
+`+__subclasshook__+` da ABC aprová-la como subclasse virtual).
 
-É uma boa ideia implementar `+__subclasshook__+` em nossas próprias ABCs? Provavelmente não.
-Todas as implementações de `+__subclasshook__+` que vi no código-fonte de Python estão em ABCs como `Sized`, que declara apenas um método especial, e elas simplesmente verificam a presença do nome daquele método especial.
-Dado seu status "especial", é quase certeza que qualquer método chamado `+__len__+` faz o que se espera.
-Mas mesmo no reino dos métodos especiais e ABCs fundamentais,
-pode ser arriscado fazer tais suposições.
-Por exemplo, mapeamentos implementam `+__len__+`, `+__getitem__+`, e `+__iter__+`, mas corretamente não são considerados subtipos de `Sequence`,
-pois você não pode recuperar itens usando deslocamentos inteiros ou faixas.
-Por isso a classe https://fpy.li/13-29[`abc.Sequence`] não implementa `+__subclasshook__+`.
+É uma boa ideia implementar `+__subclasshook__+` em nossas próprias ABCs?
+Provavelmente não. Todas as implementações de `+__subclasshook__+` que vi no
+código-fonte de Python estão em ABCs como `Sized`, que declara apenas um método
+especial, e elas simplesmente verificam a presença do nome daquele método
+especial. Dado seu status "especial", é quase certeza que qualquer método
+chamado `+__len__+` faz o que se espera. Mas mesmo no reino dos métodos
+especiais e ABCs fundamentais, pode ser arriscado fazer tais suposições. Por
+exemplo, mapeamentos implementam `+__len__+`, `+__getitem__+`, e `+__iter__+`,
+mas corretamente não são considerados subtipos de `Sequence`, pois não podemos
+recuperar itens usando índices a partir de zero ou obter fatias. Por isso a classe
+https://fpy.li/13-29[`abc.Sequence`] não implementa `+__subclasshook__+`.
 
-Para ABCs que você ou eu podemos escrever, um `+__subclasshook__+` seria ainda menos confiável.
-Não estou preparado para acreditar que qualquer classe chamada `Spam` que implemente ou herde
-`load`, `pick`, `inspect`, e `loaded` vai necessariamente se comportar como uma `Tombola`.
-É melhor deixar o programador afirmar isso, fazendo de `Spam` uma subclasse de `Tombola`, ou registrando a classe com `Tombola.register(Spam)`.
-Claro, o seu `+__subclasshook__+` poderia também verificar assinaturas de métodos e outras características, mas não creio que valha o esforço.((("", startref="GTstruct13")))((("", startref="ABCstruct13")))((("", startref="strtype13")))
+Para ABCs que você ou eu podemos escrever, um `+__subclasshook__+` seria ainda
+menos confiável. Não estou preparado para acreditar que qualquer classe chamada
+`Spam` que implemente ou herde `load`, `pick`, `inspect`, e `loaded` vai
+necessariamente se comportar como uma `Tombola`. É melhor deixar o programador
+afirmar isso, fazendo de `Spam` uma subclasse de `Tombola`, ou registrando a
+classe com `Tombola.register(Spam)`. Claro, o seu `+__subclasshook__+` poderia
+também verificar assinaturas de métodos e outras características, mas não creio
+que valha o esforço.((("", startref="GTstruct13")))((("",
+startref="ABCstruct13")))((("", startref="strtype13")))
 
 
 [[static_protocols_sec]]
@@ -1574,20 +1607,29 @@ Claro, o seu `+__subclasshook__+` poderia também verificar assinaturas de méto
 
 [NOTE]
 ====
-Vimos algo sobre protocolos estáticos((("protocols", "static protocols", id="Pstatic13")))
-em <<protocols_in_fn_sec>> (<<ch_type_hints_def>>).
-Até considerei deixar toda a discussão sobre protocolos para esse capítulo,
-mas decidi que a apresentação inicial de dicas de tipo em funções precisava incluir protocolos, pois a tipagem pato é uma parte essencial de Python,
-e checagem de tipos estática sem protocolos não consegue lidar muito bem com as APIs pythônicas.
+
+Vimos algo sobre protocolos estáticos((("protocols", "static protocols",
+id="Pstatic13"))) em <<protocols_in_fn_sec>>. Pensei em deixar toda a discussão
+sobre protocolos para este capítulo, mas decidi que a apresentação inicial de
+dicas de tipo em funções precisava incluir protocolos, pois a tipagem pato é uma
+parte essencial de Python, e a checagem de tipos estática sem protocolos não
+consegue lidar muito bem com muitas APIs pythônicas.
+
 ====
 
-Vamos encerrar esse capítulo ilustrando os protocolos estáticos com dois exemplos simples, e uma discussão sobre as ABCs numéricas e protocolos.
-Começaremos mostrando como um protocolo estático torna possível anotar e checar tipos na função `double()`, que vimos antes na <<types_defined_by_ops_sec>>.
+Vamos encerrar este capítulo ilustrando os protocolos estáticos com dois
+exemplos simples, e uma discussão sobre as ABCs numéricas e protocolos.
+Começaremos mostrando como um protocolo estático torna possível anotar e checar
+tipos na função `double()`, que vimos antes na <<types_defined_by_ops_sec>>.
 
 [[typed_double_sec]]
 ==== A função double tipada
 
-Quando((("static protocols", "typed double function", id="SPtypeddouble13")))((("typed double function", id="typdblf13")))((("double() function", id="double13")))((("functions", "double() function"))) eu apresento Python para programadores mais acostumados com uma linguagem de tipagem estática, um de meus exemplos favoritos é essa função `double` simples:
+Quando((("static protocols", "typed double function",
+id="SPtypeddouble13")))((("typed double function", id="typdblf13")))((("double()
+function", id="double13")))((("functions", "double() function"))) apresento
+Python para programadores mais acostumados com uma linguagem de tipagem
+estática, um de meus exemplos favoritos é essa função `double` simples:
 
 [source, python]
 ----
@@ -1605,12 +1647,21 @@ Quando((("static protocols", "typed double function", id="SPtypeddouble13")))(((
 Fraction(4, 5)
 ----
 
-Antes da introdução dos protocolos estáticos, não havia uma forma prática de acrescentar dicas de tipo a `double` sem limitar seus usos possíveis.footnote:[Certo, double()` não é muito útil, exceto como um exemplo.
-Mas a biblioteca padrão de Python tem muitas funções que não poderiam ser anotadas de modo apropriado antes dos protocolos estáticos serem adicionados, no Python 3.8. Ajudei a corrigir alguns bugs no _typeshed_ acrescentando dicas de tipo com o uso de protocolos.
-Por exemplo, o _pull request_ (nome do processo de pedido de envio de modificações a um repositório de código) que consertou https://fpy.li/shed4051["Should Mypy warn about potential invalid arguments to `max`? (Deveria o Mypy avisar sobre argumentos potencialmente inválidos passados a `max`?)"] aproveitava um protocolo `_SupportsLessThan`, que usei para melhorar as anotações de `max`, `min`, `sorted`, e `list.sort`.]
+Antes da introdução dos protocolos estáticos, não havia uma forma prática de
+acrescentar dicas de tipo a `double` sem limitar seus usos
+possíveis.footnote:[Concordo que `double()` não é muito útil, exceto como um exemplo.
+Mas a biblioteca padrão de Python tem muitas funções que não poderiam ser
+anotadas de modo apropriado antes dos protocolos estáticos serem adicionados, no
+Python 3.8. Ajudei a corrigir alguns bugs no _typeshed_ acrescentando dicas de
+tipo com protocolos. Por exemplo, no _pull request_ que consertou
+https://fpy.li/shed4051[_Should Mypy warn about potential invalid arguments to`max`?_]
+(Deveria o Mypy avisar sobre argumentos potencialmente inválidos passados a `max`?)
+defini um protocolo `_SupportsLessThan`, que usei para melhorar
+as anotações de `max`, `min`, `sorted`, e `list.sort`.]
 
 
-Graças à tipagem pato, `double` funciona mesmo com tipos do futuro, tal como a classe `Vector` aprimorada que veremos no <<overloading_mul>> (<<ch_op_overload>>):
+Graças à tipagem pato, `double` funciona mesmo com tipos inventados depois, tal
+como a classe `Vector` aprimorada que veremos na <<overloading_mul>>:
 
 [source, python]
 ----
@@ -1619,11 +1670,15 @@ Graças à tipagem pato, `double` funciona mesmo com tipos do futuro, tal como a
 Vector([22.0, 24.0, 26.0])
 ----
 
-A implementação inicial de dicas de tipo no Python era um sistema de tipos nominal:
-o nome de um tipo em uma anotação tinha que corresponder ao nome do tipo do argumento real—ou com o nome de uma de suas superclasses.
-Como é impossível nomear todos os tipos que implementam um protocolo (suportando as operações requeridas), a tipagem pato não podia ser descrita por dicas de tipo antes de Python 3.8.
+A implementação inicial de dicas de tipo no Python era um sistema de tipos
+nominal: o nome de um tipo em uma anotação tinha que corresponder ao nome do
+tipo do argumento real—ou com o nome de uma de suas superclasses. Como é
+impossível nomear todos os tipos que implementam um protocolo (suportando as
+operações requeridas), a tipagem pato não podia ser descrita por dicas de tipo
+antes do Python 3.8.
 
-Agora, com `typing.Protocol`, podemos informar ao Mypy que `double` recebe um argumento `x` que suporta `x * 2`.
+Agora, com `typing.Protocol`, podemos informar ao Mypy que `double` recebe um
+argumento `x` que suporta `x * 2`.
 
 O <<repeatable_protocol_ex>> mostra como.
 
@@ -1639,14 +1694,16 @@ include::../code/13-protocol-abc/double/double_protocol.py[]
 <2> `+__mul__+` é a essência do protocolo `Repeatable`.
 O parâmetro `self` normalmente não é anotado—presume-se que seu tipo seja a classe.
 Aqui usamos `T` para assegurar que o tipo do resultado é o mesmo tipo de `self`.
-Além disso observe que `repeat_count` está limitado nesse protocolo a `int`.
+Além disso observe que decidi limitar `repeat_count` ao tipo `int` neste protocolo.
 <3> A variável de tipo `RT` é vinculada pelo protocolo `Repeatable`:
 o checador de tipos vai exigir que o tipo efetivo implemente `Repeatable`.
 <4> Agora o checador de tipos pode checar que o parâmetro `x` é um objeto que pode ser multiplicado por um inteiro, e que o valor retornado tem o mesmo tipo que `x`.
 
-Este exemplo mostra porque o título da https://fpy.li/pep544[PEP 544] é
-"_Protocols: Structural subtyping (static duck typing)._ (Protocolos: Subtipagem estrutural (tipagem pato estática))."
-O tipo nominal de `x`, argumento efetivamente passado a `double`, é irrelevante, desde que grasne—ou seja, desde que implemente `+__mul__+`.((("", startref="SPtypeddouble13")))((("", startref="typdblf13")))((("", startref="double13")))
+Este exemplo mostra porque o subtítulo da https://fpy.li/pep544[PEP 544] é
+_static duck typing_ (tipagem pato estática). O tipo nominal do argumento
+concreto `x` passado a `double`, é irrelevante, desde que grasne—ou seja, desde
+que implemente `+__mul__+`.((("", startref="SPtypeddouble13")))((("",
+startref="typdblf13")))((("", startref="double13")))
 
 
 [[runtime_checkable_proto_sec]]
@@ -2229,7 +2286,7 @@ através da adição de métodos extra via _monkey patching_.
 A seção sobre tipagem pato terminou com sugestões de programação defensiva,
 incluindo a detecção de tipos estruturais sem checagens explícitas com `isinstance` ou `hasattr`, usando `try/except` e falhando rápido.
 
-Após Alex Martelli introduzir a tipagem ganso em <<waterfowl_essay>>,
+Após Alex Martelli introduzir a tipagem ganso em _<<waterfowl_essay>>_,
 vimos como criar subclasses de ABCs existentes,
 examinamos algumas ABCs importantes da biblioteca padrão,
 e criamos uma ABC do zero,
