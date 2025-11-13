@@ -850,7 +850,7 @@ checagens com `isinstance`, pois isso poder ser sintoma de um design ruim.
 Normalmente, não é bom ter uma série de `if/elif/elif` com checagens de
 `isinstance` executando ações diferentes, dependendo do tipo de objeto: nesse
 caso você deveria estar usando polimorfismo—isto é, projetando suas classes para
-permitir ao interpretador enviar chamadas para os métodos corretos, em vez de
+permitir ao interpretador invocar os métodos corretos, em vez de
 codificar diretamente a lógica de despacho em blocos `if/elif/elif`.
 
 Por outro lado, não há problema em executar uma checagem com `isinstance` contra
@@ -1007,13 +1007,13 @@ Discutiremos este detalhe em <<ch_generators>>.
 Essas não são coleções, mas `collections.abc` foi o primeiro pacote a definir
 ABCs na biblioteca padrão, e essas duas foram consideradas importante o
 suficiente para serem incluídas. Elas suportam a checagem de tipos de objetos
-que precisam ser "chamáveis" ou hashable.
+que precisam ser invocáveis ou hashable.
 
-Para a detecção de 'callable', a função nativa `callable(obj)` é mais
+Para a detecção de invocável, a função embutida `callable(obj)` é mais
 conveniente que `insinstance(obj, Callable)`.
 
-Se `insinstance(obj, Hashable)` retornar `False`, você pode ter certeza que
-`obj` não é hashable. Mas se ela retornar `True`, pode ser um falso positivo.
+Se `insinstance(obj, Hashable)` devolver `False`, pode ter certeza que
+`obj` não é hashable. Mas se ela devolver `True`, pode ser um falso positivo.
 Isso é explicado no box seguinte.
 
 [[isinstance_mislead_box]]
@@ -1044,61 +1044,80 @@ ____
 
 ****
 
-Após vermos algumas das ABCs existentes, vamos praticar tipagem ganso implementando uma ABC do zero, e a colocando em uso.
-O objetivo aqui não é encorajar todo mundo a ficar criando ABCs a torto e a direito, mas aprender como ler o código-fonte das ABCs encontradas na biblioteca padrão e em outros pacotes.((("", startref="GTstlib13")))((("", startref="ABCstndlib13")))
+Após vermos algumas das ABCs existentes, vamos praticar tipagem ganso
+implementando uma ABC do zero, e a colocando em uso. O objetivo aqui não é
+encorajar todo mundo criar ABCs a torto e a direito, mas mostrar como ler o
+código-fonte das ABCs encontradas na biblioteca padrão e em outros
+pacotes.((("", startref="GTstlib13")))((("", startref="ABCstndlib13")))
 
 [[defining_using_abc_sec]]
 ==== Definindo e usando uma ABC
 
-Essa((("goose typing", "defining and using ABCs", id="GTdef13")))((("ABCs (abstract base classes)", "defining and using ABCs", id="ABCdef13"))) advertência estava no capítulo "Interfaces" da primeira edição de _Python Fluente_:
+Essa((("goose typing", "defining and using ABCs", id="GTdef13")))((("ABCs (abstract base classes)",
+"defining and using ABCs", id="ABCdef13")))
+advertência estava no capítulo "Interfaces" da primeira edição de _Python
+Fluente_:
 
 [quote]
 ____
-ABCs, como os descritores e as metaclasses, são ferramentas para criar frameworks,
-Assim, apenas uma pequena minoria dos desenvolvedores Python podem criar ABCs sem impor limitações pouco razoáveis e trabalho desnecessário a seus colegas programadores.
+
+ABCs, como os descritores e as metaclasses, são ferramentas para criar
+frameworks. Assim, só uma pequena minoria dos desenvolvedores Python tem
+a oportunidade de criar ABCs sem impor limitações pouco razoáveis e
+trabalho desnecessário a seus colegas programadores.
 ____
 
-Agora ABCs têm mais casos de uso potenciais, em dicas de tipo para permitir tipagem estática.
-Como discutido na <<type_hint_abc_sec>>,
-usar ABCs em vez de tipo concretos em dicas de tipos de argumentos de função dá mais flexibilidade a quem chama a função.
+Agora ABCs têm mais casos de uso potenciais, em dicas de tipo para permitir
+tipagem estática. Como discutido na <<type_hint_abc_sec>>, usar ABCs em vez de
+tipo concretos em dicas de tipos de argumentos de função dá mais flexibilidade a
+quem chama a função.
 
-Para justificar a criação de uma ABC, precisamos pensar em um contexto para usá-la como um ponto de extensão em um framework.
-Então aqui está nosso contexto: imagine que você precisa exibir publicidade em um site ou em uma app de celular, em ordem aleatória, mas sem repetir um anúncio antes que o inventário completo de anúncios tenha sido exibido.
-Agora vamos presumir que estamos desenvolvendo um gerenciador de publicidade chamado `ADAM`.
-Um dos requisitos é permitir o uso de classes de escolha aleatória não repetida fornecidas pelo usuário.footnote:[Talvez o cliente precise auditar o randomizador ou a agência queira fornecer um randomizador "viciado". Nunca se sabe...]
-Para deixar claro aos usuário do `ADAM` o que se espera de um componente de "escolha aleatória não repetida", vamos definir uma ABC.
+Para justificar a criação de uma ABC, precisamos pensar em um contexto para
+usá-la como um ponto de extensão em um framework. Então aqui está nosso
+contexto: imagine que você precisa exibir publicidade em um site ou em uma app
+de celular, em ordem aleatória, mas sem repetir um anúncio antes que o
+inventário completo de anúncios tenha sido exibido. Agora vamos presumir que
+estamos desenvolvendo um gerenciador de publicidade chamado `ADAM`. Um dos
+requisitos é permitir o uso de classes de escolha aleatória não repetida
+fornecidas pelo usuário.footnote:[Talvez o cliente precise auditar o
+randomizador ou a agência queira fornecer um randomizador "viciado". Nunca se
+sabe...] Para deixar claro aos usuário do `ADAM` o que se espera de um
+componente de "escolha aleatória não repetida", vamos definir uma ABC.
 
-Na bibliografia sobre estruturas de dados, "stack" e "queue" descrevem interfaces abstratas em termos dos arranjos físicos dos objetos.
-Vamos seguir o mesmo caminho e usar uma metáfora do mundo real para batizar nossa ABC:
-gaiolas de bingo e sorteadores de loteria são máquinas projetadas para escolher aleatoriamente itens de um conjunto, finito sem repetições, até o conjunto ser exaurido.
-Vamos chamar a ABC de `Tombola`, seguindo o nome italiano do bingo, e do recipiente giratório que mistura os números.
+Na bibliografia sobre estruturas de dados, _stack_ (pilha) e _queue_ (fila) descrevem
+interfaces abstratas em termos dos arranjos físicos dos objetos. Vamos seguir o
+mesmo caminho e usar uma metáfora do mundo real para batizar nossa ABC: gaiolas
+de bingo e sorteadores de loteria são máquinas projetadas para escolher
+aleatoriamente mas sem repetir, itens de um conjunto finito, até o conjunto ser
+esgotado. Vamos chamar a ABC de `Tombola`, seguindo o nome italiano do bingo, e
+do recipiente giratório que mistura os números.
 
 A ABC `Tombola` tem quatro métodos.
 Os dois métodos abstratos são:
 
 `.load(…)`:: Coloca itens no container.
-`.pick()`:: Remove e retorna um item aleatório do container.
+`.pick()`:: Remove e devolve um item aleatório do container.
 
 Os métodos concretos são:
 
-`.loaded()`:: Retorna `True` se existir pelo menos um item no container.
-`.inspect()`:: Retorna uma `tuple` construída a partir dos itens atualmente no container, sem modificar o conteúdo (a ordem interna não é preservada).
+`.loaded()`:: Devolve `True` se existir pelo menos um item no container.
+`.inspect()`:: Devolve uma `tuple` construída a partir dos itens atualmente no container,
+sem modificar o conteúdo (a ordem interna não é preservada).
 
 A <<tombola_uml>> mostra a ABC `Tombola` e três implementações concretas.
-Vale notar que _registered_ (registarada) e _virtual subclass_ (subclasse virtual)
+Vale notar que _registered_ (registrada) e _virtual subclass_ (subclasse virtual)
 não são termos da UML padrão, mas representam uma relação de classe específica de Python,
 como veremos na <<virtual_subclass_sec>>.
 
 [role="width-80"]
 [[tombola_uml]]
-.Diagrama UML para uma ABC e três subclasses. O nome da ABC `Tombola` e de seus métodos abstratos estão escritos em _itálico_, segundo as convenções da UML. A seta tracejada indica que `TomboList` implementa a interface `Tombola`, e também está registrada como _subclasse virtual_.
-`TomboList` também está registrada como uma _subclasse virtual_ de `Tombola`.
-image::../images/flpy_1305.png[align="center",pdfwidth=10cm]
+.Diagrama UML para uma ABC e três subclasses. O nome da ABC `Tombola` e de seus métodos abstratos estão escritos em _itálico_, segundo as convenções da UML. A seta tracejada indica que `TomboList` implementa a interface `Tombola`, e também está registrada como _subclasse virtual_ daquela ABC.
+image::../images/flpy_1305.png[align="center",pdfwidth=9cm]
 
 O <<ex_tombola_abc>> mostra a definição da ABC `Tombola`.
 
 [[ex_tombola_abc]]
-.tombola.py: `Tombola` é uma ABC com dois métodos abstratos e dois métodos concretos.
+.tombola.py: ABC com dois métodos abstratos e dois métodos concretos.
 ====
 [source, python]
 ----
@@ -1106,12 +1125,27 @@ include::../code/13-protocol-abc/tombola.py[tags=TOMBOLA_ABC]
 ----
 ====
 <1> Para definir uma ABC, crie uma subclasse de `abc.ABC`.
-<2> Um método abstrato é marcado com o decorador `@abstractmethod`, e muitas vezes seu corpo é vazio, exceto por uma docstring.footnote:[Antes das ABCs existirem, métodos abstratos levantariam um `NotImplementedError` para sinalizar que as subclasses eram responsáveis por suas implementações. No Smalltalk-80, o corpo dos métodos abstratos invocaria `subclassResponsibility`, um método herdado de `object` que gerava um erro com a mensagem "Minha subclasse deveria ter sobrescrito uma de minhas mensagens."]
-<3> A docstring instrui os implementadores a levantarem `LookupError` se não existirem itens para escolher.
+
+<2> Um método abstrato é marcado com o decorador `@abstractmethod`, e muitas
+vezes seu corpo é vazio, exceto por uma docstring.footnote:[Antes das ABCs
+existirem, métodos abstratos levantariam um `NotImplementedError` para sinalizar
+que as subclasses eram responsáveis por suas implementações. No Smalltalk-80, o
+corpo dos métodos abstratos invocaria `subclassResponsibility`, um método
+herdado de `object` que gerava um erro com a mensagem "Minha subclasse deveria
+ter sobrescrito uma de minhas mensagens."]
+
+<3> A docstring instrui os implementadores a levantarem `LookupError` se não
+existirem itens para escolher.
+
 <4> Uma ABC pode incluir métodos concretos.
-<5> Métodos concretos em uma ABC devem depender apenas da interface definida pela ABC (isto é, outros métodos concretos ou abstratos ou propriedades da ABC).
-<6> Não sabemos como as subclasses concretas vão armazenar os itens, mas podemos escrever o resultado de `inspect` esvaziando a `Tombola` com chamadas sucessivas a
-`.pick()`...
+
+<5> Métodos concretos em uma ABC devem depender apenas da interface definida
+pela ABC (isto é, outros métodos concretos ou abstratos ou propriedades da ABC).
+
+<6> Não sabemos como as subclasses concretas vão armazenar os itens, mas podemos
+escrever o resultado de `inspect` esvaziando a `Tombola` com chamadas sucessivas
+a `.pick()`...
+
 <7> ...e então usando `.load(…)` para colocar tudo de volta.
 
 
@@ -1126,14 +1160,15 @@ Veja os detalhes do uso de `@abstractmethod` na
 https://fpy.li/6r[documentação do módulo `abc`].
 ====
 
-O código do o método `.inspect()` é simplório, mas mostra que podemos confiar em
-`.pick()` e `.load(…)` para inspecionar o que está dentro de `Tombola`, puxando
-e devolvendo os itens—sem saber como eles são efetivamente armazenados. O
-objetivo desse exemplo é ressaltar que não há problema em oferecer métodos
+O código do o método `.inspect()` é tolo mas funciona.
+Ele serve para mostrar que podemos usar `.pick()` e `.load(…)`
+para inspecionar o que está dentro de `Tombola`, puxando
+e devolvendo os itens—sem saber como eles são realmente armazenados. O
+objetivo deste exemplo é ressaltar que não há problema em oferecer métodos
 concretos em ABCs, desde que eles dependam apenas de outros métodos na
 interface. Conhecendo suas estruturas de dados internas, as subclasses concretas
-de `Tombola` podem sempre  sobrescrever `.inspect()` com uma implementação mais
-adequada, mas não são obrigadas a fazer isso.
+de `Tombola` podem sobrescrever `.inspect()` com uma implementação mais
+eficiente, mas não são obrigadas a fazer isso.
 
 O método `.loaded()` no <<ex_tombola_abc>> tem uma linha, mas é custoso:
 ele chama `.inspect()` para criar a `tuple` apenas para aplicar `bool()` nela.
@@ -1240,22 +1275,31 @@ A ordem dos decoradores de função empilhados importa, e no caso de `@abstractm
 
 [quote]
 ____
-Quando `@abstractmethod` é aplicado em combinação com outros descritores de método,
-ele deve ser aplicado como o decorador mais interno...footnote:[O verbete https://fpy.li/6s[`@abc.abstractmethod`] na https://docs.python.org/pt-br/dev/library/abc.html[documentação do módulo `abc`].]
+Quando `@abstractmethod` é aplicado em combinação com outros descritores de
+método, ele deve ser aplicado como o decorador mais interno...footnote:[O
+verbete https://fpy.li/6s[`@abc.abstractmethod`] na
+https://docs.python.org/pt-br/dev/library/abc.html[documentação do módulo
+`abc`].]
 ____
 
 Em outras palavras, nenhum outro decorador pode aparecer entre `@abstractmethod` e a instrução `def`.
 ====
 
-Agora que abordamos essas questões de sintaxe das ABCs, vamos colocar `Tombola` em uso, implementando dois descendentes concretos dessa classe.
+Agora que abordamos essas questões de sintaxe das ABCs, vamos colocar `Tombola`
+em uso, implementando duas subclasses concretas.
 
 ==== Criando uma subclasse de ABC
 
-Dada((("goose typing", "subclassing ABCs", id="GTsubclass13")))((("ABCs (abstract base classes)", "subclassing ABCs", id="ABCsubclass13")))((("inheritance and subclassing", "subclassing ABCs", id="IASsubclass13"))) a ABC `Tombola`, vamos agora desenvolver duas subclasses concretas que satisfazem a interface.
-Essas classes estão ilustradas na <<tombola_uml>>, junto com a subclasse virtual que será discutida na seção seguinte.
+Dada((("goose typing", "subclassing ABCs", id="GTsubclass13")))((("ABCs (abstract base classes)",
+"subclassing ABCs", id="ABCsubclass13")))((("inheritance and subclassing", "subclassing ABCs",
+id="IASsubclass13"))) a ABC `Tombola`, vamos desenvolver duas subclasses
+concretas que satisfazem a interface. Essas classes estão ilustradas na
+<<tombola_uml>>, junto com a subclasse virtual que será discutida na seção
+seguinte.
 
-A classe `BingoCage` no <<ex_tombola_bingo>> é uma variação da <<ex_bingo_callable>> usando um randomizador melhor.
-`BingoCage` implementa os métodos abstratos obrigatórios `load` e `pick`.
+A classe `BingoCage` no <<ex_tombola_bingo>> é uma variação da
+<<ex_bingo_callable>> usando um randomizador melhor. `BingoCage` implementa os
+métodos abstratos obrigatórios `load` e `pick`.
 
 [[ex_tombola_bingo]]
 .bingo.py: `BingoCage` é uma subclasse concreta de `Tombola`
@@ -1266,16 +1310,30 @@ include::../code/13-protocol-abc/bingo.py[tags=TOMBOLA_BINGO]
 ----
 ====
 <1> Essa classe `BingoCage` estende `Tombola` explicitamente.
-<2> Finja que vamos usar isso para um jogo online. `random.SystemRandom` implementa
-a API `random` sobre a função `os.urandom(…)`, que fornece bytes aleatórios "adequados para uso em criptografia", segundo https://fpy.li/6t[a documentação do módulo `os`].
+
+<2> Faz de conta que vamos usar isso para um jogo online. `random.SystemRandom`
+implementa a API `random` sobre a função `os.urandom(…)`, que fornece bytes
+aleatórios "adequados para uso em criptografia", segundo https://fpy.li/6t[a
+documentação do módulo `os`].
+
 <3> Delega o carregamento inicial para o método `.load()`
-<4> Em vez da função `random.shuffle()` normal, usamos o método `.shuffle()` de nossa instância de `SystemRandom`.
-<5> `pick` é implementado como em <<ex_bingo_callable>>.
-<6> `+__call__+` também é de <<ex_bingo_callable>>. Ele não é necessário para satisfazer a interface de `Tombola`, mas não há nenhum problema em adicionar métodos extra.
+
+<4> Em vez da função `random.shuffle()` normal, usamos o método `.shuffle()` de
+nossa instância de `SystemRandom`.
+
+<5> `pick` é implementado como no <<ex_bingo_callable>>.
+
+<6> `+__call__+` também é do <<ex_bingo_callable>>. Ele não é necessário para
+satisfazer a interface de `Tombola`, mas não há problema em adicionar
+métodos.
 
 `BingoCage` herda o custoso método `loaded` e o tolo `inspect` de `Tombola`.
-Ambos poderiam ser sobrepostos com métodos de uma linha mais rápidos, como no <<ex_lotto>>. A questão é: podemos ser preguiçosos e escolher apenas herdar os método concretos menos que ideais de uma ABC.
-Os métodos herdados de `Tombola` não são tão rápidos quanto poderia ser em `BingoCage`, mas fornecem os resultados esperados para qualquer subclasse de `Tombola` que implemente `pick` e `load` corretamente.
+Ambos poderiam ser sobrescritos com métodos de uma linha mais rápidos, como no
+<<ex_lotto>>. A questão é: podemos ser preguiçosos e escolher apenas herdar os
+método concretos menos que ideais de uma ABC. Os métodos herdados de `Tombola`
+não são tão rápidos quanto poderia ser em `BingoCage`, mas fornecem os
+resultados esperados para qualquer subclasse de `Tombola` que implemente `pick`
+e `load` corretamente.
 
 O <<ex_lotto>> mostra uma implementação muito diferente mas igualmente válida da interface de `Tombola`.
 Em vez de misturar as "bolas" e tirar a última, `LottoBlower` tira um item de uma posição aleatória..
@@ -1323,7 +1381,7 @@ Uma((("goose typing", "virtual subclasses of ABCs", id="GTvsub13")))((("ABCs (ab
 Ao fazer isso, prometemos que a classe implementa fielmente a interface definida na ABC—e Python vai acreditar em nós sem checar.
 Se mentirmos, vamos ser capturados pelas exceções de tempo de execução conhecidas.
 
-Isso é feito chamando um método de classe `register` da ABC, e será reconhecido assim por `issubclass`, mas não implica na herança de qualquer método ou atributo da ABC.
+Isso é feito invocando um método de classe `register` da ABC, e será reconhecido assim por `issubclass`, mas não implica na herança de qualquer método ou atributo da ABC.
 
 [WARNING]
 ====
@@ -1357,7 +1415,7 @@ include::../code/13-protocol-abc/tombolist.py[]
 <4> Nosso `pick` chama `self.pop`, herdado de `list`, passando um índice aleatório para um item.
 <5> `TomboList.load` é o mesmo que `list.extend`.
 <6> `loaded` delega para `bool`.footnote:[O truque usado com `load()` não funciona com `loaded()`, pois o tipo `list` não implementa `+__bool__+`, o método que eu teria de vincular a `loaded`. O `bool()` nativo não precisa de `+__bool__+` para funcionar, porque pode também usar `+__len__+`. Veja https://fpy.li/2g["4.1. Teste do Valor Verdade"] no capítulo "Tipos Embutidos" da documentação de Python.]
-<7> É sempre possível chamar `register` dessa forma, e é útil fazer assim quando você precisa registrar uma classe que você não mantém, mas que implementa a interface.
+<7> É sempre possível invocar `register` dessa forma, e é útil fazer assim quando você precisa registrar uma classe que você não mantém, mas que implementa a interface.
 
 Note que, por causa do registro,
 as funções `issubclass` e `isinstance` agem como se `TomboList` fosse uma subclasse de `Tombola`:
@@ -1393,7 +1451,7 @@ Na próxima seção, vamos falar sobre como a função `register` das ABCs é us
 ==== O Uso de register na Prática
 
 No <<ex_tombolist>>, usamos((("goose typing", "usage of register")))((("ABCs (abstract base classes)", "usage of register"))) `Tombola.register` como um decorador de classe.
-Antes de Python 3.3, `register` não podia ser usado dessa forma—ele tinha que ser chamado, como uma função normal, após a definição da classe, como sugerido pelo comentário no final do <<ex_tombolist>>.
+Antes de Python 3.3, `register` não podia ser usado dessa forma—ele tinha que ser invocado como uma função normal após a definição da classe, como sugerido pelo comentário no final do <<ex_tombolist>>.
 Entretanto, ainda hoje ele mais usado como uma função para registrar classes definidas em outro lugar.
 Por exemplo, no https://fpy.li/13-24[código-fonte] do módulo `collections.abc`,
 os tipos nativos `tuple`, `str`, `range`, e `memoryview` são registrados como subclasses virtuais de `Sequence` assim:
@@ -1481,7 +1539,7 @@ class Sized(metaclass=ABCMeta):
 Se você tiver interesse nos detalhes da checagem de subclasse,
 estude o código-fonte do método `+ABCMeta.__subclasscheck__+` no Python 3.6:
 https://fpy.li/13-26[_Lib/abc.py_].
-Cuidado: ele tem muitos ifs e duas chamadas recursivas.
+Saiba que é complicado: lá há muitos ifs e duas chamadas recursivas.
 No Python 3.7, Ivan Levkivskyi and Inada Naoki reescreveram em C a maior parte da lógica do módulo `abc`, para melhorar o desempenho.
 Veja https://fpy.li/13-27[Python issue #31333].
 A implementação atual de `+ABCMeta.__subclasscheck__+` simplesmente chama `_abc_subclasscheck`.

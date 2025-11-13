@@ -12,11 +12,11 @@ class Tombola(abc.ABC):  # <1>
     def pick(self):  # <3>
         """Remove item at random, returning it.
 
-        This method should raise `LookupError` when the instance is empty.
+        Must raise LookupError when the instance is empty.
         """
 
     def loaded(self):  # <4>
-        """Return `True` if there's at least 1 item, `False` otherwise."""
+        """True if there's at least 1 item, otherwise False."""
         return bool(self.inspect())  # <5>
 
     def inspect(self):

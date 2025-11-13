@@ -68,7 +68,8 @@ Para executar sua tarefa, `LastUpdatedOrderedDict` sobrescreve `+__setitem__+` p
 . Usar `+super().__setitem__+`, invocando aquele método na superclasse e permitindo que ele insira ou atualize o par chave/valor.
 . Invocar `self.move_to_end`, para garantir que a `key` atualizada esteja na última posição.
 
-Invocar um `+__init__+` sobreposto é particulamente importante, para permitir que a superclasse execute sua parte na inicialização da instância.
+Invocar um `+__init__+` herdado é particulamente importante, para permitir que a
+superclasse execute sua parte na inicialização da instância.
 
 [TIP]
 ====
@@ -139,13 +140,13 @@ Vamos agora discutir as ressalvas à criação de subclasses de tipos embutidos.
 
 Nas((("inheritance and subclassing", "subclassing built-in types", id="IASsubbuilt14"))) primeiras versões de Python não era possível criar subclasses de tipos embutidos como `list` ou `dict`.
 Desde Python 2.2 isso é possível, mas há restrição importante:
-o código (escrito em C) dos tipos embutidos normalmente não chama os métodos sobrepostos por classes definidas pelo usuário.
+o código (escrito em C) dos tipos embutidos normalmente não chama os métodos sobrescritos por classes definidas pelo usuário.
 Há uma boa descrição curta do problema na documentação do PyPy, na seção "Differences between PyPy and CPython" (_"Diferenças entre o PyPy e o CPython"_),
 https://fpy.li/pypydif["Subclasses of built-in types" (_Subclasses de tipos embutidos_)]:
 
 [quote]
 ____
-Oficialmente, o CPython não tem qualquer regra sobre exatamente quando um método sobreposto de subclasses de tipos embutidos é ou não invocado implicitamente. Como uma aproximação, esses métodos nunca são chamados por outros métodos embutidos do mesmo objeto. Por exemplo, um `+__getitem__+` sobreposto em uma subclasse de `dict` nunca será invocado pelo método `get()` do tipo embutido.
+Oficialmente, o CPython não tem qualquer regra sobre exatamente quando um método sobrescrito de subclasses de tipos embutidos é ou não invocado implicitamente. Como uma aproximação, esses métodos nunca são chamados por outros métodos embutidos do mesmo objeto. Por exemplo, um `+__getitem__+` sobrescrito em uma subclasse de `dict` nunca será invocado pelo método `get()` do tipo embutido.
 ____
 
 O <<ex_doppeldict>> ilustra o problema.
@@ -171,7 +172,7 @@ O <<ex_doppeldict>> ilustra o problema.
 ----
 ====
 <1> `+DoppelDict.__setitem__+` duplica os valores ao armazená-los (por nenhuma razão em especial, apenas para termos um efeito visível). Ele funciona delegando para a superclasse.
-<2> O método `+__init__+`, herdado de `dict`, claramente ignora que `+__setitem__+` foi sobreposto: o valor de `'one'` não foi duplicado.
+<2> O método `+__init__+`, herdado de `dict`, claramente ignora que `+__setitem__+` foi sobrescrito: o valor de `'one'` não foi duplicado.
 <3> O operador `[]` chama nosso `+__setitem__+` e funciona como esperado: `'two'` está mapeado para o valor duplicado `[2, 2]`.
 <4> O método `update` de `dict` também não usa nossa versão de `+__setitem__+`: o valor de `'three'` não foi duplicado.
 
@@ -183,7 +184,7 @@ em qualquer chamada na forma `x.method()`, o método exato a ser chamado deve se
 Este triste estado de coisas contribui para os problemas que vimos na <<inconsistent_missing>>.
 
 O problema não está limitado a chamadas dentro de uma instância—saber se `self.get()` chama
-`self.__getitem__()`—mas também acontece com métodos sobrepostos de outras classes que deveriam ser chamados por métodos embutidos.
+`self.__getitem__()`—mas também acontece com métodos sobrescritos de outras classes que deveriam ser chamados por métodos embutidos.
 O <<ex_other_subclass>> foi adaptado da https://fpy.li/14-5[documentação do PyPy] (EN).
 
 [[ex_other_subclass]]
@@ -257,7 +258,7 @@ Se você criar uma subclasse de `collections.UserDict` em vez de `dict`, os prob
 ====
 
 Como um experimento, para medir o trabalho extra necessário para criar uma subclasse de um tipo embutido, reescrevi a classe `StrKeyDict` do <<ex_strkeydict>>, para torná-la uma subclasse de `dict` em vez de `UserDict`. Para fazê-la passar pelo mesmo banco de testes, tive que implementar
-`+__init__+`, `get`, e `update`, pois as versões herdadas de `dict` se recusaram a cooperar com os métodos sobrepostos `+__missing__+`, `+__contains__+` e `+__setitem__+`. A subclasse de `UserDict` no <<ex_strkeydict>> tem 16 linhas, enquanto a subclasse experimental de `dict` acabou com 33 linhas.footnote:[Se você tiver curiosidade, o experimento está no arquivo
+`+__init__+`, `get`, e `update`, pois as versões herdadas de `dict` se recusaram a cooperar com os métodos sobrescritos `+__missing__+`, `+__contains__+` e `+__setitem__+`. A subclasse de `UserDict` no <<ex_strkeydict>> tem 16 linhas, enquanto a subclasse experimental de `dict` acabou com 33 linhas.footnote:[Se você tiver curiosidade, o experimento está no arquivo
 https://fpy.li/14-7[_14-inheritance/strkeydict_dictsub.py_] do repositório
 https://fpy.li/code[_fluentpython/example-code-2e_].]
 
@@ -615,7 +616,7 @@ image::../images/flpy_1403.png[Diagrama de classes UML do módulo `django.views.
 
 [TIP]
 ====
-Um recurso fantástico para estudar essas classes é o site https://fpy.li/14-21[_Classy Class-Based Views_] (EN), onde se pode navegar por elas facilmente, ver todos os métodos em cada classe (métodos herdados, sobrepostos e adicionados), os diagramas de classes, consultar sua documentação e estudar seu https://fpy.li/14-22[código-fonte no GitHub].
+Um recurso fantástico para estudar essas classes é o site https://fpy.li/14-21[_Classy Class-Based Views_] (EN), onde se pode navegar por elas facilmente, ver todos os métodos em cada classe (métodos herdados, sobrescritos e adicionados), os diagramas de classes, consultar sua documentação e estudar seu https://fpy.li/14-22[código-fonte no GitHub].
 ====
 
 `View` é a classe base de todas as views (ela poderia ser uma ABC), e oferece funcionalidade essencial como o método `dispatch`, que delega para métodos de "tratamento" como `get`, `head`, `post`, etc., implementados por subclasses concretas para tratar os diversos verbos HTTP.footnote:[Os programadores Django sabem que o método de classe `as_view` é a parte mais visível da interface `View`, mas isso não é relevante para nós aqui.] A classe `RedirectView` herda apenas de `View`, e podemos ver que ela implementa `get`, `head`, `post`, etc.
@@ -793,11 +794,11 @@ A primeira resposta é a documentação (algumas vezes na forma de docstrings ou
 Por exemplo, o pacote
 https://docs.python.org/pt-br/3/library/socketserver.html[`socketserver`] (EN) de Python é descrito como "um framework para servidores de rede".
 Sua classe https://docs.python.org/pt-br/3/library/socketserver.html#socketserver.BaseServer[`BaseServer`] (EN) foi projetada para a criação de subclasses, como o próprio nome sugere.
-E mais importante, a documentação e a https://fpy.li/14-33[docstring] (EN) no código-fonte da classe informa explicitamente quais de seus métodos foram criados para serem sobrepostos por subclasses.
+E mais importante, a documentação e a https://fpy.li/14-33[docstring] (EN) no código-fonte da classe informa explicitamente quais de seus métodos foram criados para serem sobrescritos por subclasses.
 
 No Python ≥ 3.8 uma nova forma de tornar tais restrições de projeto explícitas foi oferecida pela
 https://fpy.li/pep591[PEP 591—Adding a final qualifier to typing (_Acrescentando um qualificador "final" à tipagem_)] (EN).
-A PEP introduz um decorador https://docs.python.org/pt-br/3/library/typing.html#typing.final[`@final`], que pode ser aplicado a classes ou a métodos individuais, de forma que IDEs ou checadores de tipos podem identificar tentativas equivocadas de criar subclasses daquelas classes ou de  sobrescrever aqueles métodos.footnote:[A PEP 591 também introduz uma anotação https://docs.python.org/pt-br/3/library/typing.html#typing.Final[`Final`] para variáveis e atributos que não devem ser reatribuídos ou sobrepostos.]
+A PEP introduz um decorador https://docs.python.org/pt-br/3/library/typing.html#typing.final[`@final`], que pode ser aplicado a classes ou a métodos individuais, de forma que IDEs ou checadores de tipos podem identificar tentativas equivocadas de criar subclasses daquelas classes ou de  sobrescrever aqueles métodos.footnote:[A PEP 591 também introduz uma anotação https://docs.python.org/pt-br/3/library/typing.html#typing.Final[`Final`] para variáveis e atributos que não devem ser reatribuídos ou sobrescritos.]
 
 
 [role="pagebreak-before less_space"]
@@ -840,7 +841,7 @@ Aqui termina nossa viagem através do labirinto da herança.((("", startref="IAS
 
 Esse((("inheritance and subclassing", "overview of"))) capítulo começou com uma revisão da função `super()` no contexto de herança simples.
 Daí discutimos o problema da criação de subclasses de tipos embutidos:
-seus métodos nativos, implementados em C, não invocam os métodos sobrepostos em subclasses, exceto em uns poucos casos especiais.
+seus métodos nativos, implementados em C, não invocam os métodos sobrescritos em subclasses, exceto em uns poucos casos especiais.
 É por isso que, quando precisamos de tipos `list`, `dict`, ou `str` customizados, é mais fácil criar subclasses de `UserList`, `UserDict`, ou `UserString`&#x2014;todos definidos no módulo
 https://docs.python.org/pt-br/3/library/collections.html[`collections`]—, que na verdade encapsulam os tipos embutidos correspondentes e delegam operações para aqueles—três exemplos a favor da composição sobre a herança na biblioteca padrão. Se o comportamento desejado for muito diferente daquilo que os tipos embutidos oferecem, pode ser mais fácil criar uma subclasse da ABC apropriada em https://docs.python.org/pt-br/3/library/collections.abc.html[`collections.abc`], e escrever sua própria implementação.
 
@@ -937,7 +938,7 @@ Também é possível que todas as alternativas acima se apliquem à sua situaç�
 Tipos embutidos mal-comportados: bug ou _feature_?
 
 Os((("Soapbox sidebars", "trade-offs of built-ins"))) tipos embutidos `dict`, `list`, e `str` são blocos básicos essenciais do próprio Python, então precisam ser rápidos—qualquer problema de desempenho ali teria severos impactos em praticamente todo o resto.
-É por isso que o CPython adotou atalhos que fazem com que métodos embutidos se comportem mal, ao não cooperarem com os métodos sobrepostos por subclasses.
+É por isso que o CPython adotou atalhos que fazem com que métodos embutidos se comportem mal, ao não cooperarem com os métodos sobrescritos por subclasses.
 Um caminho possível para sair desse dilema seria oferecer duas implementações para cada um desses tipos: um "interno", otimizado para uso pelo interpretador, e um externo, facilmente extensível.
 
 Mas isso nós já temos: `UserDict`, `UserList`,
