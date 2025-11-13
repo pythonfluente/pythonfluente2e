@@ -897,7 +897,7 @@ include::../code/13-protocol-abc/frenchdeck2.py[]
 Python não verifica a implementação de métodos abstratos durante a importação
 (quando o módulo _frenchdeck2.py_ é carregado na memória e compilado),
 mas apenas durante a execução, quando tentamos de fato instanciar `FrenchDeck2`.
-Ali, se deixamos de implementar qualquer [.keep-together]#dos# métodos abstratos,
+Ali, se deixamos de implementar qualquer dos métodos abstratos,
 recebemos uma exceção de `TypeError` com uma mensagem como
 `Can't instantiate abstract class FrenchDeck2 with abstract methods __delitem__, insert`
 ("Impossível instanciar a classe abstrata FrenchDeck2 com os métodos abstratos `+__delitem__+`, ``insert``").
@@ -1697,7 +1697,9 @@ Aqui usamos `T` para assegurar que o tipo do resultado é o mesmo tipo de `self`
 Além disso observe que decidi limitar `repeat_count` ao tipo `int` neste protocolo.
 <3> A variável de tipo `RT` é vinculada pelo protocolo `Repeatable`:
 o checador de tipos vai exigir que o tipo efetivo implemente `Repeatable`.
-<4> Agora o checador de tipos pode checar que o parâmetro `x` é um objeto que pode ser multiplicado por um inteiro, e que o valor retornado tem o mesmo tipo que `x`.
+<4> Agora o checador de tipos pode checar que o parâmetro `x` é um objeto que
+pode ser multiplicado por um inteiro, e que o valor retornado tem o mesmo tipo
+que `x`.
 
 Este exemplo mostra porque o subtítulo da https://fpy.li/pep544[PEP 544] é
 _static duck typing_ (tipagem pato estática). O tipo nominal do argumento
@@ -1709,24 +1711,29 @@ startref="typdblf13")))((("", startref="double13")))
 [[runtime_checkable_proto_sec]]
 ==== Protocolos estáticos checados durante a Execução
 
-No ((("static protocols", "runtime checkable", id="SPruntime13"))) Mapa de Tipagem (<<type_systems_described>>), `typing.Protocol` aparece na área de checagem estática—a metade inferior do diagrama.
-Entretanto, ao definir uma subclasse de `typing.Protocol`, você pode usar o decorador `@runtime_checkable` para fazer aquele protocolo aceitar checagens com `isinstance/issubclass` durante a execução.
-Isso funciona porque `typing.Protocol` é uma ABC, assim suporta o `+__subclasshook__+` que vimos na <<subclasshook_sec>>.
+No ((("static protocols", "runtime checkable", id="SPruntime13"))) Mapa de
+Tipagem (<<type_systems_described>>), `typing.Protocol` aparece na área de
+checagem estática—a metade inferior do diagrama. Entretanto, ao definir uma
+subclasse de `typing.Protocol`, você pode usar o decorador `@runtime_checkable`
+para fazer aquele protocolo aceitar checagens com `isinstance/issubclass`
+durante a execução. Isso funciona porque `typing.Protocol` é uma ABC, assim
+suporta o `+__subclasshook__+` que vimos na <<subclasshook_sec>>.
 
-No Python 3.9, o módulo `typing` inclui sete protocolos prontos para uso que são verificáveis durante a execução.
-Aqui estão dois deles, citados diretamente da https://fpy.li/13-30[documentação de `typing`]:
+No Python 3.9, o módulo `typing` inclui sete protocolos prontos para uso que são
+verificáveis durante a execução. Aqui estão dois deles, citados diretamente da
+https://fpy.li/gv[documentação de `typing`]:
 
 `class typing.SupportsComplex`::
-    An ABC with one abstract method, `+__complex__+`.
-    ("Uma ABC com um método abstrato, `+__complex__+`.")
+    Um ABC com um método abstrato __complex__.
 
 `class typing.SupportsFloat`::
-    An ABC with one abstract method, `+__float__+`.
-    ("Uma ABC com um método abstrato, `+__float__+`.")
+    Um ABC com um método abstrato __float__.
 
-Esse((("numeric types", "checking for convertibility"))) protocolos foram projetados para checar a "convertibilidade" de tipos numéricos:
-se um objeto `o` implementa `+__complex__+`,
-então deveria ser possível obter um `complex` invocando `complex(o)`— pois o método especial `+__complex__+` existe para suportar a função embutida [.keep-together]#`complex()`#.
+Estes((("numeric types", "checking for convertibility"))) protocolos foram
+projetados para checar a "convertibilidade" de tipos numéricos: se um objeto `n`
+implementa `+__complex__+`, então deveria ser possível obter um `complex`
+invocando `complex(n)`, pois o método especial `+__complex__+` existe para
+suportar a função embutida `complex()`.
 
 <<supportscomplex_ex>> mostra o
 https://fpy.li/13-31[código-fonte]
@@ -1748,11 +1755,15 @@ class SupportsComplex(Protocol):
 ----
 ====
 
-A chave é o método abstrato `+__complex__+`.footnote:[O atributo `+__slots__+` é irrelevante para nossa discussão aqui—é uma otimização sobre a qual falamos na <<slots_sec>>.]
-Durante a checagem de tipo estática, um objeto será considerado _consistente-com_ o protocolo `SupportsComplex` se implementar um método `+__complex__+` que recebe apenas `self` e retorna um `complex`.
+A chave é o método abstrato `+__complex__+`.footnote:[O atributo `+__slots__+` é
+irrelevante para nossa discussão aqui—é uma otimização sobre a qual falamos na
+<<slots_sec>>.] Durante a checagem de tipo estática, um objeto será considerado
+_consistente-com_ o protocolo `SupportsComplex` se implementar um método
+`+__complex__+` que recebe apenas `self` e retorna um `complex`.
 
-Graças ao decorador de classe `@runtime_checkable`, aplicado a `SupportsComplex`,
-aquele protocolo também pode ser utilizado em checagens com `isinstance` no <<repeatable_protocol_demo_ex>>.
+Graças ao decorador de classe `@runtime_checkable`, aplicado a
+`SupportsComplex`, aquele protocolo também pode ser utilizado em checagens com
+`isinstance` no <<repeatable_protocol_demo_ex>>.
 
 [[repeatable_protocol_demo_ex]]
 .Usando `SupportsComplex` durante a execução
@@ -1779,10 +1790,13 @@ False
 <2> Nenhum dos tipos complexos da NumPy é subclasse do `complex` embutido.
 <3> Mas os tipos complexos de NumPy implementam `+__complex__+`, então cumprem o protocolo `SupportsComplex`.
 <4> Portanto, você pode criar objetos `complex` a partir deles.
-<5> Infelizmente, o tipo `complex` embutido não implementa `+__complex__+`, apesar de [.keep-together]#`complex(c)`# funcionar sem problemas se `c` for um `complex`.
+<5> O tipo `complex` embutido não implementa `+__complex__+`,
+mas `complex(c)` funciona sem problemas se `c` for uma instância de
+`complex`.
 
-Como consequência deste último ponto, se você quiser testar se um objeto `c` é um `complex` ou `SupportsComplex`,
-você pode passar uma tupla de tipos como segundo argumento para [.keep-together]#`isinstance`#, assim:
+Como consequência deste último ponto, se você quiser testar se um objeto `c` é
+um `complex` ou `SupportsComplex`, você deve passar uma tupla de tipos como
+segundo argumento para `isinstance`, assim:
 
 [source, python]
 ----
@@ -1790,7 +1804,9 @@ isinstance(c, (complex, SupportsComplex))
 ----
 
 Uma outra alternativa seria usar a ABC `Complex`, definida no módulo `numbers`.
-O tipo embutido `complex` e os tipos `complex64` e `complex128` da NumPy são todos registrados como subclasses virtuais de `numbers.Complex`, então isso aqui funciona:
+O tipo embutido `complex` e os tipos `complex64` e `complex128` da NumPy são
+todos registrados como subclasses virtuais de `numbers.Complex`, então isso aqui
+funciona:
 
 [source, python]
 ----
@@ -1801,15 +1817,24 @@ True
 True
 ----
 
-Na primeira edição de _Python Fluente_ eu recomendava o uso das ABCs de `numbers`, mas agora esse não é mais um bom conselho, pois aquelas ABCs não são reconhecidas pelos checadores de tipos estáticos, como veremos na <<numbers_abc_proto_sec>>.
+Na primeira edição de _Python Fluente_ eu recomendava o uso das ABCs de
+`numbers`, mas agora esse não é mais um bom conselho, pois aquelas ABCs não são
+reconhecidas pelos checadores de tipos estáticos, como veremos na
+<<numbers_abc_proto_sec>>.
 
-Nessa seção eu queria demonstrar que um protocolo verificável durante a execução funciona com `isinstance`, mas na verdade esse exemplo não é um caso de uso particularmente bom de `isinstance`, como a barra lateral <<duck_typing_friend_box>> explica.
+Nesta seção eu queria demonstrar que um protocolo verificável durante a execução
+funciona com `isinstance`, mas na verdade esse exemplo não é um caso de uso
+particularmente bom de `isinstance`, como a barra lateral
+<<duck_typing_friend_box>> explica.
 
 [TIP]
 ====
-Se você estiver usando um checador de tipos externo, há uma vantagem nas checagens explícitas com `isinstance`:
-quando você escreve uma instrução `if` onde a condição é `isinstance(o, MyType)`,
-então o Mypy pode inferir que dentro do bloco `if`, o tipo do objeto `o` é _consistente-com_ `MyType`.
+
+Se você estiver usando o Mypy, há uma vantagem nas checagens explícitas com
+`isinstance`: quando você escreve uma instrução `if` onde a condição é
+`isinstance(n, MyType)`, então o Mypy infere que dentro do bloco `if`, o tipo do
+objeto `n` é _consistente-com_ `MyType`.
+
 ====
 
 [[duck_typing_friend_box]]
@@ -1822,25 +1847,25 @@ apenas tente realizar as operações que você precisa com o objeto, e trate as
 exceções conforme necessário. Segue um exemplo concreto.
 
 Continuando a discussão anterior,
-dado um objeto `o` que preciso usar como número complexo,
+dado um objeto `n` que preciso usar como número complexo,
 essa seria uma abordagem:
 
 [source, python]
 ----
-if isinstance(o, (complex, SupportsComplex)):
-    # do something that requires `o` to be convertible to complex
+if isinstance(n, (complex, SupportsComplex)):
+    # código que precisa converter `n` para `complex`
 else:
-    raise TypeError('o must be convertible to complex')
+    raise TypeError('n must be convertible to complex')
 ----
 
 A abordagem da tipagem ganso seria usar a ABC `numbers.Complex`:
 
 [source, python]
 ----
-if isinstance(o, numbers.Complex):
-    # do something with `o`, an instance of `Complex`
+if isinstance(n, numbers.Complex):
+    # código que assume que `n` é instância de `Complex`
 else:
-    raise TypeError('o must be an instance of Complex')
+    raise TypeError('n must be an instance of Complex')
 ----
 
 Mas eu prefiro aproveitar a tipagem pato e pedir perdão
@@ -1849,22 +1874,22 @@ em vez de permissão (Princípio de Hopper):
 [source, python]
 ----
 try:
-    c = complex(o)
+    c = complex(n)
 except TypeError as exc:
-    raise TypeError('o must be convertible to complex') from exc
+    raise TypeError('n must be convertible to complex') from exc
 ----
 
-E se de qualquer forma tudo que você vai fazer é levantar um `TypeError`,
-eu então omitiria o bloco `try/except/raise` e escreveria apenas isso:
+Mas se o único tratamento que você vai dar para o `TypeError`
+é levantar `TypeError`, eu escreveria só isso:
 
 [source, python]
 ----
-c = complex(o)
+c = complex(n)
 ----
 
-Nesse último caso, se `o` não for de um tipo aceitável,
-o Python vai levantar uma exceção com uma mensagem bem clara.
-Por exemplo, se `o` for uma `tuple`, esse é o resultado:
+Neste último caso, se `n` não é de um tipo aceitável,
+o Python levantará uma exceção com uma mensagem bem clara.
+Por exemplo, se `n` é uma `tuple`, esse é o resultado:
 
 [source]
 ----
@@ -1873,17 +1898,20 @@ TypeError: complex() first argument must be a string or a number, not 'tuple'
 
 Em português: "O primeiro argumento de `complex()` deve ser uma string ou um número, não 'tuple'".
 
-Acho a abordagem da tipagem pato muito melhor nesse caso.
+A abordagem da tipagem pato é mais simples e correta neste caso.
 ****
 
-Agora que vimos como usar protocolos estáticos durante a execução com tipos pré-existentes como `complex` e `numpy.complex64`,
-precisamos discutir as limitações de protocolos verificáveis durante a execução.((("", startref="SPruntime13")))
+Agora que vimos como usar protocolos estáticos durante a execução com tipos
+pré-existentes como `complex` e `numpy.complex64`, precisamos discutir as
+limitações de protocolos verificáveis durante a execução.((("",
+startref="SPruntime13")))
 
 [[protocol_type_hints_ignored]]
 ==== Limitações das checagens de protocolo durante a execução
 
-Vimos((("static protocols", "limitations of runtime protocol checks"))) que dicas de tipo são geralmente ignoradas durante a execução,
-e isso também afeta o uso de checagens com `isinstance` or `issubclass` com protocolos estáticos.
+Vimos((("static protocols", "limitations of runtime protocol checks"))) que
+dicas de tipo são geralmente ignoradas durante a execução, e isso também afeta o
+uso de checagens com `isinstance` or `issubclass` com protocolos estáticos.
 
 Por exemplo, qualquer classe com um método `+__float__+`
 é considerada—durante a execução—uma subclasse virtual de `SupportsFloat`,
@@ -1905,13 +1933,14 @@ Traceback (most recent call last):
 TypeError: can't convert complex to float
 ----
 
-Em Python 3.9, o tipo `complex` tem um método `+__float__+`,
-mas ele existe apenas para gerar `TypeError` com uma mensagem de erro explícita.
-Se aquele método `+__float__+` tivesse anotações,
-o tipo de retorno seria `NoReturn`— que vimos na <<noreturn_sec>>.
+Em Python 3.9, o tipo `complex` tem um método `+__float__+`, mas ele existe
+apenas para gerar `TypeError` com uma mensagem de erro explícita. Se aquele
+método `+__float__+` tivesse anotações, o tipo de retorno seria `NoReturn`— que
+vimos na <<noreturn_sec>>.
 
-Mas incluir dicas de tipo em `+complex.__float__+` no _typeshed_ não resolveria esse problema,
-porque o interpretador Python em geral ignora dicas de tipo—e também não acessa os arquivos stub do _typeshed_.
+Mas incluir dicas de tipo em `+complex.__float__+` no _typeshed_ não resolveria
+esse problema, porque o interpretador Python em geral ignora dicas de tipo—e
+também não acessa os arquivos stub do _typeshed_.
 
 Continuando da sessão anterior de Python 3.9:
 
@@ -1925,34 +1954,46 @@ True
 True
 ----
 
-Então temos resultados enganosos: as checagens durante a execução usando `SupportsFloat`
-sugerem que você pode converter um `complex` para `float`, mas na verdade isso gera um erro de tipo.
+Então temos resultados enganosos: as checagens durante a execução usando
+`SupportsFloat` sugerem que você pode converter um `complex` para `float`, mas
+na verdade isso gera um erro de tipo.
 
 
 [WARNING]
 ====
-O problema específico com o tipo `complex` foi resolvido no Python 3.10.0b4, com a remoção do método `+complex.__float__+`.
 
-Mas o problema geral persiste:
-checagens com `isinstance`/`issubclass` só olham para a presença ou ausência de métodos,
-sem checar sequer suas assinaturas, muito menos suas anotações de tipo.
-E isso não vai mudar tão cedo, porque este tipo de checagem de tipos durante a execução traria um custo de processamento inaceitável.footnote:[Agradeço a Ivan Levkivskyi,
-co-autor da https://fpy.li/pep544[PEP 544] (sobre Protocolos),
-por apontar que checagem de tipo não é apenas uma questão de checar se o tipo de `x` é `T`: é sobre determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro.
-Não é de se espantar que o Mypy leve alguns segundos para fazer uma checagem de tipos, mesmo em scripts Python curtos.]
+O problema específico com o tipo `complex` foi resolvido no Python 3.10.0b4, com
+a remoção do método `+complex.__float__+`.
+
+Mas o problema geral persiste: checagens com `isinstance`/`issubclass` só olham
+para a presença ou ausência de métodos, sem checar sequer suas assinaturas,
+muito menos suas anotações de tipo. E isso não vai mudar tão cedo, porque este
+tipo de checagem de tipos durante a execução traria um custo de processamento
+inaceitável.footnote:[Agradeço a Ivan Levkivskyi, co-autor da
+https://fpy.li/pep544[PEP 544] (sobre Protocolos), por apontar que checagem de
+tipo não é apenas uma questão de checar se o tipo de `x` é `T`: é sobre
+determinar que o tipo de `x` é _consistente-com_ `T`, o que pode ser caro. Não é
+de se espantar que o Mypy leve alguns segundos para fazer uma checagem de tipos,
+mesmo em scripts Python curtos.]
+
 ====
 
-Agora veremos como implementar um protocolo estático em uma classe definida pelo usuário.
+Agora veremos como implementar um protocolo estático em uma classe definida pelo
+usuário.
 
 [[support_typing_proto]]
 ==== Suportando um protocolo estático
 
-Lembra((("static protocols", "supporting", id="SPsupport13"))) da classe `Vector2d`, que desenvolvemos em <<ch_pythonic_obj>>?
-Dado que tanto um número `complex` quanto uma instância de `Vector2d` consistem em um par de números de ponto flutuante, faz sentido suportar a conversão de `Vector2d` para `complex`.
+Lembra((("static protocols", "supporting", id="SPsupport13"))) da classe
+`Vector2d`, que desenvolvemos em <<ch_pythonic_obj>>? Dado que tanto um número
+`complex` quanto uma instância de `Vector2d` consistem em um par de números de
+ponto flutuante, faz sentido suportar a conversão de `Vector2d` para `complex`.
 
 O <<ex_vector2d_complex_v4>> mostra a implementação do método `+__complex__+`,
 para melhorar a última versão de `Vector2d`, vista no <<ex_vector2d_v3_full>>.
-Para deixar o serviço completo, podemos suportar a operação inversa, com um método de classe `fromcomplex`, que constrói um `Vector2d` a partir de um `complex`.
+Para deixar o serviço completo, podemos suportar a operação inversa, com um
+método de classe `fromcomplex`, que constrói um `Vector2d` a partir de um
+`complex`.
 
 [[ex_vector2d_complex_v4]]
 ._vector2d_v4.py_: métodos para conversão de e para `complex`
@@ -1962,9 +2003,12 @@ Para deixar o serviço completo, podemos suportar a operação inversa, com um m
 include::../code/13-protocol-abc/typing/vector2d_v4.py[tags=VECTOR2D_V4_COMPLEX]
 ----
 ====
-<1> Presume que `datum` tem atributos `.real` e `.imag`. Veremos uma implementação melhor no <<ex_vector2d_complex_v5>>.
 
-Dado o código acima, e o método `+__abs__+` que o `Vector2d` já tinha em <<ex_vector2d_v3_full>>, temos o seguinte:
+<1> Presume que `datum` tem atributos `.real` e `.imag`. Veremos uma
+implementação melhor no <<ex_vector2d_complex_v5>>.
+
+Dado o código acima, e o método `+__abs__+` que o `Vector2d` já tinha em
+<<ex_vector2d_v3_full>>, temos o seguinte:
 
 [source, python]
 ----
@@ -1983,9 +2027,10 @@ True
 Vector2d(3.0, 4.0)
 ----
 
-Para checagem de tipos durante a execução, o <<ex_vector2d_complex_v4>> serve bem,
-mas para uma cobertura estática e relatório de erros melhores com o Mypy, os métodos
-`+__abs__+`, `+__complex__+`, e `fromcomplex` deveriam receber dicas de tipo, como mostrado no <<ex_vector2d_complex_v5>>.
+Para checagem de tipos durante a execução, o <<ex_vector2d_complex_v4>> serve
+bem, mas para uma cobertura estática e relatório de erros melhores com o Mypy,
+os métodos `+__abs__+`, `+__complex__+`, e `fromcomplex` deveriam receber dicas
+de tipo, como mostrado no <<ex_vector2d_complex_v5>>.
 
 [[ex_vector2d_complex_v5]]
 ._vector2d_v5.py_: acrescentando anotações aos métodos mencionados
@@ -1995,42 +2040,57 @@ mas para uma cobertura estática e relatório de erros melhores com o Mypy, os m
 include::../code/13-protocol-abc/typing/vector2d_v5.py[tags=VECTOR2D_V5_COMPLEX]
 ----
 ====
-[role="pagebreak-before less_space"]
-<1> A anotação de retorno `float` é necessária, senão o Mypy infere `Any`, e não checa o corpo do método.
-<2> Mesmo sem a anotação, o Mypy foi capaz de inferir que isso retorna um `complex`. A anotação evita um aviso, dependendo da sua configuração do Mypy.
+
+<1> A anotação de retorno `float` é necessária, senão o Mypy infere `Any`, e não
+checa o corpo do método.
+
+<2> Mesmo sem a anotação, o Mypy foi capaz de inferir que isso retorna um
+`complex`. A anotação evita um aviso, dependendo da sua configuração do Mypy.
+
 <3> Aqui `SupportsComplex` garante que `datum` é conversível.
-<4> Essa conversão explícita é necessária, pois o tipo `SupportsComplex` não declara os atributos `.real` e `.img`, usados na linha seguinte.
-Por exemplo, `Vector2d` não tem esses atributos, mas implementa `+__complex__+`.
 
-O tipo de retorno de `fromcomplex` pode ser `Vector2d` se a linha `from __future__ import annotations` aparecer no início do módulo.
-Aquela importação faz as dicas de tipo serem armazenadas como strings, sem serem processadas durante a importação, quando as definições de função são tratadas.
-Sem o `+__future__+` import of `annotations`,
-`Vector2d` é uma referência inválida neste momento (a classe não está inteiramente definida ainda) e deveria ser escrita como uma string:
-`'Vector2d'`, como se fosse uma referência adiantada.
-Essa importação de `+__future__+` foi introduzida na
-https://fpy.li/pep563[PEP 563—Postponed Evaluation of Annotations], implementada no Python 3.7.
-Aquele comportamento estava marcado para se tornar default no 3.10, mas a mudança foi adiada para uma versão futura.footnote:[Leia a https://fpy.li/13-32[decisão] (EN) de Python Steering Council no python-dev.]
-Quando isso acontecer, a importação será redundante mas inofensiva.
+<4> Essa conversão explícita é necessária, pois o tipo `SupportsComplex` não
+declara os atributos `.real` e `.img`, usados na linha seguinte. Por exemplo,
+`Vector2d` não tem esses atributos, mas implementa `+__complex__+`.
 
-Agora vamos criar—e depois estender—um novo protocolo estático.((("", startref="SPsupport13")))
+O tipo de retorno de `fromcomplex` pode ser `Vector2d` se a linha `from
+__future__ import annotations` aparecer no início do módulo. Aquela importação
+faz as dicas de tipo serem armazenadas como strings, sem serem processadas
+durante a importação, quando as definições de função são tratadas. Sem o
+`+__future__+` import of `annotations`, `Vector2d` é uma referência inválida
+neste momento (a classe não está inteiramente definida ainda) e deveria ser
+escrita como uma string: `'Vector2d'`, como se fosse uma referência adiantada.
+Essa importação de `+__future__+` foi introduzida na https://fpy.li/pep563[PEP
+563—Postponed Evaluation of Annotations], implementada no Python 3.7. Aquele
+comportamento estava marcado para se tornar default no 3.10, mas a mudança foi
+adiada para uma versão futura.footnote:[Leia a https://fpy.li/13-32[decisão]
+(EN) de Python Steering Council no python-dev.] Quando isso acontecer, a
+importação será redundante mas inofensiva.
+
+Agora vamos criar—e depois estender—um novo protocolo estático.((("",
+startref="SPsupport13")))
 
 [[designing_static_proto_sec]]
 ==== Projetando um protocolo estático
 
-Quando((("static protocols", "designing", id="SPdesign13"))) estudamos tipagem ganso, vimos a ABC `Tombola` em <<defining_using_abc_sec>>.
-Aqui vamos ver como definir uma interface similar usando um protocolo estático.
+Quando((("static protocols", "designing", id="SPdesign13"))) estudamos tipagem
+ganso, vimos a ABC `Tombola` em <<defining_using_abc_sec>>. Aqui vamos ver como
+definir uma interface similar usando um protocolo estático.
 
-A ABC `Tombola` especifica dois métodos: `pick` e `load`.
-Poderíamos também definir um protocolo estático com esses dois métodos,
-mas aprendi com a comunidade Go que protocolos de apenas um método tornam a tipagem pato estática mais útil e flexível.
-A biblioteca padrão do Go tem inúmeras interfaces,
-como `Reader`, uma interface para I/O que requer apenas um método `read`.
-Após algum tempo, se você entender que um protocolo mais complexo é necessário,
-você pode combinar dois ou mais protocolos para definir um novo.
+A ABC `Tombola` especifica dois métodos: `pick` e `load`. Poderíamos também
+definir um protocolo estático com esses dois métodos, mas aprendi com a
+comunidade Go que protocolos de apenas um método tornam a tipagem pato estática
+mais útil e flexível. A biblioteca padrão do Go tem inúmeras interfaces, como
+`Reader`, uma interface para I/O que requer apenas um método `read`. Após algum
+tempo, se você entender que um protocolo mais complexo é necessário, você pode
+combinar dois ou mais protocolos para definir um novo.
 
-Usar um container que escolhe itens aleatoriamente pode ou não exigir o recarregamento do container, mas ele certamente precisa de um método para fazer a efetiva escolha do item, então o método `pick` será o escolhido para o protocolo mínimo `RandomPicker`.
-O código do protocolo está no <<ex_randompick_protocol>>, e
-seu uso é demonstrado por testes no <<ex_randompick_protocol_demo>>.
+Usar um container que escolhe itens aleatoriamente pode ou não exigir o
+recarregamento do container, mas ele certamente precisa de um método para fazer
+a efetiva escolha do item, então o método `pick` será o escolhido para o
+protocolo mínimo `RandomPicker`. O código do protocolo está no
+<<ex_randompick_protocol>>, e seu uso é demonstrado por testes no
+<<ex_randompick_protocol_demo>>.
 
 [[ex_randompick_protocol]]
 ._randompick.py_: definition of `RandomPicker`
@@ -2043,10 +2103,12 @@ include::../code/13-protocol-abc/typing/randompick.py[]
 
 [NOTE]
 ====
-O método `pick` retorna `Any`.
-Em <<implementing_generic_static_proto_sec>>
-veremos como tornar `RandomPicker` um tipo genérico,
-com um parâmetro que permite aos usuários do protocolo especificarem o tipo de retorno do método `pick`.
+
+O método `pick` retorna `Any`. Em <<implementing_generic_static_proto_sec>>
+veremos como tornar `RandomPicker` um tipo genérico, com um parâmetro que
+permite aos usuários do protocolo especificarem o tipo de retorno do método
+`pick`.
+
 ====
 
 [[ex_randompick_protocol_demo]]
@@ -2057,20 +2119,40 @@ com um parâmetro que permite aos usuários do protocolo especificarem o tipo de
 include::../code/13-protocol-abc/typing/randompick_test.py[]
 ----
 ====
-<1> Não é necessário importar um protocolo estático para definir uma classe que o implementa, Aqui eu importei `RandomPicker` apenas para usá-lo em `test_isinstance` mais tarde.
-<2> `SimplePicker` implementa `RandomPicker` — mas não é uma subclasse dele. Isso é a tipagem pato estática em ação.
-<3> `Any` é o tipo de retorno default, então essa anotação não é estritamente necessária, mas deixa mais claro que estamos implementando o protocolo `RandomPicker`, como definido em <<ex_randompick_protocol>>.
-<4> Não esqueça de acrescentar dicas `-> None` aos seus testes, se você quiser que o Mypy olhe para eles.
-<5> Acrescentei uma dica de tipo para a variável `popper`, para mostrar que o Mypy entende que o `SimplePicker` é _consistente-com_.
-<6> Esse teste prova que uma instância de `SimplePicker` também é uma instância de `RandomPicker`.
-Isso funciona por causa do decorador `@runtime_checkable` aplicado a [.keep-together]#`RandomPicker`#, e porque o `SimplePicker` tem um método `pick`, como exigido.
-<7> Esse teste invoca o método `pick` de `SimplePicker`,
-verifica que ele retorna um dos itens dados a `SimplePicker`,
-e então realiza testes estáticos e de execução sobre o item obtido.
+
+<1> Não é necessário importar um protocolo estático para definir uma classe que
+o implementa, Aqui eu importei `RandomPicker` apenas para usá-lo em
+`test_isinstance` mais tarde.
+
+<2> `SimplePicker` implementa `RandomPicker` — mas não é uma subclasse dele.
+Isso é a tipagem pato estática em ação.
+
+<3> `Any` é o tipo de retorno default, então essa anotação não é estritamente
+necessária, mas deixa mais claro que estamos implementando o protocolo
+`RandomPicker`, como definido em <<ex_randompick_protocol>>.
+
+<4> Não esqueça de acrescentar dicas `-> None` aos seus testes, se você quiser
+que o Mypy olhe para eles.
+
+<5> Acrescentei uma dica de tipo para a variável `popper`, para mostrar que o
+Mypy entende que o `SimplePicker` é _consistente-com_.
+
+<6> Esse teste prova que uma instância de `SimplePicker` também é uma instância
+de `RandomPicker`. Isso funciona por causa do decorador `@runtime_checkable`
+aplicado a `RandomPicker`, e porque o `SimplePicker` tem um
+método `pick`, como exigido.
+
+<7> Esse teste invoca o método `pick` de `SimplePicker`, verifica que ele
+retorna um dos itens dados a `SimplePicker`, e então realiza testes estáticos e
+de execução sobre o item obtido.
+
 <8> Essa linha gera uma obervação no relatório do Mypy.
 
-Como vimos no <<top_protocol_test>>, `reveal_type` é uma função "mágica" reconhecida pelo Mypy.
-Por isso ela não é importada e  só conseguimos chamá-la de dentro de blocos `if` protegidos por `typing.TYPE_CHECKING`, que só é `True` para os olhos de um checador de tipos estático, mas é `False` durante a execução.
+Como vimos no <<top_protocol_test>>, `reveal_type` é uma função "mágica"
+reconhecida pelo Mypy. Por isso ela não é importada e  só conseguimos chamá-la
+de dentro de blocos `if` protegidos por `typing.TYPE_CHECKING`, que só é `True`
+para os olhos de um checador de tipos estático, mas é `False` durante a
+execução.
 
 Os dois testes em <<ex_randompick_protocol_demo>> passam.
 O Mypy também não vê nenhum erro naquele código,
@@ -2083,47 +2165,64 @@ $ mypy randompick_test.py
 randompick_test.py:24: note: Revealed type is 'Any'
 ----
 
-Tendo criado nosso primeiro protocolo,
-vamos estudar algumas recomendações sobre essa prática.((("", startref="SPdesign13")))
+Tendo criado nosso primeiro protocolo, vamos estudar algumas recomendações sobre
+essa prática.((("", startref="SPdesign13")))
 
 [[best_protocol_design_sec]]
 ==== Melhores práticas no desenvolvimento de protocolos
 
-Após((("static protocols", "best practices for protocol design"))) 10 anos de experiência com tipagem pato estática em Go, está claro que protocolos estreitos são mais úteis—muitas vezes tais protocolos têm um único método, raramente mais que um par de métodos.
-Martin Fowler descreve uma boa ideia para se ter em mente ao desenvolver protocolos: a https://fpy.li/13-33[Role Interface],
-(__interface papel__footnote:[NT: "papel" aqui é usado no sentido de incorporação de um personagem]). A ideia é que um protocolo deve ser definido em termos de um papel que um objeto pode desempenhar, e não em termos de uma classe específica.
+Após((("static protocols", "best practices for protocol design"))) 10 anos de
+experiência com tipagem pato estática em Go, está claro que protocolos estreitos
+são mais úteis—muitas vezes tais protocolos têm um único método, raramente mais
+que um par de métodos. Martin Fowler descreve uma boa ideia para se ter em mente
+ao desenvolver protocolos: a https://fpy.li/13-33[Role Interface], (__interface
+papel__footnote:[NT: "papel" aqui é usado no sentido de incorporação de um
+personagem]). A ideia é que um protocolo deve ser definido em termos de um papel
+que um objeto pode desempenhar, e não em termos de uma classe específica.
 
 Além disso, é comum ver um protocolo definido próximo a uma função que o usa-ou seja,
 definido em "código do cliente" em vez de ser definido em uma biblioteca separada.
 Isso torna mais fácil criar novos tipos para chamar aquela função,
 bom para a extensibilidade e para testes com simulações ou protótipos.
 
-Ambas as práticas, protocolos estreitos e protocolos em código cliente, evitam um acoplamento muito firme, em acordo com o
-https://fpy.li/6v[Princípio da Segregação de Interface],
-que podemos resumir como "Clientes não devem ser forçados a depender de interfaces que não usam."
+Ambas as práticas, protocolos estreitos e protocolos em código cliente, evitam
+um acoplamento muito firme, em acordo com o https://fpy.li/6v[Princípio da
+Segregação de Interface], que podemos resumir como "Clientes não devem ser
+forçados a depender de interfaces que não usam."
 
-A página https://fpy.li/13-35["Contributing to typeshed"] (EN)
-recomenda a seguinte convenção de nomenclatura para protocolos estáticos (os três pontos a seguir foram traduzidos o mais fielmente possível):
+A página https://fpy.li/13-35["Contributing to typeshed"] (EN) recomenda a
+seguinte convenção de nomenclatura para protocolos estáticos (os três pontos a
+seguir foram traduzidos o mais fielmente possível):
 
-* Use nomes simples para protocolos que representam um conceito claro (e.g., `Iterator`, [.keep-together]#`Container`#).
+* Use nomes simples para protocolos que representam um conceito claro (e.g.,
+`Iterator`, `Container`).
 
-* Use `SupportsX` para protocolos que oferecem métodos que podem ser chamados (e.g., `SupportsInt`, `SupportsRead`, `SupportsReadSeek`).footnote:[Qualquer método pode ser chamado, então essa recomendação não diz muito. Talvez "forneça um ou dois métodos"? De qualquer forma, é uma recomendação, não uma regra absoluta.]
-* Use `HasX` para protocolos que tem atributos que podem ser lidos ou escritos, ou métodos _getter/setter_(e.g., `HasItems`, `HasFileno`).
+* Use `SupportsX` para protocolos que oferecem métodos que podem ser chamados
+(e.g., `SupportsInt`, `SupportsRead`, `SupportsReadSeek`).footnote:[Qualquer
+método pode ser chamado, então essa recomendação não diz muito. Talvez "forneça
+um ou dois métodos"? De qualquer forma, é uma recomendação, não uma regra
+absoluta.]
 
-A biblioteca padrão do Go tem uma convenção de nomenclatura que gosto:
-para protocolos de método único, se o nome do método é um verbo, acrescente o sufixo adequado (em inglês, "-er" ou "-or", em geral) para torná-lo um substantivo.
-Por exemplo, em vez de `SupportsRead`, temos `Reader`.
-Outros exemplos incluem `Formatter`, `Animator`, e `Scanner`.
-Para se inspirar, veja
-https://fpy.li/13-36["Go (Golang) Standard Library Interfaces (Selected)"] (EN) de Asuka Kenji.
+* Use `HasX` para protocolos que tem atributos que podem ser lidos ou escritos,
+ou métodos _getter/setter_(e.g., `HasItems`, `HasFileno`).
 
-Uma boa razão para se criar protocolos minimalistas é a habilidade de estendê-los posteriormente, se necessário.
-Veremos a seguir que não é difícil criar um protocolo derivado com um método adicional
+A biblioteca padrão do Go tem uma convenção de nomenclatura que gosto: para
+protocolos de método único, se o nome do método é um verbo, acrescente o sufixo
+adequado (em inglês, "-er" ou "-or", em geral) para torná-lo um substantivo. Por
+exemplo, em vez de `SupportsRead`, temos `Reader`. Outros exemplos incluem
+`Formatter`, `Animator`, e `Scanner`. Para se inspirar, veja
+https://fpy.li/13-36["Go (Golang) Standard Library Interfaces (Selected)"] (EN)
+de Asuka Kenji.
+
+Uma boa razão para se criar protocolos minimalistas é a habilidade de
+estendê-los posteriormente, se necessário. Veremos a seguir que não é difícil
+criar um protocolo derivado com um método adicional
 
 ==== Estendendo um Protocolo
 
 Como((("static protocols", "extending"))) mencionei na seção anterior, os
-desenvolvedores Go defendem que, quando em dúvida, melhor escolher o minimalismo ao definir interfaces—o nome usado para protocolos estáticos naquela linguagem.
+desenvolvedores Go defendem que, quando em dúvida, melhor escolher o minimalismo
+ao definir interfaces—o nome usado para protocolos estáticos naquela linguagem.
 Muitas das interfaces Go mais usadas têm um único método.
 
 Quando a prática revela que um protocolo com mais métodos seria útil,
@@ -2141,7 +2240,7 @@ include::../code/13-protocol-abc/typing/randompickload.py[]
 ====
 <1> Se você quer que o protocolo derivado possa ser checado durante a execução, você precisa aplicar o decorador novamente—seu comportamento não é herdado.footnote:[Para detalhes e justificativa, veja por favor a seção sobre https://fpy.li/13-37[`@runtime_checkable`] (EN)
 na PEP 544—Protocols: Structural subtyping (static duck typing).]
-<2> Todo protocolo deve nomear explicitamente `typing.Protocol` como uma de suas classes base, além do protocolo que estamos estendendo. Isso é diferente da forma como herança funciona em Python.footnote:[Novamente, leia por favor https://fpy.li/13-38["Merging and extending protocols"] (EN) na PEP 544 para os detalhes e [.keep-together]#justificativas#.]
+<2> Todo protocolo deve nomear explicitamente `typing.Protocol` como uma de suas classes base, além do protocolo que estamos estendendo. Isso é diferente da forma como herança funciona em Python.footnote:[Novamente, leia por favor https://fpy.li/13-38["Merging and extending protocols"] (EN) na PEP 544 para os detalhes e justificativas.]
 <3> De volta à programação orientada a objetos "normal": só precisamos declarar o método novo no protocolo derivado. A declaração do método `pick` é herdada de `RandomPicker`.
 
 Isso conclui o último exemplo sobre definir e usar um protocolo estático neste capítulo.
@@ -2236,7 +2335,7 @@ Na mailing list typing-sig,
 Guido van Rossum indicou que o `complex` embutido aceita um único argumento,
 e essa é a razão daquelas conversões funcionarem.
 
-Por outro lado, o Mypy aceita argumentos de todos esses seis tipos em uma chamada à função [.keep-together]#`to_complex()`#, definida assim:
+Por outro lado, o Mypy aceita argumentos de todos esses seis tipos em uma chamada à função `to_complex()`, definida assim:
 
 [source, python]
 ----
@@ -2253,7 +2352,7 @@ a situação atual é a seguinte:
 as dicas de tipo da PEP 484
 https://fpy.li/cardxvi[evitam] (EN) a torre numérica
 e recomendam implicitamente que os checadores de tipos codifiquem explicitamente as relações de tipo entre os `complex`, `float`, e `int` embutidos.
-O Mypy faz isso, e também, [.keep-together]#pragmaticamente#, aceita que `int` e `float`
+O Mypy faz isso, e também, pragmaticamente, aceita que `int` e `float`
 são _consistente-com_ `SupportsComplex`, apesar deles não implementarem `+__complex__+`.
 
 [TIP]

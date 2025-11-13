@@ -153,7 +153,7 @@ include::../code/20-executors/getflags/flags.py[tags=FLAGS_PY]
 <7> É uma boa prática adicionar um timeout razoável para operações de rede, para evitar ficar bloqueado  sem motivo por vários minutos.
 <8> Por default, o _HTTPX_ não segue redirecionamentos.footnote:[Definir `follow_redirects=True` não é necessário nesse exemplo, mas eu queria destacar essa importante diferença entre _HTTPX_ e _requests_. Além disso, definir `follow_redirects=True` nesse exemplo me dá a flexibilidade de armazenar os arquivos de imagem em outro lugar no futuro. Acho sensata a configuração default do _HTTPX_, pass:[<code>follow_redirects&#x200b;=False</code>], pois redirecionamentos inesperados podem mascarar requisições desnecessárias e complicar o diagnóstico de erro.]
 <9> Não há tratamento de erros nesse script, mas esse método lança uma exceção se o status do HTTP não está na faixa 2XX—algo mutio recomendado para evitar falhas silenciosas.
-<10> `download_many` é a função chave para comparar com as implementações [.keep-together]#concorrentes#.
+<10> `download_many` é a função chave para comparar com as implementações concorrentes.
 <11> Percorre a lista de códigos de país em ordem alfabética, para facilitar a confirmação de que a ordem é preservada na saída; retorna o número de códigos de país baixados.
 <12> Mostra um código de país por vez na mesma linha, para vermos o progresso a cada download.
 O argumento `end=' '` substitui a costumeira quebra no final de cada linha escrita com um espaço, assim todos os códigos de país aparecem progressivamente na mesma linha.
@@ -389,8 +389,8 @@ def download_many(cc_list: list[str]) -> int:
 
 O construtor de `ProcessPoolExecutor` também tem um parâmetro `max_workers`, que por default é `None`. Nesse caso, o executor limita o número de processos de trabalho ao número resultante de uma chamada a `os.cpu_count()`.
 
-Processos usam mais memória e demoram mais para iniciar que threads, então o real valor de [.keep-together]#of `ProcessPoolExecutor`# é em tarefas de uso intensivo da CPU.
-Vamos voltar ao exemplo de teste de checagem de números primos de<<naive_multiprocessing_sec>>, e reescrevê-lo com [.keep-together]#`concurrent.futures`.#
+Processos usam mais memória e demoram mais para iniciar que threads, então o real valor de of `ProcessPoolExecutor` é em tarefas de uso intensivo da CPU.
+Vamos voltar ao exemplo de teste de checagem de números primos de<<naive_multiprocessing_sec>>, e reescrevê-lo com `concurrent.futures`.
 
 [[multicore_prime_redux_sec]]
 ==== Checador de primos multinúcleo redux
@@ -462,7 +462,7 @@ Total time: 9.65s
 Aqui está o motivo para aquele comportamento de _proc_pool.py_:
 
 * Como mencionado antes, `executor.map(check, numbers)` retorna o resultado na mesma ordem em que `numbers` é enviado.
-* Por default, _proc_pool.py_ usa um número de processos de trabalho igual ao número de CPUs—isso é o que [.keep-together]#`ProcessPoolExecutor`# faz quando `max_workers` é `None`. Nesse laptop são então 12 processos.
+* Por default, _proc_pool.py_ usa um número de processos de trabalho igual ao número de CPUs—isso é o que `ProcessPoolExecutor` faz quando `max_workers` é `None`. Nesse laptop são então 12 processos.
 * Como estamos submetendo `numbers` em ordem descendente, o primeiro é 9999999999999999; com 9 como divisor, ele retorna rapidamente.
 * O segundo número é 9999999999999917, o maior número primo na amostra. Ele vai demorar mais que todos os outros para checar.
 * Enquanto isso, os 11 processos restantes estarão checando outros números, que são ou primos ou compostos com fatores grandes ou compostos com fatores muito pequenos.
@@ -534,7 +534,7 @@ $ python3 demo_executor_map.py
 <4> Isso mostra que o `results` retornado por `executor.map` é um gerador: nada até aqui é bloqueante, independente do número de tarefas e do valor de `max_workers`.
 <5> Como `loiter(0)` terminou, a primeira thread de trabalho está disponível para iniciar a quarta thread para `loiter(3)`.
 <6> Aqui é ponto a execução pode ser bloqueada, dependendo dos parâmetros passados nas chamadas a `loiter`: o método `+__next__+` do gerador `results` precisa esperar até o primeiro _future_ estar completo. Neste caso, ele não vai bloquear porque a chamada a `loiter(0)` terminou antes desse loop iniciar. Observe que tudo até aqui aconteceu dentro do mesmo segundo: 15:56:50.
-<7> `loiter(1)` termina um segundo depois, em 15:56:51. A thread está livre para iniciar [.keep-together]#`loiter(4)`.#
+<7> `loiter(1)` termina um segundo depois, em 15:56:51. A thread está livre para iniciar `loiter(4)`.
 <8> O resultado de `loiter(1)` é exibido: `10`. Agora o loop `for` ficará bloqueado, esperando o resultado de `loiter(2)`.
 <9> O padrão se repete: `loiter(2)` terminou, seu resultado é exibido; o mesmo ocorre com `loiter(3)`.
 <10> Há um intervalo de 2s até `loiter(4)` terminar, porque ela começou em 15:56:51 e não fez nada por 4s.
@@ -545,7 +545,15 @@ Para fazer isso, precisamos de uma combinação do método `Executor.submit` e d
 
 [TIP]
 ====
-A combinação de `Executor.submit` e `futures.as_completed` é mais flexível que `executor.map`, pois você pode `submit` [.keep-together]#chamáveis# e argumentos diferentes. Já `executor.map` é projetado para rodar o mesmo invocável com argumentos diferentes. Além disso, [.keep-together]#o conjunto# de _futures_ que você passa para `futures.as_completed` pode vir de mais de um executor—talvez alguns tenham sido criados por uma instância de [.keep-together]#`ThreadPoolExecutor`# enquanto outros vem de um [.keep-together]#`ProcessPoolExecutor`.#
+
+A combinação de `Executor.submit` e `futures.as_completed` é mais flexível que
+`executor.map`, pois você pode submeter invocáveis diferentes e argumentos
+diferentes. Já `executor.map` é projetado para rodar o mesmo invocável com
+argumentos diferentes. Além disso, o conjunto de _futures_ que você passa para
+`futures.as_completed` pode vir de mais de um executor—talvez alguns tenham sido
+criados por uma instância de `ThreadPoolExecutor` enquanto outros vem de um
+`ProcessPoolExecutor`.
+
 ====
 
 Na próxima seção vamos retomar os exemplos de download de bandeiras com novos requisitos que vão nos obrigar a iterar sobre os resultados de `futures.as_completed` em vez de usar `executor.map`.((("", startref="execumap20")))((("", startref="CEexecutormap20")))
@@ -558,7 +566,7 @@ Como((("concurrent executors", "downloads with progress display and error handli
 
 Para testar o tratamento de uma variedade de condições de erro, criei os exemplos `flags2`:
 
-flags2_common.py:: Este módulo contém as funções e configurações comuns, usadas por todos os exemplos `flags2`, incluindo a função `main`, que cuida da interpretação da linha de comando, da medição de tempo e de mostrar os resultados. Isso é código de apoio, sem relevância direta para [.keep-together]#o assunto# desse capítulo, então não vou incluir o código-fonte aqui, mas você pode vê-lo no
+flags2_common.py:: Este módulo contém as funções e configurações comuns, usadas por todos os exemplos `flags2`, incluindo a função `main`, que cuida da interpretação da linha de comando, da medição de tempo e de mostrar os resultados. Isso é código de apoio, sem relevância direta para o assunto desse capítulo, então não vou incluir o código-fonte aqui, mas você pode vê-lo no
 pass:[<a href="https://fpy.li/code" class="orm:hideurl"><em>fluentpython/example-code-2e</em></a>] repositório:
 https://fpy.li/20-10[_20-executors/getflags/flags2_common.py_].
 
@@ -566,7 +574,7 @@ flags2_sequential.py:: Um cliente HTTP sequencial com tratamento de erro correto
 
 flags2_threadpool.py:: Cliente HTTP concorrente, baseado em `futures.ThreadPoolExecutor`, para demonstrar o tratamento de erros e a integração da barra de progresso.
 
-flags2_asyncio.py:: Mesma funcionalidade do exemplo anterior, mas implementado com  `asyncio` e `httpx`. Isso será tratado na <<flags2_asyncio_sec>>, [.keep-together]#no <<ch_async>>.#
+flags2_asyncio.py:: Mesma funcionalidade do exemplo anterior, mas implementado com  `asyncio` e `httpx`. Isso será tratado na <<flags2_asyncio_sec>>, no <<ch_async>>.
 
 [[careful_testing_clients]]
 [WARNING]
