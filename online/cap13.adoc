@@ -426,13 +426,9 @@ Fugir da convenção é OK em uma sessão no console onde o código é descartá
 mas em um arquivo de código-fonte de Python é muito melhor usar
 `self`, `key`, e `value`, seguindo a documentação.
 
-////
-PAREI
-////
-
 O truque é que `set_card` pressupõe que o `deck` tem um atributo chamado
 `+_cards+`, e seu valor deve ser uma sequência mutável. A função `set_cards` é
-então anexada à classe `FrenchDeck` class como o método especial
+então anexada à classe `FrenchDeck` como o método especial
 `+__setitem__+`. Isso é um exemplo de _monkey patching_: modificar uma classe ou
 módulo durante a execução, sem tocar no código-fonte. O "monkey patching" é
 poderoso, mas o código que executa a modificação fica muito intimamente acoplado
@@ -471,7 +467,7 @@ função.
 
 Exemplo prático: quando você escreve código que aceita uma sequência de
 itens para processar internamente como uma `list`, não valide o argumento
-só através de checagem de tipo. Em vez disso, receba o argumento e construa
+só por checagem de tipo. Em vez disso, receba o argumento e construa
 imediatamente uma `list` a partir dele. Um exemplo desse padrão de programação é
 o método `+__init__+` no <<ex_lotto>>, que veremos mais à frente nesse capítulo:
 
@@ -485,7 +481,7 @@ Desta forma você torna seu código mais flexível, pois o construtor de `list()
 processa qualquer iterável que caiba na memória. Se o argumento não for
 iterável, a chamada vai falhar logo com uma exceção de `TypeError`
 bastante clara, no exato momento em que o objeto for inicializado. Se
-quiser ser mais explícito, pode colocr a chamada a `list()` em um
+quiser ser mais explícito, pode colocar a chamada a `list()` em um
 `try/except`, para adequar a mensagem de erro—mas eu escreveria este código extra
 apenas em uma API externa, pois a falha já estaria bem visível para os
 mantenedores que conhecem a base de código. De toda forma, a chamada errônea vai aparecer
@@ -511,11 +507,11 @@ um erro na hora.
 
 Por outro lado, se qualquer iterável for aceitável, chame `iter(x)` assim que
 possível, para obter um iterador, como veremos na <<iter_func_sec>>. E
-novamente, se `x` não for iterável, isso falhará logo com um exceção
+novamente, se `x` não for iterável, isso falhará logo com uma exceção
 fácil de depurar.
 
 Nos casos que acabei de descrever, uma dica de tipo poderia apontar alguns
-problemas mais cedo, mas não todos os problemas. Lembre-se que o tipo `Any` é
+problemas mais cedo, mas não todos os problemas. Lembre-se de que o tipo `Any` é
 _consistente-com_ qualquer outro tipo. Inferência de tipo pode fazer com que uma
 variável seja marcada com o tipo `Any`. Quando isso acontece, o checador de
 tipos se torna inútil. Além disso, dicas de tipo não são aplicadas durante a
@@ -526,7 +522,7 @@ com tipos diferentes sem usar testes com `isinstance()` e `hasattr()`.
 
 Um exemplo é como poderíamos imitar como
 https://fpy.li/13-8[`collections.namedtuple`] lida com o argumento
-`field_names`: ele aceita um única string com identificadores
+`field_names`: ele aceita uma única string com identificadores
 separados por espaços ou vírgulas, ou uma sequência de identificadores. O
 <<ex_duck_typing_str_list>> mostra como eu faria isso usando tipagem pato.
 
@@ -555,11 +551,11 @@ tem um `.replace` que devolve algo que não funciona com `.split`
 <4> Se um `AttributeError` aconteceu, então `field_names` não é uma `str`.
 Supomos que já é um iterável de nomes.
 
-<5> Para ter certeza que é um iterável e para manter nossas própria cópia,
-criamos uma tupla com o que temos. Uma `tuple` é mais compacta que uma `list`, e
-também impede que meu código troque os nomes por engano.
+<5> Para ter certeza de que é um iterável e para manter nossa própria cópia,
+criamos uma tupla com o que temos. Uma tuple é mais compacta que uma lista, e
+também impede que meu código troque os nomes por acidente.
 
-<6> Usamos `str.isidentifier` para se assegurar que todos os nomes são válidos.
+<6> Usamos `str.isidentifier` para garantir que todos os nomes são válidos.
 
 O passo `②` é uma aplicação de EAFP ou Princípio de Hopper.footnote:[A pioneira
 da computação Grace Hopper dizia que, para inovar em uma burocracia,
@@ -571,7 +567,7 @@ e se não der certo, tratamos a exceção.
 Não pedimos licença:
 fazemos o que temos que fazer e pedimos perdão se for necessário.
 
-O <<ex_duck_typing_str_list>> mostra uma situação onde a tipagem pato é mais
+O <<ex_duck_typing_str_list>> mostra uma situação em que a tipagem pato é mais
 expressiva que dicas de tipo estáticas. Não há como escrever uma dica de tipo
 que diga "o argumento `field_names` deve ser uma string de identificadores separados por
 espaços ou vírgulas." Esta é a parte relevante da assinatura de `namedtuple` no
@@ -599,7 +595,7 @@ startref="defprog13")))
 [[goose_typing_sec]]
 === Tipagem ganso
 
-[quote, Bjarne Stroustrup, creator of {cpp}]
+[quote, Bjarne Stroustrup, criador do {cpp}]
 ____
 
 Uma classe abstrata representa uma interface.footnote:[No original: "An abstract
@@ -610,7 +606,7 @@ ____
 
 Python((("goose typing", "abstract base classes (ABCs)",
 id="GTabcs13")))((("ABCs (abstract base classes)", "goose typing and",
-id="ABCgoose13"))) não a uma palavra-chave `interface`. Usamos classes base
+id="ABCgoose13"))) não tem uma palavra-chave `interface`. Usamos classes base
 abstratas (ABCs) para definir interfaces úteis para checagem explícita de tipo
 durante a execução, e também para anotações compatíveis com
 checadores de tipos estáticos.
@@ -624,7 +620,7 @@ valor dessas estruturas para linguagens que usam tipagem pato:
 [quote]
 ____
 
-Classes bases abstratas complementam a tipagem pato, fornecendo uma maneira de
+Classes base abstratas complementam a tipagem pato, fornecendo uma maneira de
 definir interfaces quando outras técnicas, como `hasattr()`, seriam desajeitadas
 ou sutilmente erradas (por exemplo, com métodos mágicos). ABCs introduzem
 subclasses virtuais, classes que não herdam de uma classe mas ainda são
@@ -637,9 +633,9 @@ apoia nas ABCs. Vou deixar que Alex Martelli explique, no texto _<<waterfowl_ess
 
 [NOTE]
 ====
-Sou muito grato a meus amigos Alex MArtekli e Anna Ravenscroft. Mostrei a eles a
+Sou muito grato a meus amigos Alex Martelli e Anna Ravenscroft. Mostrei a eles a
 primeira lista de tópicos do _Python Fluente_ na OSCON 2013, e eles me
-encorajaram a submeter à O'Reilly para publicação. Mais tarde os dois
+encorajaram a submeter à O'Reilly para publicação. Depois os dois
 contribuíram com revisões técnicas minuciosas. Alex já era a pessoa mais citada
 nesse livro quando se ofereceu para escrever este ensaio.
 ====
@@ -661,7 +657,7 @@ checar, por exemplo, se `type(foo) is bar`&#x2014;que é corretamente
 considerado um anátema, pois inibe até as formas mais simples de herança!).
 
 No geral, a abordagem da tipagem pato continua muito útil em inúmeros
-contextos—mas em muitos outros, um nova abordagem muitas vezes preferível
+contextos—mas em muitos outros, uma nova abordagem muitas vezes preferível
 evoluiu ao longo do tempo. E aqui começa nossa história...
 
 Em gerações recentes, a taxonomia de gênero e espécies (incluindo, mas não
@@ -710,7 +706,7 @@ rápido vem tornando a cladística bastante prática em mais casos).
 Por exemplo, os Chloephaga, gênero de gansos sul-americanos (antes classificados
 como próximos a outros gansos) e as tadornas (gênero de patos sul-americanos)
 estão agora agrupados juntos na subfamília Tadornidae (sugerindo que eles são
-mais próximos entre si que de qualquer outro Anatidae, pois compartilham um
+mais próximos entre si do que de qualquer outro Anatidae, pois compartilham um
 ancestral comum mais próximo). Além disso, a análise de DNA mostrou que o
 Asarcornis (pato da floresta ou pato de asas brancas) não é tão próximo do
 Cairina moschata (pato-do-mato), esse último uma tadorna, como as similaridades
@@ -718,7 +714,7 @@ corporais e comportamentais sugeriram por tanto tempo—então o pato da florest
 foi reclassificado em um gênero próprio, inteiramente fora da subfamília!
 
 Isso importa? Depende do contexto! Para o propósito de decidir como cozinhar uma
-ave depois de caçá-la, por exemplo, características observáveis específicas (mas
+ave após caçá-la, por exemplo, características observáveis específicas (mas
 nem todas—a plumagem, por exemplo, é de mínima importância nesse contexto),
 especialmente textura e sabor (a boa e velha fenética), podem ser mais
 relevantes que a cladística. Mas para outros problemas, tal como a
@@ -727,8 +723,8 @@ cativeiro, ou preservá-las na natureza), a proximidade do DNA pode ser mais
 importante.
 
 Então, a partir dessa analogia aproximada com as revoluções taxonômicas no mundo
-das aves aquáticas, estou recomendando suplementar (não substitui
-inteiramente—em determinados contexto ela ainda servirá) o bom e velho _duck
+das aves aquáticas, estou recomendando suplementar (não substituir
+inteiramente—em determinados contextos ela ainda servirá) o bom e velho _duck
 typing_ por... _goose typing_ (tipagem ganso)!
 
 _Goose typing_ significa o seguinte: `isinstance(obj, cls)` agora é plenamente
@@ -740,11 +736,11 @@ outras no módulo `numbers` da Biblioteca Padrão de Python)footnote:[Você tamb
 pode, claro, definir suas próprias ABCs—mas eu não recomendaria esse caminho a
 ninguém, exceto aos mais avançados pythonistas, da mesma forma que os
 desencorajaria de definir suas próprias metaclasses customizadas... e mesmo para
-os ditos "mais avançados pythonistas", aqueles de nós que exibem o domínio de
-todos os recantos por mais obscuros da linguagem, essas não são ferramentas de
+os ditos "mais avançados pythonistas", aqueles que exibem o domínio de todos
+os recantos por mais obscuros da linguagem, essas não são ferramentas de
 uso frequente. Este tipo de "metaprogramação profunda", se alguma vez for
-apropriada, o será no contexto dos autores de frameworks abrangentes, projetadas
-para serem estendidas de forma independente por inúmeras equipes de
+apropriada, o será no contexto dos autores de frameworks abrangentes, projetados
+para serem estendidos de forma independente por inúmeras equipes de
 desenvolvimento diferentes... menos que 1% dos "mais avançados pythonistas"
 precisará disso alguma vez na vida!—_A.M_]
 
@@ -759,8 +755,8 @@ métodos e assinatura da ABC e, mais importante, o contrato semântico
 subjacente—mas não precisa ter sido desenvolvida com qualquer conhecimento da
 ABC, e especificamente não precisa herdar dela!). Isso é um longo caminho andado
 na direção de quebrar a rigidez e o acoplamento forte que torna herança algo
-para ser usado com mais cautela que aquela tipicamente praticada pela maioria do
-programadores orientados a objetos.
+para ser usado com mais cautela que aquela tipicamente praticada pela maioria
+dos programadores orientados a objetos.
 
 Em algumas ocasiões você sequer precisa registrar uma classe para que uma ABC a
 reconheça como uma subclasse!
@@ -785,12 +781,12 @@ necessidade de registro, já que implementar o método especial chamado
 semântica corretas—deve poder ser chamado sem argumentos e retornar um inteiro
 não-negativo indicando o "comprimento" do objeto; mas qualquer código que
 implemente um método com nome especial, como `+__len__+`, com uma sintaxe e uma
-semântica arbitrárias e incompatíveis tem problemas muitos maiores que esses).
+semântica arbitrárias e incompatíveis tem problemas bem maiores que estes).
 
 Então, aqui está minha mensagem de despedida: sempre que você estiver
-implementando uma classe que incorpore qualquer dos conceitos representados nas
-ABCs de `number`, `collections.abc` ou em outro framework que estiver usando, se
-assegure (caso necessário) de ser uma subclasse ou de registrar sua classe com a
+implementando uma classe que incorpore quaisquer dos conceitos representados nas
+ABCs de `number`, `collections.abc` ou em outro framework que estiver usando,
+assegure-se (caso necessário) de ser uma subclasse ou de registrar sua classe com a
 ABC correspondente. No início de seu programa que utiliza uma biblioteca ou
 framework que define classes que omitiram esse passo, registre você mesmo as
 classes. Daí, quando precisar checar se (tipicamente) um argumento é, por
@@ -826,7 +822,7 @@ subclasse virtual.
 [NOTE]
 ====
 
-Detalhes sobre o uso de `register` são tratados em <<virtual_subclass_sec>>,
+Detalhes sobre o uso de `register` são tratados na <<virtual_subclass_sec>>,
 mais adiante. Por hora, aqui está um pequeno exemplo: dada a classe
 `FrenchDeck`, se eu quiser que ela passe em uma checagem como
 `issubclass(FrenchDeck, Sequence)`, posso torná-la uma _subclasse virtual_ da
@@ -848,10 +844,10 @@ necessários—ele sempre pode ser registrado posteriormente e passar naquelas
 checagens de tipo explícitas.
 
 Entretanto, mesmo com ABCs, você deve se precaver contra o uso excessivo de
-checagens com `isinstance`, pois isso poder ser sintoma de um design ruim.
+checagens com `isinstance`, pois isso pode ser sintoma de um design ruim.
 
 Normalmente, não é bom ter uma série de `if/elif/elif` com checagens de
-`isinstance` executando ações diferentes, dependendo do tipo de objeto: nesse
+`isinstance` executando ações diferentes, dependendo do tipo de objeto: neste
 caso você deveria estar usando polimorfismo—isto é, projetando suas classes para
 permitir ao interpretador invocar os métodos corretos, em vez de
 codificar diretamente a lógica de despacho em blocos `if/elif/elif`.
@@ -860,17 +856,17 @@ Por outro lado, não há problema em executar uma checagem com `isinstance` cont
 uma ABC se você quer garantir um contrato de API: "Cara, você precisa
 implementar isso se quiser me chamar," como costuma dizer o revisor técnico
 Lennart Regebro. Isso é especialmente útil em sistemas com arquiteturas
-modulares extensíveis por plug-ins. Fora dos frameworks, tipagem pato é muitas
-vezes mais simples e flexível que checagens de tipo.
+modulares extensíveis por plug-ins. Fora dos frameworks, tipagem pato muitas
+vezes é mais simples e flexível que checagens de tipo explícitas.
 
 Por fim, em seu ensaio Alex reforça mais de uma vez a necessidade de limitar a
 criação de ABCs. Uso excessivo de ABCs imporia cerimônia a uma linguagem que se
 tornou popular por ser prática e pragmática. Durante o processo de revisão do
-_Python Fluente_, Alex me enviou uma e-mail:
+_Python Fluente_, Alex colocou num e-mail:
 
 [quote]
 ____
-ABCs servem para encapsular conceitos muito genéricos, abstrações introduzidos
+ABCs servem para encapsular conceitos muito genéricos, abstrações introduzidas
 por um framework—coisa como "uma sequência" e "um número exato". [Os leitores]
 quase certamente não precisam escrever alguma nova ABC, apenas usar as já
 existentes de forma correta, para obter 99% dos benefícios sem qualquer risco
@@ -879,7 +875,7 @@ ____
 
 Agora vamos ver a tipagem ganso na prática.
 
-==== Criando uma Subclasse de uma ABC
+==== Criando uma subclasse de uma ABC
 
 Seguindo((("inheritance and subclassing", "subclassing ABCs", id="IASabcs13")))((("goose typing", "subclassing ABCs", id="GTsub13")))((("ABCs (abstract base classes)", "subclassing ABCs", id="ABCsub13"))) o conselho de Martelli, vamos aproveitar uma ABC existente, `collections.MutableSequence`, antes de ousar inventar uma nova.
 No <<ex_pythonic_deck2>>, `FrenchDeck2` é explicitamente declarada como subclasse de `collections.MutableSequence`.
@@ -895,30 +891,38 @@ include::../code/13-protocol-abc/frenchdeck2.py[]
 [role="pagebreak-before less_space"]
 <1> `+__setitem__+` é tudo que precisamos para possibilitar o embaralhamento...
 <2> ...mas uma subclasse de `MutableSequence` é forçada a implementar `+__delitem__+`, um método abstrato daquela ABC.
-<3> Também precisamos implementar `insert`, o terceiro método abstrato de pass:[<span class="keep-together"><code>MutableSequence</code></span>].
+<3> Também precisamos implementar `insert`, o terceiro método abstrato de `MutableSequence`.
 
 Python não verifica a implementação de métodos abstratos durante a importação
 (quando o módulo _frenchdeck2.py_ é carregado na memória e compilado),
 mas apenas durante a execução, quando tentamos de fato instanciar `FrenchDeck2`.
-Ali, se deixamos de implementar qualquer dos métodos abstratos,
+Ali, se deixamos de implementar qualquer um dos métodos abstratos,
 recebemos uma exceção de `TypeError` com uma mensagem como
-`Can't instantiate abstract class FrenchDeck2 with abstract methods __delitem__, insert`
-("Impossível instanciar a classe abstrata FrenchDeck2 com os métodos abstratos `+__delitem__+`, ``insert``").
+_Can't instantiate abstract class FrenchDeck2 with abstract methods `+__delitem__+`, ``insert``_
+(Impossível instanciar a classe abstrata `FrenchDeck2` com os métodos abstratos `+__delitem__+`, ``insert``).
 Por isso precisamos implementar `+__delitem__+` e `insert`,
-mesmo se nossos exemplos usando `FrenchDeck2` não precisem desses comportamentos: a ABC `MutableSequence` os exige.
+mesmo se nossos exemplos usando `FrenchDeck2` não precisem desses comportamentos:
+a ABC `MutableSequence` os exige.
 
-Como((("UML class diagrams", "MutableSequence ABC and superclasses"))) <<mutablesequence_uml>> mostra, nem todos os métodos das ABCs `Sequence` e `MutableSequence` ABCs são abstratos.
+Como((("UML class diagrams", "MutableSequence ABC and superclasses")))
+mostra a <<mutablesequence_uml>>, nem todos os métodos das ABCs `Sequence`
+e `MutableSequence` ABCs são abstratos.
 
 [[mutablesequence_uml]]
 .Diagrama de classe UML para a ABC `MutableSequence` e suas superclasses em `collections.abc` (as setas de herança apontam das subclasses para as ancestrais; nomes em itálico são classes e métodos abstratos).
 image::../images/flpy_1303.png[]
 
-Para escrever `FrenchDeck2` como uma subclasse de `MutableSequence`, tive que pagar o preço de implementar `+__delitem__+` e `insert`, desnecessários em meus exemplos.
-Em troca, `FrenchDeck2` herda cinco métodos concretos de `Sequence`:
-`+__contains__+`, `+__iter__+`, `+__reversed__+`, `index`, e `count`.
-De `MutableSequence`, ela recebe outros seis métodos: `append`, `reverse`, `extend`, `pop`, `remove`, e `+__iadd__+`— que suporta o operador `+=` para concatenação direta.
+Para escrever `FrenchDeck2` como uma subclasse de `MutableSequence`, tive que
+pagar o preço de implementar `+__delitem__+` e `insert`, desnecessários em meus
+exemplos. Em troca, `FrenchDeck2` herda cinco métodos concretos de `Sequence`:
+`+__contains__+`, `+__iter__+`, `+__reversed__+`, `index`, e `count`. De
+`MutableSequence`, ela recebe outros seis métodos: `append`, `reverse`,
+`extend`, `pop`, `remove`, e `+__iadd__+`— que suporta o operador `+=` para
+concatenação direta.
 
-Os métodos concretos em cada ABC de `collections.abc` são implementados nos termos da interface pública da classe, então funcionam sem qualquer conhecimento da estrutura interna das instâncias.
+Os métodos concretos em cada ABC de `collections.abc` são implementados nos
+termos da interface pública da classe, então funcionam sem qualquer conhecimento
+da estrutura interna das instâncias.
 
 
 [TIP]
@@ -957,7 +961,7 @@ Há dois módulos chamados `abc` na biblioteca padrão.
 Aqui estamos falando sobre o `collections.abc`.
 Para reduzir o tempo de carregamento, desde o Python 3.4 aquele módulo é implementado fora do pacote `collections` — em https://fpy.li/13-14[_Lib/_collections_abc.py_] — então é importado separado de `collections`.
 O((("abc.ABC class"))) outro módulo `abc` é apenas `abc` (i.e., https://fpy.li/13-15[_Lib/abc.py_]), onde a classe `abc.ABC` é definida.
-Toda ABC depende do módulo `abc`, mas não precisamos importá-lo nós mesmos, exceto para criar um nova ABC.
+Toda ABC depende do módulo `abc`, mas não precisamos importá-lo nós mesmos, exceto para criar uma nova ABC.
 
 ====
 
@@ -966,7 +970,7 @@ diagrama de classe resumido (sem os nomes dos atributos) das 17 ABCs definidas
 em `collections.abc`. A documentação de `collections.abc` inclui
 https://fpy.li/13-16[uma ótima tabela] resumindo as ABCs, suas relações e seus
 métodos abstratos e concretos (chamados "métodos mixin"). Há muita herança
-múltipla acontecendo na <<collections_uml>>. Vamos dedicar a maior parte de
+múltipla acontecendo na <<collections_uml>>. Vamos dedicar a maior parte do
 <<ch_inheritance>> à herança múltipla, mas por hora é suficiente dizer que isso
 normalmente não causa problemas no caso das ABCs.footnote:[Herança múltipla foi
 _considerada nociva_ e excluída do Java, exceto para interfaces:
@@ -981,9 +985,9 @@ Vamos rever os grupos na <<collections_uml>>:
 
 `Iterable`, `Container`, `Sized`::
 Toda coleção deveria herdar destas ABCs ou implementar protocolos compatíveis.
-`Iterable` suporta iteração com `+__iter__+`,
-`Container` suporta o operador `in` com `+__contains__+`,
-e `Sized` suporta `len()` with `+__len__+`.
+`Iterable` define `+__iter__+` para suportar iteração,
+`Container` define `+__contains__+` para o operador `in`,
+e `Sized` define `+__len__+` para `len()`.
 
 `Collection`::
 Essa ABC não tem nenhum método próprio, mas foi acrescentada no Python 3.6 para
@@ -991,7 +995,7 @@ facilitar a criação de subclasses de `Iterable`, `Container`, e `Sized`.
 
 `Sequence`, `Mapping`, `Set`::
 Esses são os principais tipos de coleções imutáveis, e cada um tem uma subclasse
-mutável. Um diagrama detalhado de `MutableSequence` é apresentado em
+mutável. Um diagrama detalhado de `MutableSequence` é apresentado na
 <<mutablesequence_uml>>; para `MutableMapping` e `MutableSet`, veja a
 <<mapping_uml>> e a <<set_uml>> em <<ch_dicts_sets>>.
 
@@ -1007,16 +1011,16 @@ Observe que iterator é subclasse de `Iterable`.
 Discutiremos este detalhe em <<ch_generators>>.
 
 `Callable`, `Hashable`::
-Essas não são coleções, mas `collections.abc` foi o primeiro pacote a definir
-ABCs na biblioteca padrão, e essas duas foram consideradas importante o
-suficiente para serem incluídas. Elas suportam a checagem de tipos de objetos
-que precisam ser invocáveis ou hashable.
+Estas não são coleções, mas `collections.abc` foi o primeiro pacote a definir
+ABCs na biblioteca padrão, e estas duas foram incluídas por serem importantes.
+Elas suportam a checagem de tipos de objetos
+que precisam ser invocáveis ou _hashable_.
 
 Para a detecção de invocável, a função embutida `callable(obj)` é mais
 conveniente que `insinstance(obj, Callable)`.
 
-Se `insinstance(obj, Hashable)` devolver `False`, pode ter certeza que
-`obj` não é hashable. Mas se ela devolver `True`, pode ser um falso positivo.
+Se `insinstance(obj, Hashable)` devolver `False`, pode ter certeza de que
+`obj` não é _hashable_. Mas se ela devolver `True`, pode ser um falso positivo.
 Isso é explicado no box seguinte.
 
 [[isinstance_mislead_box]]
@@ -1024,8 +1028,8 @@ Isso é explicado no box seguinte.
 ****
 
 É fácil interpretar errado os resultados de testes usando `isinstance` e
-`issubclass` com as ABCs `Hashable` and `Iterable`. Se `isinstance(obj,
-Hashable)` devolve `True`, is significa apenas que a classe de `obj` implementa
+`issubclass` com as ABCs `Hashable` e `Iterable`. Quando
+`isinstance(obj, Hashable)` devolve `True`, significa apenas que a classe de `obj` implementa
 ou herda `+__hash__+`. Mas se `obj` é uma tupla contendo itens _unhashable_,
 então `obj` não é _hashable_, apesar do resultado positivo da checagem com
 `isinstance`.
@@ -1034,22 +1038,22 @@ o modo mais preciso de determinar se uma instância é _hashable_: chamar `hash(
 Essa chamada vai levantar um `TypeError` se `obj` não for _hashable_.
 
 Por outro lado, mesmo quando `isinstance(obj, Iterable)` retorna `False`,
-o Python ainda pode ser capaz de iterar sobre `obj` usando `+__getitem__+` com índices baseados em 0,
-como vimos em <<ch_data_model>> e na  <<python_digs_seq_sec>>.
-A documentação de
+o Python ainda pode ser capaz de iterar sobre `obj` usando `+__getitem__+`
+com índices baseados em 0, como vimos em <<ch_data_model>> e
+na <<python_digs_seq_sec>>. A documentação de
 https://fpy.li/6q[`collections.abc.Iterable`]
 afirma:
 
 [quote]
 ____
-A única maneira confiável de determinar se um objeto é iterável é chamar iter(obj).
+A única maneira confiável de determinar se um objeto é iterável é chamar `iter(obj)`.
 ____
 
 ****
 
 Após vermos algumas das ABCs existentes, vamos praticar tipagem ganso
 implementando uma ABC do zero, e a colocando em uso. O objetivo aqui não é
-encorajar todo mundo criar ABCs a torto e a direito, mas mostrar como ler o
+encorajar todo mundo a criar ABCs a torto e a direito, mas mostrar como ler o
 código-fonte das ABCs encontradas na biblioteca padrão e em outros
 pacotes.((("", startref="GTstlib13")))((("", startref="ABCstndlib13")))
 
@@ -1072,7 +1076,7 @@ ____
 
 Agora ABCs têm mais casos de uso potenciais, em dicas de tipo para permitir
 tipagem estática. Como discutido na <<type_hint_abc_sec>>, usar ABCs em vez de
-tipo concretos em dicas de tipos de argumentos de função dá mais flexibilidade a
+tipos concretos em dicas de tipos de argumentos de função dá mais flexibilidade a
 quem chama a função.
 
 Para justificar a criação de uma ABC, precisamos pensar em um contexto para
@@ -1080,12 +1084,12 @@ usá-la como um ponto de extensão em um framework. Então aqui está nosso
 contexto: imagine que você precisa exibir publicidade em um site ou em uma app
 de celular, em ordem aleatória, mas sem repetir um anúncio antes que o
 inventário completo de anúncios tenha sido exibido. Agora vamos presumir que
-estamos desenvolvendo um gerenciador de publicidade chamado `ADAM`. Um dos
+estamos desenvolvendo um gerenciador de publicidade. Um dos
 requisitos é permitir o uso de classes de escolha aleatória não repetida
 fornecidas pelo usuário.footnote:[Talvez o cliente precise auditar o
 randomizador ou a agência queira fornecer um randomizador "viciado". Nunca se
-sabe...] Para deixar claro aos usuário do `ADAM` o que se espera de um
-componente de "escolha aleatória não repetida", vamos definir uma ABC.
+sabe...] Para deixar claro aos usuários do framework de anúncios o que se espera
+de um componente de "escolha aleatória não repetida", vamos definir uma ABC.
 
 Na bibliografia sobre estruturas de dados, _stack_ (pilha) e _queue_ (fila) descrevem
 interfaces abstratas em termos dos arranjos físicos dos objetos. Vamos seguir o
@@ -1098,13 +1102,13 @@ do recipiente giratório que mistura os números.
 A ABC `Tombola` tem quatro métodos.
 Os dois métodos abstratos são:
 
-`.load(…)`:: Coloca itens no container.
-`.pick()`:: Remove e devolve um item aleatório do container.
+`.load(…)`:: Coloca itens na coleção.
+`.pick()`:: Remove e devolve um item aleatório da coleção.
 
 Os métodos concretos são:
 
-`.loaded()`:: Devolve `True` se existir pelo menos um item no container.
-`.inspect()`:: Devolve uma `tuple` construída a partir dos itens atualmente no container,
+`.loaded()`:: Devolve `True` se existir pelo menos um item na coleção.
+`.inspect()`:: Devolve uma `tuple` construída a partir dos itens atualmente na coleção,
 sem modificar o conteúdo (a ordem interna não é preservada).
 
 A <<tombola_uml>> mostra a ABC `Tombola` e três implementações concretas.
@@ -1291,7 +1295,7 @@ Em outras palavras, nenhum outro decorador pode aparecer entre `@abstractmethod`
 Agora que abordamos essas questões de sintaxe das ABCs, vamos colocar `Tombola`
 em uso, implementando duas subclasses concretas.
 
-==== Criando uma subclasse de ABC
+==== Criando uma subclasse de `Tombola`
 
 Dada((("goose typing", "subclassing ABCs", id="GTsubclass13")))((("ABCs (abstract base classes)",
 "subclassing ABCs", id="ABCsubclass13")))((("inheritance and subclassing", "subclassing ABCs",
@@ -2089,8 +2093,8 @@ mais útil e flexível. A biblioteca padrão do Go tem inúmeras interfaces, com
 Depois, se você concluir que um protocolo mais complexo é necessário,
 pode combinar dois ou mais protocolos para definir um novo.
 
-Usar um container que escolhe itens aleatoriamente pode ou não exigir o
-recarregamento do container, mas ele certamente precisa de um método para 
+Usar um componente que escolhe itens aleatoriamente pode ou não exigir o
+recarregamento do componente, mas ele certamente precisa de um método para 
 sortear um item, então escolhi o método `pick` para o
 protocolo mínimo `RandomPicker`. O código do protocolo está no
 <<ex_randompick_protocol>>, e seu uso é demonstrado por testes no
