@@ -156,16 +156,14 @@ def gen_unused_short(redirects: dict) -> Iterator[str]:
             yield short
 
 
-def main():
-    htaccess_path, urls_path = sys.argv[1:3]
+def main(htaccess_path, urls):
     with open(htaccess_path) as f:
         hta = f.read()
     assert 'RedirectTemp' in hta, 'No RedirecTemp in {htaccess_path}'
-    with open(urls_path) as f:
-        urls = [u.rstrip() for u in f.readlines()]
     
     redirects, targets = load_redirects(parse_htaccess(hta))
     path_urls = []
+    changes = []
     path_gen = gen_unused_short(redirects)
     for url in urls:
         if url in DO_NOT_SHORTEN:
@@ -174,12 +172,17 @@ def main():
         path_urls.append(path_url)
         path, url, new = path_url
         flag = '+' if new else '='
-        print(f'{flag} /{path}\t{url}')
+        line = f'{flag} /{path}\t{url}'
+        print(line)
+        changes.append(line)
     
     with open(htaccess_path, 'a') as f:
         count = update_htaccess(f, path_urls)
     print(f'{count} directives appended to {htaccess_path}', file=sys.stderr)
-
+    return changes
 
 if __name__ == '__main__':
-    main()
+    htaccess_path, urls_path = sys.argv[1:3]
+    with open(urls_path) as f:
+        urls = [u.rstrip() for u in f.readlines()]
+    main(htaccess_path, urls)

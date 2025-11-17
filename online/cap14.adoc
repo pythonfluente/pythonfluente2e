@@ -5,53 +5,97 @@
 
 [quote, Alan Kay, Os Primórdios de Smalltalk]
 ____
-[...] precisávamos de toda uma teoria melhor sobre herança (e ainda precisamos). Por exemplo, herança e instanciação (que é um tipo de herança) embaralham tanto a pragmática (tal como fatorar o código para economizar espaço) quanto a semântica (usada para um excesso de tarefas como: especialização, generalização, especiação, etc.).footnote:[Alan Kay, "The Early History of Smalltalk" (_Os Primórdios de Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95. Também disponível https://fpy.li/14-1[online] (EN).
-Agradeço a meu amigo Christiano Anderson, por compartilhar essa referência quando eu estava escrevendo este capítulo.]
+
+[...] precisávamos de toda uma teoria melhor sobre herança (e ainda precisamos).
+Por exemplo, herança e instanciação (que é um tipo de herança) embaralham tanto
+a pragmática (tal como fatorar o código para economizar espaço) quanto a
+semântica (usada para um excesso de tarefas como: especialização, generalização,
+especiação, etc.).footnote:[Alan Kay, "The Early History of Smalltalk" (_Os
+Primórdios de Smalltalk_), na SIGPLAN Not. 28, 3 (março de 1993), 69&#x2013;95.
+Também disponível https://fpy.li/14-1[online] (EN). Agradeço a meu amigo
+Christiano Anderson, por compartilhar essa referência quando eu estava
+escrevendo este capítulo.]
+
 ____
 
-Esse((("inheritance and subclassing", "topics covered"))) capítulo é sobre herança e criação de subclasses.
-Vou presumir um entendimento básico desses conceitos, que você pode ter aprendido lendo https://docs.python.org/pt-br/3/tutorial/classes.html[_O Tutorial de Python_], ou por experiências com outra linguagem orientada a objetos popular, tal como Java, C# ou {cpp}.
-Aqui vamos nos concentrar em quatro características de Python:
+Esse((("inheritance and subclassing", "topics covered"))) capítulo é sobre
+herança e criação de subclasses. Vou presumir um entendimento básico desses
+conceitos, que você pode ter aprendido lendo
+https://fpy.li/6w[_O Tutorial de Python_],
+ou por experiências com outra linguagem orientada a objetos popular, tal como
+Java, C# ou {cpp}. Aqui vamos nos concentrar em quatro características de
+Python:
 
 * A função `super()`
 * As armadilhas na criação de subclasses de tipos embutidos
 * Herança múltipla e a ordem de resolução de métodos
 * Classes mixin
 
-Herança múltipla acontece quando uma classe tem mais de uma classe base. O {cpp} a suporta; Java e C# não.
-Muitos consideram que a herança múltipla não vale a quantidade de problemas que causa.
-Ela foi deliberadamente deixada de fora de Java, após seu aparente abuso nas primeiras bases de código {cpp}.
+Herança múltipla acontece quando uma classe tem mais de uma classe base. O {cpp}
+a suporta; Java e C# não. Muitos consideram que a herança múltipla não vale a
+quantidade de problemas que causa. Ela foi deliberadamente deixada de fora de
+Java, após seu aparente abuso nas primeiras bases de código {cpp}.
 
 Esse capítulo introduz a herança múltipla para aqueles que nunca a usaram,
-e oferece orientações sobre como lidar com herança simples ou múltipla, se você precisar usá-la.
+e oferece orientações sobre como lidar com herança simples ou múltipla,
+se você precisar usá-la.
 
-Em 2021, quando escrevo essas linhas, há uma forte reação contra o uso excessivo de herança em geral—não apenas herança múltipla—porque superclasses e subclasses são fortemente acopladas, ou seja, interdependentes.
-Esse acoplamento forte significa que modificações em uma classe pode ter efeitos inesperados
-e de longo alcance em suas subclasses, tornando os sistemas frágeis e difíceis de entender.
+Em 2021, quando escrevo essas linhas, há uma forte reação contra o uso excessivo
+de herança em geral—não apenas herança múltipla—porque superclasses e subclasses
+são fortemente acopladas, ou seja, interdependentes. Esse acoplamento forte
+significa que modificações em uma classe pode ter efeitos inesperados e de longo
+alcance em suas subclasses, tornando os sistemas frágeis e difíceis de entender.
 
-Entretanto, ainda temos que manter os sistemas existentes, que podem ter complexas hierarquias de classe, ou trabalhar com frameworks que nos obrigam a usar herança—algumas vezes até herança múltipla.
+Entretanto, ainda temos que manter os sistemas existentes, que podem ter
+complexas hierarquias de classe, ou trabalhar com frameworks que nos obrigam a
+usar herança—algumas vezes até herança múltipla.
 
-Vou ilustrar as aplicações práticas da herança múltipla com a biblioteca padrão, o framework para programação web Django e o toolkit para programação de interface gráfica Tkinter.
+Vou ilustrar as aplicações práticas da herança múltipla com a biblioteca padrão,
+o framework para programação web Django e o toolkit para programação de
+interface gráfica Tkinter.
 
 === Novidades neste capítulo
 
-Não((("inheritance and subclassing", "significant changes to"))) há nenhum recurso novo no Python no que diz respeito ao assunto desse capítulo, mas fiz inúmeras modificações baseadas nos comentários dos revisores técnicos da segunda edição, especialmente Leonardo Rochael e Caleb Hattingh.
+Não((("inheritance and subclassing", "significant changes to"))) há nenhum
+recurso novo no Python no que diz respeito ao assunto desse capítulo, mas fiz
+inúmeras modificações baseadas nos comentários dos revisores técnicos da segunda
+edição, especialmente Leonardo Rochael e Caleb Hattingh.
 
-Escrevi uma nova seção de abertura, tratando especificamente da função embutida `super()`, e mudei os exemplos na <<mro_section>>, para explorar mais profundamente a forma como `super()` suporta a herança múltipla _cooperativa_.
+Escrevi uma nova seção de abertura, tratando especificamente da função embutida
+`super()`, e mudei os exemplos na <<mro_section>>, para explorar mais
+profundamente a forma como `super()` suporta a herança múltipla _cooperativa_.
 
-A <<mixin_classes_sec>> também é nova. A <<multi_real_world_sec>> foi reorganizada, e apresenta exemplos mais simples de _mixin_ vindos da bilbioteca padrão, antes de apresentar o exemplos com o framework Django e as complicadas hierarquias do Tkinter.
+A <<mixin_classes_sec>> também é nova. A <<multi_real_world_sec>> foi
+reorganizada, e apresenta exemplos mais simples de _mixin_ vindos da bilbioteca
+padrão, antes de apresentar o exemplos com o framework Django e as complicadas
+hierarquias do Tkinter.
 
-Como o próprio título sugere, as ressalvas à herança sempre foram um dos temas principais desse capítulo. Mas como cada vez mais desenvolvedores consideram essa técnica problemática, acrescentei alguns parágrafos sobre como evitar a herança no final da <<inheritance_summary>> e da <<inheritance_further_reading>>.
+Como o próprio título sugere, as ressalvas à herança sempre foram um dos temas
+principais desse capítulo. Mas como cada vez mais desenvolvedores consideram
+essa técnica problemática, acrescentei alguns parágrafos sobre como evitar a
+herança no final da <<inheritance_summary>> e da
+<<inheritance_further_reading>>.
 
 Vamos começar com uma revisão da enigmática função `super()`.
 
 
 === A função super()
 
-O((("inheritance and subclassing", "super() function", id="IACsuper14")))((("super() function", id="super14")))((("functions", "super() function"))) uso consistente da função embutida `super()` é essencial na criação de programas Python orientados a objetos fáceis de manter.
+O((("inheritance and subclassing", "super() function",
+id="IACsuper14")))((("super() function", id="super14")))((("functions", "super() function")))
+uso consistente da função embutida `super()` é essencial na criação
+de programas Python orientados a objetos fáceis de manter.
 
-Quando uma subclasse sobrescreve um método de uma superclasse, esse novo método normalmente precisa invocar o método correspondente na superclasse.
-Aqui está o modo recomendado de fazer isso, tirado de um exemplo da documentação do módulo _collections_, na seção https://docs.python.org/pt-br/3/library/collections.html#ordereddict-examples-and-recipes["OrderedDict Examples and Recipes" (_OrderedDict: Exemplos e Receitas_)] (EN).:footnote:[Modifiquei apenas a docstring do exemplo, porque a original está errada. Ela diz: "Armazena itens na ordem das chaves adicionadas por último" (_"Store items in the order the keys were last added"_), mas não é isso o que faz a classe claramente batizada `LastUpdatedOrderedDict`.]
+Quando uma subclasse sobrescreve um método de uma superclasse, esse novo método
+normalmente precisa invocar o método correspondente na superclasse. Aqui está o
+modo recomendado de fazer isso, tirado de um exemplo da documentação do módulo
+_collections_, na seção
+https://fpy.li/6x["OrderedDict
+Examples and Recipes" (_OrderedDict: Exemplos e Receitas_)]
+(EN).:footnote:[Modifiquei apenas a docstring do exemplo, porque a original está
+errada. Ela diz: "Armazena itens na ordem das chaves adicionadas por último"
+(_"Store items in the order the keys were last added"_), mas não é isso o que
+faz a classe claramente batizada `LastUpdatedOrderedDict`.]
 
 [source, python]
 ----
@@ -215,10 +259,18 @@ O <<ex_other_subclass>> foi adaptado da https://fpy.li/14-5[documentação do Py
 
 [WARNING]
 ====
-Criar subclasses diretamente de tipos embutidos como `dict` ou `list` ou `str` é um processo propenso ao erro, pois os métodos embutidos quase sempre ignoram as sobreposições definidas pelo usuário. Em vez de criar subclasses de tipos embutidos, derive suas classes do módulo https://docs.python.org/pt-br/3/library/collections.html[`collections`], usando as classes `UserDict`, `UserList`, e `UserString`, que foram projetadas para serem fáceis de estender.
+
+Criar subclasses diretamente de tipos embutidos, como `dict`, `list` ou `str`, é
+um processo propenso ao erro, pois os métodos embutidos quase sempre ignoram as
+sobreposições definidas pelo usuário. Em vez de criar subclasses de tipos
+embutidos, derive suas classes do módulo
+https://fpy.li/2w[`collections`], usando
+as classes `UserDict`, `UserList`, e `UserString`, que foram projetadas para
+serem fáceis de estender.
+
 ====
 
-Se você criar uma subclasse de `collections.UserDict` em vez de `dict`, os problemas expostos no <<ex_doppeldict>> e no <<ex_other_subclass>> desaparecem. Veja o <<ex_userdict_ok>>.
+Herdando de `collections.UserDict` em vez de `dict`, os problemas expostos no <<ex_doppeldict>> e no <<ex_other_subclass>> desaparecem. Veja o <<ex_userdict_ok>>.
 
 [[ex_userdict_ok]]
 .`DoppelDict2` and `AnswerDict2` funcionam como esperado, porque estendem `UserDict` e não `dict`
@@ -277,7 +329,7 @@ Isso é chamado "o problema do diamante", ilustrado na <<diamond_uml>> e no <<ex
 
 [[diamond_uml]]
 .Esquerda: Sequência de ativação para a chamada `leaf1.ping()`. Direita: Sequência de ativação para a chamada `leaf1.pong()`.
-image::../images/flpy_1401.png[UML do problema do diamante]
+image::../images/flpy_1401.png[align="center",pdfwidth=11cm]
 
 [[ex_diamond]]
 .diamond.py: classes `Leaf`, `A`, `B`, `Root` formam o grafo na <<diamond_uml>>
@@ -323,7 +375,7 @@ include::../code/14-inheritance/diamond.py[tags=LEAF_MRO]
 [NOTE]
 ====
 Olhando para a <<diamond_uml>>, pode parecer que a MRO descreve uma
-https://pt.wikipedia.org/wiki/Busca_em_largura[busca em largura (ou amplitude)],
+https://fpy.li/6y[busca em largura (ou amplitude)],
 mas isso é apenas uma coincidência para essa hierarquia de classes em particular.
 A MRO é computada por um algoritmo conhecido, chamado C3.
 Seu uso no Python está detalhado no artigo
@@ -534,7 +586,7 @@ Na((("collections.abc module", "multiple inheritance in")))((("mixin methods")))
 Nenhuma controvérsia aqui:  afinal, até o Java suporta herança múltipla de interfaces, e ABCs são declarações de interface que podem, opcionalmente, fornecer implementações concretas de métodos.footnote:[Como já mencionado, o Java 8 permite que interfaces também forneçam implementações de métodos. Esse novo recurso é chamado https://fpy.li/14-12["Default Methods" (_Métodos Default_)] (EN) no Tutorial oficial de Java.]
 
 A documentação oficial de Python para
-https://docs.python.org/pt-br/3/library/collections.abc.html[`collections.abc`] (EN)
+https://fpy.li/6z[`collections.abc`] (EN)
 usa o termo _mixin method_  ("método mixin") para os métodos concretos implementados em muitas das coleções nas ABCs.
 As ABCs que oferecem métodos mixin cumprem dois papéis: elas são definições de interfaces e também classes mixin.
 Por exemplo, a https://fpy.li/14-14[implementação de `collections.UserDict`] (EN)
@@ -542,7 +594,7 @@ recorre a vários dos métodos mixim fornecidos por `collections.abc.MutableMapp
 
 ==== ThreadingMixIn e ForkingMixIn
 
-O pacote https://docs.python.org/pt-br/3/library/http.server.html[_http.server_] inclui((("ThreadingMixIn class")))((("ForkingMixIn")))((("HTTPServer class")))((("ThreadingHTTPServer class")))((("servers", "ThreadingHTTPServer class")))((("servers", "HTTPServer class"))) as classes `HTTPServer` e `ThreadingHTTPServer`. Essa última foi adicionada ao Python 3.7. Sua documentação diz:
+O pacote https://fpy.li/72[_http.server_] inclui((("ThreadingMixIn class")))((("ForkingMixIn")))((("HTTPServer class")))((("ThreadingHTTPServer class")))((("servers", "ThreadingHTTPServer class")))((("servers", "HTTPServer class"))) as classes `HTTPServer` e `ThreadingHTTPServer`. Essa última foi adicionada ao Python 3.7. Sua documentação diz:
 
 classe `http.server.ThreadingHTTPServer`(server_address, RequestHandlerClass)::
 Essa classe é idêntica a `HTTPServer`, mas trata requisições com threads, usando a `ThreadingMixIn`. Isso é útil para lidar com navegadores web que abrem sockets prematuramente, situação na qual o  `HTTPServer` esperaria indefinidamente.
@@ -584,9 +636,10 @@ class ThreadingMixIn:
 <2> Isso sobrescreve o método `process_request`, que `HTTPServer` herda de `socketserver.BaseServer`,  iniciando uma thread e delegando o trabalho efetivo para a `process_request_thread` que roda naquela thread. O método não chama `super()`.
 <3> `server_close` chama `super().server_close()` para parar de receber requisições, e então espera que as threads iniciadas por `process_request` terminem sua execução.
 
-A `ThreadingMixIn` aparece junto com `ForkingMixIn` na documentação do módulo https://docs.python.org/pt-br/3/library/socketserver.html#socketserver.ForkingMixIn[`socketserver`].
+A `ThreadingMixIn` aparece junto com `ForkingMixIn` na documentação do módulo https://fpy.li/73[`socketserver`].
 Essa última classe foi projetada para suportar servidores concorrentes baseados na
-https://docs.python.org/pt-br/3/library/os.html#os.fork[`os.fork()`], uma API para iniciar processos filhos, disponível em sistemas Unix (ou similares) compatíveis com a https://pt.wikipedia.org/wiki/POSIX[POSIX].
+https://fpy.li/74[`os.fork()`], uma API para iniciar processos filhos, disponível em sistemas Unix (ou similares) compatíveis com a
+https://fpy.li/7c[POSIX].
 
 
 
@@ -612,7 +665,7 @@ O conceito de views baseadas em classes foi introduzido no Django 1.3, juntament
 [role="width-80"]
 [[django_view_base_uml]]
 .Diagrama de classes UML do módulo `django.views.generic.base`.
-image::../images/flpy_1403.png[Diagrama de classes UML do módulo `django.views.generic.base`.]
+image::../images/flpy_1403.png[align="center",pdfwidth=8cm]
 
 [TIP]
 ====
@@ -622,7 +675,7 @@ Um recurso fantástico para estudar essas classes é o site https://fpy.li/14-21
 `View` é a classe base de todas as views (ela poderia ser uma ABC), e oferece funcionalidade essencial como o método `dispatch`, que delega para métodos de "tratamento" como `get`, `head`, `post`, etc., implementados por subclasses concretas para tratar os diversos verbos HTTP.footnote:[Os programadores Django sabem que o método de classe `as_view` é a parte mais visível da interface `View`, mas isso não é relevante para nós aqui.] A classe `RedirectView` herda apenas de `View`, e podemos ver que ela implementa `get`, `head`, `post`, etc.
 
 Se é esperado que as subclasses concretas de `View` implementem os métodos de tratamento, por que aqueles métodos não são parte da interface de `View`? A razão: subclasses são livres para implementar apenas os métodos de tratamento que querem suportar. Uma `TemplateView` é usada apenas para exibir conteúdo, então ela implementa apenas `get`. Se uma requisição HTTP `POST` é enviada para uma `TemplateView`, o método herdado `View.dispatch` verifica que não há um método de tratamento para `post`, e produz uma resposta HTTP `405 Method Not Allowed`.footnote:[Se você gosta de padrões de projetos, note que o mecanismo de despacho do Django é uma variação dinâmica do padrão
-https://pt.wikipedia.org/wiki/Template_Method[Template Method (_Método Template_]. Ele é dinâmico porque a classe `View` não obriga subclasses a implementarem todos os métodos de tratamento, mas `dispatch` verifica, durante a execução, se um método de tratamento concreto está disponível para cada requisição específica.]
+https://fpy.li/75[Template Method (_Método Template_]. Ele é dinâmico porque a classe `View` não obriga subclasses a implementarem todos os métodos de tratamento, mas `dispatch` verifica, durante a execução, se um método de tratamento concreto está disponível para cada requisição específica.]
 
 A `TemplateResponseMixin` fornece funcionalidade que interessa apenas a views que precisam usar uma template. Uma `RedirectView`, por exemplo, não tem qualquer conteúdo em seu corpo, então não precisa de uma template e não herda dessa mixin. `TemplateResponseMixin` fornece comportamentos para `TemplateView` e outras views que renderizam templates, tal como `ListView`, `DetailView`, etc., definidas nos sub-pacotes de `django.views.generic`. A <<django_view_list_uml>> mostra o módulo `django.views.generic.list`((("UML class diagrams", "django.views.generic.list module"))) e parte do módulo `base`.
 
@@ -634,7 +687,7 @@ A API de views baseadas em classes do Django é um exemplo melhor de herança m�
 
 [[django_view_list_uml]]
 .Diagrama de classe UML para o módulo `django.views.generic.list`. Aqui as três classes do módulo base aparecem recolhidas (veja a <<django_view_base_uml>>). A classe `ListView` não tem métodos ou atributos: é uma classe agregada.
-image::../images/flpy_1404.png[Diagram de classe para `django.views.generic.list`]
+image::../images/flpy_1404.png[align="center",pdfwidth=12cm]
 
 Views baseadas em classes não são universalmente aceitas por usuários do Django. Muitos as usam de forma limitada, como caixas opacas. Mas quando é necessário criar algo novo, muitos programadores Django continuam criando funções monolíticas de views, para abarcar todas aquelas responsabilidades, ao invés de tentar reutilizar as views base e as mixins.
 
@@ -644,27 +697,27 @@ Demora um certo tempo para aprender a usar as views baseadas em classes e a form
 ==== Herança múltipla no Tkinter
 
 Um((("Tkinter GUI toolkit", "multiple inheritance in", id="tinkter14"))) exemplo extremo de herança múltipla na biblioteca padrão de Python é o
-https://docs.python.org/pt-br/3/library/tkinter.html[toolkit de interface gráfica Tkinter].
+https://fpy.li/76[toolkit de interface gráfica Tkinter].
 Usei parte da hierarquia de componentes do Tkinter para ilustrar a MRO na <<tkwidgets_mro_uml>>. A
-<<tkinter_uml>> mostra todos as classes de componentes no pacote base `tkinter` (há mais componentes gráficos no subpacote https://docs.python.org/pt-br/3/library/tkinter.ttk.html[`tkinter.ttk`]).
+<<tkinter_uml>> mostra todos as classes de componentes no pacote base `tkinter` (há mais componentes gráficos no subpacote https://fpy.li/77[`tkinter.ttk`]).
 
 [[tkinter_uml]]
-.Diagrama de classes resumido da hierarquia de classes de interface gráfica do Tkinter; classes etiquetadas com «mixin» são projetadas para oferecer metodos concretos a outras classes, através de herança múltipla.
+.Diagrama de classes resumido da hierarquia de classes de interface gráfica do Tkinter; classes marcadas com «mixin» existem para oferecer metodos concretos a outras classes, através de herança múltipla.
 image::../images/flpy_1405.png[Diagrama de classes UML dos componentes do Tkinter]
 
 No momento em que escrevo essa seção, o Tkinter já tem 25 anos de idade. Ele não é um exemplo das melhores práticas atuais. Mas mostra como a herança múltipla era usada quando os programadores ainda não conheciam suas desvantagens. E vai nos servir de contra-exemplo, quando tratarmos de algumas boas práticas, na próxima seção.
 
 Considere as seguintes classes na <<tkinter_uml>>:
 
-➊ `Toplevel`: A classe de uma janela principal em um aplicação Tkinter.
+`① Toplevel`: A classe de uma janela principal em um aplicação Tkinter.
 
-➋ `Widget`: A superclasse de todos os objetos visíveis que podem ser colocados em uma janela.
+`② Widget`: A superclasse de todos os objetos visíveis que podem ser colocados em uma janela.
 
-➌ `Button`: Um componente de botão simples.
+`③ Button`: Um componente de botão simples.
 
-➍ `Entry`: Um campo de texto editável de uma única linha.
+`④ Entry`: Um campo de texto editável de uma única linha.
 
-➎ `Text`: Um campo de texto editável de múltiplas linhas.
+`⑤ Text`: Um campo de texto editável de múltiplas linhas.
 
 Aqui estão as MROs dessas classes, como exibidas pela função `print_mro` do <<ex_tkinter_text_mro>>:
 
@@ -685,41 +738,83 @@ Text, Widget, BaseWidget, Misc, Pack, Place, Grid, XView, YView, object
 
 [NOTE]
 ====
-Pelos padrões atuais, a hierarquia de classes do Tkinter é muito profunda. Poucas partes da bilbioteca padrão de Python tem mais que três ou quatro níveis de classes concretas, e o mesmo pode ser dito da biblioteca de classes de Java.
-Entretanto, é interessante observar que algumas das hierarquias mais profundas da biblioteca de classes de Java são precisamente os pacotes relacionados à programação de interfaces gráficas:
+
+Pelos padrões atuais, a hierarquia de classes do Tkinter é profunda demais.
+Poucas partes da bilbioteca padrão de Python tem mais que três ou quatro níveis
+de classes concretas, e o mesmo pode ser dito da biblioteca de classes de Java.
+Entretanto, é interessante observar que algumas das hierarquias mais profundas
+da biblioteca de classes de Java são precisamente os pacotes relacionados à
+programação de interfaces gráficas:
 https://fpy.li/14-26[`java.awt`] e
 https://fpy.li/14-27[`javax.swing`].
-O https://fpy.li/14-28[Squeak], uma versão moderna e aberta de Smalltalk,
-inclui o poderoso e inovador toolkit de interface gráfica Morphic, também com uma hierarquia de classes profunda.
-Na minha experiência, é nos toolkits de interface gráfica que a herança é mais útil.
+O https://fpy.li/14-28[Squeak], 
+uma versão moderna e aberta de Smalltalk, inclui o poderoso e inovador toolkit
+de interface gráfica Morphic, também com uma hierarquia de classes profunda. Na
+minha experiência, é nos toolkits de interface gráfica que a herança é mais
+útil.
+
 ====
 
 Observe como essas classes se relacionam com outras:
 
-* `Toplevel` é a única classe gráfica que não herda de `Widget`, porque ela é a janela primária e não se comporta como um componente; por exemplo, ela não pode ser anexada a uma janela ou moldura (_frame_). `Toplevel` herda de `Wm`, que fornece funções de acesso direto ao gerenciador de janelas do ambiente, para tarefas como definir o título da janela e configurar suas bordas.
-* `Widget` herda diretamente de `BaseWidget` e de `Pack`, `Place`, e `Grid`. As últimas três classes são gerenciadores de geometria: são responsáveis por organizar componentes dentro de uma janela ou moldura. Cada uma delas encapsula uma estratégia de layout e uma API de colocação de componentes diferente.
-* `Button`, como a maioria dos componentes, descende diretamente apenas de `Widget`, mas indiretamente de `Misc`, que fornece dezenas de métodos para todos os componentes.
+* `Toplevel` é a única classe gráfica que não herda de `Widget`, porque ela é a
+janela primária e não se comporta como um componente; por exemplo, ela não pode
+ser anexada a uma janela ou moldura (_frame_). `Toplevel` herda de `Wm`, que
+fornece funções de acesso direto ao gerenciador de janelas do ambiente, para
+tarefas como definir o título da janela e configurar suas bordas.
+
+* `Widget` herda diretamente de `BaseWidget` e de `Pack`, `Place`, e `Grid`. As
+últimas três classes são gerenciadores de geometria: são responsáveis por
+organizar componentes dentro de uma janela ou moldura. Cada uma delas encapsula
+uma estratégia de layout e uma API de colocação de componentes diferente.
+
+* `Button`, como a maioria dos componentes, descende diretamente apenas de
+`Widget`, mas indiretamente de `Misc`, que fornece dezenas de métodos para todos
+os componentes.
+
 * `Entry` é subclasse de `Widget` e `XView`, que suporta rolagem horizontal.
+
 * `Text` é subclasse de `Widget`, `XView` e `YView` (para rolagem vertical).
 
-Vamos agora discutir algumas boas práticas de herança múltipla e examinar se o Tkinter as segue.((("", startref="tinkter14")))((("", startref="IASreal14")))((("", startref="MIreal14")))
+Vamos agora discutir algumas boas práticas de herança múltipla e examinar se o
+Tkinter as segue.((("", startref="tinkter14")))((("",
+startref="IASreal14")))((("", startref="MIreal14")))
 
 
 [role="pagebreak-before less_space"]
 === Lidando com a herança
 
-Aquilo((("inheritance and subclassing", "best practices", id="IAScop14"))) que Alan Kay escreveu na epígrafe continua sendo verdade:
-ainda não existe um teoria geral sobre herança que possa guiar os programadores. O que temos são regras gerais, padrões de projetos, "melhores práticas", acrônimos perspicazes, tabus, etc. Alguns desses nos dão orientações úteis, mas nenhum deles é universalmente aceito ou sempre aplicável.
+Aquilo((("inheritance and subclassing", "best practices", id="IAScop14"))) que
+Alan Kay escreveu na epígrafe continua sendo verdade: ainda não existe um teoria
+geral sobre herança que possa guiar os programadores. O que temos são regras
+gerais, padrões de projetos, "melhores práticas", acrônimos perspicazes, tabus,
+etc. Alguns desses nos dão orientações úteis, mas nenhum deles é universalmente
+aceito ou sempre aplicável.
 
-É fácil criar designs frágeis e incompreensíveis usando herança, mesmo sem herança múltipla. Como não temos uma teoria abrangente, aqui estão algumas dicas para evitar grafos de classes parecidos com espaguete.
+É fácil criar designs frágeis e incompreensíveis usando herança, mesmo sem
+herança múltipla. Como não temos uma teoria abrangente, aqui estão algumas dicas
+para evitar grafos de classes parecidos com espaguete.
 
 [[favor_composition_sec]]
 ==== Prefira a composição de objetos à herança de classes
 
-O título dessa subseção é o segundo princípio do design orientado a objetos, do livro _Padrões de Projetos_,footnote:[Esse princípio aparece na página 20 da introdução, na edição em inglês do livro.] e é o melhor conselho que posso oferecer aqui. Uma vez que você se sinta confortável com a herança, é fácil usá-la em excesso. Colocar objetos em uma hierarquia elegante apela para nosso senso de ordem; programadores fazem isso por pura diversão.
+O título desta seção é o segundo princípio do design orientado a objetos, do
+livro _Padrões de Projetos_,footnote:[Esse princípio aparece na página 20 da
+introdução, na edição em inglês.] e é o melhor conselho que posso oferecer aqui.
+Uma vez que você se sinta confortável com a herança, é fácil usá-la em excesso.
+Colocar objetos em uma hierarquia elegante apela para nosso senso de ordem;
+programadores fazem isso por pura diversão.
 
-Preferir a composição leva a designs mais flexíveis. Por exemplo, no caso da classe
-`tkinter.Widget`, em vez de herdar os métodos de todos os gerenciadores de geometria, instâncias do componente poderiam manter uma referência para um gerenciador de geometria, e invocar seus métodos. Afinal, um `Widget` não deveria "ser" um gerenciador de geometria, mas poderia usar os serviços de um deles por delegação. E daí você poderia adicionar um novo gerenciador de geometria sem afetar a hierarquia de classes do componente e sem se preocupar  com colisões de nomes. Mesmo com herança simples, este princípio aumenta a flexibilidade, porque a subclasses são uma forma de acoplamento forte, e árvores de herança muito altas tendem a ser frágeis.
+Preferir a composição leva a designs mais flexíveis. Por exemplo, no caso da
+classe `tkinter.Widget`, em vez de herdar os métodos de todos os gerenciadores
+de geometria, instâncias do componente poderiam manter uma referência para um
+gerenciador de geometria, e invocar seus métodos. Afinal, um `Widget` não
+deveria "ser" um gerenciador de geometria, mas poderia usar os serviços de um
+deles por delegação. E daí você poderia adicionar um novo gerenciador de
+geometria sem afetar a hierarquia de classes do componente e sem se preocupar
+com colisões de nomes. Mesmo com herança simples, este princípio aumenta a
+flexibilidade, porque a subclasses são uma forma de acoplamento forte, e árvores
+de herança muito altas tendem a ser frágeis.
 
 A composição e a delegação podem substituir o uso de mixins para tornar comportamentos disponíveis para diferentes classes, mas não podem substituir o uso de herança de interfaces para definir uma hierarquia de tipos.
 
@@ -792,13 +887,14 @@ Criar subclasses e  sobrescrever métodos de qualquer classe complexa é um proc
 
 A primeira resposta é a documentação (algumas vezes na forma de docstrings ou até de comentários no código).
 Por exemplo, o pacote
-https://docs.python.org/pt-br/3/library/socketserver.html[`socketserver`] (EN) de Python é descrito como "um framework para servidores de rede".
-Sua classe https://docs.python.org/pt-br/3/library/socketserver.html#socketserver.BaseServer[`BaseServer`] (EN) foi projetada para a criação de subclasses, como o próprio nome sugere.
+https://fpy.li/78[`socketserver`] (EN) de Python é descrito como "um framework para servidores de rede".
+Sua classe https://fpy.li/79[`BaseServer`] (EN) foi projetada para a criação de subclasses, como o próprio nome sugere.
 E mais importante, a documentação e a https://fpy.li/14-33[docstring] (EN) no código-fonte da classe informa explicitamente quais de seus métodos foram criados para serem sobrescritos por subclasses.
 
 No Python ≥ 3.8 uma nova forma de tornar tais restrições de projeto explícitas foi oferecida pela
 https://fpy.li/pep591[PEP 591—Adding a final qualifier to typing (_Acrescentando um qualificador "final" à tipagem_)] (EN).
-A PEP introduz um decorador https://docs.python.org/pt-br/3/library/typing.html#typing.final[`@final`], que pode ser aplicado a classes ou a métodos individuais, de forma que IDEs ou checadores de tipos podem identificar tentativas equivocadas de criar subclasses daquelas classes ou de  sobrescrever aqueles métodos.footnote:[A PEP 591 também introduz uma anotação https://docs.python.org/pt-br/3/library/typing.html#typing.Final[`Final`] para variáveis e atributos que não devem ser reatribuídos ou sobrescritos.]
+A PEP introduz um decorador https://fpy.li/7a[`@final`], que pode ser aplicado a classes ou a métodos individuais, de forma que IDEs ou checadores de tipos podem identificar tentativas equivocadas de criar subclasses daquelas classes ou de  sobrescrever aqueles métodos.footnote:[A PEP 591 também introduz uma anotação
+https://fpy.li/7d[`Final`] para variáveis e atributos que não devem ser reatribuídos ou sobrescritos.]
 
 
 [role="pagebreak-before less_space"]
@@ -843,7 +939,7 @@ Esse((("inheritance and subclassing", "overview of"))) capítulo começou com um
 Daí discutimos o problema da criação de subclasses de tipos embutidos:
 seus métodos nativos, implementados em C, não invocam os métodos sobrescritos em subclasses, exceto em uns poucos casos especiais.
 É por isso que, quando precisamos de tipos `list`, `dict`, ou `str` customizados, é mais fácil criar subclasses de `UserList`, `UserDict`, ou `UserString`&#x2014;todos definidos no módulo
-https://docs.python.org/pt-br/3/library/collections.html[`collections`]—, que na verdade encapsulam os tipos embutidos correspondentes e delegam operações para aqueles—três exemplos a favor da composição sobre a herança na biblioteca padrão. Se o comportamento desejado for muito diferente daquilo que os tipos embutidos oferecem, pode ser mais fácil criar uma subclasse da ABC apropriada em https://docs.python.org/pt-br/3/library/collections.abc.html[`collections.abc`], e escrever sua própria implementação.
+https://fpy.li/2w[`collections`]—, que na verdade encapsulam os tipos embutidos correspondentes e delegam operações para aqueles—três exemplos a favor da composição sobre a herança na biblioteca padrão. Se o comportamento desejado for muito diferente daquilo que os tipos embutidos oferecem, pode ser mais fácil criar uma subclasse da ABC apropriada em https://fpy.li/6z[`collections.abc`], e escrever sua própria implementação.
 
 O restante do capítulo foi dedicado à faca de dois gumes da herança múltipla. Primeiro vimos como a ordem de resolução de métodos, definida no atributo de classe `+__mro__+`, trata o problema de conflitos potenciais de nomes em métodos herdados. Também examinamos como a função embutida
 `super()` se comporta em hierarquias com herança múltipla, e como ela algumas vezes se comporta de forma inesperada. O comportamento de `super()` foi projetado para suportar classes mixin, que estudamos usando o exemplo simples de `UpperCaseMixin` (para mapeamentos indiferentes a maiúsculas/minúsculas).
@@ -971,7 +1067,7 @@ Essa é uma forma "pura" de mixin, sem herança envolvida, e está claro que uma
 Isso oferece os benefícios das mixins, evitando muitos de seus problemas mais comuns.
 
 Duas novas linguagens orientadas a objetos que estão recebendo muita atenção limitam severamente a herança: Go e Julia.
-Ambas giram em torno de programar "objetos" implementando "métodos", e suportam https://pt.wikipedia.org/wiki/Polimorfismo_(ci%C3%AAncia_da_computa%C3%A7%C3%A3o)[polimorfismo], mas evitam o termo "classe".
+Ambas giram em torno de programar "objetos" implementando "métodos", e suportam https://fpy.li/7b[polimorfismo], mas evitam o termo "classe".
 
 Go não tem qualquer tipo de herança, mas oferece uma sintaxe que facilita a composição. Julia tem uma hierarquia de tipos, mas subtipos não podem herdar estrutura, apenas comportamentos, e só é permitido criar subtipos de tipos abstratos. Além disso, os métodos de Julia são implementados com despacho múltiplo—uma forma mais avançada do mecanismo que vimos na <<generic_functions_sec>>.((("", startref="IASsoap14")))
 

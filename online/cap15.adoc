@@ -178,7 +178,7 @@ include::../code/15-more-types/protocol/mymax/mymax.py[tags=MYMAX_TYPES]
 ====
 
 Minha implementação de `max` em Python tem mais ou menos o mesmo tamanho daquelas importações e declarações de tipo.
-Graças ao _duck typing_, meu código não tem nenhuma checagem usando `isinstance`, e fornece a mesma checagem de erro daquelas dicas de tipo—mas apenas durante a execução, claro.
+Graças à tipagem pato, meu código não tem nenhuma checagem usando `isinstance`, e fornece a mesma checagem de erro daquelas dicas de tipo—mas apenas durante a execução, claro.
 
 Um benefício fundamental de `@overload` é declarar o tipo devolvido da forma mais precisa possível, de acordo com os tipos dos argumentos recebidos.
 Veremos esse benefício a seguir, estudando as sobreposições de `max`, em grupos de duas ou três por vez.
@@ -599,20 +599,31 @@ pistachio  <2>
 <2> O valor de `not_book['flavor']`.
 <3> `to_xml` recebe um argumento `BookDict`, mas não há qualquer checagem durante a execução: entra lixo, sai lixo.
 
-O <<bookdict_demo_not_book_run>> mostra que _demo_not_book.py_ devolve bobagens, mas não há qualquer erro durante a execução.
-Usar um `TypedDict` ao tratar dados em formato JSON não resultou em uma tipagem segura.
+O <<bookdict_demo_not_book_run>> mostra que _demo_not_book.py_ devolve bobagens,
+mas não há qualquer erro durante a execução. Usar um `TypedDict` ao tratar dados
+em formato JSON não resultou em uma tipagem segura.
 
-Olhando o código de `to_xml` no <<to_xml_ex>> através das lentes do _duck typing_, o argumento `book` deve fornecer um método `.items()` que devolve um iterável de tuplas na forma `(chave, valor)`, onde:
+Olhando o código de `to_xml` no <<to_xml_ex>> do ponto de vista da tipagem pato,
+o argumento `book` deve fornecer um método `.items()` que devolve um iterável de
+tuplas na forma `(chave, valor)`, onde:
 
 * `chave` deve ter um método `.upper()`
 * `valor` pode ser qualquer coisa
 
-A conclusão desta demonstração: quando estamos lidando com dados de estrutura dinâmica, tal como JSON ou XML, `TypedDict` não é, de forma alguma, um substituto para a validaçào de dados durante a execução. Para isso, use o https://fpy.li/15-5[_pydantic_] (EN).
+A conclusão desta demonstração: quando estamos lidando com dados de estrutura
+dinâmica, tal como JSON ou XML, `TypedDict` não é, de forma alguma, um
+substituto para a validaçào de dados durante a execução. Para isso, use o
+https://fpy.li/15-5[_pydantic_] (EN).
 
-`TypedDict` tem mais recursos, incluindo suporte a chaves opcionais, uma forma limitada de herança e uma sintaxe de declaração alternativa. Para saber mais sobre ele, revise a
-https://fpy.li/pep589[PEP 589—TypedDict: Type Hints for Dictionaries with a Fixed Set of Keys (_TypedDict: Dicas de Tipo para Dicionários com um Conjunto Fixo de Chaves_)] (EN).
+`TypedDict` tem mais recursos, incluindo suporte a chaves opcionais, uma forma
+limitada de herança e uma sintaxe de declaração alternativa. Para saber mais
+sobre ele, revise a https://fpy.li/pep589[PEP 589—TypedDict: Type Hints for
+Dictionaries with a Fixed Set of Keys (_TypedDict: Dicas de Tipo para
+Dicionários com um Conjunto Fixo de Chaves_)] (EN).
 
-Vamos agora voltar nossas atenções para uma função que é melhor evitar, mas que algumas vezes é inevitável: `typing.cast`.((("", startref="typeddict15")))((("", startref="typeddict15")))
+Vamos agora voltar nossas atenções para uma função que é melhor evitar, mas que
+algumas vezes é inevitável: `typing.cast`.((("", startref="typeddict15")))((("",
+startref="typeddict15")))
 
 
 [[type_casting_sec]]
@@ -1392,33 +1403,34 @@ A <<typing_peps_tbl>> lista todas as PEPs que encontrei até maio de 2021.
 Seria necessário um livro inteiro para cobrir tudo.
 
 [[typing_peps_tbl]]
-.PEPs sobre dicas de tipo, com links nos títulos. PEPs com números marcados com * são importantes o suficiente para serem mencionadas no parágrafo de abertura da https://docs.python.org/pt-br/3/library/typing.html[documentação de `typing`]. Pontos de interrogação na coluna Python indica PEPs em discussão ou ainda não implementadas; "n/a" aparece em PEPs informacionais sem relação com uma versão específica de Python. Todos os textos das PEPs estão em inglês. Dados coletados em maio 2021.
+.PEPs sobre dicas de tipo, com links nos títulos. PEPs com números marcados com * são importantes o suficiente para serem mencionadas no parágrafo de abertura da https://docs.python.org/pt-br/3/library/typing.html[documentação de `typing`]. Pontos de interrogação na coluna Python indica PEPs em discussão ou ainda não implementadas; "n/a" aparece em PEPs informacionais sem relação com uma versão específica de Python. Dados coletados em maio 2021.
 [options="header"]
+[cols="3,24,4,3"]
 |=================================================================================================================================
-|PEP |Title                                                                                                           |Python|Year
-|3107|https://fpy.li/pep3107[Function Annotations (_Anotações de Função_)]                                                 |3.0   |2006
-|483*|https://fpy.li/pep483[The Theory of Type Hints (_A Teoria das Dicas de Tipo_)]                                             |n/a   |2014
-|484*|https://fpy.li/pep484[Type Hints (_Dicas de Tipo_)]                                                           |3.5   |2014
-|482 |https://fpy.li/pep482[Literature Overview for Type Hints (_Revisão da Literatura sobre Dicas de Tipo_)]                                   |n/a   |2015
-|526*|https://fpy.li/pep526[Syntax for Variable Annotations (_Sintaxe para Anotações de Variáveis_)]                                      |3.6   |2016
-|544*|https://fpy.li/pep544[Protocols: Structural subtyping (static duck typing) (_Protocolos: subtipagem estrutural (duck typing estático_))]                 |3.8   |2017
-|557 |https://fpy.li/pep557[Data Classes (_Classes de Dados_)]                                                         |3.7   |2017
-|560 |https://fpy.li/pep560[Core support for typing module and generic types (_Suporte nativo para tipagem de módulos e tipos genéricos_)]                     |3.7   |2017
-|561 |https://fpy.li/pep561[Distributing and Packaging Type Information (Distribuindo e Empacotando Informação de Tipo_)]                          |3.7   |2017
-|563 |https://fpy.li/pep563[Postponed Evaluation of Annotations (_Avaliação Adiada de Anotações_)]                                  |3.7   |2017
-|586*|https://fpy.li/pep586[Literal Types (_Tipos Literais_)]                                                        |3.8   |2018
-|585 |https://fpy.li/pep585[Type Hinting Generics In Standard Collections (_Dicas de Tipo para Genéricos nas Coleções Padrão_)]                        |3.9   |2019
-|589*|https://fpy.li/pep589[TypedDict: Type Hints for Dictionaries with a Fixed Set of Keys (_TypedDict: Dicas de Tipo para Dicionários com um Conjunto Fixo de Chaves_)]      |3.8   |2019
-|591*|https://fpy.li/pep591[Adding a final qualifier to typing (_Acrescentando um qualificador final à tipagem_)]                                   |3.8   |2019
-|593 |https://fpy.li/pep593[Flexible function and variable annotations (_Anotações flexíveis para funções e variáveis_)]                           |?     |2019
-|604 |https://fpy.li/pep604[Allow writing union types as X &#x7c; Y (_Permitir a definição de tipos de união como_ X &#x7c; Y  )]                              |3.10  |2019
-|612 |https://fpy.li/pep612[Parameter Specification Variables (_Variáveis de Especificação de Parâmetros_)]                                    |3.10  |2019
-|613 |https://fpy.li/pep613[Explicit Type Aliases (_Aliases de Tipo Explícitos_)]                                                |3.10  |2020
-|645 |https://fpy.li/pep645[Allow writing optional types as x? (_Permitir a definição de tipos opcionais como_ x? )]                                   |?     |2020
-|646 |https://fpy.li/pep646[Variadic Generics (_Genéricos Variádicos_)]                                                    |?     |2020
-|647 |https://fpy.li/pep647[User-Defined Type Guards (_Guardas de Tipos Definidos pelo Usuário_)]                                             |3.10  |2021
-|649 |https://fpy.li/pep649[Deferred Evaluation Of Annotations Using Descriptors (_Avaliação Adiada de Anotações Usando Descritores_)]                 |?     |2021
-|655 |https://fpy.li/pep655[Marking individual TypedDict items as required or potentially-missing (_Marcando itens TypedDict individuais como obrigatórios ou potencialmente ausentes_)]|?     |2021
+|PEP |título                                                                                                           |Python|ano
+|3107|https://fpy.li/pep3107[_Function Annotations_ (Anotações de Função)]                                                 |3.0   |2006
+|483*|https://fpy.li/pep483[_The Theory of Type Hints_ (A Teoria das Dicas de Tipo)]                                             |n/a   |2014
+|484*|https://fpy.li/pep484[_Type Hints_ (Dicas de Tipo)]                                                           |3.5   |2014
+|482 |https://fpy.li/pep482[_Literature Overview for Type Hints_ (Revisão da Literatura sobre Dicas de Tipo)]                                   |n/a   |2015
+|526*|https://fpy.li/pep526[_Syntax for Variable Annotations_ (Sintaxe para Anotações de Variáveis)]                                      |3.6   |2016
+|544*|https://fpy.li/pep544[_Protocols: Structural subtyping (static duck typing)_ (Protocolos: subtipagem estrutural (duck typing estático))]                 |3.8   |2017
+|557 |https://fpy.li/pep557[_Data Classes_ (Classes de Dados)]                                                         |3.7   |2017
+|560 |https://fpy.li/pep560[_Core support for typing module and generic types_ (Suporte nativo para tipagem de módulos e tipos genéricos)]                     |3.7   |2017
+|561 |https://fpy.li/pep561[_Distributing and Packaging Type Information (Distribuindo e Empacotando Informação de Tipo_)]                          |3.7   |2017
+|563 |https://fpy.li/pep563[_Postponed Evaluation of Annotations_ (Avaliação Adiada de Anotações)]                                  |3.7   |2017
+|586*|https://fpy.li/pep586[_Literal Types_ (Tipos Literais)]                                                        |3.8   |2018
+|585 |https://fpy.li/pep585[_Type Hinting Generics In Standard Collections_ (Dicas de Tipo para Genéricos nas Coleções Padrão)]                        |3.9   |2019
+|589*|https://fpy.li/pep589[_TypedDict: Type Hints for Dictionaries with a Fixed Set of Keys_ (TypedDict: Dicas de Tipo para Dicionários com um Conjunto Fixo de Chaves)]      |3.8   |2019
+|591*|https://fpy.li/pep591[_Adding a final qualifier to typing_ (Acrescentando um qualificador final à tipagem)]                                   |3.8   |2019
+|593 |https://fpy.li/pep593[_Flexible function and variable annotations_ (Anotações flexíveis para funções e variáveis)]                           |?     |2019
+|604 |https://fpy.li/pep604[_Allow writing union types as X &#x7c; Y_ (Permitir a definição de tipos de união como X &#x7c; Y)]                              |3.10  |2019
+|612 |https://fpy.li/pep612[_Parameter Specification Variables_ (Variáveis de Especificação de Parâmetros)]                                    |3.10  |2019
+|613 |https://fpy.li/pep613[_Explicit Type Aliases_ (Aliases de Tipo Explícitos)]                                                |3.10  |2020
+|645 |https://fpy.li/pep645[_Allow writing optional types as x?_ (Permitir a definição de tipos opcionais como x?)]                                   |?     |2020
+|646 |https://fpy.li/pep646[_Variadic Generics_ (Genéricos Variádicos)]                                                    |?     |2020
+|647 |https://fpy.li/pep647[_User-Defined Type Guards_ (Guardas de Tipos Definidos pelo Usuário)]                                             |3.10  |2021
+|649 |https://fpy.li/pep649[_Deferred Evaluation Of Annotations Using Descriptors_ (Avaliação Adiada de Anotações Usando Descritores)]                 |?     |2021
+|655 |https://fpy.li/pep655[_Marking individual TypedDict items as required or potentially-missing_ (Marcando itens individuais de TypedDict como obrigatórios ou potencialmente ausentes)]|?     |2021
 |=================================================================================================================================
 
 A documentação oficial de Python mal consegue acompanhar tudo aquilo, então https://fpy.li/mypy[a documentação do Mypy] (EN) é uma referência essencial.
@@ -1479,17 +1491,22 @@ Podemos silenciar os checadores de tipos e omitir as dicas de tipo quando se tor
 .Ponto de Vista
 ****
 
-[role="soapbox-title"]
-As tocas de coelho da tipagem
+**As tocas de coelho da tipagem**
 
-Quando((("gradual type system", "Soapbox discussion")))((("Soapbox sidebars", "undocumented classes")))((("classes", "undocumented classes")))((("undocumented classes"))) usamos um checador de tipos, algumas vezes somos obrigados a descobrir e importar classes que não precisávamos conhecer, e que nosso código não precisa usar—exceto para escrever dicas de tipo.
-Tais classes não são documentadas, provavelmente porque são consideradas detalhes de implementação pelos autores dos pacotes. Aqui estão dois exemplos da biblioteca padrão.
+Quando((("gradual type system", "Soapbox discussion")))((("Soapbox sidebars",
+"undocumented classes")))((("classes", "undocumented classes")))((("undocumented classes")))
+usamos um checador de tipos, algumas vezes somos obrigados a
+descobrir e importar classes que não precisávamos conhecer, e que nosso código
+não precisa usar—exceto para escrever dicas de tipo. Tais classes não são
+documentadas, provavelmente porque são consideradas detalhes de implementação
+pelos autores dos pacotes. Aqui estão dois exemplos da biblioteca padrão.
 
-Tive que vasculhar a imensa documentação do _asyncio_,
-e depois navegar o código-fonte de vários módulos daquele pacote para descobrir a classe não-documentada
-`TransportSocket` no módulo igualmente não documentado `asyncio.trsock`
-só para usar `cast()` no exemplo do `server.sockets`, na <<type_casting_sec>>.
-Usar `socket.socket` em vez de `TransportSocket` seria incorreto, pois esse último não é subtipo do primeiro, como explicitado em uma
+Tive que vasculhar a imensa documentação do _asyncio_, e depois navegar o
+código-fonte de vários módulos daquele pacote para descobrir a classe
+não-documentada `TransportSocket` no módulo igualmente não documentado
+`asyncio.trsock` só para usar `cast()` no exemplo do `server.sockets`, na
+<<type_casting_sec>>. Usar `socket.socket` em vez de `TransportSocket` seria
+incorreto, pois esse último não é subtipo do primeiro, como explicitado em uma
 https://fpy.li/15-52[docstring] (EN) no código-fonte.
 
 
@@ -1511,28 +1528,38 @@ provavelmente evitaria tais caças ao tesouro por causa de uma única linha,
 e simplesmente colocaria `# type: ignore`.
 Algumas vezes essa é a única solução com custo-benefício positivo.
 
-[role="soapbox-title"]
-Notação de variância em outras linguagens
+**Notação de variância em outras linguagens**
 
-A variância((("Soapbox sidebars", "variance notation in other classes")))((("variance", "variance notation in other classes"))) é um tópico complicado, e a sintaxe das dicas de tipo de Python não é tão boa quanto poderia ser.
-Essa citação direta da PEP 484 evidencia isso:
+A variância((("Soapbox sidebars", "variance notation in other languages")))((("variance",
+"variance notation in other languages"))) é um tópico complicado,
+e a sintaxe das dicas de tipo de Python não é tão boa quanto poderia ser.
+Esta citação direta da PEP 484 evidencia isso:
 
 [quote]
 ____
+
 Covariância ou contravariância não são propriedaades de uma variável de tipo,
-mas sim uma propriedade da classe genérica definida usando essa variável.footnote:[Veja o último parágrafo da seção https://fpy.li/15-37["Covariance and Contravariance" (_Covariância e Contravariância_)] (EN) na PEP 484.]
+mas sim uma propriedade da classe genérica definida usando essa
+variável.footnote:[Veja o último parágrafo da seção
+https://fpy.li/15-37["Covariance and Contravariance" (_Covariância e
+Contravariância_)] (EN) na PEP 484.]
+
 ____
 
-Se esse é o caso, por que a covariância e a contravarância são declaradas com `TypeVar`
-e não na classe genérica?
+Se esse é o caso, por que a covariância e a contravarância são declaradas com
+`TypeVar` e não na classe genérica?
 
-Os autores da PEP 484 trabalharam sob a severa restrição auto-imposta de suportar dicas de tipo sem fazer qualquer modificação no interpretador.
-Isso exigiu a introdução de `TypeVar` para definir variáveis de tipo,
-e também levou ao abuso de `[]` para fornecer a sintaxe `Klass[T]` para genéricos—em vez da notação `Klass<T>` usada em outras linguagens populares, incluindo C#, Java, Kotlin e TypeScript.
-Nenhuma dessas linguagens exige que variáveis de tipo seja declaradas antes de serem usadas.
+Os autores da PEP 484 trabalharam sob a severa restrição auto-imposta de
+suportar dicas de tipo sem fazer qualquer modificação no interpretador. Isso
+exigiu a introdução de `TypeVar` para definir variáveis de tipo, e também levou
+ao abuso de `[]` para fornecer a sintaxe `Klass[T]` para genéricos—em vez da
+notação `Klass<T>` usada em outras linguagens populares, incluindo C#, Java,
+Kotlin e TypeScript. Nenhuma dessas linguagens exige que variáveis de tipo seja
+declaradas antes de serem usadas.
 
-Além disso, a sintaxe do Kotlin e do C# torna claro se um parâmetro de tipo é covariante,
-contravariante ou invariante exatamente onde isso faz sentido: na declaração de classe ou interface.
+Além disso, a sintaxe do Kotlin e do C# torna claro se um parâmetro de tipo é
+covariante, contravariante ou invariante exatamente onde isso faz sentido: na
+declaração de classe ou interface.
 
 Em Kotlin, poderíamos declarar a `BeverageDispenser` assim:
 
@@ -1561,10 +1588,11 @@ segue que `TrashCan` é contravariante.
 
 Se nem `in` nem `out` aparecem, então a classe é invariante naquele parâmetro.
 
-É fácil lembrar das <<variance_rules_sec>> quando `out` e `in` são usado nos parâmetros de tipo formais.
+É fácil lembrar das <<variance_rules_sec>> quando `out` e `in` são usado nos
+parâmetros de tipo formais.
 
-Isso sugere que uma boa convenção para nomenclatura de variáveis de tipo covariante e
-contravariantes no Python seria:
+Isso sugere que uma boa convenção para nomenclatura de variáveis de tipo
+covariante e contravariantes no Python seria:
 
 [source, python]
 ----
@@ -1583,6 +1611,7 @@ class TrashCan(Generic[T_in]):
     ...
 ----
 
-Será que é tarde demais para modificar a convenção de nomenclatura definida na PEP 484?
+Será que é tarde demais para modificar a convenção de nomenclatura definida na
+PEP 484?
 
 ****
