@@ -9,9 +9,9 @@ e as tarefas são feitas nesta cópia para impressão.
 
 | 9 | 10| 11| 12| 13| 14| 15| 16| local | tarefa |
 |:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|-------|-------|
-|✅ |✅ |✅ |✅ |✅ |✅ |✅ |   |`/online`|encurtar links externos|
+|✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/online`|encurtar links externos|
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |   |`/online`|revisar estilo|
-|✅ |✅ |✅ |✅ |✅ |   |   |   |`/online`|revisar ortografia e gramática|
+|✅ |✅ |✅ |✅ |✅ |✅ |✅ |   |`/online`|revisar ortografia e gramática|
 |   |   |   |   |   |   |   |   |`/vol?`| refazer referências entre volumes|
 |   |   |   |   |   |   |   |   |`/vol?`| encurtar links entre volumes |
 |   |   |   |   |   |   |   |   |`/vol?`| rever paginação   |
