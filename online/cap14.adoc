@@ -176,10 +176,10 @@ Os parâmetros são:
 
 `type`::
     O início do caminho para a superclasse que implementa o método desejado.
-    Por default, é a classe que tem o método onde a chamada a `super()` aparece.
+    Por default, é a classe onde está o método que invoca `super()`.
 
 `object_or_type`::
-    O objeto (para chamadas a métodos de instância) ou classe (para chamadas a
+    O objeto (ao invocar métodos de instância) ou classe (ao invocar
     métodos de classe) que será o receptor da chamada ao
     método.footnote:[Adotamos o termo "receptor" como tradução para _receiver_,
     que é o objeto `x` vinculado um método `m` no momento da chamada `x.m()`.]
@@ -208,8 +208,8 @@ embutidos.((("", startref="super14")))((("", startref="IACsuper14")))
 === Problemas com subclasses de tipos embutidos
 
 Nas((("inheritance and subclassing", "subclassing built-in types",
-id="IASsubbuilt14"))) primeiras versões de Python não era possível criar
-subclasses de tipos embutidos como `list` ou `dict`. Desde Python 2.2 isso é
+id="IASsubbuilt14"))) primeiras versões do Python não era possível criar
+subclasses de tipos embutidos como `list` ou `dict`. Desde o Python 2.2 isso é
 possível, mas há uma limitação importante: o código em C dos tipos
 embutidos normalmente não invoca os métodos sobrescritos por classes definidas
 pelo usuário. Há uma boa descrição curta do problema na documentação do PyPy, na
@@ -219,7 +219,7 @@ CPython), em https://fpy.li/pypydif[_Subclasses of built-in types_]
 
 [quote]
 ____
-Oficialmente, o CPython não tem qualquer regra sobre exatamente quando um método
+Oficialmente, o CPython não tem nenhuma regra sobre exatamente quando um método
 sobrescrito de subclasses de tipos embutidos é ou não invocado implicitamente.
 Como uma aproximação, esses métodos nunca são chamados por outros métodos
 embutidos do mesmo objeto. Por exemplo, um `+__getitem__+` sobrescrito em uma
@@ -267,7 +267,7 @@ para a superclasse.
 <4> O método `update` de `dict` também não usa nossa versão de `+__setitem__+`:
 o valor de `'three'` não foi duplicado.
 
-Esse comportamento dos tipos embutidos viola de uma regra básica da
+Este comportamento dos tipos embutidos viola uma regra básica da
 programação orientada a objetos: a busca por métodos deveria sempre começar pela
 classe do receptor (`self`), mesmo quando a invocação ocorre dentro de um método
 implementado na superclasse. Isso é o que se chama _late binding_ (vinculação tardia),
@@ -388,7 +388,7 @@ delegação a métodos dentro do código em C dos tipos embutidos, e afeta apena
 classes derivadas diretamente daqueles tipos. Se você criar uma subclasse de uma
 classe escrita em Python, tal como `UserDict` ou `MutableMapping`, não vai
 encontrar este problema.footnote:[Aliás, nesse mesmo tópico, o PyPy se comporta
-de forma mais "correta" que o CPython, às custas de introduzir uma pequena
+mais "corretamente" que o CPython, às custas de introduzir uma pequena
 incompatibilidade. Veja os detalhes em https://fpy.li/14-5["Differences between
 PyPy and CPython" (_Diferenças entre o PyPy e o CPython_)].]
 
@@ -495,7 +495,7 @@ classe listada em `+Leaf.__mro__+`: a classe `A`. O método `A.pong` invoca
 ativado. Mas aquele método não invoca `super().pong()`, então a sequência de
 ativação termina ali.
 
-Além do grafo de herança, a MRO também leva em consideração a ordem na qual as
+Além do grafo de herança, a MRO também considera a ordem na qual as
 superclasses aparecem na declaração da uma subclasse. Considerando o programa
 _diamond.py_ (no <<ex_diamond>>), se a classe `Leaf` fosse declarada como `Leaf(B,
 A)`, daí a classe `B` apareceria antes de `A` em `+Leaf.__mro__+`. Isso afetaria
@@ -570,7 +570,7 @@ porque o `super().ping()` em `A.ping` ativaria `Root.ping`, e esse último não
 invoca `super()`.
 
 Em um programa real, uma classe como `U` poderia ser uma classe _mixin_: uma
-classe projetada para ser usada junto com outras classes em herança múltipla,
+classe projetada para ser usada ao lado outras classes em herança múltipla,
 fornecendo funcionalidade adicional. Vamos estudar isso em breve, na
 <<mixin_classes_sec>>.
 
@@ -812,8 +812,8 @@ para a `process_request_thread` que roda naquela thread. O método não invoca
 requisições, e então espera que as threads iniciadas por `process_request`
 terminem sua execução.
 
-A `ThreadingMixIn` aparece junto com `ForkingMixIn` na documentação do módulo
-https://fpy.li/73[`socketserver`].
+A documentação do módulo https://fpy.li/73[`socketserver`]
+apresenta a `ThreadingMixIn` e a `ForkingMixIn`.
 Esta última classe foi projetada para
 suportar servidores concorrentes baseados em
 https://fpy.li/74[`os.fork()`],
@@ -840,9 +840,9 @@ No((("Django generic views mixins", id="Django14"))) Django, uma view é um
 objeto invocável que recebe um argumento `request`—um objeto representando uma
 requisição HTTP—e devolve um objeto representando uma resposta HTTP. Nosso
 interesse  aqui são as diferentes respostas. Elas podem ser tão simples quanto
-um redirecionamento, sem nenhum conteúdo em seu corpo, ou tão complexas quando
-uma página de catálogo de uma loja online, renderizada a partir de uma template
-HTML e listando múltiplas mercadorias, com botões de compra e links para páginas
+um redirecionamento, sem nenhum conteúdo em seu corpo, ou tão complexas quanto
+uma página de catálogo de uma loja online, renderizada a partir de um template
+HTML que exibe múltiplas mercadorias, com botões de compra e links para páginas
 com detalhes.
 
 Originalmente, o Django oferecia uma série de funções, chamadas _generic views_ (views genéricas),
@@ -851,11 +851,11 @@ exibir resultados de busca que incluem dados de vários itens, com listagens
 ocupando múltiplas páginas, cada resultado contendo também  um link para uma
 página de informações detalhadas sobre aquele item. No Django, uma view de lista
 e uma view de detalhes são feitas para funcionarem juntas, resolvendo esse
-problema: uma view de lista renderiza resultados de busca , e uma view de
+problema: uma view de lista renderiza resultados de busca, e uma view de
 detalhes produz uma página para cada item individual.
 
 Entretanto, as views genéricas originais eram funções, então não eram
-extensíveis. Se quiséssemos algo algo similar mas não exatamente igual a uma
+extensíveis. Se quiséssemos algo similar mas não exatamente igual a uma
 view de lista genérica, era  preciso começar do zero.
 
 O conceito de views baseadas em classes foi introduzido no Django 1.3,
@@ -890,7 +890,7 @@ tratamento de requisições (_request handling_) como `get`, `head`, `post`, etc
 implementados por subclasses concretas para tratar os diversos verbos
 HTTP.footnote:[Os programadores Django sabem que o método de classe `as_view` é
 a parte mais visível da interface `View`, mas isso não é relevante para nós
-aqui.] A classe `RedirectView` herda apenas de `View`, e podemos ver que ela
+aqui.] A classe `RedirectView` herda apenas de `View`. Note que ela
 implementa `get`, `head`, `post`, etc.
 
 Espera-se que as subclasses concretas de `View` implementem os métodos de
@@ -907,12 +907,12 @@ subclasses a implementarem todos os métodos de tratamento, mas `dispatch`
 verifica, durante a execução, se um método de tratamento concreto está
 disponível para cada requisição específica.]
 
-A `TemplateResponseMixin` fornece funcionalidade que interessa apenas a views
-que precisam usar uma template. Uma `RedirectView`, por exemplo, não tem
-qualquer conteúdo em seu corpo, então não precisa de uma template e não herda
-dessa mixin. `TemplateResponseMixin` fornece comportamentos para `TemplateView`
+A `TemplateResponseMixin` fornece funcionalidade que interessa apenas às views
+que precisam usar um template. Uma `RedirectView`, por exemplo, não tem
+conteúdo, então não precisa de um template e não herda dessa mixin.
+`TemplateResponseMixin` fornece comportamentos para `TemplateView`
 e outras views que renderizam templates, tal como `ListView`, `DetailView`,
-etc., definidas nos sub-pacotes de `django.views.generic`. A
+etc., definidas nos subpacotes de `django.views.generic`. A
 <<django_view_list_uml>> mostra o módulo `django.views.generic.list`((("UML
 class diagrams", "django.views.generic.list module"))) e parte do módulo `base`.
 
@@ -923,14 +923,14 @@ image::../images/flpy_1404.png[align="center",pdfwidth=12cm]
 Para usuários do Django, a classe mais importante na <<django_view_list_uml>> é
 `ListView`, uma classe agregada sem qualquer código (seu corpo é apenas uma
 docstring). Quando instanciada, uma `ListView` tem um atributo de instância
-`object_list`, através do qual a template pode iterar para montar o conteúdo
-da página, normalmente o resultado de uma consulta a um banco de dados, composto
-de múltiplos objetos. Toda a funcionalidade relacionada com a geração deste
-iterável de objetos vem da `MultipleObjectMixin`. Esta mixin também oferece uma
-lógica complexa de paginação—para exibir parte dos resultados em uma página e
-links para mais páginas.
+`object_list`, através do qual o código do template pode iterar para montar o
+conteúdo da página, normalmente o resultado de uma consulta a um banco de dados,
+composto de múltiplos objetos. Toda a funcionalidade relacionada com a geração
+deste iterável de objetos vem da `MultipleObjectMixin`. Esta mixin também
+oferece uma lógica complexa de paginação—para exibir parte dos resultados em uma
+página e links para mais páginas.
 
-Suponha que você queira criar uma view que não vai renderizar uma template, mas
+Suponha que você queira criar uma view que não vai renderizar um template, mas
 sim produzir uma lista de objetos em formato JSON. Para isso existe
 `BaseListView`. Ela oferece um ponto inicial de extensão fácil de usar, unindo a
 funcionalidade de `View` e de `MultipleObjectMixin`, mas sem a complexidade do
@@ -950,8 +950,8 @@ tentar reutilizar as views base e as mixins.
 Demora um certo tempo para aprender a usar as views baseadas em classes e a
 forma de estendê-las para suprir as necessidades específicas de uma aplicação,
 mas considero que vale a pena estudá-las. Elas eliminam muito código repetitivo,
-tornam mais fácil reutilizar soluções, e melhoram até a comunicação das
-equipes—por exemplo, pela definição de nomes padronizados para as templates e
+facilitam o reuso de soluções, e melhoram até a comunicação das
+equipes—por exemplo, pela definição de nomes padronizados para os templates e
 para as variáveis passadas para contextos de templates. Views baseadas em
 classes são views do Django "on rails"footnote:[NT: Literalmente "nos trilhos",
 mas claramente uma referência ao popular framework _Ruby on Rails_].((("", startref="Django14")))
@@ -975,7 +975,7 @@ no pacote base `tkinter` (há mais componentes gráficos no subpacote
 https://fpy.li/77[`tkinter.ttk`]).
 
 [[tkinter_uml]]
-.Diagrama de classes resumido da hierarquia de classes de interface gráfica do Tkinter; classes marcadas com «mixin» existem para oferecer metodos concretos a outras classes, através de herança múltipla.
+.Diagrama de classes resumido da hierarquia de classes de interface gráfica do Tkinter; classes marcadas com «mixin» existem para oferecer metodos concretos a outras classes, por herança múltipla.
 image::../images/flpy_1405.png[Diagrama de classes UML dos componentes do Tkinter]
 
 Considere as seguintes classes na <<tkinter_uml>>:
@@ -1058,7 +1058,7 @@ startref="IASreal14")))((("", startref="MIreal14")))
 
 Aquilo((("inheritance and subclassing", "best practices", id="IAScop14"))) que
 Alan Kay escreveu na epígrafe continua sendo verdade: ainda não existe um teoria
-geral sobre herança que possa guiar os programadores. O que temos são regras
+geral sobre herança que guie os programadores. O que temos são regras
 gerais, padrões de projetos, "melhores práticas", acrônimos perspicazes, tabus,
 etc. Alguns desses nos dão orientações úteis, mas nenhum deles é universalmente
 aceito ou sempre aplicável.
@@ -1187,7 +1187,7 @@ o alerta abaixo.
 
 Criar subclasses e sobrescrever métodos de qualquer classe complexa é um
 processo muito suscetível a erros, porque os métodos da superclasse podem
-ignorar métodos sobrescritos na subclasse de forma inesperada. Sempre que
+ignorar inesperadamante métodos sobrescritos na subclasse. Sempre que
 possível, evite sobrescrever métodos, ou pelo menos limite-se a criar
 subclasses de classes projetadas para serem facilmente estendidas, e apenas
 daquelas formas pelas quais a classe foi desenhada para ser estendida.
@@ -1214,7 +1214,7 @@ https://fpy.li/pep591[_PEP 591—Adding a final qualifier to
 typing_] (Acrescentando um qualificador "final" à tipagem).
 A PEP introduz um decorador
 https://fpy.li/7a[`@final`], que pode ser aplicado a classes ou a
-métodos individuais, de forma que IDEs ou checadores de tipos podem identificar
+métodos individuais, para que IDEs ou checadores de tipos possam detectar
 tentativas de criar subclasses de classes ou de sobrescrever métodos
 que não foram projetados para serem herdadas ou sobrescritos.footnote:[A
 PEP 591 também introduz uma anotação https://fpy.li/7d[`Final`] para
@@ -1244,7 +1244,7 @@ Vamos agora analisar o Tkinter do ponto de vista dessas recomendações
 ==== Tkinter: o bom, o mau e o feio
 
 A maioria dos conselhos da seção anterior não são seguidos pelo Tkinter, com a
-notável excessão de oferecer classes agregadas (<<aggregate_class_sec>>). E
+notável exceção de oferecer classes agregadas (<<aggregate_class_sec>>). E
 mesmo assim, este não é um grande exemplo, pois a composição provavelmente
 funcionaria melhor para integrar os gerenciadores de geometria a `Widget`, como
 discutido na <<favor_composition_sec>>.
@@ -1322,8 +1322,8 @@ O restante do capítulo foi dedicado à faca de dois gumes da herança múltipla
 Primeiro vimos como a ordem de resolução de métodos, definida no atributo de
 classe `+__mro__+`, trata o problema de conflitos potenciais de nomes em métodos
 herdados. Também examinamos como a função embutida `super()` se comporta em
-hierarquias com herança múltipla, e como ela algumas vezes se comporta de forma
-inesperada. O comportamento de `super()` foi projetado para suportar classes
+hierarquias com herança múltipla, e como ela às vezes tem um comportamento
+surpreendente. O comportamento de `super()` foi projetado para suportar classes
 mixin, que estudamos usando o exemplo simples de `UpperCaseMixin` (para
 mapeamentos indiferentes a maiúsculas/minúsculas).
 
@@ -1359,7 +1359,7 @@ escolhas de design.
 [quote, Hynek Schlawack, "Subclassing in Python Redux"]
 ____
 
-No que diz respeito à legibilidade, composição feita de forma adequada é
+No que diz respeito à legibilidade, composição feita adequadamente é
 superior a herança. Como é mais frequente ler o código que escrevê-lo, como
 regra geral evite subclasses, mas em especial não misture os vários tipos de
 herança e não crie subclasses para compartilhar código.
@@ -1374,7 +1374,7 @@ Schlawack
 é o autor do popular pacote _attrs_, e foi um dos principais contribuidores do
 framework de programação assíncrona Twisted, um projeto criado por Glyph
 Lefkowitz em 2002. De acordo com Schlawack, após algum tempo os desenvolvedores
-perceberam que tinham usado subclasses em excesso no projeto. O post é longo, e
+perceberam que haviam criado subclasses em excesso no projeto. O post é longo, e
 cita outros posts e palestras importantes. Muito recomendado.
 
 Naquela mesma conclusão, Hynek Schlawack escreve: "Não esqueça que, na maioria
@@ -1558,16 +1558,16 @@ Ruby traz uma perspectiva original para a herança múltipla: não a suporta, ma
 introduz mixins como um recurso explícito da linguagem. Uma classe Ruby pode
 incluir um módulo em seu corpo, e aí os métodos definidos no módulo se tornam
 parte da implementação da classe. Essa é uma forma "pura" de mixin, sem herança
-envolvida, e está claro que uma mixin Ruby não tem qualquer influência sobre o
-tipo da classe onde ela é usada. Isso oferece os benefícios das mixins, evitando
-muitos de seus problemas mais comuns.
+envolvida, e está claro que uma mixin em Ruby não influencia o tipo da classe
+onde que a utiliza. Isto oferece os benefícios das mixins, evitando muitos de
+seus problemas mais comuns.
 
 Duas novas linguagens orientadas a objetos que estão recebendo muita atenção
 limitam severamente a herança: Go e Julia. Ambas giram em torno de programar
 "objetos" implementando "métodos", e suportam https://fpy.li/7b[polimorfismo],
 mas evitam o termo "classe".
 
-Go não tem qualquer tipo de herança, mas oferece uma sintaxe que facilita a
+Go não tem nenhum tipo de herança, mas oferece uma sintaxe que facilita a
 composição de suas interfaces e structs. Julia tem uma hierarquia de tipos, mas
 subtipos não podem herdar estrutura, só comportamentos, e só é permitido
 criar subtipos de tipos abstratos. Além disso, os métodos de Julia são
