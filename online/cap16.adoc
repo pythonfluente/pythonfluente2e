@@ -5,7 +5,7 @@
 
 [quote, James Gosling, Criador de Java]
 ____
-Existem algumas coisas que me deixam meio dividido, como a sobrecarga de operadores. Deixei a sobrecarga de operadores de fora em uma decisão bastante pessoal, pois tinha visto gente demais abusar [desse recurso] no {cpp}.footnote:[Fonte: https://fpy.li/16-1["The C Family of Languages: Interview with Dennis Ritchie, Bjarne Stroustrup, and James Gosling" (_A Família de Linguagens C: Entrevista com Dennis Ritchie, Bjarne Stroustrup, e James Gosling_)] (EN).]
+Algumas coisas me deixam meio dividido, como a sobrecarga de operadores. Deixei a sobrecarga de operadores de fora em uma decisão bastante pessoal, pois tinha visto gente demais abusar [deste recurso] no {cpp}.footnote:[Fonte: https://fpy.li/16-1["The C Family of Languages: Interview with Dennis Ritchie, Bjarne Stroustrup, and James Gosling" (_A Família de Linguagens C: Entrevista com Dennis Ritchie, Bjarne Stroustrup, e James Gosling_)].]
 ____
 
 Em((("operator overloading", "infix operators")))((("infix operators"))) Python, podemos calcular juros compostos usando uma fórmula escrita assim:
@@ -17,10 +17,15 @@ interest = principal * ((1 + rate) ** periods - 1)
 
 Operadores que aparecem entre operandos, como em `1 + rate`, são _operadores infixos_.
 No Python, operadores infixos podem lidar com qualquer tipo arbitrário.
-Assim, se você está trabalhando com dinheiro real, pode se assegurar que `principal`, `rate`, e `periods` sejam números exatos—instâncias da classe `decimal.Decimal` de Python—e a fórmula vai funcionar como está escrita, produzindo um resultado exato.
+Assim, se você está trabalhando com dinheiro real, pode se assegurar que
+`principal`, `rate`, e `periods` sejam números exatos—instâncias da classe
+`decimal.Decimal` de Python—e a fórmula vai funcionar como está escrita,
+produzindo um resultado exato.
 
-Mas em Java, se você mudar de `float` para `BigDecimal`, para obter resultados exatos, não é mais possível usar operadores infixos, porque naquela linguagem eles só funcionam com tipos primitivos.
-Abaixo vemos a mesma fórmula escrita em Java para funcionar com números `BigDecimal`:
+Mas em Java, se você mudar de `float` para `BigDecimal`, para obter resultados
+exatos, não é mais possível usar operadores infixos, porque naquela linguagem
+eles só funcionam com tipos primitivos.
+Abaixo, a mesma fórmula escrita em Java para funcionar com números `BigDecimal`:
 
 [source, java]
 ----
@@ -28,70 +33,133 @@ BigDecimal interest = principal.multiply(BigDecimal.ONE.add(rate)
                         .pow(periods).subtract(BigDecimal.ONE));
 ----
 
-Está claro que operadores infixos tornam as fórmulas mais legíveis.
-A sobrecarga de operadores é necessária para suportar a notação infixa de operadores com tipos definidos pelo usuário ou estendidos, tal como os arrays da NumPy.
-Oferecer a sobrecarga de operadores em uma linguagem de alto nível e fácil de usar foi provavelmente uma das principais razões do imenso sucesso de Python na ciência de dados, incluindo as aplicações financeiras e científicas.
+Está claro que operadores infixos tornam as fórmulas mais legíveis. A sobrecarga
+de operadores é necessária para suportar a notação infixa de operadores com
+tipos definidos pelo usuário ou em extensões compiladas, como os arrays da NumPy.
+Oferecer a sobrecarga de operadores em uma linguagem de alto nível e fácil de
+usar foi talvez uma das principais razões do grande sucesso de Python na
+ciência de dados, incluindo as aplicações científicas e financeiras.
 
-Na <<data_model_emulating_sec>> (<<ch_data_model>>) vimos algumas implementações triviais de operadores em uma classe básica `Vector`. Os métodos `+__add__+` e `+__mul__+` no <<ex_vector2d>> foram escritos para demonstrar como os métodos especiais suportam a sobrecarga de operadores, mas deixamos passar problemas sutis naquelas implementações. Além disso, no <<ex_vector2d_v0>> notamos que o método `+Vector2d.__eq__+` considera `True` a seguinte expressão: `Vector(3, 4) == [3, 4]`&#x2014;algo que pode ou não fazer sentido. Nesse capítulo vamos cuidar desses problemas, e((("operator overloading", "topics covered"))) falaremos também de:
+Na <<data_model_emulating_sec>>, vimos algumas implementações
+triviais de operadores em uma classe básica `Vector`.
+Escrevi os métodos `+__add__+` e `+__mul__+` no <<ex_vector2d>> do Capítulo 1
+para demonstrar como os métodos especiais suportam a sobrecarga de operadores,
+mas deixei passar alguns problemas sutis naquelas implementações.
+Além disso, no <<ex_vector2d_v0>> notamos que o
+método `+Vector2d.__eq__+` considera `True` a seguinte expressão: `Vector(3, 4)
+== [3, 4]`&#x2014;algo que pode ou não fazer sentido. Nesse capítulo vamos
+cuidar desses problemas, e((("operator overloading", "topics covered")))
+falaremos também de:
 
 * Como um método de operador infixo deveria indicar que não consegue tratar um operando
-* O uso de _duck typing_ ou _goose typing_ para lidar com operandos de vários tipos
-* O comportamento especial dos operadores de comparação cheia (e.g., `==`, `>`, `<=`, etc.)
+* O uso de tipagem pato ou tipagem ganso para lidar com operandos de vários tipos
+* O comportamento especial dos operadores de comparação rica, como, `==`, `>`, `{lte}`, etc.)
 * O tratamento default de operadores de atribuição aumentada tal como `+=`, e como sobrecarregá-los
 
 
 === Novidades neste capítulo
 
-O _goose typing_((("operator overloading", "significant changes to"))) é uma parte fundamental de Python, mas as ABCs `numbers` não são suportadas na tipagem estática. Então modifiquei o <<ex_vector_v7>> para usar _duck typing_, em vez de uma checagem explícita usando `isinstance` contra `numbers.Real`.footnote:[O restante das ABCs na biblioteca padrão de Python ainda são valiosas para o _goose typing_ e a tipagem estática. O problema com as ABCs `numbers` é explicado na <<numbers_abc_proto_sec>>.]
+A tipagem ganso((("operator overloading", "significant changes to"))) é uma
+parte fundamental de Python, mas as ABCs `numbers` não são suportadas na tipagem
+estática. Então modifiquei o <<ex_vector_v7>> para usar tipagem pato, em vez de
+uma checagem explícita usando `isinstance` contra `numbers.Real`.footnote:[O
+restante das ABCs na biblioteca padrão de Python ainda são valiosas para o
+tipagem ganso e a tipagem estática. O problema com as ABCs `numbers` é explicado
+na <<numbers_abc_proto_sec>>.]
 
-Na primeira edição do _Python Fluente_, tratei do operador de multiplicação de matrizes `@` como uma mudança futura, quando Python 3.5 ainda estava em sua versão alfa. Agora o `@` está integrado ao fluxo do capítulo na <<matmul_operator_sec>>.
-Aproveitei o _goose typing_ para tornar a implementação de `+__matmul__+` aqui mais segura que a da primeira edição, sem comprometer sua flexibilidade.
+Na primeira edição do _Python Fluente_, tratei do operador de multiplicação de
+matrizes `@` como uma mudança futura, pois o Python 3.5 ainda estava em desenvolvimento.
+Agora o `@` está integrado ao fluxo do capítulo na <<matmul_operator_sec>>.
+Aproveitei a tipagem ganso para tornar a implementação de `+__matmul__+`
+mais segura na primeira edição, sem comprometer sua flexibilidade.
 
-A <<further_reading_op_sec>> agora inclui algumas novas referências—incluindo um post de blog de Guido van Rossum.
-Também adicionei menções a duas bibliotecas que demonstram um uso efetivo da sobrecarga de operadores fora do domínio da matemática: `pathlib` e `Scapy`.
+A <<further_reading_op_sec>> agora inclui algumas novas referências—incluindo um
+post do blog de Guido van Rossum. Também adicionei menções a duas bibliotecas
+que demonstram usos interessantes da sobrecarga de operadores em contextos
+não numéricos: `pathlib` e `Scapy`.
 
 
 [[op_overloading_101_sec]]
 === Introdução à sobrecarga de operadores
 
-A sobrecarga de operadores((("operator overloading", "basics of"))) permite que objetos definidos pelo usuário interoperem com operadores infixos como `+` e `|`, ou com operadores unários como `-` e `~`. No Python, de uma perspectiva mais geral, a invocação de funções (`()`), o acesso a atributos (`.`)  e o acesso a itens e o fatiamento (`[]`) também são operadores, mas este capítulo trata dos operadores unários e infixos.
+A sobrecarga de operadores((("operator overloading", "basics of"))) permite que
+objetos definidos pelo usuário suportem operadores infixos como `{plus}` e
+`|`, ou com operadores unários como `-` e `~`.
+De forma geral, em Python a notação de invocação de função (`f()`),
+o acesso a atributos (`p.x`) e o acesso a itens e o fatiamento (`v[0]`)
+também são operadores, mas este capítulo trata dos operadores unários e infixos.
 
-A sobrecarga de operadores tem má-fama em certos círculos.
-É um recurso da linguagem que pode ser (e tem sido) abusado,
-resultando em programadores confusos, bugs, e gargalos de desempenho inesperados.
-Mas se bem utilizada, possibilita APIs agradáveis de usar e código legível.
-Python alcança um bom equilíbrio entre flexibilidade,
-usabilidade e segurança,
-pela imposição de algumas limitações:
+A sobrecarga de operadores tem má reputação em certos círculos. É um recurso que
+pode ser abusado, resultando em programadores confusos, bugs, e gargalos de
+desempenho inesperados. Mas se bem utilizada, possibilita APIs agradáveis de
+usar e código legível. Python alcança um bom equilíbrio entre flexibilidade,
+usabilidade e segurança, pela imposição de algumas limitações:
 
 * Não é permitido modificar o significado dos operadores para os tipos embutidos.
 * Não é permitido criar novos operadores, apenas sobrecarregar os existentes.
-* Alguns poucos operadores não podem ser sobrecarregados: `is`, `and`, `or` e `not` (mas os operadores `==`, `&`, `|`, e `~` podem).
+* Alguns poucos operadores não podem ser sobrecarregados:
+`is`, `and`, `or` e `not` (mas os operadores `==`, `&`, `|`, e `~` podem).
 
-No <<ch_seq_methods>>, na classe `Vector`, já apresentamos um operador infixo: `==`, suportado pelo método `+__eq__+`. Nesse capítulo, vamos melhorar a implementação de `+__eq__+` para lidar melhor com operandos de outros tipos além de `Vector`. Entretanto, os operadores de comparação cheia (`==`, `!=`, `>`, `<`, `>=`, `<=`) são casos especiais de sobrecarga de operadores, então começaremos sobrecarregando quatro operadores aritméticos em `Vector`: os operadores unários `-` e `+`, seguido pelos infixos `+` e `*`.
+No <<ch_seq_methods>>, na classe `Vector`, já apresentamos um operador infixo:
+`==`, suportado pelo método `+__eq__+`. Neste capítulo, vamos melhorar a
+implementação de `+__eq__+` para lidar melhor com operandos de outros tipos além
+de `Vector`. Entretanto, os operadores de comparação rica (`==`, `!=`, `>`, `<`,
+`>=`, `{lte}`) são casos especiais de sobrecarga de operadores, então
+começaremos sobrecarregando quatro operadores aritméticos em `Vector`: os
+operadores unários `-` e `{plus}`, seguido pelos infixos `{plus}` e `*`.
 
 Vamos começar pelo tópico mais fácil: operadores unários.
 
 
 === Operadores unários
 
-A seção https://fpy.li/7n["6.5. Unary arithmetic and bitwise operations" (_Aritmética unária e operações binárias_)] (EN), de _A Referência da Linguagem Python_, elenca((("operator overloading", "unary operators", id="OOunary16")))((("unary operators", id="unary16"))) três operações unárias, listadas abaixo juntamente com seus métodos especiais associados:
+Na((("operator overloading", "unary operators",
+id="OOunary16")))((("unary operators", id="unary16")))
+Referência da Linguagem Python, a seção
+https://fpy.li/7n[Operações aritméticas unárias e bit a bit)],
+cita três operadores unários, listados abaixo com os seus métodos especiais:
 
-`-`, implementado por `+__neg__+`:: Negativo((("&#x005F;&#x005F;neg&#x005F;&#x005F;"))) aritmético unário. Se `x` é `-2` então `-x == 2`.
-`{plus}`, implementado por `+__pos__+`:: Positivo((("&#x005F;&#x005F;pos&#x005F;&#x005F;"))) aritmético unário. De forma geral, `x == +x`, mas há alguns poucos casos onde isso não é verdadeiro. Veja a <<when_plus_x_sec>>, se estiver curioso.
-`~`, implementado por `+__invert__+`:: Negação((("&#x005F;&#x005F;invert&#x005F;&#x005F;"))) binária, ou inversão binária de um inteiro, definida como `~x == -(x+1)`. Se `x` é `2` então `~x == -3`.footnote:[Veja https://fpy.li/7p[Lógica Binária - NOT] para uma explicação da negação binária.]
+`-` implementado por `+__neg__+`::
+Negativo((("&#x005F;&#x005F;neg&#x005F;&#x005F;"))) aritmético unário. Se `x` é
+`42` então `-x == -42`.
 
-O pass:[<a href="https://docs.python.org/pt-br/3/reference/datamodel.html#object.__neg__">capítulo "Modelo de Dados"</a>] de _A Referência da Linguagem Python_ também inclui a função embutida `abs()` como um operador unário. O método especial associado é `+__abs__+`, como já vimos.
+`{plus}` implementado por `+__pos__+`::
+Positivo((("&#x005F;&#x005F;pos&#x005F;&#x005F;"))) aritmético unário. Em geral,
+`x == +x`, mas há alguns poucos casos em que isto não ocorre. Veja:
+<<when_plus_x_sec>> (ao final desta seção).
 
-É fácil suportar operadores unários. Basta implementar o método especial apropriado, que receberá apenas um argumento: `self`. Use a lógica que fizer sentido na sua classe, mas se atenha à regra geral dos operadores: sempre devolva um novo objeto. Em outras palavras, não modifique o receptor (`self`), crie e devolva uma nova instância do tipo adequado.
+`~` implementado por `+__invert__+`::
+Negação((("&#x005F;&#x005F;invert&#x005F;&#x005F;"))) binária, ou inversão
+bit a bit de um inteiro, definida como `~x == -(x+1)`. Se `x` é `2` então
+`~x == -3`, porque a representação binária de `2` é `0010` e `-3` é `1101`.
+Veja https://fpy.li/7p[Complemento para dois] na Wikipédia para entender
+esta representação de inteiros com sinal.
 
-No caso de `-` e `+`, o resultado será provavelmente uma instância da mesma classe de `self`. Para o `+` unário, se o receptor for imutável você deveria devolver `self`; caso contrário, devolva uma cópia de `self`.
+O capítulo Modelo de Dados na Referência da Linguagem Python_ também inclui a
+função embutida `abs()` como um operador unário. O método especial associado é
+`+__abs__+`, como já vimos.
+
+É fácil suportar operadores unários. Basta implementar o método especial
+apropriado, que receberá apenas um argumento: `self`. Use a lógica que fizer
+sentido na sua classe, mas respeite a regra geral dos operadores: sempre
+devolva um novo objeto. Em outras palavras, não modifique o receptor (`self`),
+mas crie e devolva uma nova instância do tipo adequado.
+
+No caso de `-` e `{plus}`, o resultado será provavelmente uma instância da mesma
+classe de `self`. Para o `{plus}` unário, se o receptor for imutável você
+deveria devolver `self`; caso contrário, devolva uma cópia de `self`.
 Para `abs()`, o resultado deve ser um número escalar.
 
-Já no caso de `~`, é difícil determinar o que seria um resultado razoável se você não estiver lidando com bits de um número inteiro.
-No pacote de análise de dados https://fpy.li/pandas[_pandas_], o til nega condições booleanas de filtragem; veja exemplos na documentação do _pandas_, em https://fpy.li/16-4["Boolean indexing" (_Indexação booleana)] (EN).
+Já no caso de `~`, é difícil determinar o que seria um resultado razoável se
+você não estiver lidando com bits de um número inteiro. No pacote de análise de
+dados https://fpy.li/pandas[_pandas_], o til nega condições booleanas de
+filtragem; veja exemplos na documentação do _pandas_, em
+https://fpy.li/16-4[_Boolean indexing_] (indexação booleana).
 
-Como prometido acima, vamos implementar vários novos operadores na classe `Vector`, do  <<ch_seq_methods>>. O <<ex_vector_v6_unary>> mostra o método  `+__abs__+`, que já estava no  <<ex_vector_v5>>, e os novos métodos `+__neg__+` e `+__pos__+` para operadores unários.
+Como prometido acima, vamos implementar vários novos operadores na classe
+`Vector`, do  <<ch_seq_methods>>. O <<ex_vector_v6_unary>> mostra o método
+`+__abs__+`, que já estava no  <<ex_vector_v5>> (Capítulo 12),
+e os novos métodos `+__neg__+` e `+__pos__+` para operadores unários.
 
 [[ex_vector_v6_unary]]
 .vector_v6.py: unary operators - and + added to <<ex_vector_v5>>
@@ -104,22 +172,32 @@ include::../code/16-op-overloading/vector_v6.py[tags=VECTOR_V6_UNARY]
 <1> Para computar `-v`, cria um novo `Vector` com a negação de cada componente de `self`.
 <2> Para computar `+v`, cria um novo `Vector` com cada componente de `self`.
 
-Lembre-se que instâncias de `Vector` são iteráveis, e o `+Vector.__init__+` recebe um argumento iterável, e daí as implementações de `+__neg__+` e
-`+__pos__+` são curtas e rápidas.
+Lembre-se que instâncias de `Vector` são iteráveis, e o `+Vector.__init__+`
+recebe um argumento iterável, por isto implementações de `+__neg__+` e
+`+__pos__+` são tão simples.
 
-Não vamos implementar `+__invert__+`. Se um usuário tentar escrever `~v` para uma instância de `Vector`, Python vai gerar um  `TypeError` com uma mensagem clara: “bad operand type for unary ~: `'Vector'`” (_operando inválido para o ~ unário: `'Vector'`).
+Não vamos implementar `+__invert__+`. Se um usuário tentar escrever `~v` para
+uma instância de `Vector`, Python vai gerar um  `TypeError` com uma mensagem
+clara: “bad operand type for unary ~: `'Vector'`” (operando inválido para o ~
+unário: `'Vector'`).
 
-O quadro a seguir trata de uma curiosidade que algum dia poderá ajudar você a ganhar uma aposta sobre o `+` unário .
+O quadro a seguir trata de uma curiosidade que algum dia poderá ajudar você a
+ganhar uma aposta sobre o `{plus}` unário.
 
 [[when_plus_x_sec]]
 [role="pagebreak-before less_space"]
 .Quando x e +x não são iguais
 ****
 
-Todo mumdo espera que `x == +x`, e isso é verdade no Python quase todo o tempo, mas encontrei dois casos na biblioteca padrão onde `x != +x`.
+Todo mumdo espera que `x == +x`, e isso é verdade no Python quase todo o tempo,
+mas encontrei dois casos na biblioteca padrão onde `x != +x`.
 
-O((("decimal.Decimal class"))) primeiro caso envolve a classe `decimal.Decimal`. Você pode obter
-`x != +x` se `x` é uma instância de `Decimal`, criada em um dado contexto aritmético e `+x` for então avaliada em um contexto com definições diferentes. Por exemplo, `x` é calculado em um contexto com uma determinada precisão, mas a precisão do contexto é modificada e daí `+x` é avaliado. Veja a uma demonstração no <<ex_unary_plus_decimal>>.
+O((("decimal.Decimal class"))) primeiro caso envolve a classe `decimal.Decimal`.
+Você pode obter `x != +x` se `x` é uma instância de `Decimal`, criada em um dado
+contexto aritmético e `+x` for então calculada em um contexto com definições
+diferentes. Por exemplo, `x` é calculado em um contexto com uma determinada
+precisão, mas a precisão do contexto é modificada e daí `+x` é avaliado. Veja a
+uma demonstração no <<ex_unary_plus_decimal>>.
 
 [[ex_unary_plus_decimal]]
 .Uma mudança na precisão do contexto aritmético pode fazer `x` se tornar diferente de `+x`
@@ -138,9 +216,18 @@ include::../code/16-op-overloading/unary_plus_decimal.py[tags=UNARY_PLUS_DECIMAL
 <7> Agora `one_third == +one_third` é `False`.
 <8> Inspeciona `+one_third`; aqui há 28 dígitos após o `'.'` .
 
-O fato é que cada ocorrência da expressão `+one_third` produz uma nova instância de `Decimal` a partir do valor de `one_third`, mas usando a precisão do contexto aritmético atual.
+O fato é que cada ocorrência da expressão `+one_third` produz uma nova instância
+de `Decimal` a partir do valor de `one_third`, mas usando a precisão do contexto
+aritmético atual.
 
-Podemos encontrar o segundo caso onde `x != +x` na https://fpy.li/34[documentação] de `collections.Counter`. A classe `Counter` implementa vários operadores aritméticos, incluindo o `+` infixo, para somar a contagem de duas instâncias de `Counter`. Entretanto, por razões práticas, a adição em `Counter` descarta do resultado qualquer item com contagem negativa ou zero. E o prefixo `+++` é um atalho para somar um `Counter` vazio, e portanto produz um novo `Counter`, preservando apenas as contagens maiores que zero. Veja o <<ex_unary_plus_counter>>.
+Encontrei o segundo caso onde `+x != +x+` na
+https://fpy.li/34[documentação] de `collections.Counter`. A classe `Counter`
+implementa vários operadores aritméticos, incluindo o `{plus}` infixo, para
+somar a contagem de duas instâncias de `Counter`. Entretanto, por razões
+práticas, a adição em `Counter` descarta do resultado qualquer item com contagem
+negativa ou zero. E o `{plus}` unário é um atalho para somar um `Counter` vazio,
+produzindo um novo `Counter`, que preserva só as contagens maiores que
+zero. Veja o <<ex_unary_plus_counter>>.
 
 [[ex_unary_plus_counter]]
 .O + unário produz um novo `Counter`sem as contagens negativas ou zero
@@ -159,33 +246,45 @@ Counter({'a': 5, 'b': 2, 'c': 1})
 ----
 ====
 
-Como se vê, `+ct` devolve um contador onde todas as contagens são maiores que zero.
+Como visto, `+ct` devolve um contador onde todas as contagens são maiores que
+zero.
 
-Agora voltamos à nossa programação normal.((("", startref="OOunary16")))((("", startref="unary16")))
+Agora voltamos à nossa programação normal.((("", startref="OOunary16")))((("",
+startref="unary16")))
 
 ****
 
 [[overloading_plus_sec]]
 === Sobrecarregando + para adição de Vector
 
-A((("operator overloading", "overloading &#x002B; for vector addition", id="OOplus16")))((("mathematical vector operations")))((("&#x002B; operator", id="Plusover16")))((("vectors", "overloading &#x002B; for vector addition", id="Voverload16"))) classe `Vector` é um tipo sequência,
-e a seção https://fpy.li/6n["3.3.7. Emulando de tipos contêineres"]
-do capítulo "Modelo de Dados", na documentação oficial do Python, diz que sequências devem suportar o operador
-`\+` para concatenação e o `\*` para repetição.
-Entretanto, aqui vamos implementar `+` e `*` como operações matemáticas de vetores, algo um pouco mais complicado porém mais útil para um tipo `Vector`.
+A((("operator overloading", "overloading &#x002B; for vector addition",
+id="OOplus16")))((("mathematical vector operations")))((("&#x002B; operator",
+id="Plusover16")))((("vectors", "overloading &#x002B; for vector addition",
+id="Voverload16"))) classe `Vector` é um tipo sequência, e a seção
+https://fpy.li/6n[Emulando tipos contêineres] da documentação oficial do Python,
+diz que sequências devem suportar o operador `{plus}` para concatenação e o `\*`
+para repetição. Entretanto, aqui vamos implementar `{plus}` e `*` como operações
+matemáticas de vetores, algo um pouco mais complicado porém mais útil para um
+tipo `Vector`.
 
 [TIP]
 ====
-Usuários que desejem concatenar ou repetir instâncias de `Vector` podem convertê-las para tuplas ou listas, aplicar o operador e convertê-las de volta—graças ao fato de `Vector` ser iterável e poder ser criado a partir de um iterável:
+
+Usuários que desejem concatenar ou repetir instâncias de `Vector` podem
+convertê-las para tuplas ou listas, aplicar o operador e convertê-las de
+volta—graças ao fato de `Vector` ser iterável e poder ser criado a partir de um
+iterável:
 
 [source, python]
 ----
->>> v_concatenated = Vector(list(v1) + list(v2))
->>> v_repeated = Vector(tuple(v1) * 5)
+>>> v_concat = Vector(list(v1) + list(v2))
+>>> v_repeat = Vector(tuple(v1) * 5)
 ----
+
 ====
 
-Somar dois vetores euclidianos resulta em um novo vetor no qual os componentes são as somas pareadas dos componentes dos operandos. Ilustrando:
+Somar dois vetores euclidianos resulta em um novo vetor no qual os componentes
+são as somas componentes correspondentes dos operandos. Ilustrando:
 
 [source, python]
 ----
@@ -197,7 +296,10 @@ Vector([9.0, 11.0, 13.0])
 True
 ----
 
-E o que acontece se tentarmos somar duas instâncias de `Vector` de tamanhos diferentes? Poderíamos gerar um erro, mas considerando as aplicações práticas (tal como recuperação de informação), é melhor preencher o `Vector` menor com zeros. Esse é o resultado que queremos:
+E o que acontece se tentarmos somar duas instâncias de `Vector` de tamanhos
+diferentes? Poderíamos gerar um erro, mas considerando as aplicações práticas
+(tal como recuperação de informação), é melhor preencher o `Vector` menor com
+zeros. Esse é o resultado que queremos:
 
 [source, python]
 ----
@@ -207,7 +309,8 @@ E o que acontece se tentarmos somar duas instâncias de `Vector` de tamanhos dif
 Vector([4.0, 6.0, 5.0, 6.0])
 ----
 
-Dados esses requisitos básicos, podemos implementar `+__add__+` como no <<ex_vector_add_t1>>.
+Dados esses requisitos básicos, podemos implementar `+__add__+` como no
+<<ex_vector_add_t1>>.
 
 [[ex_vector_add_t1]]
 .Método `+Vector.__add__+`, versão #1
@@ -221,18 +324,30 @@ Dados esses requisitos básicos, podemos implementar `+__add__+` como no <<ex_ve
         return Vector(a + b for a, b in pairs)  # <2>
 ----
 ====
-<1> `pairs` é um gerador que produz tuplas `(a, b)`, onde `a` vem de `self` e `b` de `other`. Se `self` e `other` tiverem tamanhos diferentes, `fillvalue` fornece os valores ausentes para o iterável mais curto.
-<2> Um novo `Vector` é criado a partir de uma expressão geradora, produzindo uma soma para cada
-`(a, b)` de `pairs`.
 
-Observe como `+__add__+` devolve uma nova instância de `Vector`, sem modificar `self` ou `other`.
+<1> `pairs` é um gerador que produz tuplas `(a, b)`, onde `a` vem de `self` e
+`b` de `other`. Se `self` e `other` tiverem tamanhos diferentes, `fillvalue`
+fornece os valores que faltam no o iterável mais curto.
+
+<2> Um novo `Vector` é criado a partir de uma expressão geradora, produzindo uma
+soma para cada `(a, b)` de `pairs`.
+
+Note que `+__add__+` devolve uma nova instância de `Vector`, sem modificar
+`self` ou `other`.
 
 [WARNING]
 ====
-Métodos especiais implementando operadores unários ou infixos não devem nunca modificar o valor dos operandos. Se espera que expressões com tais operandos produzam resultados criando novos objetos. Apenas operadores de atribuição aumentada podem modidifcar o primeiro operando (`self`), como discutido na <<augmented_assign_ops>>.
+
+Métodos especiais implementando operadores unários ou infixos não devem nunca
+modificar o valor dos operandos. Espera-se que expressões com tais operandos
+produzam resultados criando novos objetos. Só operadores de atribuição
+aumentada podem modidifcar o primeiro operando (`self`), quando ele é mutável,
+como discutido na <<augmented_assign_ops>>.
+
 ====
 
-O <<ex_vector_add_t1>> permite somar um `Vector` a um `Vector2d`, e `Vector` a uma tupla ou qualquer iterável que produza números, como prova o <<ex_vector_add_demo_mixed_ok>>.
+O <<ex_vector_add_t1>> permite somar um `Vector` a um `Vector2d`, a
+uma tupla, como prova o <<ex_vector_add_demo_mixed_ok>>.
 
 [[ex_vector_add_demo_mixed_ok]]
 .Nossa versão #1 de `+Vector.__add__+` também aceita objetos diferentes de ++Vector++
@@ -249,13 +364,17 @@ Vector([4.0, 6.0, 5.0])
 ----
 ====
 
-Os dois usos de `+++` no <<ex_vector_add_demo_mixed_ok>> funcionam porque `+__add__+` usa
-`zip_longest(…)`, capaz de consumir qualquer iterável, e a expressão geradora que cria um novo `Vector` simplesmente efetua a operação `a + b` com os pares produzidos por `zip_longest(…)`, então um iterável que produza quaisquer itens numéricos servirá.
+Os dois usos de `{plus}` no <<ex_vector_add_demo_mixed_ok>> funcionam porque
+`+__add__+` usa `zip_longest(…)`, capaz de consumir qualquer iterável, e a
+expressão geradora que cria um novo `Vector` simplesmente efetua a operação `a +
+b` com os pares produzidos por `zip_longest(…)`, então qualquer iterável que produza
+números compatíveis com `float` servirá.
 
-Entretanto, se trocarmos a ordem dos operandos (no <<ex_vector_add_demo_mixed_fail>>), a soma de tipos diferentes falha.
+Entretanto, se trocarmos a ordem dos operandos, a soma de tipos diferentes falha.
+Veja o <<ex_vector_add_demo_mixed_fail>>.
 
 [[ex_vector_add_demo_mixed_fail]]
-.A versão #1 de `+Vector.__add__+` falha com se o operador da esquerda não for um `Vector
+.A versão #1 de `+Vector.__add__+` falha com se o operador da esquerda não for um `Vector`
 ====
 [source, python]
 ----
@@ -273,16 +392,34 @@ TypeError: unsupported operand type(s) for +: 'Vector2d' and 'Vector'
 ----
 ====
 
-Para suportar operações envolvendo objetos de tipos diferentes, Python implementa um mecanismo especial de despacho para os métodos especiais de operadores infixos. Dada a expressão `a + b`, o interpretador vai executar as seguintes etapas (veja também a <<operator_flowchart>>):
+Para suportar operações envolvendo objetos de tipos diferentes, Python
+implementa um mecanismo especial de despacho para os métodos especiais de
+operadores infixos. Dada a expressão `a + b`, o interpretador executará os
+seguintes passos (veja também a <<operator_flowchart>>):
 
-. Se `a` implementa `+__add__+`, invoca `+a.__add__(b)+` e devolve o resultado, a menos que seja `NotImplemented`.
-. Se `a` não implementa `+__add__+`, ou a chamada devolve `NotImplemented`, verifica se `b` implementa `+__radd__+`, e então invoca `+b.__radd__(a)+` e devolve o resultado, a menos que seja `NotImplemented`.
-. Se `b` não implementa `+__radd__+`, ou a chamada devolve `NotImplemented`, gera um `TypeError` com a mensagem 'unsupported operand types' (_tipos de operandos não suportados_).
+. Se `a` implementa `+__add__+`, invoca `+a.__add__(b)+` e devolve o resultado,
+a menos que seja `NotImplemented`.
+
+. Se `a` não implementa `+__add__+`, ou a chamada `+a.__add__(b)+` devolve
+`NotImplemented`, verifica se `b` implementa `+__radd__+`, e então invoca
+`+b.__radd__(a)+` e devolve o resultado, a menos que seja `NotImplemented`.
+
+. Se `b` não implementa `+__radd__+`, ou a chamada `+b.__radd__(a)+`
+devolve `NotImplemented`, Python gera um `TypeError` com a mensagem
+"unsupported operand types" (tipos de operandos não suportados).
 
 [TIP]
 ====
-O método `+__radd__+` é chamado de variante "reversa" ou "refletida" de `+__add__+`.
-Adotei o termo geral "métodos especiais reversos".footnote:[A documentação de Python usa os dois termos. O https://fpy.li/dtmodel[capítulo "Modelo de Dados"] usa "refletido", mas em https://fpy.li/16-7["9.1.2.2. Implementando operações aritméticas"], a documentação do módulo menciona métodos de "adiante" (_forward_) e "reverso" (_reverse_), uma terminologia que considero melhor, pois "adiante" e "reverso" são claramente sentidos opostos, mas o oposto de "refletido" não é tão evidente.]
+O método `+__radd__+` é chamado de variante "reversa" ou "refletida"
+de `+__add__+`. Adotei o termo geral "métodos especiais reversos".
+A documentação de Python usa os dois termos. O
+https://fpy.li/dtmodel[capítulo Modelo de Dados]
+usa "refletido", mas em
+https://fpy.li/16-7[Implementando operações aritméticas],
+a documentação do módulo menciona métodos "adiante" (_forward_)
+e "reverso" (_reverse_), uma terminologia que considero
+melhor, pois "adiante" e "reverso" descrevem sentidos opostos,
+mas o oposto de "refletido" não é tão evidente.
 ====
 
 [[operator_flowchart]]
@@ -293,7 +430,14 @@ Assim, para fazer as somas de tipos diferentes no <<ex_vector_add_demo_mixed_fai
 
 [WARNING]
 ====
-Não confunda `NotImplemented` com `NotImplementedError`. O primeiro é um valor _singleton_ especial, que um método especial de operador infixo deve devolver para informar o interpretador que não consegue tratar um dado operando. `NotImplementedError`, por outro lado, é um exceção que métodos _stub_ em classes abstratas podem gerar, para avisar que subclasses devem implementar tais métodos.
+
+Não confunda `NotImplemented` com `NotImplementedError`. O primeiro é um valor
+_singleton_ especial, que um método especial de operador infixo deve devolver
+para informar o interpretador que não consegue tratar um dado operando.
+`NotImplementedError`, por outro lado, é um exceção que métodos classes
+abstratas podem levantar, para avisar que subclasses devem implementar tais
+métodos.
+
 ====
 
 A implementação viável mais simples de `+__radd__+` aparece no <<ex_vector_add_t2>>.
@@ -313,12 +457,19 @@ A implementação viável mais simples de `+__radd__+` aparece no <<ex_vector_ad
         return self + other
 ----
 ====
-<1> Nenhuma mudança no `+__add__+` do <<ex_vector_add_t1>>; ele é listado aqui porque é usado por `+__radd__+`.
+
+<1> Nenhuma mudança no `+__add__+` do <<ex_vector_add_t1>>; ele é listado aqui
+porque é usado por `+__radd__+`.
+
 <2> `+__radd__+` apenas delega para `+__add__+`.
 
-Muitas vezes, `+__radd__+` pode ser simples assim: apenas a invocação do operador apropriado, delegando para `+__add__+` neste caso. Isso se aplica para qualquer operador comutativo; `+` é comutativo quando lida com números ou com nossos vetores, mas não é comutativo ao concatenar sequências no Python.
+Muitas vezes, `+__radd__+` pode ser simples assim: apenas a invocação do
+operador apropriado, delegando para `+__add__+` neste caso. Isso se aplica para
+qualquer operador comutativo. O `{plus}` é comutativo quando lida com números ou
+com nossos vetores, mas não é comutativo ao concatenar sequências no Python.
 
-Se `+__radd__+` apenas invoca `+__add__+`, aqui está outra forma de obter o mesmo efeito:
+Se `+__radd__+` apenas invoca `+__add__+`, aqui está uma forma mais eficiente de
+obter o mesmo efeito:
 
 [source, python]
 ----
@@ -329,7 +480,11 @@ Se `+__radd__+` apenas invoca `+__add__+`, aqui está outra forma de obter o mes
     __radd__ = __add__
 ----
 
-Os métodos no <<ex_vector_add_t2>> funcionam com objetos `Vector` ou com qualquer iterável com itens numéricos, tal como um `Vector2d`, uma `tuple` de inteiros ou um `array` de números de ponto flutuante. Mas se alimentado com um objeto não-iterável, `+__add__+` gera uma exceção com uma mensagem não muito útil, como no <<ex_vector_error_iter>>.
+Os métodos no <<ex_vector_add_t2>> funcionam com objetos `Vector` ou com
+qualquer iterável com itens numéricos, tal como um `Vector2d`, uma `tuple` de
+inteiros ou um `array` de números de ponto flutuante. Mas se alimentado com um
+objeto não-iterável, `+__add__+` gera uma exceção com uma mensagem não muito
+útil, como no <<ex_vector_error_iter>>.
 
 [[ex_vector_error_iter]]
 .O método `+Vector.__add__+` precisa de operandos iteráveis
@@ -345,7 +500,9 @@ TypeError: zip_longest argument #2 must support iteration
 ----
 ====
 
-E pior ainda, recebemos uma mensagem enganosa se um operando for iterável mas seus itens não puderem ser somados aos itens `float` no `Vector`. Veja o <<ex_vector_error_iter_not_add>>.
+E pior ainda, recebemos uma mensagem enganosa se um operando for iterável mas
+seus itens não puderem ser somados aos itens `float` no `Vector`. Veja o
+<<ex_vector_error_iter_not_add>>.
 
 [[ex_vector_error_iter_not_add]]
 .O método `+Vector.__add__+` precisa de um iterável com itens numéricos
@@ -367,14 +524,26 @@ TypeError: unsupported operand type(s) for +: 'float' and 'str'
 
 Tentei somar um `Vector` a uma `str`, mas a mensagem reclama de `float` e `str`.
 
-Na verdade, os problemas no <<ex_vector_error_iter>> e no <<ex_vector_error_iter_not_add>> são mais profundos que meras mensagens de erro obscuras: se um método especial de operando não é capaz de devolver um resultado válido por incompatibilidade de tipos, ele deverua devolver `NotImplemented` e não gerar um `TypeError`. Ao devolver `NotImplemented`, a porta fica aberta para a implementação do operando do outro tipo executar a operação, quando Python tentar invocar o método reverso.
+Na verdade, os problemas no <<ex_vector_error_iter>> e no
+<<ex_vector_error_iter_not_add>> são mais profundos que meras mensagens de erro
+obscuras: se um método especial de operando não é capaz de devolver um resultado
+válido por incompatibilidade de tipos, ele tem que devolver `NotImplemented` e
+não gerar um `TypeError`. Ao devolver `NotImplemented`, a porta fica aberta para
+o outro operando executar a operação, quando Python tentar invocar o método
+reverso em sua classe.
 
-No espírito do _duck typing_, vamos nos abster de testar o tipo do operando `other` ou o tipo de seus elementos. Vamos capturar as exceções e devolver `NotImplemented`. Se o interpretador ainda não tiver invertido os operandos, tentará isso agora. Se a invocação do método reverso devolver `NotImplemented`, então Python irá gerar um `TypeError` com uma mensagem de erro padrão "unsupported operand type(s) for +: 'Vector' and 'str'” (_tipos de operandos não suportados para +: `Vector` e `str`_)
+No espírito da tipagem pato, não vamos testar o tipo do operando `other` ou o
+tipo de seus elementos. Vamos capturar as exceções e devolver `NotImplemented`.
+Se o interpretador ainda não tiver invertido os operandos, tentará isso em seguida.
+Se a invocação do método reverso devolver `NotImplemented`, então Python irá
+gerar um `TypeError` com uma mensagem de erro padrão "unsupported operand
+type(s) for +: 'Vector' and 'str'” (_tipos de operandos não suportados para +:
+`Vector` e `str`_)
 
 A implementação final dos métodos especiais de adição de `Vector` está no <<ex_vector_v6>>.
 
 [[ex_vector_v6]]
-.vector_v6.py: métodos do operador `+` adicionados a vector_v5.py (no <<ex_vector_v5>>)
+.vector_v6.py: métodos do operador `{plus}` adicionados a vector_v5.py (no <<ex_vector_v5>>)
 ====
 [source, python]
 ----
@@ -386,15 +555,26 @@ Observe que agora `+__add__+` captura um `TypeError` e devolve `NotImplemented`.
 
 [WARNING]
 ====
-Se um método de operador infixo gera uma exceção, ele interrompe o algoritmo de despacho do operador. No caso específico de `TypeError`, geralmente é melhor capturar essa exceção e devolver `NotImplemented`. Isso permite que o interpretador tente chamar o método reverso do operador, que pode tratar corretamente a operação com operadores invertidos, se eles forem de tipos diferentes.
+
+Se um método de operador infixo gera uma exceção, ele interrompe o algoritmo de
+despacho do operador. No caso específico de `TypeError`, geralmente é melhor
+capturar esta exceção e devolver `NotImplemented`. Isto permite que o
+interpretador tente chamar o método reverso do segundo operando.
+
 ====
 
-Agora que já sobrecarregamos o operador `+` com segurança, implementando `+__add__+` e `+__radd__+`, vamos enfrentar outro operador infixo: `*`.((("", startref="OOplus16")))((("", startref="Plusover16")))((("", startref="Voverload16")))
+Agora que já sobrecarregamos o operador `{plus}` com segurança, implementando `+__add__+` e `+__radd__+`, vamos enfrentar outro operador infixo: `*`.((("", startref="OOplus16")))((("", startref="Plusover16")))((("", startref="Voverload16")))
 
 [[overloading_mul]]
 === Sobrecarregando * para multiplicação escalar
 
-O((("operator overloading", "overloading &#x002A; for scalar multiplication", id="OOscalar16")))((("* (star) operator", id="starover16")))((("star (*) operator", id="staroverb16")))((("multiplication, scalar", id="Mscalar16"))) que significa `Vector([1, 2, 3]) * x`? Se `x` é um número, isso seria um produto escalar, e o resultado seria um novo `Vector` com cada componente multiplicado por `x`—também conhecida como multiplicação elemento a elemento (_elementwise multiplication_):
+O((("operator overloading", "overloading &#x002A; for scalar multiplication",
+id="OOscalar16")))((("* (star) operator", id="starover16")))((("star (*) operator",
+id="staroverb16")))((("multiplication, scalar", id="Mscalar16"))) que
+significa `Vector([1, 2, 3]) * x`? Se `x` é um número escalar, isto é um produto
+escalar, e o resultado deve ser um novo `Vector` com cada componente multiplicado
+por `x`—também conhecida como multiplicação elemento a elemento (_elementwise
+multiplication_):
 
 [source, python]
 ----
@@ -407,8 +587,13 @@ Vector([11.0, 22.0, 33.0])
 
 [NOTE]
 ====
-Outro tipo de produto envolvendo operandos de `Vector` seria o _dot product_ (produto vetorial) de dois vetores—ou multiplicação de matrizes, se tomarmos um vetor como uma matriz de 1 &#x00D7; N e o outro como uma matriz de N &#x00D7; 1.
-Vamos implementar esse operador em nossa classe `Vector` na <<matmul_operator_sec>>.
+
+Outro tipo de produto envolvendo operandos de `Vector` seria o _dot product_
+(produto vetorial) de dois vetores—ou multiplicação de matrizes, se tomarmos um
+vetor como uma matriz de 1 &#x00D7; N e o outro como uma matriz de N &#x00D7; 1.
+Vamos implementar este operador em nossa classe `Vector` na
+<<matmul_operator_sec>>.
+
 ====
 
 De volta a nosso produto escalar, começamos novamente com os métodos `+__mul__+` e `+__rmul__+` mais simples possíveis que possam funcionar:
@@ -420,14 +605,19 @@ De volta a nosso produto escalar, começamos novamente com os métodos `+__mul__
     def __mul__(self, scalar):
         return Vector(n * scalar for n in self)
 
-    def __rmul__(self, scalar):
+    __rmul__(self, scalar):
         return self * scalar
 ----
 
-Esses métodos funcionam, exceto quando recebem operandos incompatíveis. O argumento `scalar` precisa ser um número que, quando multiplicado por um `float`, produz outro `float` (porque nossa classe `Vector` usa, internamente, um `array` de números de ponto flutuante).
-Então um número `complex` não serve, mas o escalar pode ser um `int`, um `bool` (porque `bool` é subclasse  de `int`) ou mesmo uma instância de `fractions.Fraction`.
-No <<ex_vector_v7>>, o método `+__mul__+` não faz qualquer checagem de tipos explícita com `scalar`. Em vez disso, o converte em um `float`, e devolve `NotImplemented` se a conversão falha.
-Esse é um exemplo claro de _duck typing_.
+Esses métodos funcionam, exceto quando recebem operandos incompatíveis. O
+argumento `scalar` precisa ser um número que, quando multiplicado por um
+`float`, produz outro `float` (porque nossa classe `Vector` usa, internamente,
+um `array` de números de ponto flutuante). Então um número `complex` não serve,
+mas o escalar pode ser um `int`, um `bool` (porque `bool` é subclasse  de `int`)
+ou mesmo uma instância de `fractions.Fraction`. No <<ex_vector_v7>>, o método
+`+__mul__+` não faz qualquer checagem de tipos explícita com `scalar`. Em vez
+disso, o converte em um `float`, e devolve `NotImplemented` se a conversão
+falha. Esse é um exemplo claro de tipagem pato.
 
 [[ex_vector_v7]]
 .vector_v7.py: métodos do operador `*` adicionados
@@ -440,8 +630,8 @@ class Vector:
     def __init__(self, components):
         self._components = array(self.typecode, components)
 
-    # many methods omitted in book listing, see vector_v7.py
-    # in https://github.com/fluentpython/example-code-2e
+    # vários métodos omitidos no livro; código completo em
+    # https://github.com/fluentpython/example-code-2e
 
     def __mul__(self, scalar):
         try:
@@ -455,10 +645,15 @@ class Vector:
 ----
 ====
 <1> Se `scalar` não pode ser convertido para `float`...
-<2> ...não temos como lidar com ele, então devolvemos `NotImplemented`, para permitir ao Python tentar `+__rmul__+` no operando `scalar`.
-<3> Neste exemplo, `+__rmul__+` funciona bem apenas executando `self * scalar`, que delega a operação para o método `+__mul__+`.
 
-Com o <<ex_vector_v7>>, é possível multiplicar um `Vector` por valores escalares de tipos numéricos comuns e não tão comuns:
+<2> ...não temos como lidar com ele, então devolvemos `NotImplemented`, para
+permitir ao Python tentar `+__rmul__+` no operando `scalar`.
+
+<3> Neste exemplo, `+__rmul__+` funciona bem apenas executando `self * scalar`,
+que delega a operação para o método `+__mul__+`.
+
+Com o <<ex_vector_v7>>, é possível multiplicar um `Vector` por valores escalares
+de tipos numéricos comuns e não tão comuns:
 
 [source, python]
 ----
@@ -476,33 +671,58 @@ Agora que podemos multiplicar `Vector` por valores escalares, vamos ver como imp
 
 [NOTE]
 ====
-Na primeira edição de _Python Fluente_, usei _goose typing_ no <<ex_vector_v7>>: checava o argumento `scalar` de `+__mul__+` com `isinstance(scalar, numbers.Real)`.
-Agora eu evito usar as ABCs de `numbers`, por não serem suportadas pelas anotações de tipo introduzidas na PEP 484.
-Usar durante a execução tipos que não podem ser também checados de forma estática me parece uma má ideia.
 
-Outra alternativa seria checar com o protocolo `typing.SupportsFloat`, que vimos na <<runtime_checkable_proto_sec>>. Escolhi usar _duck typing_ naquele exemplo por achar que pythonistas fluentes devem se sentir confortáveis com esse padrão de programação.
+Na primeira edição de _Python Fluente_, usei tipagem ganso no <<ex_vector_v7>>:
+checava o argumento `scalar` de `+__mul__+` com `isinstance(scalar,
+numbers.Real)`. Agora evito usar as ABCs de `numbers`, por não serem
+suportadas pelas anotações de tipo introduzidas na PEP 484. Usar durante a
+execução tipos que não podem ser também checados de forma estática me parece uma
+má ideia.
 
-Mas `+__matmul__+`, no <<ex_vector_v7_matmul>>, que é novo e foi escrito para essa segunda edição, é um bom exemplo de _goose typing_.((("", startref="starover16")))((("", startref="staroverb16")))((("", startref="OOscalar16")))((("", startref="Mscalar16")))
+Outra alternativa seria checar com o protocolo `typing.SupportsFloat`, que vimos
+na <<runtime_checkable_proto_sec>>. Escolhi usar tipagem pato naquele exemplo
+por considerar que pythonistas fluentes devem se sentir confortáveis com esse
+padrão de programação.
+
+Mas `+__matmul__+`, no <<ex_vector_v7_matmul>>, que é novo e foi escrito para
+essa segunda edição, é um bom exemplo de tipagem ganso.((("",
+startref="starover16")))((("", startref="staroverb16")))((("",
+startref="OOscalar16")))((("", startref="Mscalar16")))
+
 ====
 
 [[matmul_operator_sec]]
 === Usando @ como operador infixo
 
-O símbolo `@`((("operator overloading", "using @ as infix operator", id="OOatsign16")))((("@ sign", id="atinfix16")))((("infix operators", id="infixop16"))) é bastante conhecido como o prefixo de decoradores de função,
-mas desde 2015 ele também pode ser usado como um operador infixo.
-Por anos, o produto escalar no NumPy foi escrito como `numpy.dot(a, b)`.
-A notação de invocação de função faz com que fórmulas mais longas sejam difíceis de traduzir da notação matemática para Python,footnote:[Veja o <<operator_soapbox>> para uma discussão desse problema.]
-então a comunidade de computação numérica fez campanha pela
-https://fpy.li/pep465[PEP 465—A dedicated infix operator for matrix multiplication (_Um operador infixo dedicado para multiplicação de matrizes_)] (EN), que foi implementada no Python 3.5.
-Hoje é possível escrever `a @ b` para computar o produto escalar de dois arrays da NumPy.
+O símbolo `@`((("operator overloading", "using @ as infix operator",
+id="OOatsign16")))((("@ sign", id="atinfix16")))((("infix operators",
+id="infixop16"))) é o prefixo de decoradores de função, mas desde 2015
+também pode ser usado como um operador infixo.
 
-O operador `@` é suportado pelos métodos especiais `+__matmul__+`, `+__rmatmul__+`
-e `+__imatmul__+`, cujos nomes derivam de "matrix multiplication" (_multiplicação de matrizes_).
-Até Python 3.10, esses métodos não são usados em lugar algum na biblioteca padrão,
-mas eles são reconhecidos pelo interpretador desde o Python 3.5,
-então os desenvolvedores da NumPy--e o resto de nós--podemos implementar o operador `@` em nossas classes.
-O analisador sintático de Python também foi modificado para aceitar o novo operador
-(no Python 3.4, `a @ b` era um erro de sintaxe).
+////
+"Os vetores podem ser multiplicados de três maneiras. "
+https://www.virtual.ufc.br/solar/aula_link/SOLAR_2/Curso_de_Graduacao_a_Distancia/LFIS/A_a_H/Fisica_I/aula_01/pdf/06.pdf
+
+////
+
+Por muitos anos, o produto no NumPy era escrito como `numpy.dot(a, b)`.
+A notação de invocação de função faz com que fórmulas mais longas sejam difíceis
+de traduzir da notação matemática para Python,footnote:[Veja o
+<<operator_soapbox>> para uma discussão deste problema.] então a comunidade de
+computação numérica fez campanha pela
+https://fpy.li/pep465[_PEP 465—A dedicated infix operator for matrix multiplication_]
+(Um operador infixo dedicado para multiplicação de matrizes_),
+que foi implementada no Python 3.5. Hoje podemos escrever `a @ b`
+para computar o produto de dois arrays da NumPy.
+
+O operador `@` é suportado pelos métodos especiais `+__matmul__+`,
+`+__rmatmul__+` e `+__imatmul__+`, cujos nomes derivam de "matrix
+multiplication" (_multiplicação de matrizes_). Até Python 3.10, esses métodos
+não são usados em lugar algum na biblioteca padrão, mas eles são reconhecidos
+pelo interpretador desde o Python 3.5, então os desenvolvedores da NumPy--e o
+resto de nós--podemos implementar o operador `@` em nossas classes. O analisador
+sintático de Python também foi modificado para aceitar o novo operador (no
+Python 3.4, `a @ b` era um erro de sintaxe).
 
 Os testes simples abaixo mostram como `@` deve funcionar com instâncias de `Vector`:
 
@@ -569,7 +789,7 @@ Esse novo comportamento estrito se alinha à filosofia de https://fpy.li/16-8[_f
 No <<ex_vector_v7_matmul>>, substituí o `if` interno por um `try/except ValueError` e acrescentei `strict=True` à invocação de `zip`.
 ====
 
-O <<ex_vector_v7_matmul>> é um bom exemplo prático de _goose typing_.
+O <<ex_vector_v7_matmul>> é um bom exemplo prático de tipagem ganso.
 Testar o operando `other` contra `Vector` negaria aos usuários a flexibilidade de usar listas ou arrays como operandos de `@`.
 Desde que um dos operandos seja um `Vector`, nossa implementação de `@` suporta outros operandos que sejam instâncias de `abc.Sized` e `abc.Iterable`.
 Ambas as ABCs implementam o `+__subclasshook__+`, portanto qualquer objeto que forneça `+__len__+` e `+__iter__+` satisfaz nosso teste—não há necessidade de criar subclasses concretas dessas ABCs ou sequer registrar-se com elas, como explicado na <<subclasshook_sec>>.
@@ -579,7 +799,7 @@ Vamos revisar os operadores aritméticos suportados pelo Python antes de mergulh
 
 === Resumindo os operadores aritméticos
 
-Ao implementar `+`, `*`, e `@`, vimos((("operator overloading", "infix operator method names"))) os padrões de programação mais comuns para operadores infixos.
+Ao implementar `{plus}`, `*`, e `@`, vimos((("operator overloading", "infix operator method names"))) os padrões de programação mais comuns para operadores infixos.
 As técnicas descritas são aplicáveis a todos os operadores listados na <<infix_operator_names_tbl>> (os operadores internos serão tratados em <<augmented_assign_ops>>).
 
 [[infix_operator_names_tbl]]
@@ -587,7 +807,7 @@ As técnicas descritas são aplicáveis a todos os operadores listados na <<infi
 [options="header"]
 |=================================================================================================
 | Operador  | Direto   | Reverso   | Interno  | Descrição
-| `+`       | `+__add__+`   | `+__radd__+`  | `+__iadd__+`  | Adição ou concatenação
+| `{plus}`       | `+__add__+`   | `+__radd__+`  | `+__iadd__+`  | Adição ou concatenação
 | `-`       | `+__sub__+`   | `+__rsub__+`  | `+__isub__+`  | Subtração
 | `*`       | `+__mul__+`   | `+__rmul__+`  | `+__imul__+`  | Multiplicação ou repetição
 | `/`       | `+__truediv__+`   | `+__rtruediv__+`  | `+__itruediv__+`  | Divisão exata (_True division_)
@@ -604,20 +824,20 @@ As técnicas descritas são aplicáveis a todos os operadores listados na <<infi
 |=================================================================================================
 
 
-Operadores de comparação cheia usam um conjunto diferente de regras.((("", startref="infixop16")))
+Operadores de comparação rica usam um conjunto diferente de regras.((("", startref="infixop16")))
 
 
 [[rich_comp_op_sec]]
-=== Operadores de comparação cheia
+=== Operadores de comparação rica
 
-O((("operator overloading", "rich comparison operators", id="OOrich16")))((("rich comparison operators", id="richcomp16")))((("comparison operators", id="comop16")))((("&#x3D;&#x3D; (equality) operator")))((("!&#x3D; (not equal to) operator")))((("&lt; (less than) operator")))((("&lt;&#x3D; (less than or equal to) operator")))((("&gt; (greater than) operator")))((("&gt;&#x3D; (greater than or equal to) operator")))((("equality (&#x3D;&#x3D;) operator")))((("greater than (&gt;) operator")))((("greater than or equal to (&gt;&#x3D;) operator")))((("less than (&lt;) operator")))((("less than or equal to (&lt;&#x3D;) operator")))((("not equal to (!&#x3D;) operator"))) tratamento dos operadores de comparação cheia `==`, `!=`, `>`, `<`, `>=` e `<=` pelo interpretador Python é similar ao que já vimos, com duas importantes diferenças:
+O((("operator overloading", "rich comparison operators", id="OOrich16")))((("rich comparison operators", id="richcomp16")))((("comparison operators", id="comop16")))((("&#x3D;&#x3D; (equality) operator")))((("!&#x3D; (not equal to) operator")))((("&lt; (less than) operator")))((("&lt;&#x3D; (less than or equal to) operator")))((("&gt; (greater than) operator")))((("&gt;&#x3D; (greater than or equal to) operator")))((("equality (&#x3D;&#x3D;) operator")))((("greater than (&gt;) operator")))((("greater than or equal to (&gt;&#x3D;) operator")))((("less than (&lt;) operator")))((("less than or equal to (&lt;&#x3D;) operator")))((("not equal to (!&#x3D;) operator"))) tratamento dos operadores de comparação rica `==`, `!=`, `>`, `<`, `>=` e `{lte}` pelo interpretador Python é similar ao que já vimos, com duas importantes diferenças:
 
 * O mesmo conjunto de métodos é usado para invocações diretas ou reversas do operador. As regras estão resumidas na <<reversed_rich_comp_op_tbl>>. Por exemplo, no caso de `==`, tanto a chamada direta quanto a reversa invocam `+__eq__+`, apenas permutando os argumentos; e uma chamada direta a
 `+__gt__+` é seguida de uma chamada reversa a `+__lt__+`, com os argumentos permutados.
 * Nos casos de `==` e `!=`, se o métodos reverso estiver ausente, ou devolver `NotImplemented`, Python vai comparar os IDs dos objetos em vez de gerar um `TypeError`.
 
 [[reversed_rich_comp_op_tbl]]
-.Operadores de comparação cheia: métodos reversos invocados quando a chamada inicial ao método devolve `NotImplemented`
+.Operadores de comparação rica: métodos reversos invocados quando a chamada inicial ao método devolve `NotImplemented`
 [options="header"]
 |=================================================================================================
 | Grupo    | Operador infixo | Método de invocação direta | Método de invocação reversa | Alternativa
@@ -626,7 +846,7 @@ O((("operator overloading", "rich comparison operators", id="OOrich16")))((("ric
 | Ordenação | `a > b`        | `+a.__gt__(b)+`       | `+b.__lt__(a)+`       | Gera um `TypeError`
 |          | `a < b`        | `+a.__lt__(b)+`       | `+b.__gt__(a)+`       | Gera um `TypeError`
 |          | `a >= b`       | `+a.__ge__(b)+`       | `+b.__le__(a)+`       | Gera um `TypeError`
-|          | `a <= b`       | `+a.__le__(b)+`       | `+b.__ge__(a)+`       | Gera um `TypeError`
+|          | `a {lte} b`       | `+a.__le__(b)+`       | `+b.__ge__(a)+`       | Gera um `TypeError`
 |=================================================================================================
 
 Dadas essas regras, vamos revisar e aperfeiçoar o comportamento do método `+Vector.__eq__+`, que foi escrito assim no __vector_v5.py__ (<<ex_vector_v5>>):
@@ -819,10 +1039,10 @@ Pode ser óbvio, mas vale a pena enfatizar.
 Para mostrar o código de um operador de atualização interno, vamos estender a classe `BingoCage` do <<ex_tombola_bingo>> para implementar
 `+__add__+` e `+__iadd__+`.
 
-Vamos chamar a subclasse de `AddableBingoCage`. O <<demo_addable_bingo_add>> mostra o comportamento esperado para o operador `+`.
+Vamos chamar a subclasse de `AddableBingoCage`. O <<demo_addable_bingo_add>> mostra o comportamento esperado para o operador `{plus}`.
 
 [[demo_addable_bingo_add]]
-.O operador `+` cria uma nova instância de `AddableBingoCage`
+.O operador `{plus}` cria uma nova instância de `AddableBingoCage`
 ====
 [source, python]
 ----
@@ -853,11 +1073,11 @@ include::../code/16-op-overloading/bingoaddable.py[tags=ADDABLE_BINGO_IADD_DEMO]
 <5> Durante todo esse exemplo, `globe` sempre se refere ao mesmo objeto que `globe_orig`.
 <6> Tentar adicionar um não-iterável a uma `AddableBingoCage` falha com uma mensagem de erro apropriada.
 
-Observe que o operador `++=+` é mais liberal que `+++` quanto ao segundo operando. Com `+++`, queremos que ambos os operandos sejam do mesmo tipo (nesse caso, `AddableBingoCage`), pois se aceitássemos tipos diferentes, isso poderia causar confusão quanto ao tipo do resultado. Com o `++=+`, a situação é mais clara: o objeto à esquerda do operador é atualizado internamente, então não há dúvida quanto ao tipo do resultado.
+Observe que o operador `++=+` é mais liberal que `{plus}` quanto ao segundo operando. Com `{plus}`, queremos que ambos os operandos sejam do mesmo tipo (nesse caso, `AddableBingoCage`), pois se aceitássemos tipos diferentes, isso poderia causar confusão quanto ao tipo do resultado. Com o `++=+`, a situação é mais clara: o objeto à esquerda do operador é atualizado internamente, então não há dúvida quanto ao tipo do resultado.
 
 [TIP]
 ====
-Eu validei os comportamentos diversos de `+` e `+=` observando como funciona o tipo embutido `list`. Ao escrever `my_list + x`, você só pode concatenar uma `list` a outra `list`, mas se você escrever `my_list += x`, você pode estender a lista da esquerda com itens de qualquer iterável `x` à direita do operador.
+Eu validei os comportamentos diversos de `{plus}` e `+=` observando como funciona o tipo embutido `list`. Ao escrever `my_list + x`, você só pode concatenar uma `list` a outra `list`, mas se você escrever `my_list += x`, você pode estender a lista da esquerda com itens de qualquer iterável `x` à direita do operador.
 É assim que o método `list.extend()` funciona: ele aceita qualquer argumento iterável.
 ====
 
@@ -865,7 +1085,7 @@ Agora que esclarecemos o comportamento desejado para `AddableBingoCage`, podemos
 Lembre-se que `BingoCage`, do <<ex_tombola_bingo>>, é uma subclasse concreta da ABC `Tombola` do <<ex_tombola_abc>>.
 
 [[ex_addable_bingo]]
-.bingoaddable.py: `AddableBingoCage` estende `BingoCage` para suportar `+` e `+=`
+.bingoaddable.py: `AddableBingoCage` estende `BingoCage` para suportar `{plus}` e `+=`
 ====
 [source, python]
 ----
@@ -900,19 +1120,19 @@ Isso conclui nossa exploração de sobrecarga de operadores no Python.((("", sta
 
 Começamos((("operator overloading", "overview of"))) o capítulo revisando algumas restrições impostas pelo Python à sobrecarga de operadores: é proibido redefinir operadores nos próprios tipos embutidos, a sobrecarga está limitada aos operadores existentes, e alguns operadores não podem ser sobrecarregados (`is`, `and`, `or`, `not`).
 
-Colocamos a mão na massa com os operadores unários, implementando `+__neg__+` e `+__pos__+`. A seguir vieram os operadores infixos, começando por `+`, suportado pelo método `+__add__+`. Vimos  que operadores unários e infixos devem produzir resultados criando novos objetos, sem nunca modificar seus operandos. Para suportar operações com outros tipos, devolvemos o valor especial `NotImplemented`—não uma exceção—permitindo ao interpretador tentar novamente permutando os operandos e chamando o método especial reverso para aquele operador (por exemplo, `+__radd__+`). O algoritmo usado pelo Python para tratar operadores infixos está resumido no fluxograma da <<operator_flowchart>>.
+Colocamos a mão na massa com os operadores unários, implementando `+__neg__+` e `+__pos__+`. A seguir vieram os operadores infixos, começando por `{plus}`, suportado pelo método `+__add__+`. Vimos  que operadores unários e infixos devem produzir resultados criando novos objetos, sem nunca modificar seus operandos. Para suportar operações com outros tipos, devolvemos o valor especial `NotImplemented`—não uma exceção—permitindo ao interpretador tentar novamente permutando os operandos e chamando o método especial reverso para aquele operador (por exemplo, `+__radd__+`). O algoritmo usado pelo Python para tratar operadores infixos está resumido no fluxograma da <<operator_flowchart>>.
 
-Misturar operandos de mais de um tipo exige detectar os operandos que não podemos tratar. Neste capitulo fizemos isso de duas maneiras: ao modo do _duck typing_, apenas fomos em frente e tentamos a operação, capturando uma exceção de `TypeError` se ela acontecesse; mais tarde, em `+__mul__+` e `+__matmul__+`, usamos um teste `isinstance` explícito. Há prós e contras nas duas abordagens: _duck typing_ é mais flexível, mas a checagem explícita de tipo é mais previsível.
+Misturar operandos de mais de um tipo exige detectar os operandos que não podemos tratar. Neste capitulo fizemos isso de duas maneiras: ao modo da tipagem pato, apenas fomos em frente e tentamos a operação, capturando uma exceção de `TypeError` se ela acontecesse; mais tarde, em `+__mul__+` e `+__matmul__+`, usamos um teste `isinstance` explícito. Há prós e contras nas duas abordagens: tipagem pato é mais flexível, mas a checagem explícita de tipo é mais previsível.
 
-De modo geral, bibliotecas deveriam tirar proveito do _duck typing_--abrindo a porta para objetos independente de seus tipos, desde que eles suportem as operações necessárias.
-Entretanto, o algoritmo de despacho de operadores de Python pode produzir mensagens de erro enganosas ou resultados inesperados quando combinado com o _duck typing_.
+De modo geral, bibliotecas deveriam tirar proveito da tipagem pato--abrindo a porta para objetos independente de seus tipos, desde que eles suportem as operações necessárias.
+Entretanto, o algoritmo de despacho de operadores de Python pode produzir mensagens de erro enganosas ou resultados inesperados quando combinado com a tipagem pato.
 Por essa razão, a disciplina da checagem de tipos com invocações de `isinstance` contra ABCs é muitas vezes útil quando escrevemos métodos especiais para sobrecarga de operadores.
-Essa é a técnica batizada de _goose typing_ por Alex Martelli—como vimos na <<goose_typing_sec>>.
-A _goose typing_ é um bom compromisso entre a flexibilidade e a segurança, porque os tipos definidos pelo usuário, existentes ou futuros, podem ser declarados como subclasses reais ou virtuais de uma ABC.
+Essa é a técnica batizada de tipagem ganso por Alex Martelli—como vimos na <<goose_typing_sec>>.
+A tipagem ganso é um bom compromisso entre a flexibilidade e a segurança, porque os tipos definidos pelo usuário, existentes ou futuros, podem ser declarados como subclasses reais ou virtuais de uma ABC.
 Além disso, se uma ABC implementa o `+__subclasshook__+`, objetos podem então passar por checagens com `isinstance` contra aquela ABC apenas fornecendo os métodos exigidos--sem necessidade de ser uma subclasse ou de se registrar com a ABC.
 
-O próximo tópico tratado foram os operadores de comparação cheia. Implementamos `==` com
-`+__eq__+` e descobrimos que Python oferece uma implementação conveniente de `!=` no `+__ne__+` herdado da classe base `object`. A forma como Python avalia esses operadores, bem como `>`, `<`, `>=`, e `<=`, é um pouco diferente, com uma lógica especial para a escolha do método reverso, e um tratamento alternativo para `==` e `!=` que nunca gera erros, pois Python compara os IDs dos objetos como último recurso.
+O próximo tópico tratado foram os operadores de comparação rica. Implementamos `==` com
+`+__eq__+` e descobrimos que Python oferece uma implementação conveniente de `!=` no `+__ne__+` herdado da classe base `object`. A forma como Python avalia esses operadores, bem como `>`, `<`, `>=`, e `{lte}`, é um pouco diferente, com uma lógica especial para a escolha do método reverso, e um tratamento alternativo para `==` e `!=` que nunca gera erros, pois Python compara os IDs dos objetos como último recurso.
 
 Na última seção, nos concentramos nos operadores de atribuição aumentada.
 Vimos que Python os trata, por default, como uma combinação do operador simples seguido de uma atribuição, isto é:
@@ -925,18 +1145,18 @@ trabalhamos na implementação de uma subclasse de `BingoCage`,
 suportando `+=` para adicionar itens ao reservatório de itens para sorteio,
 de modo similar à forma como o tipo embutido `list` suporta
 `+=` como um atalho para o método `list.extend()`.
-Enquanto fazíamos isso, discutimos como `+` tende a ser mais estrito que `+=` em relação aos tipos aceitos.
-Para tipos de sequências, `+` normalmente exige que ambos os operandos sejam do mesmo tipo,
+Enquanto fazíamos isso, discutimos como `{plus}` tende a ser mais estrito que `+=` em relação aos tipos aceitos.
+Para tipos de sequências, `{plus}` normalmente exige que ambos os operandos sejam do mesmo tipo,
 enquanto `+=` muitas vezes aceita qualquer iterável como o operando à direita do operador.
 
 [[further_reading_op_sec]]
 === Para saber mais
 
-Guido van Rossum((("operator overloading", "further reading on"))) escreveu uma boa apologia da sobrecarga de operadores em https://fpy.li/16-10["Why operators are useful" (_Porque operadores são úteis_)] (EN).
-Trey Hunner postou https://fpy.li/16-11["Tuple ordering and deep comparisons in Python" (_Ordenação de tuplas e comparações profundas em Python_)] (EN), argumentando que os operadores de comparação cheia de Python são mais flexíveis e poderosos do que os programadores vindos de outras linguagens costumam pensar.
+Guido van Rossum((("operator overloading", "further reading on"))) escreveu uma boa apologia da sobrecarga de operadores em https://fpy.li/16-10["Why operators are useful" (_Porque operadores são úteis_)].
+Trey Hunner postou https://fpy.li/16-11["Tuple ordering and deep comparisons in Python" (_Ordenação de tuplas e comparações profundas em Python_)], argumentando que os operadores de comparação rica de Python são mais flexíveis e poderosos do que os programadores vindos de outras linguagens costumam pensar.
 
 A sobrecarga de operadores é uma área da programação em Python onde testes com `isinstance` são comuns.
-A melhor prática relacionada a tais testes é a _goose typing_, tratada na <<goose_typing_sec>>.
+A melhor prática relacionada a tais testes é a tipagem ganso, tratada na <<goose_typing_sec>>.
 Se você pulou essa parte, se assegure de voltar lá e ler aquela seção.
 
 A principal referência para os métodos especiais de operadores é o https://fpy.li/2j[capítulo "Modelos de Dados"] na documentação de Python. Outra leitura relevante é https://docs.python.org/pt-br/3/library/numbers.html#implementing-the-arithmetic-operations["Implementando as operações aritméticas"] no módulo `numbers` da _Biblioteca Padrão de Python_.
@@ -953,15 +1173,15 @@ PosixPath('/etc/init.d/reboot')
 ----
 
 Outro exemplo não aritmético de sobrecarga de operadores está na biblioteca https://fpy.li/16-14[Scapy], usada para "enviar, farejar, dissecar e forjar pacotes de rede".
-Na Scapy, o operador `/` operator cria pacotes empilhando campos de diferentes camadas da rede. Veja https://fpy.li/16-15["Stacking layers" (_Empilhando camadas)] (EN) para mais detalhes.
+Na Scapy, o operador `/` operator cria pacotes empilhando campos de diferentes camadas da rede. Veja https://fpy.li/16-15["Stacking layers" (_Empilhando camadas)] para mais detalhes.
 
 Se você está prestes a implementar operadores de comparação, estude `functools.total_ordering`.
-Esse é um decorador de classes que gera automaticamente os métodos para todos os operadores de comparação cheia em qualquer classe que defina ao menos alguns deles.
-Veja a https://fpy.li/7q[documentação do módulo functools] (EN).
+Esse é um decorador de classes que gera automaticamente os métodos para todos os operadores de comparação rica em qualquer classe que defina ao menos alguns deles.
+Veja a https://fpy.li/7q[documentação do módulo functools].
 
-Se você tiver curiosidade sobre o despacho de métodos de operadores em linguagens com tipagem dinâmica, duas leituras fundamentais são https://fpy.li/16-17["A Simple Technique for Handling Multiple Polymorphism" (_Uma Técnica Simples para Tratar Polimorfismo Múltiplo_)] (EN), de Dan Ingalls (membro da equipe original de Smalltalk), e https://fpy.li/16-18["Arithmetic and Double Dispatching in Smalltalk-80" (_Aritmética e Despacho Duplo  em Smalltalk-80_)] (EN), de Kurt J. Hebel e Ralph Johnson (Johnson ficou famoso como um dos autores do livro _Padrões de Projetos_ original). Os dois artigos fornecem discussões profundas sobre o poder do polimorfismo em linguagens com tipagem dinâmica, como Smalltalk, Python e Ruby. Python não tem despacho duplo para tratar operadores, como descrito naqueles artigos. O algoritmo de Python, usando operadores diretos e reversos, é mais fácil de suportar por classes definidas pelo usuário que o despacho duplo, mas exige tratamento especial pelo interpretador. Por outro lado, o despacho duplo clássico é uma técnica geral, que pode ser usada no Python ou em qualquer linguagem orientada a objetos, para além do contexto específico de operadores infixos. E, de fato, Ingalls, Hebel e Johnson usam exemplos muito diferentes para descrever essa técnica.
+Se você tiver curiosidade sobre o despacho de métodos de operadores em linguagens com tipagem dinâmica, duas leituras fundamentais são https://fpy.li/16-17["A Simple Technique for Handling Multiple Polymorphism" (_Uma Técnica Simples para Tratar Polimorfismo Múltiplo_)], de Dan Ingalls (membro da equipe original de Smalltalk), e https://fpy.li/16-18["Arithmetic and Double Dispatching in Smalltalk-80" (_Aritmética e Despacho Duplo  em Smalltalk-80_)], de Kurt J. Hebel e Ralph Johnson (Johnson ficou famoso como um dos autores do livro _Padrões de Projetos_ original). Os dois artigos fornecem discussões profundas sobre o poder do polimorfismo em linguagens com tipagem dinâmica, como Smalltalk, Python e Ruby. Python não tem despacho duplo para tratar operadores, como descrito naqueles artigos. O algoritmo de Python, usando operadores diretos e reversos, é mais fácil de suportar por classes definidas pelo usuário que o despacho duplo, mas exige tratamento especial pelo interpretador. Por outro lado, o despacho duplo clássico é uma técnica geral, que pode ser usada no Python ou em qualquer linguagem orientada a objetos, para além do contexto específico de operadores infixos. E, de fato, Ingalls, Hebel e Johnson usam exemplos muito diferentes para descrever essa técnica.
 
-O artigo https://fpy.li/16-1["The C Family of Languages: Interview with Dennis Ritchie, Bjarne Stroustrup, and James Gosling"(_A Família de Linguagens C: Entrevista com Dennis Ritchie, Bjarne Stroustrup, e James Gosling_)] (EN), da onde tirei a epígrafe desse capítulo, apareceu na _Java Report_, 5(7), julho de 2000, e na _{cpp} Report_, 12(7), julho/agosto de 2000, juntamente com outros trechos que usei no "Ponto de Vista" deste capítulo (abaixo).
+O artigo https://fpy.li/16-1["The C Family of Languages: Interview with Dennis Ritchie, Bjarne Stroustrup, and James Gosling"(_A Família de Linguagens C: Entrevista com Dennis Ritchie, Bjarne Stroustrup, e James Gosling_)], de onde tirei a epígrafe desse capítulo, apareceu na _Java Report_, 5(7), julho de 2000, e na _{cpp} Report_, 12(7), julho/agosto de 2000, juntamente com outros trechos que usei no "Ponto de Vista" deste capítulo (abaixo).
 Se você se interessa pelo projeto de linguagens de programação, faça um favor a si mesmo e leia aquela entrevista.
 
 [[operator_soapbox]]
@@ -978,7 +1198,7 @@ ____
 Provavelmente uns 20 a 30 porcento da população acha que sobrecarga de operadores é uma criação demoníaca; alguém fez algo com sobrecarga de operadores que realmente os tirou do sério, porque eles usaram algo como + para inserção em listas, e isso torna a vida muito, muito confusa. Muito daquele problema vem do fato de existirem apenas uma meia dúzia de operadores que podem ser sobrecarregados de forma razoável, mas existem milhares ou milhões de operadores que as pessoas gostariam de definir—então é preciso escolher, e muitas vezes as escolhas entram em conflito com a sua intuição.
 ____
 
-Guido van Rossum escolheu o caminho do meio no suporte à sobrecarga de operadores: ele não deixou a porta aberta para que os usuários criassem novos operadores arbitrários como `<=>` ou `:-)`, evitando uma Torre de Babel de operadores customizados, e permitindo ao analisador sintático de Python permanecer simples. Python também não permite a sobrecarga dos operadores de tipos embutidos, outra limitação que promove a legibilidade e o desempenho previsível.
+Guido van Rossum escolheu o caminho do meio no suporte à sobrecarga de operadores: ele não deixou a porta aberta para que os usuários criassem novos operadores arbitrários como `{lte}&#62;` ou `:-)`, evitando uma Torre de Babel de operadores customizados, e permitindo ao analisador sintático de Python permanecer simples. Python também não permite a sobrecarga dos operadores de tipos embutidos, outra limitação que promove a legibilidade e o desempenho previsível.
 
 Gosling continua:
 
