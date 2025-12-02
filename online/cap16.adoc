@@ -5,27 +5,35 @@
 
 [quote, James Gosling, Criador de Java]
 ____
-Algumas coisas me deixam meio dividido, como a sobrecarga de operadores. Deixei a sobrecarga de operadores de fora em uma decisão bastante pessoal, pois tinha visto gente demais abusar [deste recurso] no {cpp}.footnote:[Fonte: https://fpy.li/16-1[_The C Family of Languages: Interview with Dennis Ritchie, Bjarne Stroustrup, and James Gosling_] (A Família de Linguagens C: entrevista com Dennis Ritchie, Bjarne Stroustrup, e James Gosling).]
+
+Certas coisas me deixam meio dividido, como a sobrecarga de operadores. Deixei
+a sobrecarga de operadores de fora em uma decisão bastante pessoal, pois tinha
+visto gente demais abusar [deste recurso] no {cpp}.footnote:[Fonte:
+https://fpy.li/16-1[_The C Family of Languages: Interview with Dennis Ritchie,
+Bjarne Stroustrup, and James Gosling_] (A Família de Linguagens C: entrevista
+com Dennis Ritchie, Bjarne Stroustrup, e James Gosling).]
+
 ____
 
-Em((("operator overloading", "infix operators")))((("infix operators"))) Python, podemos calcular juros compostos usando uma fórmula escrita assim:
+Em((("operator overloading", "infix operators")))((("infix operators"))) Python,
+podemos calcular juros compostos usando uma fórmula escrita assim:
 
 [source, python]
 ----
 interest = principal * ((1 + rate) ** periods - 1)
 ----
 
-Operadores que aparecem entre operandos, como em `1 + rate`, são _operadores infixos_.
-No Python, operadores infixos podem lidar com qualquer tipo arbitrário.
-Assim, se você está trabalhando com dinheiro real, pode se assegurar que
-`principal`, `rate`, e `periods` sejam números exatos—instâncias da classe
-`decimal.Decimal` de Python—e a fórmula vai funcionar como está escrita,
-produzindo um resultado exato.
+Operadores que aparecem entre operandos, como `{plus}` em `1 + rate`, são
+_operadores infixos_. No Python, operadores infixos podem lidar com qualquer
+tipo arbitrário. Assim, se você está trabalhando com dinheiro de verdade, pode
+armazenar `principal`, `rate`, e `periods` como números exatos—instâncias da
+classe `decimal.Decimal` de Python. A mesma fórmula vai funcionar como escrita,
+calculando um resultado exato.
 
 Mas em Java, se você mudar de `float` para `BigDecimal`, para obter resultados
 exatos, não é mais possível usar operadores infixos, porque naquela linguagem
-eles só funcionam com tipos primitivos.
-Abaixo, a mesma fórmula escrita em Java para funcionar com números `BigDecimal`:
+eles só funcionam com tipos primitivos como `float` ou `long`.
+Veja a mesma fórmula escrita em Java para funcionar com números `BigDecimal`:
 
 [source, java]
 ----
@@ -53,15 +61,15 @@ falaremos também de:
 
 * Como um método de operador infixo deveria indicar que não consegue tratar um operando
 * O uso de tipagem pato ou tipagem ganso para lidar com operandos de vários tipos
-* O comportamento especial dos operadores de comparação rica, como, `==`, `>`, `{lte}`, etc.)
-* O tratamento default de operadores de atribuição aumentada tal como `{iadd}`, e como sobrecarregá-los
+* O comportamento especial dos operadores de comparação rica, como `==`, `>`, `{lte}`, etc.)
+* O tratamento padrão de operadores de atribuição aumentada, como `{iadd}`, e como sobrecarregá-los
 
 
 === Novidades neste capítulo
 
 A tipagem ganso((("operator overloading", "significant changes to"))) é uma
 parte fundamental de Python, mas as ABCs `numbers` não são suportadas na tipagem
-estática. Então modifiquei o <<ex_vector_v7>> para usar tipagem pato, em vez de
+estática. Então, mudei o <<ex_vector_v7>> para usar tipagem pato, em vez de
 uma checagem explícita usando `isinstance` contra `numbers.Real`.footnote:[O
 restante das ABCs na biblioteca padrão de Python ainda são valiosas para o
 tipagem ganso e a tipagem estática. O problema com as ABCs `numbers` é explicado
@@ -116,7 +124,7 @@ Vamos começar pelo tópico mais fácil: operadores unários.
 Na((("operator overloading", "unary operators",
 id="OOunary16")))((("unary operators", id="unary16")))
 Referência da Linguagem Python, a seção
-https://fpy.li/7n[Operações aritméticas unárias e bit a bit)],
+https://fpy.li/7n[Operações aritméticas unárias e bit a bit],
 cita três operadores unários, listados abaixo com os seus métodos especiais:
 
 `-` implementado por `+__neg__+`::
@@ -165,7 +173,7 @@ Como prometido acima, vamos implementar vários novos operadores na classe
 e os novos métodos `+__neg__+` e `+__pos__+` para operadores unários.
 
 [[ex_vector_v6_unary]]
-.vector_v6.py: unary operators - and + added to <<ex_vector_v5>>
+.vector_v6.py: operadores unários `-` e `{plus}` implementados.
 ====
 [source, python]
 ----
@@ -176,7 +184,7 @@ include::../code/16-op-overloading/vector_v6.py[tags=VECTOR_V6_UNARY]
 <2> Para computar `+v`, cria um novo `Vector` com cada componente de `self`.
 
 Lembre-se que instâncias de `Vector` são iteráveis, e o `+Vector.__init__+`
-recebe um argumento iterável, por isto implementações de `+__neg__+` e
+recebe um argumento iterável, por isso implementações de `+__neg__+` e
 `+__pos__+` são tão simples.
 
 Não vamos implementar `+__invert__+`. Se um usuário tentar escrever `~v` para
@@ -192,8 +200,13 @@ ganhar uma aposta sobre o `{plus}` unário.
 .Quando x e +x não são iguais
 ****
 
-Todo mumdo espera que `x == +x`, e isso é verdade no Python quase todo o tempo,
+Todo mundo espera que `x == +x`, e isso é verdade no Python quase todo o tempo,
 mas encontrei dois casos na biblioteca padrão onde `x != +x`.
+
+////
+parei em 2025-12-02
+////
+
 
 O((("decimal.Decimal class"))) primeiro caso envolve a classe `decimal.Decimal`.
 Você pode obter `x != +x` se `x` é uma instância de `Decimal`, criada em um dado
