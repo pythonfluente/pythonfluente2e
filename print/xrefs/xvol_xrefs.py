@@ -47,7 +47,7 @@ INVALID_MSG = 'asciidoctor: INFO: possible invalid reference: '
 
 
 def list_invalid_xrefs() -> list[str]:
-    adoc = find_git_root() / 'vol1/vol1.adoc'
+    adoc = find_git_root() / 'vol2/vol2-cor.adoc'
     cmd = f'''asciidoctor -v {adoc} -o lixo'''
     result = subprocess.run(cmd, shell=True, stderr=subprocess.PIPE, text=True)
     seen = set()
@@ -161,10 +161,14 @@ def replace_xrefs_to_vols():
             chapter = numbers[0]
             volume = (chapter - 1) // 8 + 1
             text = f'Seção {number_str}'
+        elif xref.startswith('ex_'):
+            
         else:
             raise ValueError(f'unexpected xref: {xref!r}')
         link = BASE_URL + '#' + xref
-        print(f'<<{xref}>>', f'{text} &#91;vol.{volume}, fpy.li{SHORT_URLS[link]}&#93;')
+        #print(f'<<{xref}>>', f'{text} &#91;vol.{volume}, fpy.li{SHORT_URLS[link]}&#93;')
+        # https://fpy.li/24[«Capítulo 24»] (vol.3)
+        print(f'<<{xref}>>', f'{link}[«{text}»] (vol.{volume})')
 
 
 if __name__ == '__main__':
