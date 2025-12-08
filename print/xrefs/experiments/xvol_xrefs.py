@@ -146,6 +146,7 @@ def replace_xrefs_to_vols():
     with open(html_path) as fp:
         html = fp.read()
     root = BeautifulSoup(html, 'html.parser')
+    replacements = []
     for xref in list_invalid_xrefs():
         if xref.startswith('ch_'):
             chapter = CHAPTER_NUMBER[xref]
@@ -161,14 +162,16 @@ def replace_xrefs_to_vols():
             chapter = numbers[0]
             volume = (chapter - 1) // 8 + 1
             text = f'Seção {number_str}'
-        elif xref.startswith('ex_'):
             
-        else:
-            raise ValueError(f'unexpected xref: {xref!r}')
+        #else:
+        #    raise ValueError(f'unexpected xref: {xref!r}')
         link = BASE_URL + '#' + xref
         #print(f'<<{xref}>>', f'{text} &#91;vol.{volume}, fpy.li{SHORT_URLS[link]}&#93;')
         # https://fpy.li/24[«Capítulo 24»] (vol.3)
-        print(f'<<{xref}>>', f'{link}[«{text}»] (vol.{volume})')
+        repl = f'<<{xref}>>\t {link}[«{text}»] (vol.{volume})'
+        print(repl)
+        replacements.append(repl)
+    return replacements
 
 
 if __name__ == '__main__':
