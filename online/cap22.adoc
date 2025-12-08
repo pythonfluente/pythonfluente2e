@@ -124,7 +124,7 @@ o método `keys` é um atributo do `dict` `__data`.
 
 Uma instância de  `FrozenJSON` contém um atributo de instância privado `+__data+`, armazenado sob o nome `++_FrozenJSON__data++`, como explicado na <<private_protected_sec>>.
 Tentativas de recuperar atributos por outros nomes vão disparar `+__getattr__+`.
-Esse método irá primeiro olhar se o `dict` `+self.__data+`  contém um atributo (não uma chave!) com aquele nome; isso permite que instâncias de `FrozenJSON` tratem métodos de `dict` tal como `items`, delegando para `+self.__data.items()+`. Se `+self.__data+` não contiver uma atributo como o `name` dado, `+__getattr__+` usa `name` como chave para recuperar um item de `+self.__data+`, e passa aquele item para `FrozenJSON.build`. Isso permite navegar por estruturas aninhadas nos dados JSON, já que cada mapeamento aninhado é convertido para outra instância de `FrozenJSON` pelo método de classe `build`.
+Primeiro, esse método verá se o `dict` `+self.__data+`  contém um atributo (não uma chave!) com aquele nome; isso permite que instâncias de `FrozenJSON` tratem métodos de `dict` tal como `items`, delegando para `+self.__data.items()+`. Se `+self.__data+` não contiver uma atributo como o `name` dado, `+__getattr__+` usa `name` como chave para recuperar um item de `+self.__data+`, e passa aquele item para `FrozenJSON.build`. Isso permite navegar por estruturas aninhadas nos dados JSON, já que cada mapeamento aninhado é convertido para outra instância de `FrozenJSON` pelo método de classe `build`.
 
 Observe que `FrozenJSON` não transforma ou armazena o conjunto de dados original.
 Conforme navegamos pelos dados, `+__getattr__+` cria continuamente instâncias de `FrozenJSON`.
@@ -470,16 +470,23 @@ include::../code/22-dyn-attr-prop/oscon/schedule_v3.py[tags=SCHEDULE3_SPEAKERS]
 do `+__dict__+` da instância, para evitar uma chamada recursiva à propriedade `speakers`.
 <2> Devolve uma lista de todos os registros com chaves correspondendo aos números em `spkr_serials`.
 
-Dentro do método `speakers`, tentar ler `self.speakers` irá invocar a própria propriedade, gerando rapidamente um `RecursionError`.
-Entretanto, se lemos os mesmos dados via `+self.__dict__['speakers']+`, o algoritmo normal de Python para busca e recuperação de atributos é ignorado, a propriedade não é chamada e a recursão é evitada.
-Por essa razão, ler ou escrever dados diretamente no `+__dict__+` de um objeto é um truque comum em metaprogramação no Python.
+Dentro do método `speakers`, uma tentativa de ler `self.speakers` invocará a
+mesma propriedade, gerando rapidamente um `RecursionError`. Entretanto,
+acessando via `+self.__dict__['speakers']+`, evitamos o algoritmo de Python para
+busca de atributos, a propriedade não é chamada e evitamos a recursão. Por esta
+razão, ler ou escrever dados diretamente no `+__dict__+` de um objeto é um
+truque comum em metaprogramação no Python.
 
 [WARNING]
 ====
-O interpretador avalia `+obj.my_attr+` olhando primeiro a classe de `obj`.
-Se a classe possuir uma propriedade de nome `my_attr`, aquela propriedade oculta um atributo de instância com o mesmo nome.
-Isso será demonstrado por exemplos na <<prop_override_instance>>,
-e o <<ch_descriptors>> vai revelar que uma propriedade é implementada como um descritor—uma abstração mais geral e poderosa.
+
+O interpretador avalia `+obj.my_attr+` olhando primeiro a classe de `obj`. Se a
+classe tiver uma propriedade de nome `my_attr`, aquela propriedade oculta um
+atributo de instância com o mesmo nome. Isso será demonstrado por exemplos na
+<<prop_override_instance>>, e o <<ch_descriptors>> vai revelar que uma
+propriedade é implementada como um descritor—uma abstração mais geral e
+poderosa.
+
 ====
 
 Quando programava a compreensão de lista no <<ex_schedule_v3_speakers>>, meu cérebro réptil de programador pensou: "Isso talvez seja custoso". Na verdade não é, porque os eventos no conjuntos de dados da OSCON contêm poucos palestrantes, então programar algo mais complexo seria uma otimização prematura.
