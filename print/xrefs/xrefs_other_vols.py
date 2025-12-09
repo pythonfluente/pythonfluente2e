@@ -120,4 +120,4 @@ if __name__ == '__main__':
     for xref in label_targets(xrefs):
         #print(xref)
         short = long_short['https://pythonfluente.com/2/#' + xref.ident]
-        print(f'<<{xref.ident}>>\thttps://fpy.li/{short}[«{xref.lbl}»] (vol.{xref.vol})')
+        print(f'<<{xref.ident}>>\thttps://fpy.li{short}[«{xref.lbl}»] (vol.{xref.vol})')
