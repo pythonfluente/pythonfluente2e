@@ -14,5 +14,6 @@ e as tarefas são feitas nesta cópia para impressão.
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/online`|revisar ortografia e gramática|
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol2`| refazer referências entre volumes|
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol2`| encurtar links entre volumes |
+|   |   |   |   |   |   |   |   |`/vol2`| exibir capítulo alvo em xrefs para exemplos de outros capítulos |
 |   |   |   |   |   |   |   |   |`/vol2`| rever paginação   |
 
