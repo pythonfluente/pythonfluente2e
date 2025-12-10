@@ -33,7 +33,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional, Callable, NamedTuple
 
-
 class Customer(NamedTuple):
     name: str
     fidelity: int
@@ -46,6 +45,7 @@ class LineItem(NamedTuple):
 
     def total(self):
         return self.price * self.quantity
+    
 
 @dataclass(frozen=True)
 class Order:  # the Context
@@ -67,9 +67,7 @@ class Order:  # the Context
     def __repr__(self):
         return f'<Order total: {self.total():.2f} due: {self.due():.2f}>'
 
-
 # <3>
-
 
 def fidelity_promo(order: Order) -> Decimal:  # <4>
     """5% discount for customers with 1000 or more fidelity points"""
@@ -86,13 +84,10 @@ def bulk_item_promo(order: Order) -> Decimal:
             discount += item.total() * Decimal('0.1')
     return discount
 
-
 def large_order_promo(order: Order) -> Decimal:
     """7% discount for orders with 10 or more distinct items"""
     distinct_items = {item.product for item in order.cart}
     if len(distinct_items) >= 10:
         return order.total() * Decimal('0.07')
     return Decimal(0)
-
-
 # end::STRATEGY[]

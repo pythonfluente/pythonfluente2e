@@ -117,7 +117,7 @@ Considere uma loja online com as seguintes regras para descontos:
 
 * Clientes com 1.000 ou mais pontos de fidelidade recebem um desconto global de 5% por pedido.
 * Um desconto de 10% é aplicado a cada item com 20 ou mais unidades no mesmo pedido.
-* Pedidos com pelo menos 10 itens diferentes recebem um desconto global de 7%.
+* Pedidos com 10 ou mais itens diferentes têm um desconto global de 7%.
 
 Para simplificar, vamos assumir que apenas um desconto pode ser aplicado a cada pedido.
 
@@ -161,7 +161,7 @@ verificar a operação de um módulo implementando as regras descritas
 anteriormente.
 
 [[ex_classic_strategy_tests]]
-.Amostra de uso da classe `Order` com a aplicação de diferentes promoções
+.Usos da classe `Order` com a aplicação de diferentes promoções
 ====
 [source, python]
 ----
@@ -188,11 +188,11 @@ startref="RSclassic10")))
 Cada((("refactoring strategies", "function-oriented",
 id="RSfunction10")))((("function-oriented refactoring strategy",
 id="funcorient01"))) estratégia concreta no <<ex_classic_strategy>> é uma classe
-com um único método, `discount`. Além disso, as instâncias de estratégia não tem
-nenhum estado (nenhum atributo de instância). Você poderia dizer que elas se
+com um método: `discount`. Além disso, as instâncias de estratégia não tem
+estado (nenhum atributo de instância). Você poderia dizer que elas se
 parecem muito com funções simples, e estaria certa. O <<ex_strategy>> é uma
-refatoração do <<ex_classic_strategy>>, substituindo as estratégias concretas
-por funções simples e removendo a classe abstrata `Promo`. São necessários
+refatoração do <<ex_classic_strategy>>, trocando as estratégias concretas
+por funções simples e removendo a ABC `Promo`. São necessários
 apenas alguns pequenos ajustes na classe `Order`.footnote:[Precisei
 reimplementar `Order` com `@dataclass` devido a um bug no Mypy. Você pode
 ignorar esse detalhe, pois essa classe funciona também com `NamedTuple`,
@@ -210,7 +210,7 @@ linha de comando `--enable-recursive-aliases` do Mypy evita os erros
 relatados).]
 
 [[ex_strategy]]
-.A classe `Order` com as estratégias de descontos implementadas como funções
+.A classe `Order` com as estratégias implementadas como funções
 ====
 [source, python]
 ----
@@ -225,7 +225,7 @@ passando `self` como argumento. Veja a razão disso logo abaixo.
 <3> Nenhuma classe abstrata.
 <4> Cada estratégia é uma função.
 
-.Por que self.promotion(self)?
+.Por que `self.promotion(self)`?
 [TIP]
 ====
 Na classe `Order`, `promotion` não é um método. É um atributo de instância que
@@ -256,9 +256,8 @@ include::../code/10-dp-1class-func/strategy.py[tags=STRATEGY_TESTS]
 <3> Uma função de promoção diferente é usada aqui e no teste seguinte.
 
 
-Observe os textos explicativos do <<ex_strategy_tests>>: não há necessidade
-de instanciar um novo objeto `promotion` com cada novo pedido:
-as funções já estão prontas para usar.
+Note que não precisamos criar uma nova instância de `promotion` a
+cada novo pedido: as funções já estão prontas para usar.
 
 É interessante notar que no _Padrões de Projetos_, os autores sugerem que:
 "Objetos Estratégia muitas vezes são bons "peso mosca"
@@ -316,7 +315,7 @@ include::../code/10-dp-1class-func/strategy_best.py[tags=STRATEGY_BEST_TESTS]
 A implementação de `best_promo` é simples. Veja o <<ex_strategy_best>>.
 
 [[ex_strategy_best]]
-.`best_promo` encontra o desconto máximo iterando sobre uma lista de funções
+.`best_promo` encontra o desconto máximo em uma lista de funções
 ====
 [source, python]
 ----
@@ -418,7 +417,7 @@ startref="FDPrefactor10")))((("", startref="RSfind10")))
 
 
 [[decorated_strategy_sec]]
-=== Estratégia melhorado com decorador
+=== Estratégia com decorador de registro
 
 Lembre-se((("functions, design patterns with first-class", "decorator-enhanced
 strategy pattern", id="FDPdecorator10")))((("refactoring strategies",
@@ -493,10 +492,10 @@ método em cada comando armazenado.
 Citando _Padrões de Projetos_, "Comandos são um substituto orientado a objetos
 para _callbacks_." A pergunta é: precisamos de um substituto orientado a objetos
 para _callbacks_? Algumas vezes sim, mas nem sempre.
-
 Em vez de dar ao solicitante uma instância de `Command`, podemos dar
 a ele uma função. Em vez de invocar `command.execute()`, o solicitante pode
-apenas invoca `command()`. O `MacroCommand` pode ser programado como uma classe que
+invoca `command()` diretamente. +
+O `MacroCommand` pode ser uma classe que
 implementa `+__call__+`. Instâncias de `MacroCommand` seriam invocáveis, cada
 uma contendo uma lista de comandos para invocação futura, como implementado no
 <<ex_macro_command>>.
@@ -589,21 +588,18 @@ Sobre o tópico mais geral de padrões de projetos, a oferta de leituras para o
 programador Python não é tão numerosa quando aquela disponível para as
 comunidades de outras linguagens.
 
-_Learning Python Design Patterns_, de Gennadiy Zlobin (Packt),
-é o único livro inteiramente dedicado a
-padrões em Python que encontrei. Mas o trabalho de Zlobin é muito breve (100
-páginas) e trata de apenas 8 dos 23 padrões de projeto originais.
-
 _Expert Python Programming_, de Tarek Ziadé (Packt), é um dos melhores livros
-sobre Python em nível intermediário, e seu capítulo final,
-_Useful Design Patterns_ (Padrões de Projetos Úteis),
-apresenta vários padrões clássicos com uma abordagem pythônica.
+sobre Python em nível intermediário, apresenta vários padrões clássicos com uma
+abordagem pythônica eu seu último capítulo. _Learning Python Design Patterns_,
+de Gennadiy Zlobin (Packt), é o único livro inteiramente dedicado a padrões em
+Python que encontrei. Mas esta obra de 100 páginas cobre apenas 8 dos 23 padrões
+de projeto originais.
 
 Alex Martelli já apresentou várias palestras sobre padrões de projetos em
-Python. Há um vídeo de sua https://fpy.li/10-5[apresentação na EuroPython] (EN)
-e um https://fpy.li/10-6[conjunto de slides em seu site pessoal] (EN). Ao longo
-dos anos, encontrei diferentes jogos de slides e vídeos de diferentes tamanhos,
-então vale a pena tentar uma busca mais ampla com o nome dele e as palavras
+Python. Há um vídeo de sua https://fpy.li/10-5[apresentação na EuroPython]
+e um https://fpy.li/10-6[conjunto de slides em seu site pessoal]. Ao longo
+dos anos, encontrei vários conjuntos de slides e vídeos,
+então vale a pesquisar o nome dele e com palavras
 "Python Design Patterns".
 
 Há muitos livros sobre padrões de projetos com ênfase em Java.
@@ -675,6 +671,7 @@ linguagem. Os autores dizem explicitamente, logo no início de seu livro, que
 objetos menos conhecidas" (a citação completa apareceu na primeira página deste
 capítulo).
 
+<<<
 Agora que Python está se tornando cada vez mais popular no ambiente acadêmico,
 podemos esperar que novos livros sobre padrões de projetos sejam escritos com
 foco nesta linguagem. Além disso, o Java 8 introduziu referências a
