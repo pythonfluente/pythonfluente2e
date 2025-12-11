@@ -87,7 +87,6 @@ from array import array
 import reprlib
 import math
 
-
 class Vector:
     typecode = 'd'
 

@@ -124,18 +124,27 @@ instância de `Vector2d`.
 include::../code/11-pythonic-obj/vector2d_v0.py[tags=VECTOR2D_V0_DEMO]
 ----
 ====
+
 <1> Os componentes de um `Vector2d` podem ser acessados diretamente como
 atributos (não é preciso invocar métodos _getter_).
+
 <2> Um `Vector2d` pode ser desempacotado para uma tupla de variáveis.
+
 <3> O `repr` de um `Vector2d` imita o código-fonte usado para construir a instância.
+
 <4> Usar `eval` aqui mostra que o `repr` de um `Vector2d` é uma representação
 fiel da chamada a seu construtor.footnote:[Usei `eval` para clonar o objeto
 apenas para demonstrar a sintaxe da string gerada por `repr`; para clonar uma instância, a
 função `copy.copy` é mais segura e rápida.]
+
 <5> `Vector2d` suporta a comparação com `==` (muito útil para testes).
+
 <6> `print` chama `str`, que no caso de `Vector2d` exibe um par ordenado.
+
 <7> `bytes` usa o método `+__bytes__+` para produzir uma representação binária.
+
 <8> `abs` usa o método `+__abs__+` para devolver a magnitude do `Vector2d`.
+
 <9> `bool` usa o método `+__bool__+` para devolver `False` se o `Vector2d`
 tiver magnitude zero, caso contrário esse método devolve `True`.
 
@@ -146,6 +155,7 @@ métodos para os operadores `{plus}` e `*`, que veremos mais tarde no
 escrever testes. Nesse ponto, `Vector2d` usa vários métodos especiais para oferecer
 operações que um pythonista espera encontrar em um objeto bem projetado.
 
+<<<
 [[ex_vector2d_v0]]
 .vector2d_v0.py: todos os métodos até aqui são métodos especiais
 ====
@@ -581,9 +591,9 @@ Para tornar um `Vector2d` _hashable_, precisamos implementar `+__hash__+`
 precisamos tornar imutáveis as instâncias do vetor, como vimos na
 https://fpy.li/8t[«Seção 3.4.1»] (vol.1).
 
-Nesse momento, qualquer um pode fazer `v1.x = 7`,
-e não há nada no código sugerindo que é proibido modificar um `Vector2d`.
-O comportamento que queremos é o seguinte:
+Nesse momento, qualquer um pode fazer `v1.x = 7`.
+Nada no código proíbe modificar um `Vector2d`.
+Mas o comportamento que queremos é o seguinte:
 
 [source, python]
 ----
@@ -599,7 +609,7 @@ Faremos isso transformando os componentes `x` e `y` em propriedades apenas para
 leitura no <<ex_vector2d_v3>>.
 
 [[ex_vector2d_v3]]
-.vector2d_v3.py: apenas as mudanças necessárias para tornar `Vector2d` imutável são exibidas aqui; a listagem completa está no <<ex_vector2d_v3_full>>
+.vector2d_v3.py: só as mudanças necessárias para tornar `Vector2d` imutável aparecem aqui; a listagem completa está no <<ex_vector2d_v3_full>>
 ====
 [source, python]
 ----
@@ -620,10 +630,9 @@ ele expõe: `x`.
 
 <5> Repete a mesma fórmula para a propriedade `y`.
 
-<6> Todos os métodos que apenas leem os componentes `x` e `y` podem permanecer
-como estavam, lendo as propriedades públicas através de `self.x` e `self.y` em
-vez de usar os atributos privados. Então essa listagem omite o restante do
-código da classe.
+<6> Todos os métodos que apenas leem os componentes `x` e `y` podem continuar
+lendo as propriedades públicas através de `self.x` e `self.y` em vez de usar os
+atributos privados. Por isso omiti o resto da classe.
 
 [NOTE]
 ====
@@ -717,17 +726,14 @@ o resultado é esse:
 TypeError: Vector2d() accepts 0 positional sub-patterns (1 given)
 ----
 
-Para fazer `Vector2d` funcionar com padrões posicionais, precisamos acrescentar
+Para fazer `Vector2d` funcionar com padrões posicionais, precisamos criar
 um atributo de classe chamado `+__match_args__+`, listando os atributos de
-instância na ordem em que eles serão usados no pattern matching posicional.
-
+instância na ordem em que eles serão usados no pattern matching posicional:
 
 [source, python]
 ----
 class Vector2d:
     __match_args__ = ('x', 'y')
-
-    # etc...
 ----
 
 Agora podemos escrever menos código ao criar padrões para casar com
@@ -760,7 +766,7 @@ trabalhando no `Vector2d` há algum tempo, mostrando apenas trechos isolados. O
 _vector2d_v3.py_, incluindo os doctests que usei durante o desenvolvimento.
 
 [[ex_vector2d_v3_full]]
-.vector2d_v3.py: o pacote completo
+.vector2d_v3.py: o módulo completo
 ====
 [source, python]
 ----
@@ -789,6 +795,7 @@ Como programado no  <<ex_vector2d_v3_full>>, `Vector2d` é um exemplo didático
 com uma longa lista de métodos especiais relacionados à representação de
 objetos, não um modelo para qualquer classe que você vai escrever.
 
+<<<
 Na próxima seção, deixamos o `Vector2d` de lado por um tempo para discutir o
 design e as limitações do mecanismo de atributos privados no Python—o prefixo
 de duplo sublinhado em `self.__x`.((("", startref="POvectorfull11")))((("",
@@ -833,9 +840,10 @@ O <<name_mangling_ex>> mostra o resultado na classe `Vector2d` do <<ex_vector2d_
 ----
 ====
 
+<<<
 A desfiguração do nome oferece proteção, não segurança:
-ela pode evitar acessos acidentais, mas não ataques intencionais.
-A <<safety_fig>> ilustra outro dispositivo de proteção.
+evita acessos acidentais, mas não intencionais.
+A <<safety_fig>> mostra um dispositivo de proteção.
 
 [[safety_fig]]
 .A capa sobre um interruptor é um dispositivo de proteção, não de segurança: previne acidentes, não sabotagem
@@ -849,9 +857,9 @@ atribuir um valor a um componente privado de um `Vector2d`, escrevendo
 não poderá reclamar se alguma coisa explodir.
 
 A funcionalidade de desfiguração de nomes não é amada por todos os pythonistas,
-nem tampouco a aparência estranha de nomes escritos como `self.__x`. Muitos
+nem tampouco a aparência estranha de nomes escritos como `+self.__x+`. Muitos
 preferem evitar essa sintaxe e usar apenas um sublinhado no prefixo para
-"proteger" atributos por convenção: `self._x`. Críticos da
+"proteger" atributos por convenção: `+self._x+`. Críticos da
 desfiguração automática com o sublinhado duplo dizem que preocupações com
 modificações acidentais a atributos devem ser tratadas através de convenções
 de nomenclatura. O criador do _pip_, _virtualenv_ e outros
@@ -899,8 +907,8 @@ Java nesse aspecto, nem leia minha discussão sobre a força relativa do
 modificador `private` de Java no <<pythonic_soapbox>>.]
 
 Vamos agora voltar à nossa classe `Vector2d`. Na próxima seção trataremos de um
-atributo especial (e não um método) que afeta o armazenamento interno de um
-objeto, reduzindo o uso de memória, mas sem afetar muito
+atributo especial (não um método) que 
+reduz o uso de memória das instâncias, sem afetar muito
 sua interface pública: `+__slots__+`.((("",
 startref="Aprivate11")))((("", startref="POprivate11")))
 
@@ -922,7 +930,7 @@ nomeados em `+__slots__+` serão armazenados em um array de referências oculto,
 que usa menos memória que um `dict`. Vamos ver como isso funciona através de
 alguns exemplos simples, começando pelo <<slots_ex1>>.
 
-
+<<<
 [[slots_ex1]]
 .A classe `Pixel` usa `+__slots__+`
 ====
@@ -996,14 +1004,14 @@ no final.
 <3> Você pode definir atributos declarados no `+__slots__+` dessa classe e nos
 de suas superclasses, mas nenhum outro.
 
-Curiosamente, também é possível colocar o nome `'+__dict__+'` em  `+__slots__+`.
+Curiosamente, também é possível colocar o nome `+'__dict__'+` em  `+__slots__+`. +
 Neste caso, as instâncias vão manter os atributos nomeados em `+__slots__+` num
 array de referências da instância, mas também vão aceitar atributos criados
 dinamicamente, que serão armazenados `+__dict__+`, como de costume.
-Isso é necessário para usar o decorador `@cached_property` (tratado na
-https://fpy.li/7x[«Seção 22.3.5»] (vol.3)).
+Isso é necessário para usar o decorador `@cached_property`, tratado na
+https://fpy.li/7x[«Seção 22.3.5»] (vol.3).
 
-Naturalmente, incluir `+__dict__+` em `+__slots__+` pode anular a economia
+Naturalmente, incluir `+'__dict__'+` em `+__slots__+` pode anular a economia
 de memória, dependendo do número de atributos estáticos e
 dinâmicos em cada instância, e de como eles são usados.
 Otimização descuidada é pior que otimização prematura:
@@ -1017,8 +1025,9 @@ instâncias de classes definidas pelo usuário. Entretanto, se a classe define
 fracas, então é preciso incluir  `+__weakref__+` entre os atributos nomeados em
 `+__slots__+`.
 
-Vejamos agora o efeito da adição de `+__slots__+` a `Vector2d`.
+Vejamos agora o efeito de `+__slots__+` em `Vector2d`.
 
+<<<
 ==== Uma medida simples da economia gerada por `+__slots__+`
 
 <<ex_vector2d_v3_slots>> mostra a implementação de `+__slots__+` em `Vector2d`.
@@ -1326,7 +1335,7 @@ resumido em uma só frase, seria essa:
 
 [quote, Antigo provérbio chinês]
 ____
-Para criar objetos pythônicos, observe como se comportam objetos reais de Python.
+Para criar objetos pythônicos, observe como se comportam os objetos do Python.
 ____
 
 [[pythonic_reading_sec]]
@@ -1542,3 +1551,5 @@ você pelo Python. E use esse poder com
 responsabilidade.((("", startref="POsoap11")))
 
 ****
+
+<<<

@@ -117,12 +117,11 @@ Quando um `Vector` tem mais de seis componentes, a string produzida por `repr()`
 `\...`, como visto na última linha do <<ex_vector_demo>>. Isso é fundamental para qualquer tipo de coleção que possa conter um número grande de itens, pois `repr` é usado na depuração—e você não quer que um único objeto grande ocupe milhares de linhas em seu console ou arquivo de log. Use o módulo `reprlib` para produzir representações de tamanho limitado, como no <<ex_vector_v1>>. O módulo `reprlib` se chamava `repr` no Python 2.7.
 ====
 
-O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector`
-(este exemplo usa como base o código mostrado no <<ex_vector2d_v0>> e
-<<ex_vector2d_v1>> do <<ch_pythonic_obj>>).
+O <<ex_vector_v1>> é a primeira versão de `Vector`
+baseada no <<ex_vector2d_v0>> e <<ex_vector2d_v1>> do <<ch_pythonic_obj>>.
 
 [[ex_vector_v1]]
-.vector_v1.py: derived from vector2d_v1.py
+.vector_v1.py: baseado em vector2d_v1.py
 ====
 [source, python]
 ----
@@ -161,8 +160,8 @@ dentro de um `Vector` é um detalhe de implementação. Como essas chamadas ao
 construtor criam objetos `Vector` idênticos, preferi a sintaxe mais simples,
 usando um argumento `list`.
 
-Ao escrever o `+__repr__+`, eu poderia construir uma string para exibição
-simplificada de `components` com este código:
+Ao escrever o `+__repr__+`, eu poderia construir uma string para exibir
+`components` com este código:
 `reprlib.repr(list(self._components))`.
 Mas isto teria um custo adicional, pois eu estaria copiando cada item de `self._components` para uma
 `list` só para usar a `list` no `repr`. Em vez disso, decidi aplicar
@@ -240,24 +239,25 @@ se exatamente como a classe será utilizada.
 Por exemplo, apenas `+__getitem__+` é necessário para suportar iteração;
 não é preciso implemtar `+__len__+`.
 
-[role="man-height4"]
+
 [TIP]
 ====
+
 Com((("protocol classes")))((("protocols", "static protocols"))) a
 https://fpy.li/pep544[_PEP 544—Protocols: Structural subtyping (static duck typing)_]
 (Protocolos: sub-tipagem estrutural (tipagem pato estática))],
 o Python 3.8 suporta _classes protocolo_: subclasses de `typing.Protocol`,
-que estudamos na <<protocols_in_fn_sec>>.
-Esse novo uso da palavra protocolo no Python tem um significado parecido, mas não idêntico.
+que estudamos na https://fpy.li/8m[«Seção 8.5.10»] (vol.1).
+Este novo uso da palavra "protocolo" no Python tem um significado parecido, mas não idêntico.
 Quando preciso diferenciá-los, escrevo((("static protocols", "versus dynamic protocols",
 secondary-sortas="dynamic protocols")))
-
-_protocolo estático_ para me referir aos protocolos formalizados em classes
-protocolo (subclasses de `typing.Protocol`), e((("dynamic protocols")))
-_protocolos dinâmicos_ para o sentido tradicional. Uma diferença fundamental é
+"protocolo estático" para me referir a um protocolos formalizado por uma classe
+subclasse de `typing.Protocol`, e((("dynamic protocols")))
+"protocolo dinâmico" para me referir ao sentido tradicional.
+Uma diferença fundamental é que
 uma implementação de um protocolo estático precisa oferecer todos os métodos
 definidos na classe protocolo. A <<two_kinds_protocols_sec>>
-(<<ch_ifaces_prot_abc>>) traz mais detalhes.
+apresentará muito mais detalhes.
 
 ====
 
@@ -281,8 +281,7 @@ são um bom começo:
 [source, python]
 ----
 class Vector:
-    # many lines omitted
-    # ...
+    # muitas linhas omitidas...
 
     def __len__(self):
         return len(self._components)
@@ -291,7 +290,7 @@ class Vector:
         return self._components[index]
 ----
 
-Após tais acréscimos, agora as seguintes operações funcionam:
+Com tais acréscimos, as seguintes operações funcionam:
 
 [source, python]
 ----
@@ -381,7 +380,7 @@ Vamos agora olhar mais de perto a própria classe `slice`, no <<ex_slice1>>.
 No <<ex_slice1>>, a chamada `dir(slice)` revela um atributo `indices`, um método
 pouco conhecido mas muito interessante. Eis o que diz `help(slice.indices)`:
 
-`S.indices(len) -> (start, stop, stride)`::
+`S.indices(len) {rt-arrow} (start, stop, stride)`::
   Supondo uma sequência de tamanho `len`, calcula os índices `start` (_início_) e `stop` (_fim_), e a extensão do `stride` (_passo_) da fatia estendida descrita por `S`. Índices fora dos limites são recortados, exatamente como acontece em uma fatia normal.
 
 Em outras palavras, o método `indices` expõe a lógica complexa implementada nas
@@ -867,9 +866,8 @@ Mas não para grandes vetores multidimensionais. Uma forma melhor de comparar um
         return True  # <4>
 ----
 ====
-<1> Se as `len` dos objetos são diferentes, eles não são iguais.
-Este teste é importante porque o `zip` encerra a iteração
-assim que o primeiro argumento é consumido.
+<1> Objetos de tamanho diferentes não são iguais.
+Teste necessário porque `zip` retorna quando termina o iterável menor.
 <2> `zip` produz um gerador de tuplas criadas a partir dos itens em cada argumento iterável.
 <3> Sai assim que dois componentes sejam diferentes, devolvendo `False`.
 <4> Caso contrário, os objetos são iguais.
@@ -1281,9 +1279,9 @@ o uso do `*` como opção de formatação.
 
 Na((("Soapbox sidebars", "Pythonic sums",
 id="SSpysum12")))((("Pythonic sums", id="pysum12")))
-https://fpy.li/12-11[Python-list], há uma thread de abril de 2003 chamada
-https://fpy.li/12-12[Pythonic Way to Sum n-th List Element?] (A forma
-pythônica de somar o n-ésimo elemento em listas).
+https://fpy.li/12-11[_python-list_], há uma thread de abril de 2003 intitulada
+https://fpy.li/12-12[_Pythonic Way to Sum n-th List Element?_]
+(A forma pythônica de somar o n-ésimo elemento em listas).
 
 Não há uma resposta única para a "O que é pythônico?", da mesma
 forma que não há uma resposta única para "O que é belo?"

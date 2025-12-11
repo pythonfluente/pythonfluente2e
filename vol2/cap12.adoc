@@ -117,12 +117,11 @@ Quando um `Vector` tem mais de seis componentes, a string produzida por `repr()`
 `\...`, como visto na última linha do <<ex_vector_demo>>. Isso é fundamental para qualquer tipo de coleção que possa conter um número grande de itens, pois `repr` é usado na depuração—e você não quer que um único objeto grande ocupe milhares de linhas em seu console ou arquivo de log. Use o módulo `reprlib` para produzir representações de tamanho limitado, como no <<ex_vector_v1>>. O módulo `reprlib` se chamava `repr` no Python 2.7.
 ====
 
-O <<ex_vector_v1>> lista a implementação de nossa primeira versão de `Vector`
-(este exemplo usa como base o código mostrado no <<ex_vector2d_v0>> e
-<<ex_vector2d_v1>> do <<ch_pythonic_obj>>).
+O <<ex_vector_v1>> é a primeira versão de `Vector`
+baseada no <<ex_vector2d_v0>> e <<ex_vector2d_v1>> do <<ch_pythonic_obj>>.
 
 [[ex_vector_v1]]
-.vector_v1.py: derived from vector2d_v1.py
+.vector_v1.py: baseado em vector2d_v1.py
 ====
 [source, python]
 ----
@@ -161,8 +160,8 @@ dentro de um `Vector` é um detalhe de implementação. Como essas chamadas ao
 construtor criam objetos `Vector` idênticos, preferi a sintaxe mais simples,
 usando um argumento `list`.
 
-Ao escrever o `+__repr__+`, eu poderia construir uma string para exibição
-simplificada de `components` com este código:
+Ao escrever o `+__repr__+`, eu poderia construir uma string para exibir
+`components` com este código:
 `reprlib.repr(list(self._components))`.
 Mas isto teria um custo adicional, pois eu estaria copiando cada item de `self._components` para uma
 `list` só para usar a `list` no `repr`. Em vez disso, decidi aplicar
@@ -212,10 +211,10 @@ protocolo de sequência no Python implica apenas no métodos `+__len__+` e
 assinatura e a semântica padrão, pode ser usada em qualquer lugar onde uma
 sequência é esperada. É irrelevante se `Spam` é uma subclasse dessa ou daquela
 outra classe; tudo o que importa é que ela fornece os métodos necessários. Vimos
-isso no https://fpy.li/8x[«Exemplo 1 do Capítulo 1»] (vol.1), reproduzido aqui no <<ex_pythonic_deck_rep>>.
+isso no https://fpy.li/8x[«Exemplo 1 do Capítulo 1»] (vol.1), reproduzido no <<ex_pythonic_deck_rep>>.
 
 [[ex_pythonic_deck_rep]]
-.Código do https://fpy.li/8x[«Exemplo 1 do Capítulo 1»] (vol.1), reproduzido aqui por conveniência
+.Código do https://fpy.li/8x[«Exemplo 1 do Capítulo 1»] (vol.1), repetido aqui
 ====
 [source, python]
 ----
@@ -229,7 +228,6 @@ isso não esteja declarado em qualquer ponto do código. Um programador Python
 experiente vai olhar para ela e entender que aquilo _é_ uma sequência, mesmo
 sendo apenas uma subclasse de `object`.
 Dizemos que ela _é_ uma sequênca porque ela _se comporta_ como uma sequência.
-
 Esta abordagem ficou conhecida como _duck typing_ (literalmente "tipagem pato"),
 após o post de Alex Martelli citado no início deste capítulo.
 
@@ -239,24 +237,25 @@ se exatamente como a classe será utilizada.
 Por exemplo, apenas `+__getitem__+` é necessário para suportar iteração;
 não é preciso implemtar `+__len__+`.
 
-[role="man-height4"]
+
 [TIP]
 ====
+
 Com((("protocol classes")))((("protocols", "static protocols"))) a
 https://fpy.li/pep544[_PEP 544—Protocols: Structural subtyping (static duck typing)_]
 (Protocolos: sub-tipagem estrutural (tipagem pato estática))],
 o Python 3.8 suporta _classes protocolo_: subclasses de `typing.Protocol`,
 que estudamos na https://fpy.li/8m[«Seção 8.5.10»] (vol.1).
-Esse novo uso da palavra protocolo no Python tem um significado parecido, mas não idêntico.
+Este novo uso da palavra "protocolo" no Python tem um significado parecido, mas não idêntico.
 Quando preciso diferenciá-los, escrevo((("static protocols", "versus dynamic protocols",
 secondary-sortas="dynamic protocols")))
-
-_protocolo estático_ para me referir aos protocolos formalizados em classes
-protocolo (subclasses de `typing.Protocol`), e((("dynamic protocols")))
-_protocolos dinâmicos_ para o sentido tradicional. Uma diferença fundamental é
+"protocolo estático" para me referir a um protocolos formalizado por uma classe
+subclasse de `typing.Protocol`, e((("dynamic protocols")))
+"protocolo dinâmico" para me referir ao sentido tradicional.
+Uma diferença fundamental é que
 uma implementação de um protocolo estático precisa oferecer todos os métodos
 definidos na classe protocolo. A <<two_kinds_protocols_sec>>
-(<<ch_ifaces_prot_abc>>) traz mais detalhes.
+apresentará muito mais detalhes.
 
 ====
 
@@ -280,8 +279,7 @@ são um bom começo:
 [source, python]
 ----
 class Vector:
-    # many lines omitted
-    # ...
+    # muitas linhas omitidas...
 
     def __len__(self):
         return len(self._components)
@@ -290,7 +288,7 @@ class Vector:
         return self._components[index]
 ----
 
-Após tais acréscimos, agora as seguintes operações funcionam:
+Com tais acréscimos, as seguintes operações funcionam:
 
 [source, python]
 ----
@@ -380,9 +378,10 @@ Vamos agora olhar mais de perto a própria classe `slice`, no <<ex_slice1>>.
 No <<ex_slice1>>, a chamada `dir(slice)` revela um atributo `indices`, um método
 pouco conhecido mas muito interessante. Eis o que diz `help(slice.indices)`:
 
-`S.indices(len) -> (start, stop, stride)`::
+`S.indices(len) {rt-arrow} (start, stop, stride)`::
   Supondo uma sequência de tamanho `len`, calcula os índices `start` (_início_) e `stop` (_fim_), e a extensão do `stride` (_passo_) da fatia estendida descrita por `S`. Índices fora dos limites são recortados, exatamente como acontece em uma fatia normal.
 
+<<<
 Em outras palavras, o método `indices` expõe a lógica complexa implementada nas
 sequências embutidas, para tratar índices inexistentes ou
 negativos e fatias maiores que a sequência original. Esse método produz
@@ -496,7 +495,7 @@ decorador `@property` (veja o <<ex_vector2d_v3>> do <<ch_pythonic_obj>>). Poder�
 propriedades no `Vector`, mas isso seria tedioso. O método especial
 `+__getattr__+` é uma opção melhor.
 
-O método `+__getattr__+` é invocado pelo interpretador quando a busca por um
+O método `+__getattr__+` é invocado só quando a busca por um
 atributo falha. Simplificando, dada a expressão `my_obj.x`, Python verifica se a
 instância de `my_obj` tem um atributo chamado `x`; em caso negativo, a busca
 passa para a classe (`+my_obj.__class__+`) e depois sobe pelo diagrama de
@@ -504,7 +503,7 @@ herança.footnote:[A pesquisa de atributos é mais complicada que isso; veremos
 todos os detalhes sinistros na Parte V: Metaprogramação (vol.3). Por ora, esta
 explicação simplificada nos serve.] Se por fim o atributo `x` não for
 encontrado, o método `+__getattr__+`, definido na classe de `my_obj`, é chamado
-com `self` e o nome do atributo em formato de string (por exemplo, `'x'`).
+com `self` e o nome do atributo como uma string, por exemplo, `'x'`.
 
 O <<ex_vector_v3_getattr>> lista nosso método `+__getattr__+`. Ele basicamente
 verifica se o atributo desejado é uma das letras `xyzt`. Em caso positivo,
@@ -572,11 +571,12 @@ Em especial, por que no passo `③`, `v.x` devolve `10`,
 se este valor não está presente no array de componentes do vetor?
 Se você não souber responder de imediato,
 estude a explicação de `+__getattr__+` que aparece logo antes do <<ex_vector_v3_getattr>>.
-A razão é um pouco sutil, mas é um fundamento importante
+A razão é um sutil, mas é um fundamento importante
 para entender técnicas que veremos mais tarde no livro.
 
 Após pensar um pouco sobre essa questão, veja a seguir a explicação para o que aconteceu.
 
+<<<
 A inconsistência no <<ex_vector_v3_getattr_bug>> ocorre devido à forma como
 `+__getattr__+` funciona: Python só chama esse método como último recurso,
 quando o objeto não contém o atributo nomeado.
@@ -654,6 +654,7 @@ apenas quando isso for um problema real.
 
 ====
 
+<<<
 Mesmo não suportando escrita nos componentes de `Vector`, aqui está uma lição importante deste exemplo: muitas vezes, quando você implementa `+__getattr__+`, é necessário também escrever o `+__setattr__+`, para evitar comportamentos inconsistentes em seus objetos.
 
 Para permitir a modificação de componentes, poderíamos implementar `+__setitem__+`, para permitir `v[0] = 1.1`, e/ou `+__setattr__+`, para fazer `v.x = 1.1` funcionar.
@@ -866,9 +867,8 @@ Mas não para grandes vetores multidimensionais. Uma forma melhor de comparar um
         return True  # <4>
 ----
 ====
-<1> Se as `len` dos objetos são diferentes, eles não são iguais.
-Este teste é importante porque o `zip` encerra a iteração
-assim que o primeiro argumento é consumido.
+<1> Objetos de tamanho diferentes não são iguais.
+Teste necessário porque `zip` retorna quando termina o iterável menor.
 <2> `zip` produz um gerador de tuplas criadas a partir dos itens em cada argumento iterável.
 <3> Sai assim que dois componentes sejam diferentes, devolvendo `False`.
 <4> Caso contrário, os objetos são iguais.
@@ -891,17 +891,18 @@ No Python 3.10, `zip` passou a aceitar o argumento nomeado opcional `strict=True
 que faz o que eu imaginava. 
 Mas atenção: para preservar a compatibilidade, o default é `strict=False`,
 portanto o comportamento padrão ainda é parar sem avisar assim que
-um dos argumentos é consumido.
-
-Veja a caixa <<zip_box>> logo adiante para saber mais sobre zip.
+um dos argumentos é consumido. Veja a caixa <<zip_box>> logo adiante para saber mais sobre zip.
 ====
 
-O <<ex_eq_loop>> é eficiente, mas a função `all` pode produzir a mesma computação de um agregado do loop `for` em apenas uma linha:
-se todas as comparações entre componentes correspoendentes nos operandos forem `True`, o resultado é `True`.
-Assim que uma comparação é `False`, `all` devolve `False`. O <<ex_eq_all>> mostra um `+__eq__+` usando `all`.
+O <<ex_eq_loop>> é eficiente, mas a função `all` pode produzir o mesmo resultado do loop `for` em uma linha:
+se todas as comparações entre componentes correspoendentes forem `True`, o resultado é `True`.
+Assim que uma comparação é `False`, `all` devolve `False`.
+Confira o <<ex_eq_all>>: novamente, comparamos os `len` para não invocar `zip`
+se os vetores têm tamanhos diferentes.((("", startref="eq12")))((("", startref="hash12")))((("",
+startref="SSMhasheq12")))((("", startref="VCMhasheq12")))
 
 [[ex_eq_all]]
-.A implementação de `+Vector.__eq__+` usando `zip` e `all`: mesma lógica do <<ex_eq_loop>>
+.`+Vector.__eq__+` com `zip` e `all`: mesma lógica do <<ex_eq_loop>>
 ====
 [source, python]
 ----
@@ -911,12 +912,10 @@ Assim que uma comparação é `False`, `all` devolve `False`. O <<ex_eq_all>> mo
 ----
 ====
 
-Observe que primeiro comparamos o `len()` dos operandos porque
-não queremos comparar item a item se os vetores têm tamanhos diferentes.
 
-O <<ex_eq_all>> é a implementação que escolhemos para `+__eq__+` em
-_vector_v4.py_.((("", startref="eq12")))((("", startref="hash12")))((("",
-startref="SSMhasheq12")))((("", startref="VCMhasheq12")))
+
+
+
 
 
 [[zip_box]]
@@ -1006,10 +1005,10 @@ Por este motivo, mudaremos o sufixo do formato customizado de `'p'` para `'h'`.
 ====
 
 Como vimos na <<format_display_sec>>, ao estender a
-https://fpy.li/63[Minilinguagem de especificação de formato] é melhor evitar a reutilização dos códigos de formato
-usados por tipos embutidos. Em particular, nossa minilinguagens estendida também
-usa os códigos de formato dos números de ponto flutuante (`'eEfFgGn%'`), com seus
-significados originais, então devemos certamente evitar qualquer um daqueles.
+https://fpy.li/63[«Minilinguagem de especificação de formato»] é bom evitar os códigos de formato
+usados pelos tipos embutidos. Nossa minilinguagem estendida também
+usa os códigos de formato dos números de ponto flutuante (`'eEfFgGn%'`) com seus
+significados originais.
 Inteiros usam `'bcdoxXn'` e strings usam `'s'`. Escolhi `'p'` para as
 coordenadas polares de `Vector2d`. O código `'h'` para coordendas hiperesféricas
 é uma boa opção.
@@ -1070,7 +1069,7 @@ Usamos intensivamente expressões geradoras em `+__format__+`, `angle`, e
 `angles`, mas nosso foco aqui é fornecer um `+__format__+` para levar `Vector`
 ao mesmo nível de implementação de `Vector2d`. Quando tratarmos de geradores, no
 https://fpy.li/17[«Capítulo 17»] (vol.3), vamos usar parte do código de `Vector` nos exemplos, e lá
-o funcionamento dos geradores será explicado em detalhes.
+os geradores serão explicados em detalhes.
 ====
 
 Completamos a missão deste capítulo. Aperfeiçoaremos a classe `Vector`
@@ -1117,7 +1116,8 @@ um código de _hash_ agregado para o `Vector` como um todo.
 Após aplicar `reduce` em `+__hash__+`, usamos a função de redução embutida `all`,
 para criar um método `+__eq__+` eficiente.
 
-O último aperfeiçoamento a `Vector` foi reimplementar o método `+__format__+` de
+<<<
+O último aperfeiçoamento em `Vector` foi reimplementar o método `+__format__+` de
 `Vector2d`, para suportar coordenadas esféricas como alternativa às coordenadas
 cartesianas default. Usamos alguma matemática e vários geradores para
 programar `+__format__+` e suas funções auxiliares, mas esses são detalhes de
@@ -1169,7 +1169,6 @@ As muitas contribuições de Oliphant tornaram Python uma das mais importantes
 linguagem para computação científica, favorecendo sua ampla adoção em
 aplicações de aprendizagem de máquina.
 
-
 [[sequence_hacking_soapbox]]
 .Ponto de vista
 ****
@@ -1209,6 +1208,7 @@ mas isso tem a vantagem de manter as coisas simples. A
 https://fpy.li/6e[Seção3.3]
 do capítulo "Modelo de Dados" na documentação de Python sugere:
 
+<<<
 [quote]
 ____
 Ao implementar uma classe que emula qualquer tipo embutido, é importante que a
@@ -1266,11 +1266,11 @@ minilinguagem de especificação de formato.
 O quê eu faria: por default, qualquer `Vector` formatado mostraria um número
 razoável mas limitado de componentes, digamos uns 30. Se existirem mais
 elementos que isso, o comportamento default seria similar ao de `reprlib`:
-cortar o excesso e exibir `\...`. Entretanto, se o especificador
+cortar o excesso e exibir `+'...'+`. Entretanto, se o especificador
 de formato terminar com um código especial `+*+`, significando "all" (_todos_),
 então a limitação de tamanho seria desabilitada. Assim, um usuário
 que desconhece o problema de exibição de vetores muito grandes não será
-penalizado. Mas se a limitação não for desejada, a presença das `\...`
+penalizado. Mas se a limitação não for desejada, a presença das `+'...'+`
 pode levar o usuário a consultar a documentação e descobrir
 o uso do `*` como opção de formatação.
 
@@ -1280,9 +1280,9 @@ o uso do `*` como opção de formatação.
 
 Na((("Soapbox sidebars", "Pythonic sums",
 id="SSpysum12")))((("Pythonic sums", id="pysum12")))
-https://fpy.li/12-11[Python-list], há uma thread de abril de 2003 chamada
-https://fpy.li/12-12[Pythonic Way to Sum n-th List Element?] (A forma
-pythônica de somar o n-ésimo elemento em listas).
+https://fpy.li/12-11[_python-list_], há uma thread de abril de 2003 intitulada
+https://fpy.li/12-12[_Pythonic Way to Sum n-th List Element?_]
+(A forma pythônica de somar o n-ésimo elemento em listas).
 
 Não há uma resposta única para a "O que é pythônico?", da mesma
 forma que não há uma resposta única para "O que é belo?"
@@ -1296,7 +1296,9 @@ também substitui os nomes `x` e `y` por `my_list` e `sub` (para sub-lista),
 e usei `ac` como variável acumuladora para o `reduce`.
 
 No caso específico, Middleton quer somar o segundo item de cada lista de uma série de listas.
+Este foi o código que ele enviou para iniciar a discussão:
 
+<<<
 [source, python]
 ----
 >>> from functools import reduce
@@ -1328,7 +1330,8 @@ principalmente em casos obscuros como este.
 Apenas quis mostrar aqui um exemplo sem uma compreensão de lista.
 
 A primeira resposta veio de Fernando Perez, criador do IPython e do Jupyter
-Notebook, mostrando como a NumPy suporta arrays _n_-dimensionais e fatiamento
+Notebook, mostrando como a NumPy suporta arrays +
+_n_-dimensionais e fatiamento
 _n_-dimensional:
 
 [source, python]
@@ -1339,7 +1342,10 @@ _n_-dimensional:
 60
 ----
 
-Acho a solução de Perez boa, mas Guy Middleton elogiou essa próxima solução,
+A solução de Perez é boa, mas obviamente requer a NumPy.
+
+<<<
+Guy Middleton elogiou esta próxima solução,
 de Paul Rubin e Skip Montanaro:
 
 [source, python]
@@ -1361,10 +1367,9 @@ Então Evan Simpson perguntou, "O que há de errado em fazer assim?":
 60
 ----
 
-Muitos concordaram que esse código era bastante pythônico.
+Muitos concordaram que este código era bastante pythônico.
 Alex Martelli chegou a escrever que Guido provavelmente 
 resolveria o problema desta maneira.
-
 Gosto do código de Evan Simpson, mas também gosto do comentário
 de David Eppstein sobre ele:
 
@@ -1430,3 +1435,5 @@ startref="SSMsoap12")))((("", startref="SSpysum12")))((("",
 startref="pysum12")))
 
 ****
+
+<<<

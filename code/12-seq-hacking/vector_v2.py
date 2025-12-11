@@ -148,6 +148,7 @@ class Vector:
 # tag::VECTOR_V2[]
     def __len__(self):
         return len(self._components)
+    
 
     def __getitem__(self, key):
         if isinstance(key, slice):  # <1>
