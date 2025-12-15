@@ -15,5 +15,5 @@ e faço as demais tarefas nestas cópias especiais para impressão.
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol2`| refazer referências entre volumes|
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol2`| encurtar links entre volumes |
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol2`| exibir capítulo alvo em xrefs para exemplos de outros capítulos |
-|✅ |✅ |✅ |✅ |✅ |✅ |✅ |   |`/vol2`| rever paginação   |
+|✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol2`| rever paginação   |
 
