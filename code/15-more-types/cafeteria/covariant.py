@@ -16,7 +16,6 @@ class OrangeJuice(Juice):
 # tag::BEVERAGE_TYPES[]
 T_co = TypeVar('T_co', covariant=True)  # <1>
 
-
 class BeverageDispenser(Generic[T_co]):  # <2>
     def __init__(self, beverage: T_co) -> None:
         self.beverage = beverage
@@ -33,7 +32,6 @@ def install(dispenser: BeverageDispenser[Juice]) -> None:  # <3>
 # tag::INSTALL_JUICE_DISPENSERS[]
 juice_dispenser = BeverageDispenser(Juice())
 install(juice_dispenser)
-
 orange_juice_dispenser = BeverageDispenser(OrangeJuice())
 install(orange_juice_dispenser)
 # end::INSTALL_JUICE_DISPENSERS[]

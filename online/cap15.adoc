@@ -1920,9 +1920,11 @@ Algumas vezes essa é a única solução com custo-benefício positivo.
 
 **Notação de variância em outras linguagens**
 
+**Notação de variância em outras linguagens**
+
 A variância((("Soapbox sidebars", "variance notation in other languages")))((("variance",
 "variance notation in other languages"))) é um tópico complicado,
-e a sintaxe das dicas de tipo de Python não é tão boa quanto poderia ser.
+e a sintaxe das dicas de tipo de Python deixa a desejar.
 Esta citação direta da PEP 484 evidencia isso:
 
 [quote]
@@ -1939,12 +1941,23 @@ ____
 Se esse é o caso, por que a covariância e a contravarância são declaradas com
 `TypeVar` e não na classe genérica?
 
-Os autores da PEP 484 trabalharam sob a severa restrição auto-imposta de
-suportar dicas de tipo sem fazer qualquer modificação no interpretador. Isso
-exigiu a introdução de `TypeVar` para definir variáveis de tipo, e também levou
-ao abuso de `[]` para fornecer a sintaxe `Klass[T]` para genéricos—em vez da
+Os autores da PEP 484 optaram por introduzir dicas de tipo sem fazer
+qualquer modificação no interpretador.
+Em Python, todo identificador aparece pela primeira vez no código-fonte
+de um módulo através de uma
+atribuição, ou uma instrução especial como `import`, `class`, ou  `def`.
+Por isso tiveram que criar `TypeVar` para declarar uma variável de tipo
+através de uma atribuição:
+
+[source, python]
+----
+T = TypeVar('T')
+----
+
+Para não mexer no _parser_, reutilizaram o operador `[]` na sintaxe
+`Klass[T]` para genéricos—em vez da
 notação `Klass<T>` usada em outras linguagens populares, incluindo C#, Java,
-Kotlin e TypeScript. Nenhuma dessas linguagens exige que variáveis de tipo seja
+Kotlin e TypeScript. Estas linguagens não exigem que variáveis de tipo sejam
 declaradas antes de serem usadas.
 
 Além disso, a sintaxe do Kotlin e do C# torna claro se um parâmetro de tipo é
@@ -1961,9 +1974,7 @@ class BeverageDispenser<out T> {
 ----
 
 O modificador `out` no parâmetro de tipo formal significa que `T` é um tipo de
-_output_ (saída)), e portanto `BeverageDispenser` é covariante.
-
-[role="pagebreak-before less_space"]
+_output_ (saída), e portanto `BeverageDispenser` é covariante.
 Você provavelmente consegue adivinhar como `TrashCan` seria declarada:
 
 [source, kotlin]
@@ -1974,15 +1985,13 @@ class TrashCan<in T> {
 ----
 
 Dado `T` como um parâmetro de tipo formal de _input_ (entrada),
-segue que `TrashCan` é contravariante.
-
+então `TrashCan` é contravariante.
 Se nem `in` nem `out` aparecem, então a classe é invariante naquele parâmetro.
 
-É fácil lembrar das <<variance_rules_sec>> quando `out` e `in` são usado nos
-parâmetros de tipo formais.
-
-Isso sugere que uma boa convenção para nomenclatura de variáveis de tipo
-covariante e contravariantes no Python seria:
+É fácil lembrar das regras gerais de variância (<<variance_rules_sec>>)
+quando `out` e `in` são usados nos parâmetros de tipo formais.
+Isso sugere uma convenção melhor para nomear de variáveis de tipo
+covariantes e contravariantes:
 
 [source, python]
 ----
@@ -2001,7 +2010,7 @@ class TrashCan(Generic[T_in]):
     ...
 ----
 
-Será que é tarde demais para modificar a convenção de nomenclatura definida na
-PEP 484?
+Será tarde demais para adotar `T_out` e `T_in` em vez de
+`T_co` e `T_contra` que foram sugeridos na PEP 484?
 
 ****
