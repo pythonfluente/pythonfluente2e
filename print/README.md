@@ -1,5 +1,19 @@
 # Procedimentos para preparar volumes para impressão
 
+## Rever ISBN na página de copyright e na contra-capa
+
+Python Fluente, 2ª edição...
+
+|volume| variante  | ISBN              |
+|------|-----------|-------------------|
+|    1 | standard  | 978-65-988962-1-8 |
+|      | dunder    | 978-65-988962-0-1 |
+|    2 | standard  | 978-65-989778-3-2 |
+|      | dunder    | 978-65-989778-2-5 |
+|    3 | standard  | 978-65-989778-1-8 |
+|      | dunder    | 978-65-989778-6-3 |
+
+
 ## Formatação dos links
 
 Renderize este markdown para ver a *aparência* dos links.

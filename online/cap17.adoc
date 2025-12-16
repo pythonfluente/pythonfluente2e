@@ -3,72 +3,94 @@
 :example-number: 0
 :figure-number: 0
 
-//++++
-//<blockquote>
-//<p>When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve. Any other regularity in the code is a sign, to at least, that I'm using abstractions that aren't powerful enough&mdash;often that I'm generating by hand the expansions of some macro that I need to write.</p>
-
-//<p data-type="attribution">Paul Graham, Lisp hacker and venture capitalist<span data-type="footnote">From <a href="https://fpy.li/17-1">"Revenge of the Nerds"</a>, a blog post.</span></p>
-//</blockquote>
-//++++
-
-
 [quote, Paul Graham, hacker de Lisp e investidor]
 ____
-Quando vejo padrões em meus programas, considero isso um mau sinal. A forma de um programa deve refletir apenas o problema que ele precisa resolver. Qualquer outra regularidade no código é, pelo menos para mim, um sinal que estou usando abstrações que não são poderosas o suficiente—muitas vezes estou gerando à mão as expansões de alguma macro que preciso escrever.footnote:[De https://fpy.li/17-1["Revenge of the Nerds" (_A Revanche dos Nerds_)], um post de blog.]
+
+Quando vejo padrões em meus programas, considero isso um mau sinal. A forma de
+um programa deve refletir apenas o problema que ele precisa resolver. Qualquer
+outra regularidade no código é, pelo menos para mim, um sinal que estou usando
+abstrações que não são poderosas o suficiente—muitas vezes estou gerando à mão
+as expansões de alguma macro que preciso escrever.footnote:[De
+https://fpy.li/17-1[_Revenge of the Nerds_] (A Revanche dos Nerds), um post de
+blog.]
+
 ____
 
-////
-PROD: in the rendered PDF, the title of this chapter appears with a line break between "Classic" and "Coroutines".
-Is there a way to put a line break after the comma, so the second line would be "and Classic Coroutines"? Of course, this is not important, but would make more sense and look nicer too. Thanks!
 
-AU: Of course!
-////
-
-A iteração((("iterators", "role of"))) é fundamental para o processamento de dados: programas aplicam computações sobre séries de dados, de pixels a nucleotídeos.
-Se os dados não cabem na memória, precisamos buscar esses itens de forma _preguiçosa_—um de cada vez e sob demanda. É isso que um iterador faz.
-Este capítulo mostra como o padrão de projeto _Iterator_ ("Iterador") está embutido na linguagem Python, de modo que nunca será necessário programá-lo manualmente.
+A iteração((("iterators", "role of"))) é fundamental para o processamento de
+dados: programas aplicam computações sobre séries de dados, de pixels a
+nucleotídeos. Se os dados não cabem na memória, precisamos buscar esses itens de
+forma _preguiçosa_—um de cada vez e sob demanda. É isso que um iterador faz.
+Este capítulo mostra como o padrão de projeto _Iterator_ ("Iterador") está
+embutido na linguagem Python, de modo que nunca será necessário programá-lo
+manualmente.
 
 Todas as coleções padrão de Python são _iteráveis_.
-Um _iterável_ é um objeto que fornece um _iterador_, que Python usa para suportar operações como:
+Um _iterável_ é um objeto que fornece um _iterador_,
+que Python usa para suportar operações como:
 
 * loops `for`
 * Compreensões de lista, dict e set
 * Desempacotamento para atribuições
 * Criação de instâncias de coleções
 
-[role="pagebreak-before less_space"]
-Este((("iterators", "topics covered")))((("generators", "topics covered")))((("coroutines", "topics covered"))) capítulo cobre os seguintes tópicos:
+Este((("iterators", "topics covered")))((("generators", "topics
+covered")))((("coroutines", "topics covered"))) capítulo cobre os seguintes
+tópicos:
 
 * Como Python usa a função embutida `iter()` para lidar com objetos iteráveis
+
 * Como implementar o padrão _Iterator_ clássico no Python
-* Como o padrão _Iterator_ clássico pode ser substituído por uma função geradora ou por uma expressão geradora
+
+* Como o padrão _Iterator_ clássico pode ser substituído por uma função geradora
+ou por uma expressão geradora
+
 * Como funciona uma função geradora, em detalhes, com descrições linha a linha
+
 * Aproveitando o poder das funções geradoras de uso geral da biblioteca padrão
+
 * Usando expressões `yield from` para combinar geradoras
-* Porque geradoras e corrotinas clássicas se parecem, mas são usadas de formas muito diferentes e não devem ser misturadas
+
+* Porque geradoras e corrotinas clássicas se parecem, mas são usadas de formas
+muito diferentes e não devem ser misturadas
 
 
 === Novidades neste capítulo
 
-A <<yield_from_sec0>> aumentou((("iterators", "significant changes to")))((("generators", "significant changes to")))((("coroutines", "significant changes to"))) de uma para seis páginas.
-Ela agora inclui experimentos simples, demonstrando o comportamento de geradoras com `yield from`, e um exemplo de código para percorrer uma árvore de dados, desenvolvido passo a passo.
+A <<yield_from_sec0>> aumentou((("iterators", "significant changes to")))((("generators",
+"significant changes to")))((("coroutines", "significant changes to")))
+de uma para seis páginas. Ela agora inclui experimentos simples,
+demonstrando o comportamento de geradoras com `yield from`, e um exemplo de
+código para percorrer uma árvore de dados, desenvolvido passo a passo.
 
-Novas seções explicam as dicas de tipo para os tipos `Iterable`, `Iterator` e `Generator`.
+Novas seções explicam as dicas de tipo para os tipos `Iterable`, `Iterator` e
+`Generator`.
 
-A última grande seção do capítulo, <<classic_coroutines_sec>>, é agora uma introdução de 9 páginas a um tópico que ocupava um capítulo de 40 páginas na primeira edição.
-Atualizei e transferi o capítulo https://fpy.li/oldcoro[Classic Coroutines (_Corrotinas Clássicas_)] para um
-https://fpy.li/oldcoro[post no site que acompanha o livro], porque ele era o capítulo mais difícil para os leitores, mas seu tema se tornou menos relevante após a introdução das corrotinas nativas no Python 3.5 (estudaremos as corrotinas nativas no <<ch_async>>).
+A última grande seção do capítulo, <<classic_coroutines_sec>>, é agora uma
+introdução de 9 páginas a um tópico que ocupava um capítulo de 40 páginas na
+primeira edição. Atualizei e transferi o capítulo
+https://fpy.li/oldcoro[Classic Coroutines (_Corrotinas Clássicas_)] para um
+https://fpy.li/oldcoro[post no site que acompanha o livro],
+porque ele era o capítulo mais difícil para os leitores,
+mas seu tema se tornou menos relevante após a introdução das corrotinas nativas
+no Python 3.5 (estudaremos as corrotinas nativas no <<ch_async>>).
 
-Vamos começar examinando como a função embutida `iter()` torna as sequências iteráveis.
+Vamos começar examinando como a função embutida `iter()` torna as sequências
+iteráveis.
 
 
 === Uma sequência de palavras
 
-Vamos((("iterators", "sequence protocol", id="Isequence17")))((("sequence protocol", id="seqpro17"))) começar nossa exploração de iteráveis implementando uma classe `Sentence`: seu construtor recebe uma string de texto e daí podemos iterar sobre a "sentença" palavra por palavra. A primeira versão vai implementar o protocolo de sequência e será iterável, pois todas as sequências são iteráveis—como sabemos desde o <<ch_data_model>>.
-Agora veremos exatamente porque isso acontece.
+Vamos((("iterators", "sequence protocol", id="Isequence17")))((("sequence protocol",
+id="seqpro17"))) começar nossa exploração de iteráveis implementando
+uma classe `Sentence`: seu construtor recebe uma string de texto e daí podemos
+iterar sobre a "sentença" palavra por palavra. A primeira versão vai implementar
+o protocolo de sequência e será iterável, pois todas as sequências são
+iteráveis—como sabemos desde o <<ch_data_model>>. Agora veremos exatamente
+porque isso acontece.
 
-O <<ex_sentence0>> mostra uma classe `Sentence` que extrai palavras de um texto por
-índice.
+O <<ex_sentence0>> mostra uma classe `Sentence` que extrai palavras de um texto
+por índice.
 
 [[ex_sentence0]]
 .sentence.py: uma `Sentence` como uma sequência de palavras
@@ -78,13 +100,23 @@ O <<ex_sentence0>> mostra uma classe `Sentence` que extrai palavras de um texto 
 include::../code/17-it-generator/sentence.py[tags=SENTENCE_SEQ]
 ----
 ====
-<1> `.findall` devolve a lista com todos os trechos não sobrepostos correspondentes à expressão regular, como uma lista de strings.
-<2> `self.words` mantém o resultado de `.findall`, então basta devolver a palavra em um dado índice.
-<3> Para completar o protocolo de sequência, implementamos `+__len__+`, apesar dele não ser necessário para criar um iterável.
-<4> `reprlib.repr` é uma função utilitária para gerar representações abreviadas, em forma de strings, de estruturas de dados que podem ser muito grandes.footnote:[Já usamos `reprlib` na <<vector_take1_sec>>.]
+
+<1> `.findall` devolve a lista com todos os trechos não sobrepostos
+correspondentes à expressão regular, como uma lista de strings.
+
+<2> `self.words` mantém o resultado de `.findall`, então basta devolver a
+palavra em um dado índice.
+
+<3> Para completar o protocolo de sequência, implementamos `+__len__+`, apesar
+dele não ser necessário para criar um iterável.
+
+<4> `reprlib.repr` é uma função utilitária para gerar representações abreviadas,
+em forma de strings, de estruturas de dados que podem ser muito
+grandes.footnote:[Já usamos `reprlib` na <<vector_take1_sec>>.]
 
 
-Por default, `reprlib.repr` limita a string gerada a 30 caracteres. Veja como `Sentence` é usada na sessão de console do <<demo_sentence0>>.
+Por default, `reprlib.repr` limita a string gerada a 30 caracteres. Veja como
+`Sentence` é usada na sessão de console do <<demo_sentence0>>.
 
 [[demo_sentence0]]
 .Testando a iteração em uma instância de `Sentence`
@@ -107,13 +139,20 @@ said
 ['The', 'time', 'has', 'come', 'the', 'Walrus', 'said']
 ----
 ====
-<1> Uma sentença criada a partir de uma string.
-<2> Observe a saída de `+__repr__+` gerada por `reprlib.repr`, usando `\...`.
-<3> Instâncias de `Sentence` são iteráveis; veremos a razão em seguida.
-<4> Sendo iteráveis, objetos `Sentence` podem ser usados como entrada para criar listas e outros tipos iteráveis.
 
-Nas próximas páginas vamos desenvolver outras classes `Sentence` que passam nos testes do <<demo_sentence0>>.
-Entretanto, a implementação no <<ex_sentence0>> difere das outras por ser também uma sequência, e então é possível obter palavras usando um índice:
+<1> Uma sentença criada a partir de uma string.
+
+<2> Observe a saída de `+__repr__+` gerada por `reprlib.repr`, usando `\...`.
+
+<3> Instâncias de `Sentence` são iteráveis; veremos a razão em seguida.
+
+<4> Sendo iteráveis, objetos `Sentence` podem ser usados como entrada para criar
+listas e outros tipos iteráveis.
+
+Nas próximas páginas vamos desenvolver outras classes `Sentence` que passam nos
+testes do <<demo_sentence0>>. Entretanto, a implementação no <<ex_sentence0>>
+difere das outras por ser também uma sequência, e então é possível obter
+palavras usando um índice:
 
 [source, python]
 ----
@@ -125,23 +164,39 @@ Entretanto, a implementação no <<ex_sentence0>> difere das outras por ser tamb
 'said'
 ----
 
-Programadores Python sabem que sequências são iteráveis. Agora vamos descobrir exatamente o porquê disso.((("", startref="Isequence17")))((("", startref="seqpro17")))
+Programadores Python sabem que sequências são iteráveis. Agora vamos descobrir
+exatamente o porquê disso.((("", startref="Isequence17")))((("",
+startref="seqpro17")))
 
 [[iter_func_sec]]
 === Porque sequências são iteráveis: a função iter
 
-Sempre((("functions", "iter() function")))((("iterators", "iter() function", id="Iinterfun17")))((("iter() function", id="iterfunc17"))) que Python precisa iterar sobre um objeto `x`, ele automaticamente invoca `iter(x)`.
+Sempre((("functions", "iter() function")))((("iterators", "iter() function",
+id="Iinterfun17")))((("iter() function", id="iterfunc17")))
+que Python precisa iterar sobre um objeto `x`, ele automaticamente invoca `iter(x)`.
 
 A função embutida `iter`:
 
-. Verifica se o objeto implementa o método `+__iter__+`, e o invoca para obter um iterador.
-. Se `+__iter__+` não for implementado, mas `+__getitem__+` sim, então `iter()` cria um iterador que tenta buscar itens pelo índice, começando de 0 (zero).
-. Se isso falhar, Python gera um `TypeError`, normalmente dizendo `'C' object is not iterable` (_objeto 'C' não é iterável_), onde `C` é a classe do objeto alvo.
+. Verifica se o objeto implementa o método `+__iter__+`, e o invoca para obter
+um iterador.
 
-Por isso todas as sequências de Python são iteráveis: por definição, todas elas implementam `+__getitem__+`.
-Na verdade, todas as sequências padrão também implementam `+__iter__+`, e as suas próprias sequências também deviam implementar esse método, porque a iteração via `+__getitem__+` existe para manter a compatibilidade retroativa, e pode desaparecer em algum momento—apesar dela não ter sido descontinuada no Python 3.10, e eu duvidar que vá ser removida algum dia.
+. Se `+__iter__+` não for implementado, mas `+__getitem__+` sim, então `iter()`
+cria um iterador que tenta buscar itens pelo índice, começando de 0 (zero).
 
-Como mencionado na <<python_digs_seq_sec>>, essa é uma forma extrema de _duck typing_: um objeto é considerado iterável não apenas quando implementa o método especial `+__iter__+`, mas também quando implementa `+__getitem__+`. Veja isso:
+. Se isso falhar, Python gera um `TypeError`, normalmente dizendo `'C' object is
+not iterable` (_objeto 'C' não é iterável_), onde `C` é a classe do objeto alvo.
+
+Por isso todas as sequências de Python são iteráveis: por definição, todas elas
+implementam `+__getitem__+`. Na verdade, todas as sequências padrão também
+implementam `+__iter__+`, e as suas próprias sequências também deviam
+implementar esse método, porque a iteração via `+__getitem__+` existe para
+manter a compatibilidade retroativa, e pode desaparecer em algum momento—apesar
+dela não ter sido descontinuada no Python 3.10, e eu duvidar que vá ser removida
+algum dia.
+
+Como mencionado na <<python_digs_seq_sec>>, essa é uma forma extrema de _duck
+typing_: um objeto é considerado iterável não apenas quando implementa o método
+especial `+__iter__+`, mas também quando implementa `+__getitem__+`. Veja isso:
 
 [source, python]
 ----
@@ -161,13 +216,20 @@ Como mencionado na <<python_digs_seq_sec>>, essa é uma forma extrema de _duck t
 False
 ----
 
-Se uma classe fornece `+__getitem__+`, a função embutida `iter()` aceita uma instância daquela classe como iterável e cria um iterador a partir da instância.
-A maquinaria de iteração de Python chamará `+__getitem__+` com índices, começando de 0, e entenderá um `IndexError` como sinal de que não há mais itens.
+Se uma classe fornece `+__getitem__+`, a função embutida `iter()` aceita uma
+instância daquela classe como iterável e cria um iterador a partir da instância.
+A maquinaria de iteração de Python chamará `+__getitem__+` com índices,
+começando de 0, e entenderá um `IndexError` como sinal de que não há mais itens.
 
-Observe que, apesar de `spam_can` ser iterável (seu método `+__getitem__+` poderia fornecer itens), ela não é reconhecida assim por uma chamada a `isinstance` contra `abc.Iterable`.
+Observe que, apesar de `spam_can` ser iterável (seu método `+__getitem__+`
+poderia fornecer itens), ela não é reconhecida assim por uma chamada a
+`isinstance` contra `abc.Iterable`.
 
-Na abordagem da _goose typing_, a definição para um iterável é mais simples, mas não tão flexível: um objeto é considerado iterável se implementa o método `+__iter__+`.
-Não é necessário ser subclasse ou se registar, pois `abc.Iterable` implementa o `+__subclasshook__+`, como visto na <<subclasshook_sec>>. Eis uma demonstração:
+Na abordagem da _goose typing_, a definição para um iterável é mais simples, mas
+não tão flexível: um objeto é considerado iterável se implementa o método
+`+__iter__+`. Não é necessário ser subclasse ou se registar, pois `abc.Iterable`
+implementa o `+__subclasshook__+`, como visto na <<subclasshook_sec>>. Eis uma
+demonstração:
 
 [source, python]
 ----
@@ -185,27 +247,43 @@ True
 
 [TIP]
 ====
-Desde o Python 3.10, a forma mais precisa de checar se um objeto `x` é iterável é invocar
-`iter(x)` e tratar a exceção `TypeError` se ele não for.
-Isso é mais preciso que usar `isinstance(x, abc.Iterable)`, porque `iter(x)` também leva em consideração o método legado `+__getitem__+`, enquanto a ABC `Iterable` não considera tal método.
+
+Desde o Python 3.10, a forma mais precisa de checar se um objeto `x` é iterável
+é invocar `iter(x)` e tratar a exceção `TypeError` se ele não for. Isso é mais
+preciso que usar `isinstance(x, abc.Iterable)`, porque `iter(x)` também leva em
+consideração o método legado `+__getitem__+`, enquanto a ABC `Iterable` não
+considera tal método.
+
 ====
 
-Verificar explicitamente se um objeto é iterável pode não valer a pena, se você for iterar sobre o objeto logo após a checagem.
-Afinal, quando se tenta iterar sobre um não-iterável, a exceção gerada pelo Python é bastante clara: `TypeError: 'C' object is not iterable` (_TypeError: o objeto 'C' não é iterável_).
-Se você puder fazer algo mais além de gerar um `TypeError`, então faça isso em um bloco `try/except` ao invés de realizar uma checagem explícita.
-A checagem explícita pode fazer sentido se você estiver mantendo o objeto para iterar sobre ele mais tarde; nesse caso, capturar o erro mais cedo torna a depuração mais fácil.
+Verificar explicitamente se um objeto é iterável pode não valer a pena, se você
+for iterar sobre o objeto logo após a checagem. Afinal, quando se tenta iterar
+sobre um não-iterável, a exceção gerada pelo Python é bastante clara:
+`TypeError: 'C' object is not iterable` (TypeError: o objeto 'C' não é
+iterável). Se você puder fazer algo mais além de gerar um `TypeError`, então
+faça isso em um bloco `try/except` ao invés de realizar uma checagem explícita.
+A checagem explícita pode fazer sentido se você estiver mantendo o objeto para
+iterar sobre ele mais tarde; nesse caso, capturar o erro mais cedo torna a
+depuração mais fácil.
 
-A função embutida `iter()` é usada mais frequentemente pelo Python que no nosso código.
-Há uma segunda maneira de usá-la, mas não é muito conhecida.
+A função embutida `iter()` é usada mais frequentemente pelo Python que no nosso
+código. Há uma segunda maneira de usá-la, mas não é muito conhecida.
 
 
 [[iter_closer_look_sec]]
 ==== Usando iter com um invocável
 
-Podemos((("objects", "callable objects", id="Oiter17")))((("callable objects", "using iter() with", id="COiter17"))) chamar `iter()` com dois argumentos, para criar um iterador a partir de uma função ou de qualquer objeto invocável.
-Nessa forma de uso, o primeiro argumento deve ser um invocável que será chamado repetidamente (sem argumentos) para produzir valores, e o segundo argumento é um https://fpy.li/17-2[_valor sentinela_] (EN): um marcador que, quando devolvido por um invocável, faz o iterador gerar um `StopIteration` ao invés de produzir o valor sentinela.
+Podemos((("objects", "callable objects", id="Oiter17")))((("callable objects",
+"using iter() with", id="COiter17"))) chamar `iter()` com dois argumentos, para
+criar um iterador a partir de uma função ou de qualquer objeto invocável. Nessa
+forma de uso, o primeiro argumento deve ser um invocável que será chamado
+repetidamente (sem argumentos) para produzir valores, e o segundo argumento é um
+https://fpy.li/17-2[«valor sentinela»]: um marcador que, quando devolvido
+por um invocável, faz o iterador gerar um `StopIteration` ao invés de produzir o
+valor sentinela.
 
-O exemplo a seguir mostra como usar `iter` para rolar um dado de seis faces até que o valor `1` seja sorteado:
+O exemplo a seguir mostra como usar `iter` para rolar um dado de seis faces até
+que o valor `1` seja sorteado:
 
 [source, python]
 ----
@@ -224,14 +302,22 @@ O exemplo a seguir mostra como usar `iter` para rolar um dado de seis faces até
 3
 ----
 
-Observe que a função `iter` devolve um `callable_iterator`.
-O loop `for` no exemplo pode rodar por um longo tempo, mas nunca vai devolver `1`, pois esse é o valor sentinela. Como é comum com iteradores, o objeto `d6_iter` se torna inútil após ser exaurido. Para recomeçar, é necessário reconstruir o iterador, invocando novamente `iter()`.
+Observe que a função `iter` devolve um `callable_iterator`. O loop `for` no
+exemplo pode rodar por um longo tempo, mas nunca vai devolver `1`, pois esse é o
+valor sentinela. Como é comum com iteradores, o objeto `d6_iter` se torna inútil
+após ser exaurido. Para recomeçar, é necessário reconstruir o iterador,
+invocando novamente `iter()`.
 
-A https://docs.python.org/pt-br/3.10/library/functions.html#iter[documentação de `iter`] inclui a seguinte explicação e código de exemplo:
+A https://docs.python.org/pt-br/3.10/library/functions.html#iter[documentação de
+`iter`] inclui a seguinte explicação e código de exemplo:
 
 [quote]
 ____
-Uma aplicação útil da segunda forma de `iter()` é para construir um bloco de leitura. Por exemplo, ler blocos de comprimento fixo de um arquivo binário de banco de dados até que o final do arquivo seja atingido:
+
+Uma aplicação útil da segunda forma de `iter()` é para construir um bloco de
+leitura. Por exemplo, ler blocos de comprimento fixo de um arquivo binário de
+banco de dados até que o final do arquivo seja atingido:
+
 ____
 
 [source, python]
@@ -245,24 +331,33 @@ with open('mydata.db', 'rb') as f:
 ----
 
 Para deixar o código mais claro, adicionei a atribuição `read64`, que não está no
-https://docs.python.org/pt-br/3.10/library/functions.html#iter[exemplo original].
-A função `partial()` é necessária porque o invocável passado a `iter()` não pode requerer argumentos.
-No exemplo, um objeto `bytes` vazio é a sentinela, pois é isso que `f.read` devolve quando não há mais bytes para ler.
+https://docs.python.org/pt-br/3.10/library/functions.html#iter[«exemplo original»].
+A função `partial()` é necessária porque o invocável passado a
+`iter()` não pode requerer argumentos. No exemplo, um objeto `bytes` vazio é a
+sentinela, pois é isso que `f.read` devolve quando não há mais bytes para ler.
 
-A próxima seção detalha a relação entre iteráveis e iteradores.((("", startref="Iinterfun17")))((("", startref="iterfunc17")))((("", startref="Oiter17")))((("", startref="COiter17")))
+A próxima seção detalha a relação entre iteráveis e iteradores.((("",
+startref="Iinterfun17")))((("", startref="iterfunc17")))((("",
+startref="Oiter17")))((("", startref="COiter17")))
 
 
 === Iteráveis versus iteradores
 
-Da((("iterators", "versus iterables", secondary-sortas="iterables", id="IOvie17")))((("iterables", "versus iterators", secondary-sortas="iterators", id="IEvio17"))) explicação na <<iter_func_sec>> podemos extrapolar a seguinte definição:
+Da((("iterators", "versus iterables", secondary-sortas="iterables",
+id="IOvie17")))((("iterables", "versus iterators", secondary-sortas="iterators",
+id="IEvio17"))) explicação na <<iter_func_sec>> podemos extrapolar a seguinte
+definição:
 
-iterável:: Qualquer objeto a partir do qual a função embutida `iter` consegue obter um iterador.
-Objetos que implementam um método `+__iter__+` devolvendo um _iterador_ são iteráveis.
-Sequências são sempre iteráveis, bem como objetos que implementam um método `+__getitem__+` que aceite índices iniciando em 0.
+iterável:: Qualquer objeto a partir do qual a função embutida `iter` consegue
+obter um iterador. Objetos que implementam um método `+__iter__+` devolvendo um
+_iterador_ são iteráveis. Sequências são sempre iteráveis, bem como objetos que
+implementam um método `+__getitem__+` que aceite índices iniciando em 0.
 
-É importante deixar clara a relação entre iteráveis e iteradores: Python obtém um iterador a partir de um iterável.
+É importante deixar clara a relação entre iteráveis e iteradores: Python obtém
+um iterador a partir de um iterável.
 
-Aqui está um simples loop `for` iterando sobre uma `str`. A `str` `'ABC'` é o iterável aqui. Você não vê, mas há um iterador por trás das cortinas:
+Aqui está um simples loop `for` iterando sobre uma `str`. A `str` `'ABC'` é o
+iterável aqui. Você não vê, mas há um iterador por trás das cortinas:
 
 [source, python]
 ----
@@ -275,7 +370,8 @@ B
 C
 ----
 
-Se não existisse uma instrução `for` e fosse preciso emular o mecanismo do `for` à mão com um loop `while`, isso é o que teríamos que escrever:
+Se não existisse uma instrução `for` e fosse preciso emular o mecanismo do `for`
+à mão com um loop `while`, isso é o que teríamos que escrever:
 
 [source, python]
 ----
@@ -306,9 +402,11 @@ como compreensões de lista, desempacotamento iterável, etc.
 
 A interface padrão de um iterador em Python tem dois métodos:
 
-`+__next__+`:: Devolve o próximo item da série, gerando `StopIteration` se não há mais nenhum.
+`+__next__+`:: Devolve o próximo item da série,
+gerando `StopIteration` se não há mais nenhum.
 
-`+__iter__+`:: Devolve `self`; isso permite que um iterador seja usado quando um iterável é esperado. Por exemplo, em um laço `for`.
+`+__iter__+`:: Devolve `self`; isso permite que um iterador seja
+usado quando um iterável é esperado. Por exemplo, em um laço `for`.
 
 Essa interface está formalizada na ABC `collections.abc.Iterator`,
 que declara o método abstrato `+__next__+`,
@@ -346,19 +444,28 @@ class Iterator(Iterable):
         return NotImplemented
 ----
 ====
-<1> `+__subclasshook__+` suporta a checagem de tipos estrutural com `isinstance` e `issubclass`. Vimos isso na <<subclasshook_sec>>.
-<2> `_check_methods` percorre o parâmetro `+__mro__+` da classe, para checar se os métodos estão implementados em sua classe base.
-Ele está definido no mesmo módulo, __Lib/_collections_abc.py__.
-Se os métodos estiverem implementados, a classe `C` será reconhecida como uma subclasse virtual de `Iterator`.
-Em outras palavras, `issubclass(C, Iterable)` devolverá `True`.
+
+<1> `+__subclasshook__+` suporta a checagem de tipos estrutural com `isinstance`
+e `issubclass`. Vimos isso na <<subclasshook_sec>>.
+
+<2> `_check_methods` percorre o parâmetro `+__mro__+` da classe, para checar se
+os métodos estão implementados em sua classe base. Ele está definido no mesmo
+módulo, __Lib/_collections_abc.py__. Se os métodos estiverem implementados, a
+classe `C` será reconhecida como uma subclasse virtual de `Iterator`. Em outras
+palavras, `issubclass(C, Iterable)` devolverá `True`.
 
 [WARNING]
 ====
-O método abstrato da ABC `Iterator` é `+it.__next__()+` no Python 3 e `it.next()` no Python 2. Como sempre, você deve evitar invocar métodos especiais diretamente.
-Use apenas `next(it)`: essa função embutida faz a coisa certa no Python 2 e no 3—algo útil para quem está migrando bases de código do 2 para o 3.
+
+O método abstrato da ABC `Iterator` é `+it.__next__()+` no Python 3 e
+`it.next()` no Python 2. Como sempre, você deve evitar invocar métodos especiais
+diretamente. Use apenas `next(it)`: essa função embutida faz a coisa certa no
+Python 2 e no 3—algo útil para quem está migrando bases de código do 2 para o 3.
+
 ====
 
-O código-fonte do módulo https://fpy.li/17-6[_Lib/types.py_] no Python 3.9 tem um comentário dizendo:
+O código-fonte do módulo https://fpy.li/17-6[_Lib/types.py_] no Python 3.9 tem
+um comentário dizendo:
 
 ----
 # Iteradores no Python não são uma questão de tipo, mas sim de protocolo. Um número
@@ -367,14 +474,23 @@ O código-fonte do módulo https://fpy.li/17-6[_Lib/types.py_] no Python 3.9 tem
 # checar [a existência] de ambos os atributos "__iter__" e "__next__".
 ----
 
-E de fato, é exatamente o que o método `+__subclasshook__+` da ABC `abc.Iterator` faz.
+E de fato, é exatamente o que o método `+__subclasshook__+` da ABC
+`abc.Iterator` faz.
 
 [TIP]
 ====
-Dado o conselho de __Lib/types.py__ e a lógica implementada em __Lib/_collections_abc.py__, a melhor forma de checar se um objeto `x` é um iterador é invocar `isinstance(x, abc.Iterator)`. Graças ao `+Iterator.__subclasshook__+`, esse teste funciona mesmo se a classe de `x` não for uma subclasse real ou virtual de `Iterator`.
+
+Dado o conselho de __Lib/types.py__ e a lógica implementada em
+__Lib/_collections_abc.py__, a melhor forma de checar se um objeto `x` é um
+iterador é invocar `isinstance(x, abc.Iterator)`. Graças ao
+`+Iterator.__subclasshook__+`, esse teste funciona mesmo se a classe de `x` não
+for uma subclasse real ou virtual de `Iterator`.
+
 ====
 
-Voltando à nossa classe `Sentence` no <<ex_sentence0>>, usando o console de Python é possivel ver claramente como o iterador é criado por `iter()` e consumido por `next()`:
+Voltando à nossa classe `Sentence` no <<ex_sentence0>>, usando o console de
+Python é possivel ver claramente como o iterador é criado por `iter()` e
+consumido por `next()`:
 
 [source, python]
 ----
@@ -401,22 +517,30 @@ StopIteration
 <2> Obtém um iterador a partir de `s3`.
 <3> `next(it)` devolve a próxima palavra.
 <4> Não há mais palavras, então o iterador gera uma exceção `StopIteration`.
-<5> Uma vez exaurido, um itereador vai sempre gerar `StopIteration`, o que faz parecer que ele está vazio..
+<5> Uma vez exaurido, um itereador vai sempre gerar `StopIteration`,
+o que faz parecer que ele está vazio..
 <6> Para percorrer a sentença novamente é preciso criar um novo iterador.
 
-Como os únicos métodos exigidos de um iterador são `+__next__+` e `+__iter__+`, não há como checar se há itens restantes, exceto invocando `next()` e capturando `StopIteration`.
-Além disso, não é possível "reiniciar" um iterador.
-Se for necessário começar de novo, é preciso invocar `iter()` no iterável que criou o iterador original.
-Invocar `iter()` no próprio iterador também não funciona, pois—como já mencionado&mdash;a implementação de pass:[<span class="keep-together"><code>Iterator.&#x5f;&#x5f;iter&#x5f;&#x5f;</code></span>] apenas devolve `self`, e isso não reinicia um iterador exaurido.
+Como os únicos métodos exigidos de um iterador são `+__next__+` e `+__iter__+`,
+não há como checar se há itens restantes, exceto invocando `next()` e capturando
+`StopIteration`. Além disso, não é possível "reiniciar" um iterador. Se for
+necessário começar de novo, é preciso invocar `iter()` no iterável que criou o
+iterador original. Invocar `iter()` no próprio iterador também não funciona,
+pois—como já mencionado—a implementação de `+Iterator.&#x5f;&#x5f;iter&#x5f;&#x5f;+`
+apenas devolve `self`, e isso não reinicia um iterador exaurido.
 
-Essa interface mínima é bastante razoável porque, na realidade, nem todos os itereadores são reiniciáveis.
-Por exemplo, se um iterador está lendo pacotes da rede, não há como "rebobiná-lo".footnote:[Agradeço ao revisor técnico Leonardo Rochael por esse ótimo exemplo.]
+Essa interface mínima é bastante razoável porque, na realidade, nem todos os
+itereadores são reiniciáveis. Por exemplo, se um iterador está lendo pacotes da
+rede, não há como "rebobiná-lo".footnote:[Agradeço ao revisor técnico Leonardo
+Rochael por esse ótimo exemplo.]
 
-A primeira versão de `Sentence`, no <<ex_sentence0>>, era iterável graças ao tratamento especial dispensado pela função embutida às sequências.
-A seguir vamos implementar variações de `Sentence` que implementam `+__iter__+` para devolver iteradores.((("", startref="IOvie17")))((("", startref="IEvio17")))
+A primeira versão de `Sentence`, no <<ex_sentence0>>, era iterável graças ao
+tratamento especial dispensado pela função embutida às sequências. A seguir
+vamos implementar variações de `Sentence` que implementam `+__iter__+` para
+devolver iteradores.((("", startref="IOvie17")))((("", startref="IEvio17")))
 
 
-=== Classes Sentence com pass:[__iter__]
+=== Classes Sentence com `+__iter__+`
 
 As((("iterators", "Sentence classes with &#x005F;&#x005F;iter&#x005F;&#x005F;", id="ITsentence17")))((("&#x005F;&#x005F;iter&#x005F;&#x005F;", id="iter17")))((("Sentence classes", id="sentclass17"))) próximas variantes de `Sentence` implementam o protocolo iterável padrão, primeiro implementando o padrão de projeto _Iterable_ e depois com funções geradoras.
 
@@ -608,13 +732,13 @@ end.      <10>
 >>>       <11>
 ----
 ====
-<1> A primeira chamada implícita a `next()` no loop `for` em pass:[<img src="callouts/4.png" alt="4"/>] vai exibir `'start'` e parar no primeiro `yield`, produzindo o valor `'A'`.
+<1> A primeira chamada implícita a `next()` no loop `for` em `④` vai exibir `'start'` e parar no primeiro `yield`, produzindo o valor `'A'`.
 <2> A segunda chamada implícita a `next()` no loop `for` vai exibir `'continue'` e parar no segundo `yield`, produzindo o valor `'B'`.
 <3> A terceira chamada a `next()` vai exibir `'end.'` e continuar até o final do corpo da função, fazendo com que o objeto gerador crie uma `StopIteration`.
 <4> Para iterar, o mecanismo do `for` faz o equivalente a `g = iter(gen_AB())` para obter um objeto gerador, e daí `next(g)` a cada iteração.
-<5> O loop exibe `-->` e o valor devolvido por `next(g)`. Esse resultado só aparece após a saída das chamadas `print` dentro da função geradora.
+<5> O loop exibe `-{rt-arrow}` e o valor devolvido por `next(g)`. Esse resultado só aparece após a saída das chamadas `print` dentro da função geradora.
 <6> O texto `start` vem de `print('start')` no corpo da geradora.
-<7> `yield 'A'` no corpo da geradora produz o valor 'A' consumido pelo loop `for`, que é atribuído à variável `c` e resulta na saída `--> A`.
+<7> `yield 'A'` no corpo da geradora produz o valor 'A' consumido pelo loop `for`, que é atribuído à variável `c` e resulta na saída `-{rt-arrow} A`.
 <8> A iteração continua com a segunda chamada a `next(g)`, avançando no corpo da geradora de
 `yield 'A'` para `yield 'B'`. O texto `continue` é gerado pelo segundo `print` no corpo da geradora.
 <9> `yield 'B'` produz o valor 'B' consumido pelo loop `for`, que é atribuído à variável `c` do loop, que então exibe `--> B`.
