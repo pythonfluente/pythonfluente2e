@@ -901,10 +901,10 @@ iterador::
 
 gerador::
     Um iterador criado pelo compilador Python.
-    Para criar um gerador, não implementamos `+__next__+`.
-    Em vez disso, usamos((("yield keyword")))((("keywords", "yield keyword"))) a palavra reservada `yield` para criar uma _função submarina_, que é uma fábrica de _objetos geradores_.
-    Uma _expressão submarina_ é outra maneira de criar um objeto gerador.
-    Objetos geradores fornecem `+__next__+`, então são iteradores.
+    Para criar um gerador, não implementamos uma classe com `+__next__+`.
+    Em vez disso, usamos((("yield keyword")))((("keywords", "yield keyword"))) a palavra reservada `yield` para criar uma _função geradora_, que é uma fábrica de _objetos geradores_.
+    Uma _expressão geradora_ é outra maneira de criar um objeto gerador.
+    Objetos geradores fornecem `+__next__+`, portanto são iteradores.
     Desde o Python 3.5, também temos _geradores assíncronos_, declarados com `async def`.
     Vamos estudá-los no <<ch_async>>.
 
@@ -937,14 +937,23 @@ os objetos devolvidos em ambos os casos são objetos geradores:
 
 === Um gerador de progressão aritmética
 
-O((("generators", "arithmetic progression generators", id="Garith17"))) padrão _Iterator_ clássico está todo baseado em uma travessia: navegar por alguma estrutura de dados. Mas uma interface padrão baseada em um método para obter o próximo item em uma série também é útil quando os itens são produzidos sob demanda, ao invés de serem obtidos de uma coleção. Por exemplo, a função embutida `range` gera uma progressão aritmética (PA) de inteiros delimitada. E se precisarmos gerar uma PA com números de qualquer tipo, não apenas inteiros?
+O((("generators", "arithmetic progression generators", id="Garith17")))
+padrão _Iterator_ clássico trata de navegar por uma estrutura de dados.
+Sua interface padrão é um método que fornece o próximo item de uma série.
+Tal interface também é util quando os itens são produzidos sob demanda,
+ao invés de serem lidos de uma coleção.
+Por exemplo, a função embutida `range` gera uma progressão aritmética (PA)
+de inteiros.
+E se precisarmos gerar uma PA com números de qualquer tipo, não apenas inteiros?
 
 O <<ap_class_demo>> mostra alguns testes no console com uma classe `ArithmeticProgression`, que vermos em breve.
 A assinatura do construtor no <<ap_class_demo>> é `ArithmeticProgression(begin, step[, end])`.
 A assinatura completa da função embutida `range` é `range(start, stop[, step])`.
-Escolhi implementar uma assinatura diferente porque o `step` é obrigatório, mas `end` é opcional em uma progressão aritmética.
-Também mudei os nomes dos argumentos de `start/stop` para `begin/end`, para deixar claro que optei por uma assinatura diferente.
-Para cada teste no <<ap_class_demo>>, chamo `list()` com o resultado para inspecionar o valores gerados.
+Escolhi implementar uma assinatura diferente porque o `step` é obrigatório,
+mas o `end` é opcional.
+Também mudei os nomes dos argumentos `start/stop` para `begin/end`,
+para deixar claro que optei por uma assinatura diferente.
+Para cada teste no <<ap_class_demo>>, chamo `list()` com o resultado para exibir o valores gerados.
 
 [[ap_class_demo]]
 .Demonstração de uma classe `ArithmeticProgression`
@@ -955,7 +964,9 @@ include::../code/17-it-generator/aritprog_v1.py[tags=ARITPROG_CLASS_DEMO]
 ----
 ====
 
-Observe que o tipo dos números na progressão aritmética resultante segue o tipo de `begin + step`, de acordo com as regras de coerção numérica da aritmética de Python. No <<ap_class_demo>>, você pode ver listas de números `int`, `float`, `Fraction`, e `Decimal`.
+Observe que o tipo dos números na progressão aritmética resultante
+segue o tipo de `begin + step`, de acordo com as regras de coerção numérica da aritmética de Python.
+No <<ap_class_demo>>, você pode ver listas de números `int`, `float`, `Fraction`, e `Decimal`.
 O <<ex_ap_class>> mostra a implementação da classe `ArithmeticProgression`.
 
 [[ex_ap_class]]
@@ -966,12 +977,19 @@ O <<ex_ap_class>> mostra a implementação da classe `ArithmeticProgression`.
 include::../code/17-it-generator/aritprog_v1.py[tags=ARITPROG_CLASS]
 ----
 ====
+
 <1> `+__init__+` exige dois argumentos: `begin` e `step`; `end` é opcional, se for `None`, a série será ilimitada.
+
 <2> Obtém o tipo somando `self.begin` e `self.step`. Por exemplo, se um for `int` e o outro `float`, o `result_type` será `float`.
+
 <3> Essa linha cria um `result` com o mesmo valor numérico de `self.begin`, mas coagido para o tipo das somas subsequentes.footnote:[No Python 2, havia uma função embutida `coerce()`, mas ela não existe mais no Python 3. Foi considerada desnecessária, pois as regras de coerção numérica estão implícitas nos métodos dos operadores aritméticos. Então, a melhor forma que pude imaginar para forçar o valor inicial para o mesmo tipo do restante da série foi realizar a adição e usar seu tipo para converter o resultado. Perguntei sobre isso na Python-list e recebi uma excelente https://fpy.li/17-11[resposta de Steven D'Aprano] (EN).]
+
 <4> Para melhorar a legibilidade, o sinalizador `forever` será `True` se o atributo `self.end` for `None`, resultando em uma série ilimitada.
-<5> Esse loop roda `forever` ou até o resultado ser igual ou maior que `self.end`. Quando esse loop termina, a função retorna.
+
+<5> Este loop roda `forever` ou até o resultado ser igual ou maior que `self.end`. Quando este loop termina, a função retorna.
+
 <6> O `result` atual é produzido.
+
 <7> O próximo resultado em potencial é calculado. Ele pode nunca ser produzido, se o loop `while` terminar.
 
 Na última linha do <<ex_ap_class>>,
