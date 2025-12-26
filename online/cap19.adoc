@@ -576,16 +576,22 @@ por definição, uma corrotina só pode ser cancelada quando está suspensa em u
 A chamada `time.sleep()` bloqueia mas não faz nada. Vamos agora experimentar com uma chamada de uso intensivo da CPU, para entender melhor a GIL, bem como o efeito de funções de processamento intensivo sobre código assíncrono.((("", startref="CMhello19")))
 
 
+=== O verdadeiro impacto da GIL
 
+Na((("concurrency models", "Global Interpreter Lock impact",
+id="CMimpact19")))((("Global Interpreter Lock (GIL)", id="gil19")))((("spinners (loading indicators)",
+"Global Interpreter Lock impact", id="SPgil19"))) versão
+com threads(<<spinner_thread_top_ex>>), você pode trocar a chamada
+`time.sleep(3)` na função `slow` por um requisição de cliente HTTP de sua
+biblioteca favorita, e a animação continuará girando. Isso acontece porque
+qualquer boa biblioteca de programação para rede vai liberar a GIL enquanto
+estiver esperando uma resposta. Por padrão, toda operação de E/S em Python
+libera a GIL.
 
-
-=== O real impacto da GIL
-
-Na((("concurrency models", "Global Interpreter Lock impact", id="CMimpact19")))((("Global Interpreter Lock (GIL)", id="gil19")))((("spinners (loading indicators)", "Global Interpreter Lock impact", id="SPgil19"))) versão com threads(<<spinner_thread_top_ex>>),
-você pode substituir a chamada `time.sleep(3)` na função `slow` por um requisição de cliente HTTP de sua biblioteca favorita, e a animação continuará girando.
-Isso acontece porque uma biblioteca de programação para rede bem desenhada liberará a GIL enquanto estiver esperando uma resposta.
-
-Você também pode substituir a expressão `asyncio.sleep(3)` na corrotina `slow` para que `await` espere pela resposta de uma biblioteca bem desenhada de acesso assíncrono à rede, pois tais bibliotecas fornecem corrotinas que devolvem o controle para o loop de eventos enquanto esperam por uma resposta da rede.
+Você também pode trocar a expressão `asyncio.sleep(3)` na corrotina `slow` para
+fazer `await` esperar a resposta de uma corrotina de biblioteca bem desenhada de
+acesso assíncrono à rede. Tais bibliotecas implementam corrotinas para devolver
+o controle para o loop de eventos enquanto esperam por uma resposta da rede.
 Enquanto isso, a animação seguirá girando.
 
 Com código de uso intensivo da CPU, a história é outra.
