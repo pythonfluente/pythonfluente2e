@@ -156,8 +156,8 @@ include::../code/21-async/domains/asyncio/blogdom.py[]
 <1> Estabelece o comprimento máximo da palavra-chave para domínios, pois quanto menor, melhor.
 <2> `probe` devolve uma tupla com o nome do domínio e um valor booleano; `True` significa que o domínio foi resolvido. Incluir o nome do domínio aqui facilita a exibição dos resultados.
 <3> Obtém uma referência para o loop de eventos do `asyncio`, para usá-la a seguir.
-<4> O método corrotina https://docs.python.org/pt-br/3/library/asyncio-eventloop.html#asyncio.loop.getaddrinfo[`loop.getaddrinfo(…)`]
-devolve uma https://docs.python.org/pt-br/3/library/socket.html#socket.getaddrinfo[tupla de parâmetros com cinco partes] para conectar ao endereço dado usando um socket. Neste exemplo não precisamos do resultado. Se conseguirmos um resultado, o domínio foi resolvido; caso contrário, não.
+<4> O método corrotina https://fpy.li/aq[`loop.getaddrinfo(…)`]
+devolve uma https://fpy.li/ar[tupla de parâmetros com cinco partes] para conectar ao endereço dado usando um socket. Neste exemplo não precisamos do resultado. Se conseguirmos um resultado, o domínio foi resolvido; caso contrário, não.
 <5> `main` precisa ser uma corrotina, para podermos usar `await` aqui.
 <6> Gerador para produzir palavras-chave com tamanho até `MAX_KEYWORD_LEN`.
 <7> Gerador para produzir nome de domínio com o sufixo `.dev`.
@@ -171,7 +171,7 @@ devolve uma https://docs.python.org/pt-br/3/library/socket.html#socket.getaddrin
 A função `asyncio.get_running_loop` surgiu no Python 3.7, para uso dentro de corrotinas, como visto em `probe`.
 Se não houver um loop em execução, `asyncio.get_running_loop` gera um `RuntimeError`.
 Sua implementação é mais simples e mais rápida que a de `asyncio.get_event_loop`, que pode iniciar um loop de eventos se necessário.
-Desde o Python 3.10, `asyncio.get_event_loop` foi https://docs.python.org/pt-br/3.10/library/asyncio-eventloop.html#asyncio.get_event_loop[descontinuado], e em algum momento se tornará um alias para `asyncio.get_running_loop`.
+Desde o Python 3.10, `asyncio.get_event_loop` foi https://fpy.li/as[descontinuado], e em algum momento se tornará um alias para `asyncio.get_running_loop`.
 ====
 
 ==== O truque de Guido para ler código assíncrono
@@ -243,7 +243,7 @@ o que significa que elas podem ser descartadas pelo coletor de lixo
 antes de executarem. Por isso você precisa criar referências fortes para
 manter cada tarefa na memória.
 Veja a documentação de
-https://docs.python.org/pt-br/3/library/asyncio-task.html#asyncio.create_task[`asyncio.create_task`].
+https://fpy.li/at[`asyncio.create_task`].
 Sobre referências fracas, escrevi o artigo
 https://fpy.li/weakref["Weak References"] _fluentpython.com_ (EN).footnote:[Agradeço ao leitor Samuel Woodward por ter reportado esse erro para a O'Reilly em fevereiro de 2023]
 ====
@@ -527,7 +527,7 @@ Primeira diferença: ele exige o parâmetro `client`.
 
 No _asyncio_, toda a comunicação de rede é feita com corrotinas, mas não E/S de arquivos.
 Entretanto, E/S de arquivos também é "bloqueante"—no sentido que ler/escrever arquivos é https://fpy.li/21-15[milhares de vezes mais demorado] que ler/escrever na RAM.
-Se você estiver usando https://pt.wikipedia.org/wiki/Armazenamento_conectado_%C3%A0_rede[armazenamento conectado à rede], isso pode até envolver E/S de rede internamente.
+Se você estiver usando https://fpy.li/av[armazenamento conectado à rede], isso pode até envolver E/S de rede internamente.
 
 Desde o Python 3.9, a corrotina `asyncio.to_thread` facilitou delegar operações de arquivo para um pool de threads fornecido pelo _asyncio_.
 Se você precisa suportar Python 3.7 ou 3.8,
@@ -538,7 +538,7 @@ Mas primeiro, vamos terminar nosso estudo do código do cliente HTTP.
 
 Clientes de rede((("throttling", id="throttle21")))((("semaphores", id="semaphores21"))) como os que estamos estudando devem ser _limitados_ ("_throttled_") (isto é, desacelerados) para que não martelem o servidor com um número excessivo de requisições concorrentes.
 
-Um https://pt.wikipedia.org/wiki/Sem%C3%A1foro_(computa%C3%A7%C3%A3o)[_semáforo_]
+Um https://fpy.li/aw[_semáforo_]
 é uma estrutura primitiva de sincronização, mais flexível que uma trava.
 Um semáforo pode ser mantido por múltiplas corrotinas, com um número máximo configurável.
 Isso o torna ideial para limitar o número de corrotinas concorrentes ativas.
@@ -553,7 +553,7 @@ e passado como o argumento `semaphore` para `download_one` no <<flags2_asyncio_t
 [[about_semaphores_box]]
 .Semáforos no Python
 ****
-O cientista da computação Edsger W. Dijkstra inventou o https://pt.wikipedia.org/wiki/Sem%C3%A1foro_(computa%C3%A7%C3%A3o)[semáforo] no início dos anos 1960.
+O cientista da computação Edsger W. Dijkstra inventou o https://fpy.li/aw[semáforo] no início dos anos 1960.
 É uma ideia simples, mas tão flexível que a maioria dos outros objetos de sincronização—como as travas e as barreiras—podem ser construídas a partir de semáforos.
 Há três classes `Semaphore` na biblioteca padrão de Python:
 uma em `threading`, outra em `multiprocessing`, e uma terceira em `asyncio`.
@@ -730,7 +730,7 @@ include::../code/20-executors/getflags/flags2_asyncio_executor.py[tags=FLAGS2_AS
 <1> Obtém uma referência para o loop de eventos.
 <2> O primeiro argumento é o executor a ser utilizado; passar `None` seleciona o default, `ThreadPoolExecutor`, que está sempre disponível no loop de eventos do `asyncio`.
 <3> Você pode passar argumentos posicionais para a função a ser executada, mas se você precisar passar argumentos nomeados, vai precisar recorrer a `functool.partial`, como descrito na
-https://docs.python.org/pt-br/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor[documentação de `run_in_executor`].
+https://fpy.li/ax[documentação de `run_in_executor`].
 
 A função mais recente `asyncio.to_thread` é mais fácil de usar e mais flexível, já que também aceita argumentos nomeados.
 
@@ -766,7 +766,7 @@ Agora saímos de scripts cliente para escrever servidores com o `asyncio`.((("",
 === Programando servidores asyncio
 
 O((("asynchronous programming", "writing asyncio servers", id="APRwrit21")))((("asyncio package", "writing asyncio servers", id="APwrite21")))((("servers", "writing asyncio servers", id="Sasyncio21"))) exemplo clássico de um servidor TCP de brinquedo é um
-https://docs.python.org/pt-br/3/library/asyncio-stream.html#tcp-echo-server-using-streams[servidor eco]. Vamos escrever brinquedos um pouco mais interessantes: utilitários de servidor para busca de caracteres Unicode, primeiro usando HTTP com a _FastAPI_, depois usando TCP puro apenas com `asyncio`.
+https://fpy.li/7g[servidor eco]. Vamos escrever brinquedos um pouco mais interessantes: utilitários de servidor para busca de caracteres Unicode, primeiro usando HTTP com a _FastAPI_, depois usando TCP puro apenas com `asyncio`.
 
 Esse servidores permitem que os usuários façam consultas sobre caracteres Unicode baseadas em palavras em seus nomes padrão no módulo `unicodedata` que discutimos na <<unicodedata_sec>>.
 A <<web_mojifinder_result>> mostra uma sessão com o _web_mojifinder.py_, o primeiro servidor que escreveremos.
@@ -792,7 +792,7 @@ Após indexar os dados do Unicode 13.0.0 incluídos no Python 3.10, `'DIGIT'` se
 e `'SEVEN'` para  143, incluindo U+1F556—CLOCK FACE SEVEN OCLOCK e
 U+2790—DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT SEVEN.
 
-Veja a <<inverted_index_fig>> para uma demonstração usando os registro para `'CAT'` e `'FACE'`.footnote:[O ponto de interrogação encaixotado na captura de tela não é um defeito do livro ou do ebook que você está lendo. É o caractere U+101EC—PHAISTOS DISC SIGN CAT, que não existe na fonte do terminal que usei. O https://pt.wikipedia.org/wiki/Disco_de_Festo[Disco de Festo] é um artefato antigo inscrito com pictogramas, descoberto na ilha de Creta.]
+Veja a <<inverted_index_fig>> para uma demonstração usando os registro para `'CAT'` e `'FACE'`.footnote:[O ponto de interrogação encaixotado na captura de tela não é um defeito do livro ou do ebook que você está lendo. É o caractere U+101EC—PHAISTOS DISC SIGN CAT, que não existe na fonte do terminal que usei. O https://fpy.li/ay[Disco de Festo] é um artefato antigo inscrito com pictogramas, descoberto na ilha de Creta.]
 
 [[inverted_index_fig]]
 .Explorando o atributo `entries` e o método `search` de `InvertedIndex` no console de Python
@@ -802,7 +802,7 @@ O método `InvertedIndex.search` quebra a consulta em palavras separadas, e devo
 É por isso que buscar por "face" encontra 171 resultados, "cat" encontra 14, mas "cat face" apenas 10.
 
 Essa é a bela ideia por trás dos índices invertidos: uma pedra fundamental da recuperação de informação—a teoria por trás dos mecanismos de busca.
-Veja o artigo https://pt.wikipedia.org/wiki/Listas_invertidas["Listas Invertidas"] na Wikipedia para saber mais.
+Veja o artigo https://fpy.li/az["Listas Invertidas"] na Wikipedia para saber mais.
 ****
 
 [[fastapi_web_service_sec]]
@@ -917,12 +917,12 @@ include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_MAIN]
 ====
 <1> Este `await` rapidamente recebe um instância de `asyncio.Server`, um servidor TCP baseado em _sockets_. Por default, `start_server` cria e inicia o servidor, então ele está pronto para receber conexões.
 <2> O primeiro argumento para `start_server` é `client_connected_cb`, um callback para ser executado quando a conexão com um novo cliente se inicia. O callback pode ser uma função ou uma corrotina, mas precisa aceitar exatamente dois argumentos: um `asyncio.StreamReader` e um `asyncio.StreamWriter`. Entretanto, minha corrotina `finder` também precisa receber um `index`, então usei `functools.partial` para vincular aquele parâmetro e obter um invocável que receber o leitor (`asyncio.StreamReader`) e o escritor (`asyncio.StreamWriter`). Adaptar funções do usuário a APIs de callback é o caso de uso mais comum de `functools.partial`.
-<3> `host` e `port` são o segundo e o terceiro argumentos de `start_server`. Veja a assinatura completa na https://docs.python.org/pt-br/3/library/asyncio-stream.html#asyncio.start_server[documentação do `asyncio`].
+<3> `host` e `port` são o segundo e o terceiro argumentos de `start_server`. Veja a assinatura completa na https://fpy.li/b2[documentação do `asyncio`].
 <4> Este `cast` é necessário porque o _typeshed_ tem uma dica de tipo desatualizada para a propriedade `sockets` da classe `Server`—isso em maio de 2021. Veja https://fpy.li/21-36[Issue #5535 no _typeshed_].footnote:[O issue #5535 está fechado desde outubro de 2021, mas o Mypy não lançou uma nova versão desde então, daí o erro permanece.]
 <5> Mostra o endereço e a porta do primeiro _socket_ do servidor.
 <6> Apesar de `start_server` já ter iniciado o servidor como uma tarefa concorrente, preciso usar o `await` no método `serve_forever`, para que meu `supervisor` seja suspenso aqui.
 Sem essa linha, o `supervisor` retornaria imediatamente, encerrando o loop iniciado com `asyncio.run(supervisor(…))`, e fechando o programa. A
-https://docs.python.org/pt-br/3/library/asyncio-eventloop.html#asyncio.Server.serve_forever[documentação de `Server.serve_forever`] diz: "Este método pode ser chamado se o servidor já estiver aceitando conexões."
+https://fpy.li/b3[documentação de `Server.serve_forever`] diz: "Este método pode ser chamado se o servidor já estiver aceitando conexões."
 <7> Constrói o índice invertido.footnote:[O revisor técnico Leonardo Rochael apontou que a construção do índice poderia ser delegada a outra thread, usando `loop.run_with_executor()` na corrotina `supervisor`. Dessa forma o servidor estaria pronto para receber requisições imediatamente, enquanto o índice é construído. Isso é verdade, mas como consultar o índice é a única coisa que esse servidor faz, isso não seria uma grande vantagem nesse exemplo.]
 <8> Inicia o loop de eventos rodando `supervisor`.
 <9> Captura `KeyboardInterrupt` para evitar o traceback dispersivo quando encerro o servidor com Ctrl-C, no terminal onde ele está rodando.
@@ -987,7 +987,7 @@ include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_TOP]
 <13> `search` realiza a busca efetiva; o código será apresentado a seguir.
 <14> Registra a resposta no console do servidor.
 <15> Fecha o `StreamWriter`.
-<16> Espera até `StreamWriter` fechar. Isso é recomendado na https://docs.python.org/pt-br/3/library/asyncio-stream.html#asyncio.StreamWriter.close[documentação do método `.close()`].
+<16> Espera até `StreamWriter` fechar. Isso é recomendado na https://fpy.li/b4[documentação do método `.close()`].
 <17> Registra o final dessa sessão do cliente no console do servidor.
 
 O último pedaço desse exemplo é a corrotina `search`, listada no <<tcp_mojifinder_search>>.
@@ -1012,10 +1012,14 @@ Observe que toda a E/S de rede em _tcp_mojifinder.py_ é feita em `bytes`; preci
 [WARNING]
 ====
 Veja que alguns dos métodos de E/S são corrotinas, e precisam ser acionados com `await`, enquanto outros são funções simples, Por exemplo, `StreamWriter.write` é uma função normal, porque escreve em um buffer.
-Por outro lado, `StreamWriter.drain`—que esvazia o buffer e executa o E/S de rede—é uma corrotina, assim como `StreamReader.readline`—mas não `StreamWriter.writelines`! Enquanto estava escrevendo a primeira edição desse livro, a documentação da API `asyncio` API docs foi melhorada pela https://docs.python.org/pt-br/3/library/asyncio-stream.html#streamwriter[indicação clara das corrotinas como tal].
+Por outro lado, `StreamWriter.drain`—que esvazia o buffer e executa o E/S de rede—é uma corrotina, assim como `StreamReader.readline`—mas não `StreamWriter.writelines`! Enquanto estava escrevendo a primeira edição desse livro, a documentação da API `asyncio` API docs foi melhorada pela https://fpy.li/b5[indicação clara das corrotinas como tal].
 ====
 
-O código de _tcp_mojifinder.py_ se vale da https://fpy.li/21-40[API Streams] de alto nível do `asyncio`, que fornece um servidor pronto para ser usado, de forma que basta implemetar uma função de processamento, que pode ser um callback simples ou uma corrotina. Há também uma https://docs.python.org/pt-br/3/library/asyncio-protocol.html[API de Transportes e Protocolos] (EN) de baixo nível, inspirada pelas abstrações transporte e protocolo do framework _Twisted_. Veja a documentação do `asyncio` para mais informações, incluindo os https://docs.python.org/pt-br/3/library/asyncio-protocol.html#tcp-echo-server[servidores echo e clientes TCP e UDP ] implementados com aquela API de nível mais baixo.
+O código de _tcp_mojifinder.py_ se vale da https://fpy.li/21-40[API Streams] de alto nível do `asyncio`, que fornece um servidor pronto para ser usado, de forma que basta implemetar uma função de processamento, que pode ser um callback simples ou uma corrotina. Há também uma
+https://fpy.li/bb[API de Transportes e Protocolos]
+de baixo nível, inspirada pelas abstrações transporte e protocolo do framework _Twisted_.
+Veja a documentação do `asyncio` para mais informações, incluindo os
+https://fpy.li/bc[servidores echo e clientes TCP e UDP ] implementados com aquela API de nível mais baixo.
 
 Nosso próximo tópico é `async for` e os objetos que a fazem funcionar.((("", startref="tcp21")))((("", startref="APRwrit21")))((("", startref="APwrite21")))((("", startref="Stcp22")))((("", startref="Sasyncio21")))
 
@@ -1234,7 +1238,7 @@ Geradores têm um uso adicional, não relacionado à iteração: ele podem ser u
 [[async_gen_context_mngr_sec]]
 ===== Geradores assíncronos como gerenciadores de contexto
 
-Escrever((("context managers", "asynchronous generators as"))) nossos próprios gerenciadores de contexto assíncronos não é uma tarefa de programação frequente, mas se você precisar escrever um, considere usar o decorador https://docs.python.org/pt-br/3/library/contextlib.html#contextlib.asynccontextmanager[`@asynccontextmanager`] (EN), incluído no módulo `contextlib` no Python 3.7.
+Escrever((("context managers", "asynchronous generators as"))) nossos próprios gerenciadores de contexto assíncronos não é uma tarefa de programação frequente, mas se você precisar escrever um, considere usar o decorador https://fpy.li/b6[`@asynccontextmanager`] (EN), incluído no módulo `contextlib` no Python 3.7.
 Ele é muito similar ao decorador `@contextmanager` que estudamos na <<using_cm_decorator_sec>>.
 
 Um exemplo interessante da combinação de `@asynccontextmanager` com `loop.run_in_executor` aparece no livro de Caleb Hattingh,
@@ -1269,7 +1273,7 @@ async with web_page('google.com') as data:  # <6>
 Isso é muito similar ao decorador sequencial `@contextmanager`.
 Por favor, consulte a <<using_cm_decorator_sec>> para mais detalhes, inclusive o tratamento de erro na linha do `yield`.
 Para outro exemplo usando `@asynccontextmanager`, veja a
-https://docs.python.org/pt-br/3/library/contextlib.html#contextlib.asynccontextmanager[documentação do `contextlib`].
+https://fpy.li/b6[documentação do `contextlib`].
 
 Por fim, vamos terminar nossa jornada pelas funções geradoras assíncronas comparado-as com as corrotinas nativas.
 
@@ -1354,7 +1358,7 @@ Usar `await` em uma compreensão de lista é similar a usar  `asyncio.gather`.
 Mas `gather` dá a você um maior controle sobre o tratamento de exceções, graças ao seu argumento opcional `return_exceptions`.
 Caleb Hattingh recomenda sempre definir `return_exceptions=True` (o default é `False`).
 Veja a
-https://docs.python.org/pt-br/3/library/asyncio-task.html#asyncio.gather[documentação de `asyncio.gather`]
+https://fpy.li/b7[documentação de `asyncio.gather`]
 para mais informações.
 ====
 
@@ -1646,7 +1650,7 @@ Aqui estão algumas opções para quando você identifica gargalos de uso da CPU
 A fila de tarefas externa deveria ser escolhida e integrada o mais rápido possível,
 no início do projeto, para que ninguém na equipe hesite em usá-la quando necessário.
 
-A opção deixar como está entra na categoria de https://pt.wikipedia.org/wiki/D%C3%ADvida_tecnol%C3%B3gica[dívida tecnológica].
+A opção deixar como está entra na categoria de https://fpy.li/b8[dívida tecnológica].
 
 Programação concorrente é um tópico fascinante, e eu gostaria de escrever mais sobre isso.
 Mas não é o foco principal deste livro, e este já é um dos capítulos mais longos, então vamos encerrar por aqui.
@@ -1704,11 +1708,11 @@ https://fpy.li/21-67["What is the core difference between asyncio and trio?" (_Q
 no StackOverflow.
 
 Para aprender mais sobre o pacote _asyncio_, já mencionei os melhores recursos escritos que conheço no início do capítulo:
-a https://docs.python.org/pt-br/3/library/asyncio.html[documentação oficial], após a fantástica https://fpy.li/21-69[reorganização] (EN) iniciada por Yury Selivanov em 2018, e o livro de Caleb Hattingh,
+a https://fpy.li/b9[documentação oficial], após a fantástica https://fpy.li/21-69[reorganização] (EN) iniciada por Yury Selivanov em 2018, e o livro de Caleb Hattingh,
 pass:[<a href="https://fpy.li/hattingh" class="orm:hideurl"><em>Using Asyncio in Python</em></a>]
 (O'Reilly).
 
-Na documentação oficial, não deixe de ler https://docs.python.org/pt-br/3/library/asyncio-dev.html["Desenvolvendo com asyncio"], que documenta o modo de depuração do _asyncio_ e também discute erros e armadilhas comuns, e como evitá-los.
+Na documentação oficial, não deixe de ler https://fpy.li/ba["Desenvolvendo com asyncio"], que documenta o modo de depuração do _asyncio_ e também discute erros e armadilhas comuns, e como evitá-los.
 
 Para uma introdução muito acessível, de 30 minutos, à programação assíncrona em geral e também ao _asyncio_,
 assista a palestra

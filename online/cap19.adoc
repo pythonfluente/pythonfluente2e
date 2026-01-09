@@ -175,12 +175,12 @@ a((("Global Interpreter Lock (GIL)"))) Global Interpreter Lock (GIL) ou _Trava G
 A qualquer dado momento, apenas uma thread de Python pode reter a trava.
 Isso significa que apenas uma thread pode executar código Python a cada momento, independente do número de núcleos da CPU.
 
-. Para evitar que uma thread de Python segure a GIL indefinidamente, o interpretador de bytecode de Python pausa a thread Python corrente a cada 5ms por default,footnote:[Chame https://docs.python.org/pt-br/3/library/sys.html#sys.getswitchinterval[`sys.getswitchinterval()`] para obter o intervalo; ele pode ser modificado com https://docs.python.org/pt-br/3/library/sys.html#sys.setswitchinterval[`sys.setswitchinterval(s)`].] liberando a GIL.
+. Para evitar que uma thread de Python segure a GIL indefinidamente, o interpretador de bytecode de Python pausa a thread Python corrente a cada 5ms por default,footnote:[Chame https://fpy.li/a5[`sys.getswitchinterval()`] para obter o intervalo; ele pode ser modificado com https://fpy.li/ag[`sys.setswitchinterval(s)`].] liberando a GIL.
 A thread pode então tentar readquirir a GIL, mas se existirem outras threads esperando, o agendador do SO pode escolher uma delas para continuar.
 
 . Quando escrevemos código Python, não temos controle sobre a GIL. Mas uma função embutida ou uma extensão escrita em C—ou qualquer linguagem que trabalhe no nível da API Python/C—pode liberar a GIL enquanto estiver rodando alguma tarefa demorada.
 
-. Toda função na biblioteca padrão de Python que executa uma syscallfootnote:[Uma syscall é uma chamada a partir do código do usuário para uma função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para aprender mais sobre esse tópico, leia o artigo https://pt.wikipedia.org/wiki/Chamada_de_sistema["Chamada de sistema"] na Wikipedia.] libera a GIL. Isso inclui todas as funções que executam operações de escrita e leitura em disco, escrita e leitura na rede, e `time.sleep()`. Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as funções de compressão e descompressão dos módulos `zlib` and `bz2`, também liberam a GIL.footnote:[Os módulos `zlib` e `bz2` são mencionados nominalmente em uma https://fpy.li/19-6[mensagem de Antoine Pitrou na python-dev] (EN). Pitrou contribuiu para a lógica da divisão de tempo da GIL no Python 3.2.]
+. Toda função na biblioteca padrão de Python que executa uma syscallfootnote:[Uma syscall é uma chamada a partir do código do usuário para uma função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para aprender mais sobre esse tópico, leia o artigo https://fpy.li/a6["Chamada de sistema"] na Wikipedia.] libera a GIL. Isso inclui todas as funções que executam operações de escrita e leitura em disco, escrita e leitura na rede, e `time.sleep()`. Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as funções de compressão e descompressão dos módulos `zlib` and `bz2`, também liberam a GIL.footnote:[Os módulos `zlib` e `bz2` são mencionados nominalmente em uma https://fpy.li/19-6[mensagem de Antoine Pitrou na python-dev] (EN). Pitrou contribuiu para a lógica da divisão de tempo da GIL no Python 3.2.]
 
 . Extensões que se integram no nível da API Python/C também podem iniciar outras threads não-Python, que não são afetadas pela GIL. Essas threads fora do controle da GIL normalmente não podem modificar objetos Python, mas podem ler e escrever na memória usada por objetos que suportam o https://fpy.li/pep3118[buffer protocol] (EN), como `bytearray`, `array.array`, e arrays do _NumPy_.
 
@@ -190,7 +190,7 @@ A thread pode então tentar readquirir a GIL, mas se existirem outras threads es
 
 . Para rodar código Python de uso intensivo da CPU em múltiplos núcleos, você precisa usar múltiplos processos Python.
 
-Aqui está um bom resumo, da documentação do módulo `threading`:footnote:[Fonte: início do capítulo https://docs.python.org/pt-br/3/library/threading.html#["threading — Paralelismo baseado em Thread"] (EN).]
+Aqui está um bom resumo, da documentação do módulo `threading`:footnote:[Fonte: início do capítulo https://fpy.li/a7["threading — Paralelismo baseado em Thread"] (EN).]
 
 [quote]
 ____
@@ -339,10 +339,10 @@ No <<spinner_proc_ex>>, o único dado que cruza a fronteira entre os processos �
 
 [TIP]
 ====
-Desde o Python 3.8, há o pacote https://docs.python.org/pt-br/3/library/multiprocessing.shared_memory.html[`multiprocessing.shared_memory`] (_memória compartilhada para acesso direto entre processos_) na biblioteca padrão, mas ele não suporta instâncias de classes definidas pelo usuário.
+Desde o Python 3.8, há o pacote https://fpy.li/a8[`multiprocessing.shared_memory`] (_memória compartilhada para acesso direto entre processos_) na biblioteca padrão, mas ele não suporta instâncias de classes definidas pelo usuário.
 Além bytes nus, o pacote permite que processos compartilhem uma `ShareableList`, uma sequência mutável que pode manter um número fixo de itens dos tipos `int`, `float`, `bool`, e `None`, bem como `str` e `bytes`, até o limite de 10 MB por item.
 Veja a documentação de
-https://docs.python.org/pt-br/3/library/multiprocessing.shared_memory.html#multiprocessing.shared_memory.ShareableList[`ShareableList`]
+https://fpy.li/a9[`ShareableList`]
 para mais detalhes.
 ====
 
@@ -599,7 +599,7 @@ Considere a função `is_prime` no <<def_is_prime_ex>>,
 que retorna `True` se o argumento for um número primo, `False` se não for.
 
 [[def_is_prime_ex]]
-.primes.py: uma checagem de números primos fácil de entender, do exemplo em https://docs.python.org/pt-br/3/library/concurrent.futures.html#processpoolexecutor-example[pass:[<code>ProcessPool&#x200b;Executor</code>] na documentação de Python]
+.primes.py: uma checagem de números primos fácil de entender, do exemplo em https://fpy.li/aa[pass:[<code>ProcessPool&#x200b;Executor</code>] na documentação de Python]
 ====
 [source, python]
 ----
@@ -887,7 +887,7 @@ include::../code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_MAIN]
 <5> Mostra quantos números foram checados e o tempo total decorrido.
 <6> Os argumentos são o número de `procs` e a fila para armazenar os resultados.
 <7> Percorre o loop até que todos os processos terminem.
-<8> Obtém um `PrimeResult`. Chamar `.get()` em uma fila deixa o processamento bloqueado até que haja um item na fila. Também é possível fazer isso de forma não-bloqueante ou estabelecer um timeout. Veja os detalhes na documentação de https://docs.python.org/pt-br/3/library/queue.html#queue.SimpleQueue.get[`SimpleQueue.get`].
+<8> Obtém um `PrimeResult`. Chamar `.get()` em uma fila deixa o processamento bloqueado até que haja um item na fila. Também é possível fazer isso de forma não-bloqueante ou estabelecer um timeout. Veja os detalhes na documentação de https://fpy.li/ab[`SimpleQueue.get`].
 <9> Se `n` é zero, então um processo terminou; incrementa o contador `procs_done`.
 <10> Senão, incrementa o contador `checked` (para acompanhar os números checados) e mostra os resultados.
 
@@ -901,7 +901,7 @@ Felizmente, o `ProcessPoolExecutor` que veremos no <<ch_executors>> é mais fác
 
 [NOTE]
 ====
-Agradeço((("race conditions"))) ao leitor Michael Albert, que notou que o código que publiquei durante o pré-lançamento tinha uma https://pt.wikipedia.org/wiki/Condi%C3%A7%C3%A3o_de_corrida[_"condição de corrida" (race condition)_] no <<primes_procs_main_ex>>.
+Agradeço((("race conditions"))) ao leitor Michael Albert, que notou que o código que publiquei durante o pré-lançamento tinha uma https://fpy.li/ac[_"condição de corrida" (race condition)_] no <<primes_procs_main_ex>>.
 Uma condição de corrida (ou de _concorrência_) é um bug que pode ou não aparecer, dependendo da ordem das ações realizadas pelas unidades de execução concorrentes.
 Se "A" acontecer antes de "B", tudo segue normal;
 mas se "B" acontecer antes, surge um erro.
@@ -943,7 +943,7 @@ com tempos medianos apenas ligeiramente maiores que o menor tempo mediano com 6 
 
 Também((("process pools", "thread-based nonsolution")))((("threads", "thread-based process pools"))) escrevi _threads.py_, uma versão de _procs.py_ usando `threading` em vez de `multiprocessing`. O código é muito similar quando convertemos exemplo simples entre as duas APIs.footnote:[See https://fpy.li/19-27[_19-concurrency/primes/threads.py_] no https://fpy.li/code[repositório de código do _Fluent Python_].] Devido à GIL e à natureza de processamento intensivo de `is_prime`, a versão com threads é mais lenta que a versão sequencial do <<primes_sequential_ex>>, e fica mais lenta conforme aumenta o número de threads, por causa da disputa pela CPU e o custo da mudança de contexto. Para passar de uma thread para outra, o SO precisa salvar os registradores da CPU e atualizar o contador de programas e o ponteiro do stack, disparando efeitos colaterais custosos,
 como invalidar os caches da CPU e talvez até trocar páginas de memória.
-footnote:[Para saber mais, consulte https://pt.wikipedia.org/wiki/Troca_de_contexto["Troca de contexto"] na Wikipedia.]
+footnote:[Para saber mais, consulte https://fpy.li/ad["Troca de contexto"] na Wikipedia.]
 
 Os dois próximos capítulos tratam de mais temas ligados à programação concorrente em Python, usando a biblioteca de alto nível _concurrent.futures_ para gerenciar threads e processos (<<ch_executors>>) e a biblioteca _asyncio_ para programação assíncrona (<<ch_async>>).
 
@@ -1255,9 +1255,12 @@ https://fpy.li/19-53[_The Python 3 Standard Library by Example_]
 https://fpy.li/effectpy[_Effective Python_], 2nd ed. (Addison-Wesley), de Brett Slatkin,
 _Python Essential Reference_, 4th ed. (Addison-Wesley), de David Beazley, e _Python in a Nutshell_, 3rd ed. (O'Reilly) de Martelli et al são outras referências gerais de Python com uma cobertura significativa de `threading` e `multiprocessing`.
 A vasta documentação oficial de `multiprocessing` inclui conselhos úteis em sua seção
-https://docs.python.org/pt-br/3/library/multiprocessing.html#programming-guidelines["Programming guidelines" (_Diretrizes de programação_)] (EN).
+https://fpy.li/ae["Programming guidelines" (_Diretrizes de programação_)] (EN).
 
-Jesse Noller e Richard Oudkerk contribuíram para o pacote `multiprocessing`, introduzido na https://fpy.li/pep371[PEP 371--Addition of the multiprocessing package to the standard library] (EN). A documentação oficial do pacote é um https://docs.python.org/pt-br/3/library/multiprocessing.html[arquivo _.rst_] de 93 KB (cerca de 63 páginas), um dos capítulos mais longos da biblioteca padrão de Python.
+Jesse Noller e Richard Oudkerk contribuíram para o pacote `multiprocessing`,
+proposto na https://fpy.li/pep371[PEP 371--Addition of the multiprocessing package to the standard library].
+A documentação oficial do pacote é um
+https://fpy.li/ah[arquivo _.rst_] de 93 KB (cerca de 63 páginas), um dos capítulos mais longos da biblioteca padrão de Python.
 
 Em pass:[<a href="https://fpy.li/19-56" class="orm:hideurl"><em>High Performance Python</em>, 2nd ed.,</a>] (O'Reilly), os autores Micha Gorelick e Ian Ozsvald incluem um capítulo sobre `multiprocessing` com um exemplo sobre checagem de números primos usando uma estratégia diferente do nosso exemplo _procs.py_. Para cada número, eles dividem a faixa de fatores possíveis-de 2 a `sqrt(n)`—em subfaixas, e fazem cada unidade de execução iterar sobre uma das subfaixas.
 Sua abordagem de dividir para conquistar é típica de aplicações de computação científica, onde os conjuntos de dados são enormes, e as estações de trabalho (ou clusters) tem mais núcleos de CPU que usuários.
@@ -1297,7 +1300,7 @@ mas mesmo os fáceis são desafiadores.
 Se((("Global Interpreter Lock (GIL)"))) você ficou curioso sobre a GIL, lembre-se que não temos qualquer controle sobre ela a partir do código em Python, então a referência canônica é a documentação da C-API:
 https://fpy.li/19-60[_Thread State and the Global Interpreter Lock_] (EN) (_O Estado das Threads e a Trava Global do Interpretador_).
 A resposta no FAQ _Python Library and Extension_ (_A Biblioteca e as Extensões de Python_):
-https://docs.python.org/pt-br/3/faq/library.html#can-t-we-get-rid-of-the-global-interpreter-lock[_"Can’t we get rid of the Global Interpreter Lock?"_] (_Não podemos remover o Bloqueio Global do interpretador?_).
+https://fpy.li/af[_"Can’t we get rid of the Global Interpreter Lock?"_] (_Não podemos remover o Bloqueio Global do interpretador?_).
 Também vale a pena ler os posts de Guido van Rossum e Jesse Noller (contribuidor do pacote `multiprocessing`), respectivamente:
 https://fpy.li/19-62["It isn't Easy to Remove the GIL"] (_Não é Fácil Remover a GIL_) e
 https://fpy.li/19-63["Python Threads and the Global Interpreter Lock"] (_As Threads de Python e a Trava Global do Interpretador_).

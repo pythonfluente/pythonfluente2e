@@ -335,10 +335,10 @@ A definição de `Record` no <<ex_schedule_v1>> é tão simples que você pode e
 [NOTE]
 ====
 A biblioteca padrão de Python oferece classes similares a `Record`, onde cada instância tem um conjunto arbitrário de atributos criados a partir de argumentos nomeados passados a `+__init__+`:
-https://docs.python.org/pt-br/3/library/types.html#types.SimpleNamespace[`types.SimpleNamespace`],
-https://docs.python.org/pt-br/3/library/argparse.html#argparse.Namespace[`argparse.Namespace`] (EN),
+https://fpy.li/bd[`types.SimpleNamespace`],
+https://fpy.li/be[`argparse.Namespace`] (EN),
 and
-https://docs.python.org/pt-br/3/library/multiprocessing.html#multiprocessing.managers.Namespace[`multiprocessing.managers.Namespace`] (EN).
+https://fpy.li/bf[`multiprocessing.managers.Namespace`] (EN).
 Escrevi a classe `Record`, mais simples, para destacar a ideia essencial: `+__init__+` atualizando o
 `+__dict__+` da instância.
 ====
@@ -571,7 +571,7 @@ O decorador `property` é uma API de alto nível para criar um _descritor domina
 O <<ch_descriptors>> inclui um explicação completa sobre descritores _dominantes_ e _não dominantes_.
 
 Por hora, vamos deixar de lado a implementação subjacente e nos concentrar nas diferenças entre `cached_property` e `property` do ponto de vista de um usuário.
-Raymond Hettinger os explica muito bem na https://docs.python.org/pt-br/3/library/functools.html#functools.cached_property[Documentação de Python]:
+Raymond Hettinger os explica muito bem na https://fpy.li/bg[Documentação de Python]:
 
 [quote]
 ____
@@ -580,7 +580,7 @@ Uma propriedade regular bloqueia a escrita em atributos, a menos que um _setter_
 
 O decorador `cached_property` só funciona para consultas e apenas quando um atributo de mesmo nome não existe. Quando funciona, `cached_property` escreve no atributo de mesmo nome. Leituras e escritas subsequentes do/no atributo tem precedência sobre o método decorado com `cached_property` e ele funciona como um atributo normal.
 
-O valor em cache pode ser excluído apagando-se o atributo. Isso permite que o método `cached_property` rode novamente.footnote:[Fonte: documentação de https://docs.python.org/pt-br/3/library/functools.html#functools.cached_property[@functools.cached_property]. Sei que autor dessa explicação é Raymond Hettinger porque ele a escreveu em resposta a um problema que eu mesmo reportei: https://fpy.li/22-11[bpo42781—functools.cached_property docs should explain that it is non-overriding (_a documentação de functools.cached_property deveria explicar que ele é não-dominante_)] (EN). Hettinger é um grande colaborador da documentação oficial de Python e da biblioteca padrão. Ele também escreveu o excelente https://fpy.li/22-12[Descriptor HowTo Guide (_Guia de Utilização de Descritores_)] (EN), um recurso fundamental para o <<ch_descriptors>>.]
+O valor em cache pode ser excluído apagando-se o atributo. Isso permite que o método `cached_property` rode novamente.footnote:[Fonte: documentação de https://fpy.li/bg[@functools.cached_property]. Sei que autor dessa explicação é Raymond Hettinger porque ele a escreveu em resposta a um problema que eu mesmo reportei: https://fpy.li/22-11[bpo42781—functools.cached_property docs should explain that it is non-overriding (_a documentação de functools.cached_property deveria explicar que ele é não-dominante_)] (EN). Hettinger é um grande colaborador da documentação oficial de Python e da biblioteca padrão. Ele também escreveu o excelente https://fpy.li/22-12[Descriptor HowTo Guide (_Guia de Utilização de Descritores_)] (EN), um recurso fundamental para o <<ch_descriptors>>.]
 ____
 
 Voltando((("@cached_property"))) à nossa classe `Event`: o comportamento específico de `@cached_property` o torna inadequado para decorar `speakers`, porque aquele método depende de um atributo existente também chamado `speakers`, contendo os números de série dos palestrantes do evento.
@@ -595,12 +595,15 @@ se o método decorado já depender de um atributo de instância de mesmo nome.
 * Ele impede a otimização de compartilhamento de chaves do `+__dict__+` da instância, pois cria um atributo de instância após o `+__init__+`.
 ====
 
-Apesar dessas limitações, `@cached_property` supre uma necessidade comum de uma maneira simples, e é seguro para usar com threads.
-Seu https://fpy.li/22-13[código Python] é um exemplo do uso de uma https://docs.python.org/pt-br/3/library/threading.html#rlock-objects[_trava recursiva_ (_reentrant lock_)].
+Apesar dessas limitações, `@cached_property` supre uma necessidade comum de um modo simples,
+e é seguro para usar com threads.
+Seu https://fpy.li/22-13[código Python] é um exemplo do uso de uma
+https://fpy.li/bp[_reentrant lock_] (trava reentrante ou trava recursiva).footnote:[Veja
+https://fpy.li/bq[«Mutex recursivo»] na Wikipédia.]
 
 
 A
-https://docs.python.org/pt-br/3.10/library/functools.html#functools.cached_property[documentação] de `@cached_property`
+https://fpy.li/bh[documentação] de `@cached_property`
 recomenda uma solução altenativa que podemos usar com `speakers`:
 Empilhar decoradores `@property` e `@cache`, como exibido no <<ex_schedule_v5_property_over_cache>>.
 
@@ -1051,7 +1054,7 @@ Essas cinco funções embutidas executam leitura, escrita e introspecção de at
 
 `dir([object])`:: Lista((("dir([object]) function")))((("functions", "dir([object]) function")))
 a maioria dos atributos de um objeto. A
-https://docs.python.org/pt-br/3/library/functions.html#dir[documentação oficial]
+https://fpy.li/bj[documentação oficial]
 diz que o objetivo de `dir` é o uso interativo, então ele não fornece uma lista completa de atributos,
 mas um conjunto de nomes "interessantes". `dir` pode inspecionar objetos implementados com ou sem um `+__dict__+`.
 O próprio atributo `+__dict__+` não é exibido por `dir`, mas as chaves de `+__dict__+` são listadas.
@@ -1063,7 +1066,7 @@ Vários atributos especiais de classes, como
 Um ótimo exemplo de uso de `gettatr` aparece no
 https://fpy.li/22-19[método `Cmd.onecmd`], no pacote `cmd` da biblioteca padrão, onde ela é usada para obter e executar um comando definido pelo usuário.
 
-`hasattr(object, name)`:: Devolve `True` se o atributo nomeado existir em `object`, ou puder ser obtido de alguma forma através dele (por herança, por exemplo). A https://docs.python.org/pt-br/3/library/functions.html#hasattr[documentação] explica: "Isto é implementado chamando getattr(object, name) e vendo se [isso] levanta um AttributeError ou não."
+`hasattr(object, name)`:: Devolve `True` se o atributo nomeado existir em `object`, ou puder ser obtido de alguma forma através dele (por herança, por exemplo). A https://fpy.li/bk[documentação] explica: "Isto é implementado chamando getattr(object, name) e vendo se [isso] levanta um AttributeError ou não."
 
 `setattr(object, name, value)`:: Atribui((("functions", "setattr(object, name, value) function"))) o `value` ao atributo de `object` nomeado, se o `object` permitir essa operação. Isso pode criar um novo atributo ou sobrescrever um atributo existente.
 
@@ -1077,7 +1080,7 @@ Quando implementados em uma classe definida pelo usuário, os métodos especiais
 Acessos((("getattr function")))((("setattr function")))((("functions", "hasattr function")))((("hasattr function")))((("functions", "getattr function")))((("functions", "setattr funcion"))) a atributos, usando tanto a notação de ponto ou as funções embutidas `getattr`, `hasattr` e `setattr` disparam os métodos especiais adequados, listados aqui. A leitura e escrita direta de atributos no
 `+__dict__+` da instância não dispara esses métodos especiais--e essa é a forma habitual de evitá-los se isso for necessário.
 
-A seção https://docs.python.org/pt-br/3.10/reference/datamodel.html#special-method-lookup["3.3.11. Pesquisa de método especial"] do capítulo "Modelo de dados" adverte:
+A seção https://fpy.li/bm["3.3.11. Pesquisa de método especial"] do capítulo "Modelo de dados" adverte:
 
 [quote]
 ____
@@ -1129,11 +1132,17 @@ Por fim, demos uma rápida passada pelo tratamento da exclusão de atributos com
 
 === Leitura Complementar
 
-A((("dynamic attributes and properties", "further reading on"))) documentação oficial para as funções embutidas de tratamento de atributos e introspecção é o https://docs.python.org/pt-br/3/library/functions.html[Capítulo 2, "Funções embutidas"] da _Biblioteca Padrão de Python_. Os métodos especiais relacionados e o atributo especial `+__slots__+` estão documentados em _A Referência da Linguagem Python_, em https://docs.python.org/pt-br/3/reference/datamodel.html#customizing-attribute-access["3.3.2. Personalizando o acesso aos atributos"]. A semântica de como métodos especiais são invocados ignorando as instâncias está explicada em https://docs.python.org/pt-br/3/reference/datamodel.html#special-method-lookup["3.3.11. Pesquisa de método especial"]. No capítulo 4 da _Biblioteca Padrão de Python_, "Tipos embutidos", https://docs.python.org/pt-br/3/library/stdtypes.html#special-attributes["Atributos especiais"] trata dos atributos `+__class__+` e `+__dict__+`.
+A((("dynamic attributes and properties", "further reading on"))) documentação oficial para as funções embutidas de tratamento de atributos e introspecção é o https://fpy.li/bn[Capítulo 2, "Funções embutidas"] da _Biblioteca Padrão de Python_. Os métodos especiais relacionados e o atributo especial `+__slots__+` estão documentados em _A Referência da Linguagem Python_, em
+https://fpy.li/br["3.3.2. Personalizando o acesso aos atributos"].
+A semântica de como métodos especiais são invocados ignorando as instâncias está explicada em
+https://fpy.li/bs["3.3.11. Pesquisa de método especial"].
+No capítulo 4 da _Biblioteca Padrão de Python_, "Tipos embutidos",
+https://fpy.li/bt["Atributos especiais"]
+trata dos atributos `+__class__+` e `+__dict__+`.
 
-O pass:[<em><a href="https://fpy.li/pycook3" class="orm:hideurl">Python Cookbook</a></em>] (EN), 3ª ed., de David Beazley e Brian K. Jones (O’Reilly), tem várias receitas relacionadas aos tópicos deste capítulo, mas eu destacaria três mais marcantes: A "Recipe 8.8. Extending a Property in a Subclass" (_Receita 8.8. Estendendo uma Propriedade em uma Subclasse_) trata da espinhosa questão de  sobrescrever métodos dentro de uma propriedade herdada de uma superclasse; a "Recipe 8.15. Delegating Attribute Access" (_Receita 8.15. Delegando o Acesso a Atributos_) implementa uma classe proxy, demonstrando a maioria dos métodos especiais da <<special_methods_for_attr_sec>> deste livro; e a fantástica "Recipe 9.21. Avoiding Repetitive Property Methods" (_Receita 9.21. Evitando Métodos de Propriedade Repetitivos_), que foi a base da função fábrica de propriedades apresentada no <<lineitem_class_v2prop>>.
+O https://fpy.li/pycook3[Python Cookbook], 3ª ed., de David Beazley e Brian K. Jones (O’Reilly), tem várias receitas relacionadas aos tópicos deste capítulo, mas eu destacaria três mais marcantes: A "Recipe 8.8. Extending a Property in a Subclass" (_Receita 8.8. Estendendo uma Propriedade em uma Subclasse_) trata da espinhosa questão de  sobrescrever métodos dentro de uma propriedade herdada de uma superclasse; a "Recipe 8.15. Delegating Attribute Access" (_Receita 8.15. Delegando o Acesso a Atributos_) implementa uma classe proxy, demonstrando a maioria dos métodos especiais da <<special_methods_for_attr_sec>> deste livro; e a fantástica "Recipe 9.21. Avoiding Repetitive Property Methods" (_Receita 9.21. Evitando Métodos de Propriedade Repetitivos_), que foi a base da função fábrica de propriedades apresentada no <<lineitem_class_v2prop>>.
 
-O pass:[<em><a class="orm:hideurl" href="https://fpy.li/pynut3">Python in a Nutshell,</a></em>] 3ª ed., de Alex Martelli, Anna Ravenscroft e Steve Holden (O'Reilly), é rigoroso e objetivo. Eles dedicam apenas três páginas a propriedades, mas isso se dá porque o livro segue um estilo de apresentação axiomático: as 15 ou 16 páginas precedentes fornecem uma descrição minuciosa da semântica das classes de Python, a partir do zero, incluindo descritores, que são como as propriedades são efetivamente implementadas debaixo dos panos. Assim, quando Martelli et al. chegam à propriedades, eles concentram várias ideias profundas naquelas três páginas—incluindo o trecho que selecionei para abrir este capítulo.
+O https://fpy.li/pynut3[Python in a Nutshell], 3ª ed., de Alex Martelli, Anna Ravenscroft e Steve Holden (O'Reilly), é rigoroso e objetivo. Eles dedicam apenas três páginas a propriedades, mas isso se dá porque o livro segue um estilo de apresentação axiomático: as 15 ou 16 páginas precedentes fornecem uma descrição minuciosa da semântica das classes de Python, a partir do zero, incluindo descritores, que são como as propriedades são efetivamente implementadas debaixo dos panos. Assim, quando Martelli et al. chegam à propriedades, eles concentram várias ideias profundas naquelas três páginas—incluindo o trecho que selecionei para abrir este capítulo.
 
 Bertrand Meyer—citado na definição do Princípio do Acesso Uniforme no início do capítulo—foi um pioneiro da metodologia Programação por Contrato (_Design by Contract_), projetou a linguagem Eiffel e escreveu o excelente _Object-Oriented Software Construction_, 2ª ed. (Pearson). Os primeiros seis capítulos fornecem uma das melhores introduções conceituais à análise e design orientados a objetos que tenho notícia. O capítulo 11 apresenta a Programação por Contrato, e o capítulo 35 traz as avaliações de Meyer de algumas das mais influentes linguagens orientadas a objetos: Simula, Smalltalk, CLOS (the Common Lisp Object System), Objective-C, {cpp}, e Java, com comentários curtos sobre algumas outras. Apenas na última página do livro o autor revela que a "notação" extremamente legível usada como pseudo-código no livro é Eiffel.
 

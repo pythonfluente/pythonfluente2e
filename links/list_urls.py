@@ -14,6 +14,9 @@ def find_urls(lines, fpy=True, long=True):
             is_fpy = '://fpy.li/' in url
             if (is_fpy and not fpy) or (not is_fpy and not long):
                 continue
+            if url.endswith('fluentpython.com'):
+                # keep uses in examples in chapter 20
+                continue
             urls.append(url)
     return urls
 
