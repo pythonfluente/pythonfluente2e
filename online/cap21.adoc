@@ -26,7 +26,7 @@ em particular da <<classic_coroutines_sec>>), gerenciadores de contexto (no <<ch
 e conceitos gerais de programação concorrente (no <<ch_concurrency_models>>).
 
 Vamos estudar clientes HTTP concorrentes similares aos vistos no <<ch_executors>>, reescritos com corrotinas nativas e gerenciadores de contexto assíncronos, usando a mesma biblioteca _HTTPX_ de antes, mas agora através de sua API assíncrona.
-Veremos também como evitar o bloqueio do loop de eventos, delegando operações lentas para um executor de threads ou processos.
+Veremos também como evitar o bloqueio do laço de eventos, delegando operações lentas para um executor de threads ou processos.
 
 Após os exemplos de clientes HTTP, teremos duas aplicações simples de servidor,
 uma delas usando o framework cada vez mais popular _FastAPI_.
@@ -155,7 +155,7 @@ include::../code/21-async/domains/asyncio/blogdom.py[]
 ====
 <1> Estabelece o comprimento máximo da palavra-chave para domínios, pois quanto menor, melhor.
 <2> `probe` devolve uma tupla com o nome do domínio e um valor booleano; `True` significa que o domínio foi resolvido. Incluir o nome do domínio aqui facilita a exibição dos resultados.
-<3> Obtém uma referência para o loop de eventos do `asyncio`, para usá-la a seguir.
+<3> Obtém uma referência para o laço de eventos do `asyncio`, para usá-la a seguir.
 <4> O método corrotina https://fpy.li/aq[`loop.getaddrinfo(…)`]
 devolve uma https://fpy.li/ar[tupla de parâmetros com cinco partes] para conectar ao endereço dado usando um socket. Neste exemplo não precisamos do resultado. Se conseguirmos um resultado, o domínio foi resolvido; caso contrário, não.
 <5> `main` precisa ser uma corrotina, para podermos usar `await` aqui.
@@ -164,13 +164,13 @@ devolve uma https://fpy.li/ar[tupla de parâmetros com cinco partes] para conect
 <8> Cria uma lista de objetos corrotina, invocando a corrotina `probe` com cada argumento `domain`.
 <9> `asyncio.as_completed` é um gerador que produz corrotinas que devolvem os resultados das corrotinas passadas a ele. Ele as produz na ordem em que elas terminam seu processamento, não na ordem em que foram submetidas. É similar ao `futures.as_completed`, que vimos no <<ch_executors>>, <<flags_threadpool_futures_ex>>.
 <10> Nesse ponto, sabemos que a corrotina terminou, pois é assim que `as_completed` funciona. Portanto, a expressão `await` não vai bloquear, mas precisamos dela para obter o resultado de `coro`. Se `coro` gerou uma exceção não tratada, ela será gerada novamente aqui.
-<11> `asyncio.run` inicia o loop de eventos e retorna apenas quando o loop terminar. Esse é um modelo comum para scripts usando `asyncio`: implementar `main` como uma corrotina e controlá-la com `asyncio.run` dentro do bloco `if __name__ == '__main__':`.
+<11> `asyncio.run` inicia o laço de eventos e retorna apenas quando o laço terminar. Esse é um modelo comum para scripts usando `asyncio`: implementar `main` como uma corrotina e controlá-la com `asyncio.run` dentro do bloco `if __name__ == '__main__':`.
 
 [TIP]
 ====
 A função `asyncio.get_running_loop` surgiu no Python 3.7, para uso dentro de corrotinas, como visto em `probe`.
-Se não houver um loop em execução, `asyncio.get_running_loop` gera um `RuntimeError`.
-Sua implementação é mais simples e mais rápida que a de `asyncio.get_event_loop`, que pode iniciar um loop de eventos se necessário.
+Se não houver um laço em execução, `asyncio.get_running_loop` gera um `RuntimeError`.
+Sua implementação é mais simples e mais rápida que a de `asyncio.get_event_loop`, que pode iniciar um laço de eventos se necessário.
 Desde o Python 3.10, `asyncio.get_event_loop` foi https://fpy.li/as[descontinuado], e em algum momento se tornará um alias para `asyncio.get_running_loop`.
 ====
 
@@ -185,7 +185,7 @@ Por exemplo, imagine que o corpo dessa corrotina...
 [source, python]
 ----
 async def probe(domain: str) -> tuple[str, bool]:
-    loop = asyncio.get_running_loop()
+    laço = asyncio.get_running_loop()
     try:
         await loop.getaddrinfo(domain, None)
     except socket.gaierror:
@@ -198,7 +198,7 @@ async def probe(domain: str) -> tuple[str, bool]:
 [source, python]
 ----
 def probe(domain: str) -> tuple[str, bool]:  # no async
-    loop = asyncio.get_running_loop()
+    laço = asyncio.get_running_loop()
     try:
         loop.getaddrinfo(domain, None)  # no await
     except socket.gaierror:
@@ -209,10 +209,10 @@ def probe(domain: str) -> tuple[str, bool]:  # no async
 Usar a sintaxe `await loop.getaddrinfo(...)` evita o bloqueio, porque `await` suspende o objeto corrotina atual.
 Por exemplo, durante a execução da corrotina `probe('if.dev')`,
 um novo objeto corrotina é criado por `getaddrinfo('if.dev', None)`.
-Aplicar `await` sobre ele inicia a consulta de baixo nível `addrinfo` e devolve o controle para o loop de eventos, não para a corrotina `probe(‘if.dev’)`, que está suspensa.
-O loop de eventos pode então ativar outros objetos corrotina pendentes, tal como `probe('or.dev')`.
+Aplicar `await` sobre ele inicia a consulta de baixo nível `addrinfo` e devolve o controle para o laço de eventos, não para a corrotina `probe(‘if.dev’)`, que está suspensa.
+O laço de eventos pode então ativar outros objetos corrotina pendentes, tal como `probe('or.dev')`.
 
-Quando o loop de eventos recebe uma resposta para a consulta `getaddrinfo('if.dev', None)`,
+Quando o laço de eventos recebe uma resposta para a consulta `getaddrinfo('if.dev', None)`,
 aquele objeto corrotina específico prossegue sua execução, e devolve o controle pra o `probe('if.dev')`—que estava suspenso no `await`—e pode agora tratar alguma possível exceção e devolver a tupla com o resultado.
 
 Até aqui, vimos `asyncio.as_completed` e `await` sendo aplicados apenas a corrotinas.
@@ -238,7 +238,7 @@ Criar a tarefa é o suficiente para agendar a execução da corrotina.
 Mesmo que você não precise cancelar a tarefa ou esperar por ela,
 é necessário preservar o objeto `Task` devolvido por `create_task`,
 atribuindo ele a uma variável ou coleção que você controla.
-O loop de eventos usa referências fracas para gerenciar as tarefas,
+O laço de eventos usa referências fracas para gerenciar as tarefas,
 o que significa que elas podem ser descartadas pelo coletor de lixo
 antes de executarem. Por isso você precisa criar referências fortes para
 manter cada tarefa na memória.
@@ -306,14 +306,14 @@ include::../code/20-executors/getflags/flags_asyncio.py[tags=FLAGS_ASYNCIO_START
 ----
 ====
 <1> Essa precisa ser uma função comum—não uma corrotina—para poder ser passada para e chamada pela função `main` do módulo _flags.py_ (<<flags_module_ex>>).
-<2> Executa o loop de eventos, monitorando o objeto corrotina `supervisor(cc_list)` até que ele retorne. Isso vai bloquear enquanto o loop de eventos roda. O resultado dessa linha é o que quer que `supervisor` devolver.
+<2> Executa o laço de eventos, monitorando o objeto corrotina `supervisor(cc_list)` até que ele retorne. Isso vai bloquear enquanto o laço de eventos roda. O resultado dessa linha é o que quer que `supervisor` devolver.
 <3> Operação de cliente HTTP assíncronas no `httpx` são métodos de `AsyncClient`, que também é um gerenciador de contexto assíncrono: um gerenciador de contexto com métodos assíncronos de configuração e destruição (veremos mais sobre isso na <<async_context_manager_sec>>).
 <4> Cria uma lista de objetos corrotina, chamando a corrotina `download_one` uma vez para cada bandeira a ser obtida.
 <5> Espera pela corrotina `asyncio.gather`, que aceita um ou mais argumentos esperáveis e aguarda até que todos terminem, devolvendo uma lista de resultados para os esperáveis fornecidos, na ordem em que foram enviados.
 <6> `supervisor` devolve o tamanho da lista vinda de `asyncio.gather`.
 
 
-Agora vamos revisar a parte superior de _flags_asyncio.py_ (<<flags_asyncio_ex>>). Reorganizei as corrotinas para podermos lê-las na ordem em que são iniciadas pelo loop de eventos.
+Agora vamos revisar a parte superior de _flags_asyncio.py_ (<<flags_asyncio_ex>>). Reorganizei as corrotinas para podermos lê-las na ordem em que são iniciadas pelo laço de eventos.
 
 [[flags_asyncio_ex]]
 .flags_asyncio.py: imports and download functions
@@ -328,11 +328,11 @@ include::../code/20-executors/getflags/flags_asyncio.py[tags=FLAGS_ASYNCIO_TOP]
 <3> `download_one` precisa ser uma corrotina nativa, para poder `await` por `get_flag`—que executa a requisição HTTP. Ela então mostra o código de país bandeira baixada, e salva a imagem.
 <4> `get_flag` precisa receber o `AsyncClient` para fazer a requisição.
 <5> O método `get` de uma instância de `httpx.AsyncClient` devolve um objeto `ClientResponse`, que também é um gerenciador assíncrono de contexto.
-<6> Operações de E/S de rede são implementadas como métodos corrotina, então eles são controlados de forma assíncrona pelo loop de eventos do `asyncio`.
+<6> Operações de E/S de rede são implementadas como métodos corrotina, então eles são controlados de forma assíncrona pelo laço de eventos do `asyncio`.
 
 [NOTE]
 ====
-Seria melhor, em termos de desempenho, que a chamada a `save_flag` dentro de `get_flag` fosse assíncrona, evitando bloquear o loop de eventos.
+Seria melhor, em termos de desempenho, que a chamada a `save_flag` dentro de `get_flag` fosse assíncrona, evitando bloquear o laço de eventos.
 Entretanto, atualmente _asyncio_ não oferece uma API assíncrona de acesso ao sistema de arquivos—como faz o Node.js.
 
 A <<using_as_completed_sec>> vai mostrar como delegar `save_flag` para uma thread.
@@ -347,24 +347,24 @@ A((("native coroutines", "humble generators and")))((("humble generators")))((("
 O seu código fica entre a biblioteca _asyncio_ e as bibliotecas assíncronas que você estiver usando, como por exemplo a _HTTPX_. Isso está ilustrado na <<await_channel_fig>>.
 
 [[await_channel_fig]]
-.Em um programa assíncrono, uma função do usuário inicia o loop de eventos, agendando uma corrotina inicial com `asyncio.run`. Cada corrotina do usuário aciona a seguinte com uma expressão `await`, formando um canal que permite a comunicação entre uma biblioteca como a _HTTPX_ e o loop de eventos.
+.Em um programa assíncrono, uma função do usuário inicia o laço de eventos, agendando uma corrotina inicial com `asyncio.run`. Cada corrotina do usuário aciona a seguinte com uma expressão `await`, formando um canal que permite a comunicação entre uma biblioteca como a _HTTPX_ e o laço de eventos.
 image::../images/flpy_2101.png[Diagrama do canal await]
 
-Debaixo dos panos, o loop de eventos do `asyncio` faz as chamadas a `.send` que acionam as nossas corrotinas, e nossas corrotinas `await` por outras corrotinas, incluindo corrotinas da biblioteca.
+Debaixo dos panos, o laço de eventos do `asyncio` faz as chamadas a `.send` que acionam as nossas corrotinas, e nossas corrotinas `await` por outras corrotinas, incluindo corrotinas da biblioteca.
 Como já mencionado, a maior parte da implementação de `await` vem de `yield from`, que também usa chamadas a `.send` para acionar corrotinas.
 
-O canal `await` acaba por chegar a um esperável de baixo nível, que devolve um gerador que o loop de eventos pode acionar em resposta a eventos tais com cronômetros ou E/S de rede.
+O canal `await` acaba por chegar a um esperável de baixo nível, que devolve um gerador que o laço de eventos pode acionar em resposta a eventos tais com cronômetros ou E/S de rede.
 Os esperáveis e geradores no final desses canais `await` estão implementados nas profundezas das bibliotecas, não são parte de suas APIs e podem ser extensões Python/C.
 
 Usando funções como `asyncio.gather` e `asyncio.create_task`,
-é possível iniciar múltiplos canais `await` concorrentes, permitindo a execução concorrente de múltiplas operações de E/S acionadas por um único loop de eventos, em uma única thread.
+é possível iniciar múltiplos canais `await` concorrentes, permitindo a execução concorrente de múltiplas operações de E/S acionadas por um único laço de eventos, em uma única thread.
 
 ==== O problema do tudo ou nada
 
 Observe que, no <<flags_asyncio_ex>>, não pude reutilizar a função `get_flag` de
 _flags.py_ (<<flags_module_ex>>).
 Tive que reescrevê-la como uma corrotina para usar a API assíncrona do _HTTPX_.
-Para((("asyncio package", "achieving peak performance with"))) obter o melhor desempenho do _asyncio_, precisamos substituir todas as funções que fazem E/S por uma versão assíncrona, que seja ativada com `await` ou `asyncio.create_task`. Dessa forma o controle é devolvido ao loop de eventos  enquanto a função aguarda pela operação de entrada ou saída. Se você não puder reescrever a função bloqueante como uma  corrotina, deveria executá-la em uma thread ou um processo separados, como veremos na <<delegating_to_executors_sec>>.
+Para((("asyncio package", "achieving peak performance with"))) obter o melhor desempenho do _asyncio_, precisamos substituir todas as funções que fazem E/S por uma versão assíncrona, que seja ativada com `await` ou `asyncio.create_task`. Dessa forma o controle é devolvido ao laço de eventos  enquanto a função aguarda pela operação de entrada ou saída. Se você não puder reescrever a função bloqueante como uma  corrotina, deveria executá-la em uma thread ou um processo separados, como veremos na <<delegating_to_executors_sec>>.
 
 Essa é a razão da escolha da epígrafe desse capítulo, que incluí o seguinte conselho:
  "[Ou] você reescreve todo o código, de forma que nada nele bloqueie [o processamento] ou você está só perdendo tempo.""
@@ -523,7 +523,7 @@ Primeira diferença: ele exige o parâmetro `client`.
 <2> Segunda e terceira diferenças: `.get` é um método de `AsyncClient`, e é uma corrotina, então precisamos `await` por ela.
 <3> Usa o `semaphore` como um gerenciador de contexto assíncrono, assim o programa como um todo não é bloqueado; apenas essa corrotina é suspensa quando o contador do semáforo é zero. Veja mais sobre isso em <<about_semaphores_box>>.
 <4> A lógica de tratamento de erro é idêntica à de `download_one`, do <<flags2_basic_http_ex>>.
-<5> Salvar a imagem é uma operação de E/S. Para não bloquear o loop de eventos, roda `save_flag` em uma thread.
+<5> Salvar a imagem é uma operação de E/S. Para não bloquear o laço de eventos, roda `save_flag` em uma thread.
 
 No _asyncio_, toda a comunicação de rede é feita com corrotinas, mas não E/S de arquivos.
 Entretanto, E/S de arquivos também é "bloqueante"—no sentido que ler/escrever arquivos é https://fpy.li/21-15[milhares de vezes mais demorado] que ler/escrever na RAM.
@@ -608,24 +608,24 @@ include::../code/20-executors/getflags/flags2_asyncio.py[tags=FLAGS2_ASYNCIO_STA
 <1> `supervisor` recebe os mesmos argumentos que a função `download_many`, mas ele não pode ser invocado diretamente de `main`, pois é uma corrotina e não uma função simples como `download_many`.
 <2> Cria um `asyncio.Semaphore` que não vai permitir mais que `concur_req` corrotinas ativas entre aquelas usando este semáforo. O valor de `concur_req` é calculado pela função `main` de _flags2_common.py_, baseado nas opções de linha de comando e nas constantes estabelecidas em cada exemplo.
 <3> Cria uma lista de objetos corrotina, um para cada chamada à corrotina `download_one`.
-<4> Obtém um iterador que vai devolver objetos corrotina quando eles terminarem sua execução. Não coloquei essa chamada a `as_completed` diretamente no loop `for` abaixo porque posso precisar envolvê-la com o iterador `tqdm` para a barra de progresso, dependendo da opção do usuário para verbosidade.
+<4> Obtém um iterador que vai devolver objetos corrotina quando eles terminarem sua execução. Não coloquei essa chamada a `as_completed` diretamente no laço `for` abaixo porque posso precisar envolvê-la com o iterador `tqdm` para a barra de progresso, dependendo da opção do usuário para verbosidade.
 <5> Envolve o iterador `as_completed` com a função geradora `tqdm`, para mostrar o progresso.
 <6> Declara e inicializa `error` com `None`; essa variável será usada para manter uma exceção além do bloco `try/except`, se alguma for levantada.
-<7> Itera pelos objetos corrotina que terminaram a execução; esse loop é similar ao de `download_many` em <<flags2_threadpool_full>>.
+<7> Itera pelos objetos corrotina que terminaram a execução; esse laço é similar ao de `download_many` em <<flags2_threadpool_full>>.
 <8> `await` pela corrotina para obter seu resultado. Isso não bloqueia porque `as_completed` só produz corrotinas que já terminaram.
 <9> Essa atribuição é necessária porque o escopo da variável `exc` é limitado a essa cláusula `except`, mas preciso preservar o valor para uso posterior.
 <10> Mesmo que acima.
 <11> Se houve um erro, muda o `status`.
 <12> Se em modo verboso, extrai a URL da exceção que foi levantada...
 <13> ...e extrai o nome do arquivo para mostrar o código do país em seguida.
-<14> `download_many` instancia o objeto corrotina `supervisor` e o passa para o loop de eventos com `asyncio.run`, coletando o contador que `supervisor` devolve quando o loop de eventos termina.
+<14> `download_many` instancia o objeto corrotina `supervisor` e o passa para o laço de eventos com `asyncio.run`, coletando o contador que `supervisor` devolve quando o laço de eventos termina.
 
 No <<flags2_asyncio_rest>>, não podíamos usar o mapeamento de `futures` para os códigos de país que vimos em <<flags2_threadpool_full>>, porque os esperáveis devolvidos por `asyncio.as_completed` são os mesmos esperáveis que passamos na chamada a `as_completed`. Internamente, o mecanismo do _asyncio_ pode substituir os esperáveis que fornecemos por outros que irão, no fim, produzir os mesmos resultados.footnote:[Um discussão detalhada sobre esse tópico pode era encontrada em uma thread de discussão que iniciei no grupo python-tulip, intitulada https://fpy.li/21-19["Which other futures may come out of asyncio.as_completed?" (_Que outros futures podem sair de asyncio.as_completed?_ )]. Guido responde e fornece detalhes sobre a implementação de `as_completed`, bem como sobre a relação próxima entre _futures_ e corrotinas no _asyncio_.]
 
 [TIP]
 ====
 Já que não podia usar os esperáveis como chaves para recuperar os códigos de país de um `dict` em caso de falha, tive que extrair o código de pais da exceção.
-Para fazer isso, mantive a exceção na variável `error`, permitindo sua recuperação fora do bloco `try/except`. Python não é uma linguagem com escopo de bloco: comandos como loops e `try/except` não criam um escopo local aos blocos que eles gerenciam.
+Para fazer isso, mantive a exceção na variável `error`, permitindo sua recuperação fora do bloco `try/except`. Python não é uma linguagem com escopo de bloco: comandos como laços e `try/except` não criam um escopo local aos blocos que eles gerenciam.
 Mas se uma cláusula `except` vincula uma exceção a uma variável, como as variáveis `exc` que acabamos de ver—aquele vínculo só existe no bloco dentro daquela cláusula `except` específica.
 ====
 
@@ -706,7 +706,7 @@ Vamos agora discutir o uso de executores de threads ou processos na programaçã
 === Delegando tarefas a executores
 
 Uma((("asynchronous programming", "delegating tasks to executors", id="APRdelegat21")))((("executors, delegating tasks to", id="exedel21"))) vantagem importante do Node.js sobre Python para programação assíncrona é a biblioteca padrão do Node.js, que inclui APIs assíncronas para toda a E/S—não apenas para E/S de rede.
-No Python, se você não for cuidadosa, a E/S de arquivos pode degradar seriamente o desempenho de aplicações assíncronas, pois ler e escrever no armazenamento desde a thread principal bloqueia o loop de eventos.
+No Python, se você não for cuidadosa, a E/S de arquivos pode degradar seriamente o desempenho de aplicações assíncronas, pois ler e escrever no armazenamento desde a thread principal bloqueia o laço de eventos.
 
 No corrotina `download_one` de <<flags2_asyncio_top>>, usei a seguinte linha para salvar a imagem baixada para o disco:
 
@@ -727,8 +727,8 @@ substitua aquela linha pelas linhas em  <<flags2_asyncio_executor_fragment>>.
 include::../code/20-executors/getflags/flags2_asyncio_executor.py[tags=FLAGS2_ASYNCIO_EXECUTOR]
 ----
 ====
-<1> Obtém uma referência para o loop de eventos.
-<2> O primeiro argumento é o executor a ser utilizado; passar `None` seleciona o default, `ThreadPoolExecutor`, que está sempre disponível no loop de eventos do `asyncio`.
+<1> Obtém uma referência para o laço de eventos.
+<2> O primeiro argumento é o executor a ser utilizado; passar `None` seleciona o default, `ThreadPoolExecutor`, que está sempre disponível no laço de eventos do `asyncio`.
 <3> Você pode passar argumentos posicionais para a função a ser executada, mas se você precisar passar argumentos nomeados, vai precisar recorrer a `functool.partial`, como descrito na
 https://fpy.li/ax[documentação de `run_in_executor`].
 
@@ -921,10 +921,10 @@ include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_MAIN]
 <4> Este `cast` é necessário porque o _typeshed_ tem uma dica de tipo desatualizada para a propriedade `sockets` da classe `Server`—isso em maio de 2021. Veja https://fpy.li/21-36[Issue #5535 no _typeshed_].footnote:[O issue #5535 está fechado desde outubro de 2021, mas o Mypy não lançou uma nova versão desde então, daí o erro permanece.]
 <5> Mostra o endereço e a porta do primeiro _socket_ do servidor.
 <6> Apesar de `start_server` já ter iniciado o servidor como uma tarefa concorrente, preciso usar o `await` no método `serve_forever`, para que meu `supervisor` seja suspenso aqui.
-Sem essa linha, o `supervisor` retornaria imediatamente, encerrando o loop iniciado com `asyncio.run(supervisor(…))`, e fechando o programa. A
+Sem essa linha, o `supervisor` retornaria imediatamente, encerrando o laço iniciado com `asyncio.run(supervisor(…))`, e fechando o programa. A
 https://fpy.li/b3[documentação de `Server.serve_forever`] diz: "Este método pode ser chamado se o servidor já estiver aceitando conexões."
 <7> Constrói o índice invertido.footnote:[O revisor técnico Leonardo Rochael apontou que a construção do índice poderia ser delegada a outra thread, usando `loop.run_with_executor()` na corrotina `supervisor`. Dessa forma o servidor estaria pronto para receber requisições imediatamente, enquanto o índice é construído. Isso é verdade, mas como consultar o índice é a única coisa que esse servidor faz, isso não seria uma grande vantagem nesse exemplo.]
-<8> Inicia o loop de eventos rodando `supervisor`.
+<8> Inicia o laço de eventos rodando `supervisor`.
 <9> Captura `KeyboardInterrupt` para evitar o traceback dispersivo quando encerro o servidor com Ctrl-C, no terminal onde ele está rodando.
 
 Pode ser mais fácil entender como o controle flui em _tcp_mojifinder.py_ estudando a saída que ele gera no console do servidor, listada em <<tcp_mojifinder_server_demo>>.
@@ -950,16 +950,16 @@ $
 ====
 <1> Saída de `main`. Antes da próxima linha surgir, vi um intervalo de 0,6s na minha máquina, enquanto o índice era construído.
 <2> Saída de `supervisor`.
-<3> Primeira iteração de um loop `while` em `finder`. A pilha TCP/IP atribuiu a porta 58192 a meu cliente Telnet. Se você conectar diversos clientes ao servidor, verá suas várias portas aparecerem na saída.
-<4> Segunda iteração do loop `while` em `finder`.
-<5> Eu apertei Ctrl-C no terminal cliente; o loop `while` em `finder` termina.
+<3> Primeira iteração de um laço `while` em `finder`. A pilha TCP/IP atribuiu a porta 58192 a meu cliente Telnet. Se você conectar diversos clientes ao servidor, verá suas várias portas aparecerem na saída.
+<4> Segunda iteração do laço `while` em `finder`.
+<5> Eu apertei Ctrl-C no terminal cliente; o laço `while` em `finder` termina.
 <6> A corrotina `finder` mostra essa mensagem e então encerra. Enquanto isso o servidor continua rodando, pronto para receber outro cliente.
-<7> Aperto Ctrl-C no terminal do servidor; `server.serve_forever` é cancelado, encerrando `supervisor` e o loop de eventos.
+<7> Aperto Ctrl-C no terminal do servidor; `server.serve_forever` é cancelado, encerrando `supervisor` e o laço de eventos.
 <8> Saída de `main`.
 
-Após `main` construir o índice e iniciar o loop de eventos, `supervisor` rapidamente mostra a mensagem `Serving on…`, e é suspenso na linha `await server.serve_forever()`. Nesse ponto o controle flui para dentro do loop de eventos e lá permanece, voltando ocasionalmente para a corrotina `finder`, que devolve o controle de volta para o loop de eventos sempre  que precisa esperar que a rede envie ou receba dados.
+Após `main` construir o índice e iniciar o laço de eventos, `supervisor` rapidamente mostra a mensagem `Serving on…`, e é suspenso na linha `await server.serve_forever()`. Nesse ponto o controle flui para dentro do laço de eventos e lá permanece, voltando ocasionalmente para a corrotina `finder`, que devolve o controle de volta para o laço de eventos sempre  que precisa esperar que a rede envie ou receba dados.
 
-Enquanto o loop de eventos estiver ativo, uma nova instância da corrotina `finder` será iniciada para cada cliente que se conecte ao servidor. Dessa forma, múltiplos clientes podem ser atendidos de forma concorrente por esse servidor simples. Isso segue até que ocorra um `KeyboardInterrupt` no servidor ou que seu processo seja eliminado pelo SO.
+Enquanto o laço de eventos estiver ativo, uma nova instância da corrotina `finder` será iniciada para cada cliente que se conecte ao servidor. Dessa forma, múltiplos clientes podem ser atendidos de forma concorrente por esse servidor simples. Isso segue até que ocorra um `KeyboardInterrupt` no servidor ou que seu processo seja eliminado pelo SO.
 
 Agora vamos ver o início de _tcp_mojifinder.py_, com a corrotina `finder`.
 
@@ -975,7 +975,7 @@ include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_TOP]
 <1> `format_results` é útil para mostrar os resultado de `InvertedIndex.search` em uma interface de usuário baseada em texto, como a linha de comando ou uma sessão Telnet.
 <2> Para passar `finder` para `asyncio.start_server`, a envolvi com `functools.partial`, porque o servidor espera uma corrotina ou função que receba apenas os argumentos `reader` e `writer`.
 <3> Obtém o endereço do cliente remoto ao qual o socket está conectado.
-<4> Esse loop controla um diálogo que persiste até um caractere de controle ser recebido do cliente.
+<4> Esse laço controla um diálogo que persiste até um caractere de controle ser recebido do cliente.
 <5> O método `StreamWriter.write` não é uma corrotina, é apenas um função normal; essa linha envia o prompt `?>`.
 <6> O `StreamWriter.drain` esvazia o buffer de `writer`; ela é uma corrotina, então precisa ser acionada com `await`.
 <7> `StreamWriter.readline` é um corrotina que devolve `bytes`.
@@ -983,7 +983,7 @@ include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_TOP]
 <9> Decodifica os `bytes` para `str`, usando a codificação UTF-8 como default.
 <10> Pode ocorrer um `UnicodeDecodeError` quando o usuário digita Ctrl-C e o cliente Telnet envia caracteres de controle; se isso acontecer, substitui a consulta pelo caractere null, para simplificar.
 <11> Registra a consulta no console do servidor.
-<12> Sai do loop se um caractere de controle ou null foi recebido.
+<12> Sai do laço se um caractere de controle ou null foi recebido.
 <13> `search` realiza a busca efetiva; o código será apresentado a seguir.
 <14> Registra a resposta no console do servidor.
 <15> Fecha o `StreamWriter`.
@@ -1049,8 +1049,8 @@ async def go():
 
 Nesse exemplo, a consulta vai devolver uma única linha, mas em um cenário realista é possível receber milhares de linhas na resposta a um `SELECT`.
 Para respostas grandes, o cursor não será carregado com todas as linhas de uma vez só.
-Assim é importante que `async for row in cur:` não bloqueie o loop de eventos enquanto o cursor pode estar esperando por linhas adicionais.
-Ao implementar o cursor como um iterador assíncrono, _aiopg_ pode devolver o controle para o loop de eventos a cada chamada a `+__anext__+`, e continuar mais tarde, quando mais linhas cheguem do PostgreSQL.
+Assim é importante que `async for row in cur:` não bloqueie o laço de eventos enquanto o cursor pode estar esperando por linhas adicionais.
+Ao implementar o cursor como um iterador assíncrono, _aiopg_ pode devolver o controle para o laço de eventos a cada chamada a `+__anext__+`, e continuar mais tarde, quando mais linhas cheguem do PostgreSQL.
 
 
 [[async_gen_func_sec]]
@@ -1068,7 +1068,7 @@ Vamos ver a implementação de _domainlib.py_ logo, mas primeiro examinaremos co
 [[python_async_console_sec]]
 ===== Experimentando com o console assíncrono de Python
 
-https://fpy.li/21-44[Desde o Python 3.8], é possível rodar o interpretador com a opção de linha de comando `-m asyncio`, para obter um "async REPL": um console de Python que importa `asyncio`, fornece um loop de eventos ativo, e aceita `await`, `async for`, e `async with` no prompt principal—que em qualquer outro contexto são erros de sintaxe quando usados fora de corrotinas nativas.footnote:[Isso é ótimo para experimentação, como o console do Node.js. Agradeço a Yury Selivanov por mais essa excelente contribuição para Python assíncrono.]
+https://fpy.li/21-44[Desde o Python 3.8], é possível rodar o interpretador com a opção de linha de comando `-m asyncio`, para obter um "async REPL": um console de Python que importa `asyncio`, fornece um laço de eventos ativo, e aceita `await`, `async for`, e `async with` no prompt principal—que em qualquer outro contexto são erros de sintaxe quando usados fora de corrotinas nativas.footnote:[Isso é ótimo para experimentação, como o console do Node.js. Agradeço a Yury Selivanov por mais essa excelente contribuição para Python assíncrono.]
 
 Para experimentar com o _domainlib.py_, vá ao diretório _21-async/domains/asyncio/_ na sua cópia local do https://fpy.li/code[repositório de código do _Python Fluente_].
 Aí rode::
@@ -1146,7 +1146,7 @@ TypeError: 'async_generator' object is not iterable
 ====
 <1> Chamar uma corrotina nativa devolve um objeto corrotina.
 <2> Chamar um gerador assíncrono devolve um objeto `async_generator`.
-<3> Não podemos usar um loop `for` regular com geradores assíncronos, porque eles implementam `+__aiter__+` em vez de `+__iter__+`.
+<3> Não podemos usar um laço `for` regular com geradores assíncronos, porque eles implementam `+__aiter__+` em vez de `+__iter__+`.
 
 Geradores assíncronos são acionados por `async for`, que pode ser um comando bloqueante (como visto em <<domainlib_demo_repl>>), e também podem aparecer em compreensões assíncronas, que veremos mais tarde.
 
@@ -1174,7 +1174,7 @@ include::../code/21-async/domains/asyncio/domainlib.py[]
 
 [NOTE]
 ====
-O loop `for` no <<domainlib_ex>> poderia ser mais conciso:
+O laço `for` no <<domainlib_ex>> poderia ser mais conciso:
 
 [source, python]
 ----
@@ -1253,7 +1253,7 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def web_page(url):  # <1>
-    loop = asyncio.get_running_loop()   # <2>
+    laço = asyncio.get_running_loop()   # <2>
     data = await loop.run_in_executor(  # <3>
         None, download_webpage, url)
     yield data                          # <4>
@@ -1265,7 +1265,7 @@ async with web_page('google.com') as data:  # <6>
 ====
 <1> A função decorada precisa ser um gerador assíncrono.
 <2> Uma pequena atualização no código de Caleb: usar o `get_running_loop`, mais leve, no lugar de `get_event_loop`.
-<3> Suponha que `download_webpage` é uma função bloqueante que usa a biblioteca _requests_; vamos rodá-la em uma thread separada, para evitar o bloqueio do loop de eventos.
+<3> Suponha que `download_webpage` é uma função bloqueante que usa a biblioteca _requests_; vamos rodá-la em uma thread separada, para evitar o bloqueio do laço de eventos.
 <4> Todas as linhas antes dessa expressão `yield` vão se tornar o método corrotina `+__aenter__+` do gerenciador de contexto assíncrono criado pelo decorador. O valor de `data` será vinculado à variável `data` após a cláusula `as` no comando `async with` abaixo.
 <5> As linhas após o `yield` se tornarão o método corrotina `+__aexit__+`. Aqui outra chamada bloqueante é delegada para um executor de threads.
 <6> Usa `web_page` com `async with`.
@@ -1412,7 +1412,7 @@ Esses artefatos são muitas vezes usados com o _asyncio_ mas, na verdade, eles s
 
 === Programação assíncrona além do asyncio: Curio
 
-Os elementos da linguagem((("asynchronous programming", "Curio project", id="APRcurio21")))((("Curio project", id="curio21"))) `async/await` de Python não estão presos a nenhum loop de eventos ou biblioteca específicos.footnote:[Em contraste com o Javascript, onde `async/await` são atrelados ao loop de eventos que é inseparável do ambiente de runtime, isto é, um navegador, o Node.js ou o Deno.]
+Os elementos da linguagem((("asynchronous programming", "Curio project", id="APRcurio21")))((("Curio project", id="curio21"))) `async/await` de Python não estão presos a nenhum laço de eventos ou biblioteca específicos.footnote:[Em contraste com o Javascript, onde `async/await` são atrelados ao laço de eventos que é inseparável do ambiente de runtime, isto é, um navegador, o Node.js ou o Deno.]
 Graças à API extensível fornecida por métodos especiais, qualquer um suficientemente motivado pode escrever seu ambiente de runtime e suo framework assíncronos para acionar corrotinas nativas, geradores assíncronos, etc.
 
 Foi isso que David Beazley fez em seu projeto https://fpy.li/21-49[_Curio_].
@@ -1428,7 +1428,7 @@ O <<blogdom_curio_ex>> mostra o script _blogdom.py_ (<<blogdom_ex>>) reescrito p
 include::../code/21-async/domains/curio/blogdom.py[]
 ----
 ====
-<1> `probe` não precisa obter o loop de eventos, porque...
+<1> `probe` não precisa obter o laço de eventos, porque...
 <2> ...`getaddrinfo` é uma função nível superior de `curio.socket`, não um método de um objeto `loop`—como ele é no `asyncio`.
 <3> Um `TaskGroup` é um conceito central no _Curio_, para monitorar e controlar várias corrotinas, e para garantir que elas todas sejam executadas e terminadas corretamente.
 <4> `TaskGroup.spawn` é como você inicia uma corrotina, gerenciada por uma instância específica de `TaskGroup`. A corrotina é envolvida em uma `Task`.
@@ -1439,7 +1439,7 @@ Para expandir esse último ponto: se você olhar nos exemplo de código de `asyn
 
 [source, python]
 ----
-    loop = asyncio.get_event_loop()
+    laço = asyncio.get_event_loop()
     loop.run_until_complete(main())
     loop.close()
 ----
@@ -1462,7 +1462,7 @@ print('Results:', g.results)
 
 Grupos((("structured concurrency")))((("concurrency models", "structured concurrency"))) de tarefas (_task groups_) suportam https://fpy.li/21-51[_concorrência estruturada_]:
 uma forma de programação concorrente que restringe todas a atividade de um grupo de tarefas assíncronas a um único ponto de entrada e saída.
-Isso é análogo à programaçào estruturada, que eliminou o comando `GOTO` e introduziu os comandos de bloco para limitar os pontos de entrada e saída de loops e sub-rotinas.
+Isso é análogo à programaçào estruturada, que eliminou o comando `GOTO` e introduziu os comandos de bloco para limitar os pontos de entrada e saída de laços e sub-rotinas.
 Quando usado como um gerenciador de contexto assíncrono, um `TaskGroup` garante que na saída do bloco, todas as tarefas criadas dentro dele estão ou finalizadas ou canceladas e qualquer exceção foi levantada.
 
 [NOTE]
@@ -1488,7 +1488,7 @@ o framework https://fpy.li/21-58[_Trio_], iniciada por Nathaniel J. Smith,
 foi muito inspirada pelo _Curio_.
 O _Curio_ pode também ter alertado os contribuidores de Python a melhorarem a usabilidade da API `asyncio`.
 Por exemplo, em suas primeiras versões, os usuários do `asyncio` muitas vezes eram obrigados a obter e ficar passando um objeto `loop`, porque algumas funções essenciais eram ou métodos de `loop` ou exigiam um argumento `loop`.
-Em versões mais recentes de Python, acesso direto ao loop não é mais tão necessário e, de fato, várias funções que aceitavam um `loop` opcional estão agora descontinuando aquele argumento.
+Em versões mais recentes de Python, acesso direto ao laço não é mais tão necessário e, de fato, várias funções que aceitavam um `loop` opcional estão agora descontinuando aquele argumento.
 
 Anotações de tipo para tipos assíncronos é o nosso próximo tópico.((("", startref="APRcurio21")))((("", startref="curio21")))
 
@@ -1544,7 +1544,7 @@ ____
 Se um parâmetro de tipo formal define um tipo para um dado que sai do objeto, ele pode ser covariante.
 ____
 
-Segundo: `AsyncGenerator` e `Coroutine` são contra-variantes do segundo ao último parâmetros. Aquele é o tipo do argumento do método de baixo nível `.send()`, que o loop de eventos chama para acionar geradores assíncronos e corrotinas. Dessa forma, é um tipo de "entrada".
+Segundo: `AsyncGenerator` e `Coroutine` são contra-variantes do segundo ao último parâmetros. Aquele é o tipo do argumento do método de baixo nível `.send()`, que o laço de eventos chama para acionar geradores assíncronos e corrotinas. Dessa forma, é um tipo de "entrada".
 Assim, pode ser contra-variante, pelo Regra de Variância #2
 
 [quote]
@@ -1623,12 +1623,12 @@ Aprendi da forma mais difícil que não existem "sistemas limitados por E/S."
 Você pode ter _funções_ limitadas por E/S.
 Talvez a maioria das funções no seu sistema sejam limitadas por E/S;
 isto é, elas passam mais tempo esperando por E/S do que realizando operações na memória.
-Enquanto esperam, cedem o controle para o loop de eventos,
+Enquanto esperam, cedem o controle para o laço de eventos,
 que pode então acionar outras tarefas pendentes.
 Mas, inevitavelmente, qualquer sistema não-trivial terá partes limitadas pela CPU.
 Mesmo sistemas triviais revelam isso, sob stress.
 No <<async_soapbox>>, conto a história de dois programas assíncronos sofrendo com
-funções limitadas pela CPU freando loop de eventos,
+funções limitadas pela CPU freando laço de eventos,
 com severos impactos no desempenho do sistema como um todo.
 
 Dado que qualquer sistema não-trivial terá funções limitadas pela CPU,
@@ -1665,7 +1665,7 @@ Ou você reescreve todo o código, de forma que nada nele bloqueie [o processame
 ____
 
 Escolhi((("asynchronous programming", "overview of"))) essa epígrafe para esse capítulo por duas razões.
-Em um nível mais alto, ela nos lembra de evitar o bloqueio do loop de eventos, delegando tarefas lentas para uma unidade de processamento diferente, desde uma simples thread indo até uma fila de tarefas distribuída.
+Em um nível mais alto, ela nos lembra de evitar o bloqueio do laço de eventos, delegando tarefas lentas para uma unidade de processamento diferente, desde uma simples thread indo até uma fila de tarefas distribuída.
 Em um nível mais baixo, ela também é um aviso: no momento em que você escreve seu primeiro `async def`, seu programa vai inevitavelmente ver surgir mais e mais `async def`, `await`, `async with`, e `async for`.
 E o uso de bibliotecas não-assíncronas subitamente se tornará um desafio.
 
@@ -1757,11 +1757,11 @@ Nada é perfeito, e programação concorrente é sempre difícil.
 [role="soapbox-title"]
 Como uma função lerda quase estragou as benchmarks do uvloop
 
-Em((("asynchronous programming", "Soapbox discussion")))((("Soapbox sidebars", "uvloop")))((("uvloop"))) 2016, Yury Selivanov lançou o https://fpy.li/21-83[_uvloop_], "um substituto rápido e direto para o loop de eventos embutido do _asyncio_ event loop." Os números de referência (_benchmarks_) apresentados no https://fpy.li/21-84[post de blog] de Selivanov anunciando a biblioteca, em 2016, eram muito impressionantes. Ele escreveu: "ela é pelo menos 2x mais rápida que o nodejs e gevent, bem como qualquer outro framework assíncrona de Python. O desempenho do asyncio com o uvloop é próximo àquele de programas em Go."
+Em((("asynchronous programming", "Soapbox discussion")))((("Soapbox sidebars", "uvloop")))((("uvloop"))) 2016, Yury Selivanov lançou o https://fpy.li/21-83[_uvloop_], "um substituto rápido e direto para o laço de eventos embutido do _asyncio_." Os números de referência (_benchmarks_) apresentados no https://fpy.li/21-84[post de blog] de Selivanov anunciando a biblioteca, em 2016, eram muito impressionantes. Ele escreveu: "ela é pelo menos 2x mais rápida que o nodejs e gevent, bem como qualquer outro framework assíncrona de Python. O desempenho do _asyncio_ com o _uvloop_ é próximo àquele de programas em Go."
 
 Entretanto, o post revela que a _uvloop_ é capaz de competir com o desempenho do Go sob duas condições:
 
- . Que o Go seja configurado para usar uma única thread. Isso faz o runtime do Go se comportar de forma similar ao _asyncio_: a concorrência é alcançada através de múltiplas corrotinas acionadas por um loop de eventos, todos na mesma thread.footnote:[Usar uma única thread era o default até o lançamento do Go 1.5. Anos antes, o Go já tinha ganho uma merecida reputação por permitir a criação de sistemas em rede de alta concorrência. Mais uma evidência que a concorrência não exige múltiplas threads ou múltiplos núcleos de CPU.]
+ . Que o Go seja configurado para usar uma única thread. Isso faz o runtime do Go se comportar de forma similar ao _asyncio_: a concorrência é alcançada através de múltiplas corrotinas acionadas por um laço de eventos, todos na mesma thread.footnote:[Usar uma única thread era o default até o lançamento do Go 1.5. Anos antes, o Go já tinha ganho uma merecida reputação por permitir a criação de sistemas em rede de alta concorrência. Mais uma evidência que a concorrência não exige múltiplas threads ou múltiplos núcleos de CPU.]
 . Que o código Python 3.5 use a biblioteca https://fpy.li/21-85[_httptools_] além do próprio _uvloop_.
 
 Selivanov explica que escreveu _httptools_ após testar o desempenho da _uvloop_ com a https://fpy.li/21-86[_aiohttp_]—uma das primeiras bibliotecas HTTP completas construídas sobre o `asyncio`:
@@ -1774,8 +1774,8 @@ ____
 Agora reflita sobre isso: os testes de desempenho HTTP de Selivanov consistiam de um simples servidor eco escrito em diferentes linguagens e usando diferentes bibliotecas, testados pela ferramenta de benchmarking https://fpy.li/21-87[_wrk_].
 A maioria dos desenvolvedores consideraria um simples servidor eco um "sistema limitado por E/S", certo?
 Mas no fim, a análise de cabeçalhos HTTP é vinculada à CPU, e tinha uma implementação Python lenta na _aiohttp_ quando Selivanov realizou os testes, em 2016.
-Sempre que uma função escrita em Python estava processando os cabeçalhos, o loop de eventos era bloqueado. O impacto foi tão significativo que Selivanov se deu ao trabalho extra de escrever o _httptools_.
-Sem a otimização do código de uso intensivo de CPU, os ganhos de desempenho de um loop de eventos mais rápido eram perdidos.
+Sempre que uma função escrita em Python estava processando os cabeçalhos, o laço de eventos era bloqueado. O impacto foi tão significativo que Selivanov se deu ao trabalho extra de escrever o _httptools_.
+Sem a otimização do código de uso intensivo de CPU, os ganhos de desempenho de um laço de eventos mais rápido eram perdidos.
 
 
 [role="soapbox-title"]
@@ -1796,7 +1796,7 @@ O projeto era ambicioso: já estava em desenvolvimento há mais de um ano,
 mas ainda não estava em produção.footnote:[Independente de escolhas técnicas, esse foi talvez o maior erro daquela projeto: as partes interessadas não forçaram uma abordagem MVP—entregar o "Mínimo Produto Viável" o mais rápido possível e acrescentar novos recursos em um ritmo estável.] Com o tempo, os desenvolvedores notaram que o desempenho do sistema como um todo estava diminuindo, e estavam tendo muita dificuldade em localizar os gargalos.
 
 O que estava acontecendo: a cada nova funcionalidade,
-mais código intensivo em CPU desacelerava o loop de eventos do _Twisted_.
+mais código intensivo em CPU desacelerava o laço de eventos do _Twisted_.
 O papel de Python como um linguagem de "cola" significava que havia muita interpretação
 de dados, serialização, desserialização, e muitas conversões entre formatos.
 Não havia um gargalo único:
@@ -1810,6 +1810,6 @@ e o projeto foi cancelado semanas depois deste diagnóstico.
 
 Quando contei essa história para Glyph Lefkowitz—fundador do projeto _Twisted_—ele me disse que uma de suas prioridades, no início de qualquer projeto envolvendo programação assíncrona,
 é decidir que ferramentas serão usadas para executar tarefas intensivas em CPU
-sem atrapalhar o loop de eventos.
+sem atrapalhar o laço de eventos.
 Essa conversa com Glyph foi a inspiração para a <<avoid_cpu_trap_sec>>.
 ****

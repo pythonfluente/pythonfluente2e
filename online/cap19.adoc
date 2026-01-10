@@ -71,7 +71,7 @@ e obter os resultados ou os erros requer criar algum canal de comunicação, tal
 Além disso, criar uma thread ou um processo não é barato,
 você não quer iniciar uma delas apenas para executar uma única computação e desaparecer.
 Muitas vezes queremos amortizar o custo de inicialização transformando cada thread ou processo em um "worker" ou "unidade de trabalho",
-que entra em um loop e espera por dados para processar.
+que entra em um laço e espera por dados para processar.
 Isso complica ainda mais a comunicação e introduz mais perguntas.
 Como terminar um "worker" quando ele não é mais necessário?
 E como fazer para encerrá-lo sem interromper uma tarefa inacabada,
@@ -135,11 +135,11 @@ Corrotina::
     Uma((("coroutines", "definition of term"))) função que pode suspender sua própria execução e continuar depois.
     Em Python, _corrotinas clássicas_ são criadas a partir de funções geradoras, e _corrotinas nativas_ são definidas com `async def`.
     A <<classic_coroutines_sec>> introduziu o conceito, e <<ch_async>> trata do uso de corrotinas nativas.
-    As corrotinas de Python normalmente rodam dentro de uma única thread, sob a supervisão de um _loop de eventos_, também na mesma thread.
-    Frameworks de programação assíncrona como _asyncio_, _Curio_, ou _Trio_ fornecem um loop de eventos e bibliotecas de apoio para E/S não-bloqueante baseado em corrotinas.
+    As corrotinas de Python normalmente rodam dentro de uma única thread, sob a supervisão de um laço de eventos (_event loop_), também na mesma thread.
+    Frameworks de programação assíncrona como _asyncio_, _Curio_, ou _Trio_ fornecem um laço de eventos e bibliotecas de apoio para E/S não-bloqueante baseado em corrotinas.
     Corrotinas permitem _multitarefa cooperativa_:
     cada corrotina deve ceder explicitamente o controle com as palavras-chave `yield` ou `await`, para que outra possa continuar de forma concorrente (mas não em paralelo).
-    Isso significa que qualquer código bloqueante em uma corrotina bloqueia a execução do loop de eventos e de todas as outras corrotinas—ao contrário da _multitarefa preemptiva_ suportada por processos e threads.
+    Isso significa que qualquer código bloqueante em uma corrotina bloqueia a execução do laço de eventos e de todas as outras corrotinas—ao contrário da _multitarefa preemptiva_ suportada por processos e threads.
     Por outro lado, cada corrotina consome menos recursos para executar o mesmo trabalho que uma thread ou processo.
 
 Fila (_queue_)::
@@ -204,8 +204,8 @@ O parágrafo anterior começa com "Detalhe de implementação do CPython" porque
 
 [NOTE]
 ====
-Essa seção não mencionou corrotinas, pois por default elas compartilham a mesma thread Python entre si e com o loop de eventos supervisor fornecido por um framework assíncrono. Assim, a GIL não as afeta.
-É possível usar múltiplas threads em um programa assíncrono, mas a melhor prática é ter uma thread rodando o loop de eventos e todas as corrotinas, enquanto as threads adicionais executam tarefas específicas.
+Essa seção não mencionou corrotinas, pois por default elas compartilham a mesma thread Python entre si e com o laço de eventos supervisor fornecido por um framework assíncrono. Assim, a GIL não as afeta.
+É possível usar múltiplas threads em um programa assíncrono, mas a melhor prática é ter uma thread rodando o laço de eventos e todas as corrotinas, enquanto as threads adicionais executam tarefas específicas.
 Isso será explicado na <<delegating_to_executors_sec>>.
 ====
 
@@ -248,10 +248,10 @@ include::../code/19-concurrency/spinner_thread.py[tags=SPINNER_THREAD_TOP]
 ----
 ====
 <1> Essa função vai rodar em uma thread separada. O argumento `done` é uma instância de `threading.Event`, um objeto simples para sincronizar threads.
-<2> Isso é um loop infinito, porque `itertools.cycle` produz um caractere por vez, circulando pela string para sempre.
+<2> Isso é um laço infinito, porque `itertools.cycle` produz um caractere por vez, circulando pela string para sempre.
 <3> O truque para animação em modo texto: mova o cursor de volta para o início da linha com o caractere de controle ASCII de retorno (`'\r'`).
 <4> O método `Event.wait(timeout=None)` retorna `True` quando o evento é acionado por outra thread; se o `timeout` passou, ele retorna `False`. O tempo de 0,1s estabelece a "velocidade" da animação para 10 FPS. Se você quiser que uma animação mais rápida, use um tempo menor aqui.
-<5> Sai do loop infinito.
+<5> Sai do laço infinito.
 <6> Sobrescreve a linha de status com espaços para limpá-la e move o cursor de volta para o início.
 <7> `slow()` será chamada pela thread principal. Imagine que isso é uma chamada de API lenta, através da rede. Chamar `sleep` bloqueia a thread principal, mas a GIL é liberada e a thread da animação pode continuar.
 
@@ -290,7 +290,7 @@ include::../code/19-concurrency/spinner_thread.py[tags=SPINNER_THREAD_REST]
 é o estado da thread—significando aqui que ela ainda não foi iniciada.
 <5> Inicia a thread `spinner`.
 <6> Chama `slow`, que bloqueia a thread principal. Enquanto isso, a thread secundária está rodando a animação.
-<7> Muda a flag de `Event` para `True`; isso vai encerrar o loop `for` dentro da função `spin`.
+<7> Muda a flag de `Event` para `True`; isso vai encerrar o laço `for` dentro da função `spin`.
 <8> Espera até que a thread `spinner` termine.
 <9> Roda a função `supervisor`. Escrevi `main` e `supervisor` como funções separadas para deixar esse exemplo mais parecido com a versão `asyncio` no <<spinner_async_start_ex>>.
 
@@ -361,9 +361,9 @@ Agora vamos ver como o mesmo comportamento pode ser obtido com corrotinas em vez
 O <<ch_async>> é((("spinners (loading indicators)", "created using coroutines", id="Scoroutine19")))((("coroutines", "spinners (loading indicators) using", id="Cspin19"))) inteiramente dedicado à programação assíncrona com corrotinas. Essa seção é apenas um introdução rápida, para contrastar essa abordagem com as threads e os processos. Assim, vamos ignorar muitos detalhes.
 ====
 
-Alocar tempo da CPU para a execução de threads e processos é trabalho dos agendadores do SO. As corrotinas, por outro lado, são controladas por um loop de evento no nível da aplicação, que gerencia uma fila de corrotinas pendentes, as executa uma por vez, monitora eventos disparados por operações de E/S iniciadas pelas corrotinas, e passa o controle de volta para a corrotina correspondente quando cada evento acontece.
-O loop de eventos e as corrotinas da biblioteca e as corrotinas do usuário todas rodam em uma única thread.
-Assim, o tempo gasto em uma corrotina desacelera loop de eventos—e de todas as outras corrotinas.
+Alocar tempo da CPU para a execução de threads e processos é trabalho dos agendadores do SO. As corrotinas, por outro lado, são controladas por um laço de evento no nível da aplicação, que gerencia uma fila de corrotinas pendentes, as executa uma por vez, monitora eventos disparados por operações de E/S iniciadas pelas corrotinas, e passa o controle de volta para a corrotina correspondente quando cada evento acontece.
+O laço de eventos e as corrotinas da biblioteca e as corrotinas do usuário todas rodam em uma única thread.
+Assim, o tempo gasto em uma corrotina desacelera laço de eventos—e de todas as outras corrotinas.
 
 A versão com corrotinas do programa de animação é mais fácil de entender se começarmos por uma função `main`, e depois olharmos a `supervisor`.
 É isso que o <<spinner_async_start_ex>> mostra.
@@ -377,7 +377,7 @@ include::../code/19-concurrency/spinner_async.py[tags=SPINNER_ASYNC_START]
 ----
 ====
 <1> `main` é a única função regular definida nesse programa—as outras são corrotinas.
-<2> A função`asyncio.run` inicia o loop de eventos para controlar a corrotina que em algum momento colocará as outras corrotinas em movimento.
+<2> A função`asyncio.run` inicia o laço de eventos para controlar a corrotina que em algum momento colocará as outras corrotinas em movimento.
 A função `main` ficará bloqueada até que `supervisor` retorne.
 O valor de retorno de `supervisor` será o valor de retorno de `asyncio.run`.
 <3> Corrotinas nativas são definidas com `async def`.
@@ -414,7 +414,7 @@ O <<spinner_async_start_ex>> demonstra as três principais formas de rodar uma c
 [NOTE]
 ====
 Lembre-se: invocar uma corrotina como `coro()` retorna imediatamente um objeto corrotina, mas não executa o corpo da função `coro`.
-Acionar o corpo de corrotinas é a função do loop de eventos.
+Acionar o corpo de corrotinas é a função do laço de eventos.
 ====
 
 Vamos estudar agora as corrotinas `spin` e `slow` no <<spinner_async_top_ex>>.
@@ -429,7 +429,7 @@ include::../code/19-concurrency/spinner_async.py[tags=SPINNER_ASYNC_TOP]
 ====
 <1> Não precisamos do argumento `Event`, que era usado para sinalizar que `slow` havia terminado de rodar no _spinner_thread.py_ (<<spinner_thread_top_ex>>).
 <2> Use `await asyncio.sleep(.1)` em vez de `time.sleep(.1)`, para pausar sem bloquear outras corrotinas. Veja o experimento após o exemplo.
-<3> `asyncio.CancelledError` é lançada quando o método `cancel` é chamado na `Task` que controla essa corrotina. É hora de sair do loop.
+<3> `asyncio.CancelledError` é lançada quando o método `cancel` é chamado na `Task` que controla essa corrotina. É hora de sair do laço.
 <4> A corrotina `slow` também usa `await asyncio.sleep` em vez de `time.sleep`.
 
 ===== Experimento: Estragando a animação para sublinhar um ponto
@@ -482,7 +482,7 @@ O _spinner_async_experiment.py_ ensina uma lição importante, como explicado no
 ====
 Nunca use `time.sleep(…)` em corrotinas `asyncio`, a menos que você queira pausar o programa inteiro.
 Se uma corrotina precisa passar algum tempo sem fazer nada, ela deve `await asyncio.sleep(DELAY)`.
-Isso devolve o controle para o loop de eventos de `asyncio`, que pode acionar outras corrotinas em espera.((("", startref="Cspin19")))((("", startref="Scoroutine19")))
+Isso devolve o controle para o laço de eventos de `asyncio`, que pode acionar outras corrotinas em espera.((("", startref="Cspin19")))((("", startref="Scoroutine19")))
 ====
 
 [[gevent_box]]
@@ -591,7 +591,7 @@ libera a GIL.
 Você também pode trocar a expressão `asyncio.sleep(3)` na corrotina `slow` para
 fazer `await` esperar a resposta de uma corrotina de biblioteca bem desenhada de
 acesso assíncrono à rede. Tais bibliotecas implementam corrotinas para devolver
-o controle para o loop de eventos enquanto esperam por uma resposta da rede.
+o controle para o laço de eventos enquanto esperam por uma resposta da rede.
 Enquanto isso, a animação seguirá girando.
 
 Com código de uso intensivo da CPU, a história é outra.
@@ -641,7 +641,7 @@ Não acertei essa resposta inicialmente:
 Esperava que a animação congelasse, porque superestimei o impacto da GIL.
 
 Nesse exemplo em particular, a animação segue girando porque Python suspende a thread em execução a cada 5ms (por default), tornando a GIL disponível para outras threads pendentes.
-Assim, a thread principal executando `is_prime` é interrompida a cada 5ms, permitindo à thread secundária acordar e executar uma vez o loop `for`, até chamar o método `wait` do evento `done`, quando então ela liberará a GIL.
+Assim, a thread principal executando `is_prime` é interrompida a cada 5ms, permitindo à thread secundária acordar e executar uma vez o laço `for`, até chamar o método `wait` do evento `done`, quando então ela liberará a GIL.
 A thread principal então pegará a GIL, e o cálculo de `is_prime` continuará por mais 5 ms.
 
 Isso não tem um impacto visível no tempo de execução deste exemplo específico, porque a função `spin` rapidamente realiza uma iteração e libera a GIL, enquanto espera pelo evento `done`, então não há muita disputa pela GIL.
@@ -664,7 +664,7 @@ O programa parecerá congelado por aproximadamente 3s, e então mostrará a resp
 .Soneca profunda com sleep(0)
 ****
 Uma((("spinners (loading indicators)", "keeping alive"))) maneira de manter a animação funcionando é reescrever `is_prime` como uma corrotina,
-e periodicamente chamar `asyncio.sleep(0)` em uma expressão `await`, para passar o controle de volta para o loop de eventos, como no <<example-19-11>>.
+e periodicamente chamar `asyncio.sleep(0)` em uma expressão `await`, para passar o controle de volta para o laço de eventos, como no <<example-19-11>>.
 
 [[example-19-11]]
 .spinner_async_nap.py: `is_prime` agora é uma corrotina
@@ -678,7 +678,7 @@ include::../code/19-concurrency/primes/spinner_prime_async_nap.py[tags=PRIME_NAP
 
 O https://fpy.li/19-20[Issue #284] (EN) no repositório do `asyncio` tem uma discussão informativa sobre o uso de `asyncio.sleep(0)`.
 
-Entretanto, observe que isso vai tornar `is_prime` mais lento, e—mais importante—vai também tornar o loop de eventos e o seu programa inteiro mais lentos.
+Entretanto, observe que isso vai tornar `is_prime` mais lento, e—mais importante—vai também tornar o laço de eventos e o seu programa inteiro mais lentos.
 Quando eu usei `await asyncio.sleep(0)` a cada 100.000 iterações, a animação foi suave mas o programa rodou por 4,9s na minha máquina, quase 50% a mais que a função `primes.is_prime` rodando sozinha com o mesmo argumento (`5_000_111_000_222_021`).
 
 Usar `await asyncio.sleep(0)` deve ser considerada uma medida paliativa até o código assíncrono ser refatorado para delegar computações de uso intensivo da CPU para outro processo.
@@ -839,20 +839,20 @@ Temos que chamar essa `SimpleQueue` para criar uma fila. Por outro lado, não po
 <7> `worker` recebe uma fila com os números a serem checados, e outra para colocar os resultados.
 <8> Nesse código, usei o número `0` como uma _pílula venenosa_: um sinal para que o processo encerre. Se `n` não é `0`, continue com o loop.footnote:[Nesse exemplo, `0` é uma sentinela conveniente. `None` também é comumente usado para essa finalidade, mas usar `0` simplifica a dica de tipo para `PrimeResult` e a implementação de `worker`.]
 <9> Invoca a checagem de número primo e coloca o `PrimeResult` na fila.
-<10> Devolve um `PrimeResult(0, False, 0.0)`, para informar ao loop principal que esse processo terminou seu trabalho.
+<10> Devolve um `PrimeResult(0, False, 0.0)`, para informar ao laço principal que esse processo terminou seu trabalho.
 <11> `procs` é o número de processos que executarão a checagem de números primos em paralelo.
 <12> Coloca na fila `jobs` os números a serem checados.
-<13> Cria um processo filho para cada `worker`. Cada um desses processos executará o loop dentro de sua própria instância da função `worker`, até encontrar um `0` na fila `jobs`.
+<13> Cria um processo filho para cada `worker`. Cada um desses processos executará o laço dentro de sua própria instância da função `worker`, até encontrar um `0` na fila `jobs`.
 <14> Inicia cada processo filho.
 <15> Coloca um `0` na fila de cada processo, para encerrá-los.
 
 [[good_poison_pill_tip]]
-.Loops, sentinelas e pílulas venenosas
+.laços, sentinelas e pílulas venenosas
 ****
-A((("concurrency models", "indefinite loops and sentinels")))((("indefinite loops")))((("sentinels")))
+A((("concurrency models", "indefinite laços and sentinels")))((("indefinite laços")))((("sentinels")))
 função `worker` no <<ex_primes_procs_top>> segue um modelo comum em programação concorrente:
-percorrer indefinidamente um loop, pegando itens em um fila e processando cada um deles com uma função que realiza o trabalho real.
-O loop termina quando a fila produz um valor sentinela.
+percorrer indefinidamente um laço, pegando itens em um fila e processando cada um deles com uma função que realiza o trabalho real.
+O laço termina quando a fila produz um valor sentinela.
 Nesse modelo, a sentinela que encerra o processo é muitas vezes chamada de "pílula venenosa.
 
 `None` é bastante usado como valor sentinela, mas pode não ser adequado se existir a possibilidade dele aparecer entre os dados.
@@ -886,7 +886,7 @@ include::../code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_MAIN]
 <4> Recupera e exibe os resultados; `report` está definido em `⑥`.
 <5> Mostra quantos números foram checados e o tempo total decorrido.
 <6> Os argumentos são o número de `procs` e a fila para armazenar os resultados.
-<7> Percorre o loop até que todos os processos terminem.
+<7> Percorre o laço até que todos os processos terminem.
 <8> Obtém um `PrimeResult`. Chamar `.get()` em uma fila deixa o processamento bloqueado até que haja um item na fila. Também é possível fazer isso de forma não-bloqueante ou estabelecer um timeout. Veja os detalhes na documentação de https://fpy.li/ab[`SimpleQueue.get`].
 <9> Se `n` é zero, então um processo terminou; incrementa o contador `procs_done`.
 <10> Senão, incrementa o contador `checked` (para acompanhar os números checados) e mostra os resultados.
@@ -1219,7 +1219,7 @@ Após((("concurrency models", "overview of"))) um pouco de teoria, esse capítul
 
 Então exploramos o impacto real da GIL com um experimento:
 mudar os exemplos de animação para computar se um inteiro grande era primo e observar o comportamento resultante.
-Isso demonstrou graficamente que funções de uso intensivo da CPU devem ser evitadas em `asyncio`, pois elas bloqueiam o loop de eventos.
+Isso demonstrou graficamente que funções de uso intensivo da CPU devem ser evitadas em `asyncio`, pois elas bloqueiam o laço de eventos.
 A versão com threads do experimento funcionou—apesar da GIL—porque Python periodicamente interrompe as threads, e o exemplo usou apenas duas threads:
 uma fazendo um trabalho de computação intensiva, a outra controlando a animação apenas 10 vezes por segundo.
 A variante com `multiprocessing` contornou a GIL, iniciando um novo processo só para a animação, enquanto o processo principal calculava se o número era primo.
@@ -1343,7 +1343,7 @@ pass:[<a href="https://fpy.li/19-76" class="orm:hideurl"><em>cosmicpython.com</e
 Duas bibliotecas elegantes e fáceis de usar para tarefas de paralelização de processos são a https://fpy.li/19-77[_lelo_] de João S. O. Bueno e a https://fpy.li/19-78[_python-parallelize_] de Nat Pryce.
 O pacote _lelo_ define um decorador `@parallel` que você pode aplicar a qualquer função para torná-la magicamente não-bloqueante:
 quando você chama uma função decorada, sua execução é iniciada em outro processo.
-O pacote _python-parallelize_ de Nat Pryce fornece um gerador `parallelize`, que distribui a execução de um loop `for` por múltiplas CPUs.
+O pacote _python-parallelize_ de Nat Pryce fornece um gerador `parallelize`, que distribui a execução de um laço `for` por múltiplas CPUs.
 Ambos os pacotes são baseados na biblioteca _multiprocessing_.
 
 Eric Snow, um dos desenvolvedores oficiais de Python,
@@ -1488,7 +1488,7 @@ Muito poucas operações são atômicas no nível das expressões do código-fon
 Se você esquecer de obter a trava, nada impede seu código de bagunçar os dados enquanto outra thread, que obedientemente detém a trava, está atualizando os mesmos dados.
 
 Em comparação, considere algumas restrições impostas pelo modelo de atores,
-no qual a unidade de execução é chamada de um _actor_ ("ator"):footnote:[A comunidade Erlang usa o termo "processo" para se referir a atores. Em Erlang, cada processo é uma função em seu próprio loop, que então são muito leves, tornando viável ter milhões deles ativos ao mesmo tempo em uma única máquina—nenhuma relação com os pesados processo do SO, dos quais falamos em outros pontos desse capitulo. Então temos aqui exemplos dos dois pecados descritos pelo Prof. Simon: usar palavras diferentes para se referir à mesma coisa, e usar uma palavra para se referir a coisas diferentes.]
+no qual a unidade de execução é chamada de um _actor_ ("ator"):footnote:[A comunidade Erlang usa o termo "processo" para se referir a atores. Em Erlang, cada processo é uma função em seu próprio laço, que então são muito leves, tornando viável ter milhões deles ativos ao mesmo tempo em uma única máquina—nenhuma relação com os pesados processo do SO, dos quais falamos em outros pontos desse capitulo. Então temos aqui exemplos dos dois pecados descritos pelo Prof. Simon: usar palavras diferentes para se referir à mesma coisa, e usar uma palavra para se referir a coisas diferentes.]
 
 * Um ator pode manter um estado interno, mas não pode compartilhar esse estado com outros atores.
 * Atores só podem se comunicar enviando e recebendo mensagens.

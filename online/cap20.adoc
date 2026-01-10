@@ -202,7 +202,7 @@ include::../code/20-executors/getflags/flags_threadpool.py[tags=FLAGS_THREADPOOL
 <5> Retorna o número de resultados obtidos. Se alguma das chamadas das threads levantar uma exceção, aquela exceção será levantada aqui quando a chamada implícita `next()`, dentro do construtor de `list`, tentar recuperar o valor de retorno correspondente, no iterador retornado por `executor.map`.
 <6> Chama a função `main` do módulo `flags`, passando a versão concorrente de `download_many`.
 
-Observe que a função `download_one` do <<flags_threadpool_ex>> é essencialmente o corpo do loop `for` na função `download_many` do <<flags_module_ex>>. Essa é uma refatoração comum quando se está escrevendo código concorrente: transformar o corpo de um loop `for` sequencial em uma função a ser chamada de modo concorrente.
+Observe que a função `download_one` do <<flags_threadpool_ex>> é essencialmente o corpo do laço `for` na função `download_many` do <<flags_module_ex>>. Essa é uma refatoração comum quando se está escrevendo código concorrente: transformar o corpo de um laço `for` sequencial em uma função a ser chamada de modo concorrente.
 
 [TIP]
 ====
@@ -287,7 +287,7 @@ Para ver uma experiência prática com os _futures_, podemos reescrever o <<flag
 entrega _futures_ quando cada um encerra sua execução.
 
 Usar `futures.as_completed` exige mudanças apenas na função `download_many`.
-A chamada ao `executor.map`, de alto nível, é substituída por dois loops `for`:
+A chamada ao `executor.map`, de alto nível, é substituída por dois laços `for`:
 um para criar e agendar os _futures_, o outro para recuperar seus resultados.
 Já que estamos aqui, vamos acrescentar algumas chamadas a `print` para mostrar cada _future_ antes e depois do término de sua execução.
 O <<flags_threadpool_futures_ex>> mostra o código da nova função `download_many`.
@@ -495,7 +495,7 @@ include::../code/20-executors/demo_executor_map.py[tags=EXECUTOR_MAP]
 <4> Cria um `ThreadPoolExecutor` com três threads.
 <5> Submete cinco tarefas para o `executor`. Já que há apenas três threads, apenas três daquelas tarefas vão iniciar imediatamente: a chamadas `loiter(0)`, `loiter(1)`, e `loiter(2)`; essa é uma chamada não-bloqueante.
 <6> Mostra imediatamente o `results` da invocação de `executor.map`: é um gerador, como se vê na saída no <<demo_executor_map_run>>.
-<7> A chamada `enumerate` no loop `for` vai invocar implicitamente `next(results)`, que por sua vez vai invocar `f.result()` no _future_ (interno) `f`, representando a primeira chamada, `loiter(0)`. O método `result` vai bloquear a thread até que o _future_ termine, portanto cada iteração nesse loop vai esperar até que o próximo resultado esteja disponível.
+<7> A chamada `enumerate` no laço `for` vai invocar implicitamente `next(results)`, que por sua vez vai invocar `f.result()` no _future_ (interno) `f`, representando a primeira chamada, `loiter(0)`. O método `result` vai bloquear a thread até que o _future_ termine, portanto cada iteração nesse laço vai esperar até que o próximo resultado esteja disponível.
 
 [role="pagebreak-before less_space"]
 Encorajo você a rodar o <<demo_executor_map_ex>> e ver o resultado sendo atualizado de forma incremental. Quando for fazer isso, mexa no argumento `max_workers` do pass:[<code>ThreadPool&#x200b;Executor</code>] e com a função `range`, que produz os argumentos para a chamada a `executor.map`—ou os substitua por listas com valores escolhidos, para criar intervalos diferentes.
@@ -533,9 +533,9 @@ $ python3 demo_executor_map.py
 <3> `loiter(1)` e `loiter(2)` começam imediatamente (como o pool de threads têm três threads de trabalho, é possível rodar três funções de forma concorrente).
 <4> Isso mostra que o `results` retornado por `executor.map` é um gerador: nada até aqui é bloqueante, independente do número de tarefas e do valor de `max_workers`.
 <5> Como `loiter(0)` terminou, a primeira thread de trabalho está disponível para iniciar a quarta thread para `loiter(3)`.
-<6> Aqui é ponto a execução pode ser bloqueada, dependendo dos parâmetros passados nas chamadas a `loiter`: o método `+__next__+` do gerador `results` precisa esperar até o primeiro _future_ estar completo. Neste caso, ele não vai bloquear porque a chamada a `loiter(0)` terminou antes desse loop iniciar. Observe que tudo até aqui aconteceu dentro do mesmo segundo: 15:56:50.
+<6> Aqui é ponto a execução pode ser bloqueada, dependendo dos parâmetros passados nas chamadas a `loiter`: o método `+__next__+` do gerador `results` precisa esperar até o primeiro _future_ estar completo. Neste caso, ele não vai bloquear porque a chamada a `loiter(0)` terminou antes desse laço iniciar. Observe que tudo até aqui aconteceu dentro do mesmo segundo: 15:56:50.
 <7> `loiter(1)` termina um segundo depois, em 15:56:51. A thread está livre para iniciar `loiter(4)`.
-<8> O resultado de `loiter(1)` é exibido: `10`. Agora o loop `for` ficará bloqueado, esperando o resultado de `loiter(2)`.
+<8> O resultado de `loiter(1)` é exibido: `10`. Agora o laço `for` ficará bloqueado, esperando o resultado de `loiter(2)`.
 <9> O padrão se repete: `loiter(2)` terminou, seu resultado é exibido; o mesmo ocorre com `loiter(3)`.
 <10> Há um intervalo de 2s até `loiter(4)` terminar, porque ela começou em 15:56:51 e não fez nada por 4s.
 
@@ -769,7 +769,7 @@ include::../code/20-executors/getflags/flags2_sequential.py[tags=FLAGS2_DOWNLOAD
 <5> As exceções do código de status HTTP ocorridas em `get_flag` e não tratadas por `download_one` são tratadas aqui.
 <6> Outras exceções referentes à rede são tratadas aqui. Qualquer outra exceção vai interromper o script, porque a função `flags2_common.main`,
 que chama `download_many`, não tem nenhum `try/except`.
-<7> Sai do loop se o usuário pressionar Ctrl-C.
+<7> Sai do laço se o usuário pressionar Ctrl-C.
 <8> Se nenhuma exceção saiu de `download_one`, limpa a mensagem de erro.
 <9> Se houve um erro, muda o `status` local de acordo com o erro.
 <10> Incrementa o contador para aquele `status`.
