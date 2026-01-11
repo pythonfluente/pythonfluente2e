@@ -7,18 +7,27 @@
 ____
 Concorrência é lidar com muitas coisas ao mesmo tempo. +
 Paralelismo é fazer muitas coisas ao mesmo tempo. +
-Não são a mesma coisa, mas estão relacionados. +
+Não são a mesma coisa, mas têm relação. +
 Uma é sobre estrutura, outro é sobre execução. +
 A concorrência fornece uma maneira de estruturar uma solução para resolver um problema que pode (mas não necessariamente) ser paralelizado.footnote:[Slide 8 of the talk https://fpy.li/19-1[_Concurrency Is Not Parallelism_].]
 
 ____
 
 Este((("concurrency models", "benefits of concurrency"))) capítulo é sobre como
-fazer Python "lidar com muitas coisas ao mesmo tempo."
-Isso pode envolver programação concorrente ou paralela—e mesmo os acadêmicos rigorosos com terminologia discordam sobre o uso dessas palavras.
-Vou adotar as definições informais de Rob Pike, na epígrafe desse capítulo, mas saiba que encontrei artigos e livros que dizem ser sobre computação paralela mas são quase que inteiramente sobre concorrência.footnote:[Estudei e trabalhei com o Prof. Imre Simon, que gostava de dizer que há dois grandes pecados na ciência: usar palavras diferentes para significar a mesma coisa e usar uma palavra para significar coisas diferentes. Imre Simon (1942-2009) foi um pioneiro da ciência da computação no Brasil, com contribuições seminais para a Teoria dos Autômatos. Ele fundou o campo da Matemática Tropical e foi também um defensor do software livre, da cultura livre, e da Wikipédia.]
+fazer Python "lidar com muitas coisas ao mesmo tempo." Isso pode envolver
+programação concorrente ou paralela. Até mesmo acadêmicos discordam sobre
+o uso destas palavras. Vou adotar as definições
+informais de Rob Pike, na epígrafe acima, mas encontrei
+artigos e livros que dizem ser sobre computação paralela mas são quase que
+inteiramente sobre concorrência.footnote:[Estudei e trabalhei com o Prof. Imre
+Simon, que gostava de dizer que há dois grandes pecados na ciência: usar
+palavras diferentes para significar a mesma coisa e usar uma palavra para
+significar coisas diferentes. Imre Simon (1942-2009) foi um pioneiro da ciência
+da computação no Brasil, com contribuições seminais para a Teoria dos Autômatos.
+Ele fundou o campo da Matemática Tropical e foi também um defensor do software
+livre, da cultura livre, e da Wikipédia.]
 
-O paralelismo((("parallelism"))) é, na perspectiva de Pike, um caso especial de concorrência.
+Na perspectiva de Pike, o paralelismo((("parallelism"))) é, um caso especial de concorrência.
 Todo sistema paralelo é concorrente,
 mas nem todo sistema concorrente é paralelo.
 No início dos anos 2000, usávamos laptops GNU Linux de um único núcleo, que rodavam 100 processos ao mesmo tempo.
@@ -29,15 +38,15 @@ em nosso cotidiano é concorrente e não paralela.
 O SO administra centenas de processos, assegurando que cada um tenha a oportunidade de progredir,
 mesmo quando a CPU em si não roda mais que quatro tarefas em parelelo.
 
-Este((("concurrency models", "topics covered"))) capítulo não assume que você tenha qualquer conhecimento prévio de programação concorrente ou paralela.
+Este((("concurrency models", "topics covered"))) capítulo não assume que você tenha conhecimento prévio de programação concorrente ou paralela.
 Após uma breve introdução conceitual, vamos estudar exemplos simples,
 para apresentar e comparar os principais pacotes da biblioteca padrão de Python dedicados a programação concorrente:
 `threading`, `multiprocessing`, e `asyncio`.
 
 O último terço do capítulo é uma revisão geral de ferramentas, servidores de aplicação e filas de tarefas distribuídas
-(_distributed task queues_) de vários desenvolvedores, capazes de melhorar o desempenho e a escalabilidade de aplicações Python.
+(_distributed task queues_) de vários fornecedores, capazes de melhorar o desempenho e a escalabilidade de aplicações Python.
 Todos esses são tópicos importantes, mas fogem do escopo de um livro focado nos recursos fundamentais da linguagem Python.
-Mesmo assim, achei importante mencionar esses temas nessa segunda edição do _Python Fluente_,
+Mesmo assim, achei importante mencionar estes temas nesta segunda edição do _Python Fluente_,
 porque a aptidão de Python para computação concorrente e paralela não está limitada ao que a biblioteca padrão oferece.
 Por isso YouTube, DropBox, Instagram, Reddit e outros foram capazes de atingir alta escalabilidade quando começaram,
 usando Python como sua linguagem primária—apesar das persistentes alegações de que "Python não escala."
@@ -45,10 +54,10 @@ usando Python como sua linguagem primária—apesar das persistentes alegações
 === Novidades neste capítulo
 
 Este((("concurrency models", "significant changes to"))) capítulo é novo, escrito para a segunda edição do _Python Fluente_.
-Os exemplos com os caracteres giratórios no <<concurrent_hello_world>> antes estavam no capítulo sobre _asyncio_.
+Os exemplos com os caracteres giratórios na <<concurrent_hello_world>> antes estavam no capítulo sobre _asyncio_.
 Aqui eles foram revisados, e apresentam uma primeira ilustração das três abordagens de Python à concorrência: threads, processos e corrotinas nativas.
 
-O restante do conteúdo é novo, exceto por alguns parágrafos, que apareciam originalmente nos capítulos sobre `concurrent.futures` e _asyncio_.
+O resto do conteúdo é novo, exceto por alguns parágrafos, que apareciam originalmente nos capítulos sobre `concurrent.futures` e `asyncio`.
 
 A <<py_in_multicore_world_sec>> é diferente do resto do livro: não há código exemplo.
 O objetivo ali é apresentar brevemente ferramentas importantes,
@@ -60,27 +69,28 @@ para além do que é possível com a biblioteca padrão de Python.
 Há((("concurrency models", "basics of concurrency"))) muitos fatores que tornam a programação concorrente difícil,
 mas quero tocar no mais básico deles: iniciar threads ou processos é fácil, mas como administrá-los?footnote:[Essa seção foi sugerida por meu amigo Bruce Eckel—autor de livros sobre Kotlin, Scala, Java, e {cpp}.]
 
-Quando você chama uma função, o código que origina a chamada fica bloqueado até que função retorne.
+Quando você invoca uma função, o código que faz a chamada fica aguardando até que função retorne.
 Então você sabe que a função terminou, e pode facilmente acessar o valor devolvido por ela.
-Se a função lançar uma exceção, o código de origem pode cercar aquela chamada com um bloco `try/except` para tratar o erro.
+Se a função lançar uma exceção, o código cliente pode cercar aquela chamada com um bloco `try/except` para tratar o erro.
 
-Essas opções não existem quando você inicia threads ou um processo:
+Tais opções não existem quando você inicia threads ou um processo:
 você não sabe automaticamente quando eles terminaram,
-e obter os resultados ou os erros requer criar algum canal de comunicação, tal como uma fila de mensagens.
+e obter os resultados ou os erros requer algum canal de comunicação
+que você precisa fornecer, como uma fila de mensagens (_message queue_).
 
-Além disso, criar uma thread ou um processo não é barato,
-você não quer iniciar uma delas apenas para executar uma única computação e desaparecer.
-Muitas vezes queremos amortizar o custo de inicialização transformando cada thread ou processo em um "worker" ou "unidade de trabalho",
+Além disso, criar uma thread ou um processo tem um custo,
+você não quer iniciar um deles apenas para executar uma única computação e encerrar.
+Muitas vezes queremos amortizar o custo de inicialização transformando cada thread ou processo em um _worker_ ou "unidade de trabalho",
 que entra em um laço e espera por dados para processar.
-Isso complica ainda mais a comunicação e introduz mais perguntas.
+Isso complica ainda mais a comunicação e introduz mais questões.
 Como terminar um "worker" quando ele não é mais necessário?
 E como fazer para encerrá-lo sem interromper uma tarefa inacabada,
 deixando dados inconsistentes e recursos não liberados—tal como arquivos abertos?
-A resposta envolve novamente mensagens e filas.
+A resposta envolve novamente filas e mensagens.
 
 Uma corrotina é fácil de iniciar.
 Se você inicia uma corrotina usando a palavra-chave `await`,
-é fácil obter o valor de retorno e há um local óbvio para interceptar exceções.
+é fácil obter o valor de retorno e há um local óbvio para tratar exceções.
 Mas corrotinas muitas vezes são iniciadas pelo framework assíncrono,
 e isso pode torná-las tão difíceis de monitorar quanto threads ou processos.
 
@@ -91,13 +101,14 @@ Então vamos primeiro garantir que estamos na mesma página em relação a algun
 
 === Um pouco de jargão
 
-Aqui((("concurrency models", "relevant terminology", id="CBterm19"))) estão alguns termos que vou usar pelo restante desse capítulo e nos dois seguintes:
+Aqui((("concurrency models", "relevant terminology", id="CBterm19")))
+estão alguns termos que usaremos pelo restante deste capítulo e nos dois seguintes:
 
 Concorrência::
-    A habilidade de lidar com múltiplas tarefas pendentes, fazendo progredir uma por vez ou várias em paralelo (se possível),
-    de forma que cada uma delas avance até terminar com sucesso ou falha.
-    Uma CPU de núcleo único é capaz de concorrência se rodar um "agendador" (_scheduler_) do sistema operacional, que intercale a execução das tarefas pendentes.
-    Também conhecida como multitarefa (_multitasking_).
+    A capacidade de lidar com múltiplas tarefas pendentes, fazendo progredir uma por vez ou várias em paralelo (se possível),
+    de forma que cada uma delas avance até terminar com sucesso ou falhar.
+    Uma CPU de um núcleo é capaz de concorrência se rodar um _scheduler_ (escalonador) do sistema operacional, que intercale a execução das tarefas pendentes.
+    Esta capacidade também é conhecida como multitarefa (_multitasking_).
 
 Paralelismo::
     A((("parallelism"))) habilidade de executar múltiplas operações computacionais ao mesmo tempo. Isso requer uma CPU com múltiplos núcleos, múltiplas CPUs, uma
@@ -109,19 +120,19 @@ Unidades de execução::
     _processos_, _threads_, e _corrotinas_.
 
 Processo::
-    Uma((("processes", "definition of term"))) instância de um programa de computador em execução, usando memória e uma fatia do tempo da CPU.
-    Sistemas operacionais modernos em nossos computadores e celulares rotineiramente mantém centenas de processos de forma concorrente, cada um deles isolado em seu próprio espaço de memória privado.
-    Processos se comunicam via pipes, soquetes ou arquivos mapeados da memória. Todos esses métodos só comportam bytes em estado bruto.
+    Uma((("processes", "definition of term"))) instância de um programa de computador em execução, usando parte da memória e uma fatia do tempo da CPU.
+    Os sistemas operacionais modernos em nossos computadores e celulares rotineiramente mantém centenas de processos de forma concorrente, cada um deles isolado em seu próprio espaço de memória privado.
+    Processos se comunicam via _pipes_, soquetes ou arquivos mapeados na memória (_memory mapped files_). Todos esses métodos só comportam bytes em estado bruto.
     Objetos Python precisam ser serializados (convertidos em sequências de bytes) para passarem de um processo a outro.
     Isto é caro, e nem todos os objetos Python podem ser serializados.
     Um processo pode gerar subprocessos, chamados "processos filhos".
     Estes também rodam isolados entre si e do processo original.
     Os processos permitem _multitarefa preemptiva_:
     o agendador do sistema operacional exerce __preempção__—isto é, suspende cada processo em execução periodicamente, para permitir que outro processos sejam executados.
-    Isto significa que um processo paralisado não pode paralisar todo o sistema—em teoria.
+    Isto significa que um processo travado não pode travar todo o sistema—em teoria.
 
 Thread::
-    Uma((("threads", "definition of term"))) unidade de execução dentro de um único processo.
+    Uma((("threads", "definition of term"))) unidade de execução dentro de um processo.
     Quando um processo se inicia, ele tem uma única thread: a thread principal.
     Um processo pode chamar APIs do sistema operacional para criar mais threads para operar de forma concorrente.
     Threads dentro de um processo compartilham o mesmo espaço de memória, onde são mantidos objetos Python "vivos" (não serializados).
@@ -133,8 +144,8 @@ Thread::
 
 Corrotina::
     Uma((("coroutines", "definition of term"))) função que pode suspender sua própria execução e continuar depois.
-    Em Python, _corrotinas clássicas_ são criadas a partir de funções geradoras, e _corrotinas nativas_ são definidas com `async def`.
-    A <<classic_coroutines_sec>> introduziu o conceito, e <<ch_async>> trata do uso de corrotinas nativas.
+    Em Python, corrotinas clássicas são criadas a partir de funções geradoras, e corrotinas nativas são definidas com `async def`.
+    A <<classic_coroutines_sec>> introduziu o conceito, e o <<ch_async>> trata do uso de corrotinas nativas.
     As corrotinas de Python normalmente rodam dentro de uma única thread, sob a supervisão de um laço de eventos (_event loop_), também na mesma thread.
     Frameworks de programação assíncrona como _asyncio_, _Curio_, ou _Trio_ fornecem um laço de eventos e bibliotecas de apoio para E/S não-bloqueante baseado em corrotinas.
     Corrotinas permitem _multitarefa cooperativa_:
@@ -150,14 +161,14 @@ Fila (_queue_)::
 Trava (_lock_)::
 
     Um((("locks, definition of term"))) objeto que as unidades de execução podem usar para sincronizar suas ações e evitar corrupção de dados.
-    Ao atualizar uma estrutura de dados compartilhada, o código em execução deve manter uma trava associada a tal estrutura.
+    Ao atualizar uma estrutura de dados compartilhada, o código em execução deve invocar uma função para obter uma trava associada a tal estrutura.
     Isso sinaliza a outras partes do programa que elas devem aguardar até que a trava seja liberada, antes de acessar a mesma estrutura de dados.
     O tipo mais simples de trava é conhecida também como mutex (de _mutual exclusion_, exclusão mútua).
-    A implementação de uma trava depende do modelo de concorrência subjacente.
+    O mecanismo para implementar uma trava depende do modelo de concorrência subjacente.
 
 Contenda (_contention_)::
     Disputa((("contention"))) por um recurso limitado.
-    Contenda por recursos ocorre quando múltiplas unidades de execução tentam acessar um recurso compartilhado — tal como uma trava ou o armazenamento.
+    Contenda por recursos ocorre quando múltiplas unidades de execução tentam acessar um recurso compartilhado—tal como uma trava ou unidade de armazenamento.
     Há também contenda pela CPU, quando processos ou threads de computação intensiva precisam aguardar até que o agendador do SO dê a eles uma quota do tempo da CPU.
 
 Agora vamos usar um pouco desse jargão para entender o suporte à concorrência no Python.((("", startref="CBterm19")))
@@ -166,7 +177,11 @@ Agora vamos usar um pouco desse jargão para entender o suporte à concorrência
 
 Veja((("concurrency models", "Python programming concepts", id="CMconcepts19"))) como os conceitos que acabamos de tratar se aplicam ao Python, em dez pontos:
 
-. Cada instância do interpretador Python é um processo. Você pode iniciar processos Python adicionais usando as bibliotecas _multiprocessing_ ou _concurrent.futures_. A biblioteca _subprocess_ de Python foi projetada para rodar programas externos, independente das linguagens usadas para escrever tais programas.
+. Cada instância do interpretador Python é um processo. Você pode iniciar
+processos Python adicionais usando as bibliotecas `multiprocessing` ou
+`concurrent.futures`. A biblioteca _subprocess_ de Python foi projetada para
+rodar programas externos, independente das linguagens usadas para escrever tais
+programas.
 
 . O interpretador Python usa uma única thread para rodar o programa do usuário e o coletor de lixo da memória. Você pode iniciar threads Python adicionais usando as bibliotecas _threading_ ou _concurrent.futures_.
 
@@ -180,13 +195,13 @@ A thread pode então tentar readquirir a GIL, mas se existirem outras threads es
 
 . Quando escrevemos código Python, não temos controle sobre a GIL. Mas uma função embutida ou uma extensão escrita em C—ou qualquer linguagem que trabalhe no nível da API Python/C—pode liberar a GIL enquanto estiver rodando alguma tarefa demorada.
 
-. Toda função na biblioteca padrão de Python que executa uma syscallfootnote:[Uma syscall é uma chamada a partir do código do usuário para uma função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para aprender mais sobre esse tópico, leia o artigo https://fpy.li/a6["Chamada de sistema"] na Wikipedia.] libera a GIL. Isso inclui todas as funções que executam operações de escrita e leitura em disco, escrita e leitura na rede, e `time.sleep()`. Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as funções de compressão e descompressão dos módulos `zlib` and `bz2`, também liberam a GIL.footnote:[Os módulos `zlib` e `bz2` são mencionados nominalmente em uma https://fpy.li/19-6[mensagem de Antoine Pitrou na python-dev] (EN). Pitrou contribuiu para a lógica da divisão de tempo da GIL no Python 3.2.]
+. Toda função na biblioteca padrão de Python que executa uma _syscall_footnote:[Uma syscall é uma chamada a partir do código do usuário para uma função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para aprender mais sobre esse tópico, leia o artigo https://fpy.li/a6["Chamada de sistema"] na Wikipedia.] libera a GIL. Isso inclui todas as funções que executam operações de escrita e leitura de arquivos, escrita e leitura na rede, e `time.sleep()`. Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as funções de compressão e descompressão dos módulos `zlib` and `bz2`, também liberam a GIL.footnote:[Os módulos `zlib` e `bz2` são mencionados nominalmente em uma https://fpy.li/19-6[mensagem de Antoine Pitrou na python-dev] (EN). Pitrou contribuiu para a lógica da divisão de tempo da GIL no Python 3.2.]
 
-. Extensões que se integram no nível da API Python/C também podem iniciar outras threads não-Python, que não são afetadas pela GIL. Essas threads fora do controle da GIL normalmente não podem modificar objetos Python, mas podem ler e escrever na memória usada por objetos que suportam o https://fpy.li/pep3118[buffer protocol] (EN), como `bytearray`, `array.array`, e arrays do _NumPy_.
+. Extensões binárias que se comunicam via API Python/C também podem iniciar outras threads não-Python, que não são afetadas pela GIL. Essas threads fora do controle da GIL normalmente não podem modificar objetos Python, mas podem ler e escrever na memória usada por objetos que suportam o https://fpy.li/pep3118[buffer protocol], como `bytearray`, `array.array`, e arrays do _NumPy_.
 
 . O efeito da GIL sobre a programação de redes com threads Python é relativamente pequeno, porque as funções de E/S liberam a GIL, e ler e escrever na rede sempre implica em alta latência—comparado a ler e escrever na memória. Consequentemente, cada thread individual já passa muito tempo esperando mesmo, então sua execução pode ser intercalada sem maiores impactos no desempenho geral. Por isso David Beazley diz: "As threads de Python são ótimas em fazer nada."footnote:[Fonte: slide 106 do tutorial de Beazley, https://fpy.li/19-7["Generators: The Final Frontier" (EN)].]
 
-. As contendas pela GIL desaceleram as threads Python de processamento intensivo. Código sequencial de uma única thread é mais simples e mais rápido para esse tipo de tarefa.
+. As contendas pela GIL desaceleram as threads Python que fazem processamento intensivo. Código sequencial de uma única thread é mais simples e mais rápido para este tipo de tarefa.
 
 . Para rodar código Python de uso intensivo da CPU em múltiplos núcleos, você precisa usar múltiplos processos Python.
 
@@ -194,7 +209,7 @@ Aqui está um bom resumo, da documentação do módulo `threading`:footnote:[Fon
 
 [quote]
 ____
-*Detalhe de implementação do CPython*: Em CPython, devido à Trava Global do Interpretador, apenas uma thread pode executar código Python de cada vez (mas certas bibliotecas orientadas ao desempenho podem superar essa limitação). Se você quer que sua aplicação faça melhor uso dos recursos computacionais de máquinas com CPUs de múltiplos núcleos, aconselha-se usar `multiprocessing` ou
+*Detalhe de implementação do CPython*: Em CPython, devido à Trava Global do Interpretador, apenas uma thread pode executar código Python de cada vez (mas certas bibliotecas de alto desempenho podem contornar esta limitação). Se você quer que sua aplicação faça melhor uso dos recursos computacionais de máquinas com CPUs de múltiplos núcleos, aconselha-se usar `multiprocessing` ou
  `concurrent.futures.ProcessPoolExecutor`.
 
 Entretanto, threads ainda são o modelo adequado se você deseja rodar múltiplas tarefas ligadas a E/S simultaneamente.
@@ -227,16 +242,17 @@ Vamos começar com a versão `threading`, que pode parecer familiar se você já
 
 A((("spinners (loading indicators)", "created with threading", id="Sthread19")))((("threads", "spinners (loading indicators) using", id="Tspin19"))) ideia dos próximos exemplos é simples: iniciar uma função que pausa por 3 segundos enquanto anima caracteres no terminal, para deixar o usuário saber que o programa está "pensando" e não congelado.
 
-O script cria uma animação giratória e mostra em sequência cada caractere da string `"\|/-"`
-na mesma posição da tela.footnote:[O Unicode tem muitos caracteres úteis para animações simples, como por exemplo os https://fpy.li/19-11[padrões Braille]. Usei os caracteres ASCII `"\|/-"` para simplificar os exemplos do livro.] Quando a computação lenta termina, a linha com a animação é apagada e o resultado é apresentado: `Answer: 42`.
+O script cria uma animação giratória mostrando em sequência cada caractere da string `'\|/-'`
+na mesma posição da tela.footnote:[O Unicode tem muitos caracteres úteis para animações simples, como por exemplo os https://fpy.li/19-11[padrões Braille]. Usei os caracteres ASCII `'\|/-'` para simplificar os exemplos do livro.] Quando a computação lenta termina, a linha com a animação é apagada e o resultado é apresentado: `Answer: 42`.
 
-<<spinner_fig>> mostra a saída de duas versões do exemplo: primeiro com threads, depois com corrotinas. Se você estiver longe do computador, imagine que o `\` na última linha está girando.
+<<spinner_fig>> mostra a saída de duas versões do exemplo: primeiro com threads, depois com corrotinas. Se você estiver longe do computador, imagine que o
+o hífen (`-`) na última linha está girando.
 
 [[spinner_fig]]
-.Os scripts spinner_thread.py e spinner_async.py produzem um resultado similar: o repr do objeto spinner e o texto "Answer: 42". Na captura de tela, spinner_async.py ainda está rodando, e a mensagem animada "/ thinking!" é apresentada; aquela linha será substituída por "Answer: 42" após 3 segundos.
+.Os scripts spinner_thread.py e spinner_async.py produzem um resultado similar: o repr do objeto spinner e o texto "Answer: 42". Na captura de tela, spinner_async.py ainda está rodando, e a mensagem animada "- thinking!" é apresentada; aquela linha será substituída por "Answer: 42" após 3 segundos.
 image::../images/flpy_1901.png[Captura de tela do console mostrando a saída dos dois exemplos.]
 
-Vamos revisar o script _spinner_thread.py_ primeiro. O <<spinner_thread_top_ex>>
+Vamos estudar o script _spinner_thread.py_ primeiro. O <<spinner_thread_top_ex>>
 lista as duas primeiras funções no script, e o <<spinner_thread_rest_ex>> mostra o restante.
 
 [[spinner_thread_top_ex]]
@@ -247,10 +263,10 @@ lista as duas primeiras funções no script, e o <<spinner_thread_rest_ex>> most
 include::../code/19-concurrency/spinner_thread.py[tags=SPINNER_THREAD_TOP]
 ----
 ====
-<1> Essa função vai rodar em uma thread separada. O argumento `done` é uma instância de `threading.Event`, um objeto simples para sincronizar threads.
-<2> Isso é um laço infinito, porque `itertools.cycle` produz um caractere por vez, circulando pela string para sempre.
-<3> O truque para animação em modo texto: mova o cursor de volta para o início da linha com o caractere de controle ASCII de retorno (`'\r'`).
-<4> O método `Event.wait(timeout=None)` retorna `True` quando o evento é acionado por outra thread; se o `timeout` passou, ele retorna `False`. O tempo de 0,1s estabelece a "velocidade" da animação para 10 FPS. Se você quiser que uma animação mais rápida, use um tempo menor aqui.
+<1> Esta função vai rodar em uma thread separada. O argumento `done` é uma instância de `threading.Event`, um objeto simples para sincronizar threads.
+<2> Isto é um laço infinito, porque `itertools.cycle` produz um caractere por vez, circulando pela string para sempre.
+<3> O truque para animação em modo texto: mova o cursor de volta para o início da linha com o caractere ASCII _carriage return_: `'\r'`.
+<4> O método `Event.wait(timeout=None)` retorna `True` quando o evento é sinalizado por outra thread; se o `timeout` passou, ele retorna `False`. O tempo de 0,1s estabelece a velocidade da animação em 10 FPS (quadros por segundo). Se quiser uma animação mais rápida, use um tempo menor aqui.
 <5> Sai do laço infinito.
 <6> Sobrescreve a linha de status com espaços para limpá-la e move o cursor de volta para o início.
 <7> `slow()` será chamada pela thread principal. Imagine que isso é uma chamada de API lenta, através da rede. Chamar `sleep` bloqueia a thread principal, mas a GIL é liberada e a thread da animação pode continuar.
@@ -262,13 +278,14 @@ O primeiro detalhe importante deste exemplo é que `time.sleep()` bloqueia a thr
 
 As funções `spin` e `slow` serão executadas de forma concorrente.
 A thread principal—a única thread quando o programa é iniciado—vai iniciar uma nova thread para rodar `spin` e então chamará `slow`.
-Propositalmente, não há qualquer API para terminar uma thread em Python.
-É preciso enviar uma mensagem para encerrar uma thread.
+Propositalmente, não existe API para terminar uma thread em Python.
+É preciso enviar algum sinal para encerrar uma thread.
 
-A classe `threading.Event` é o mecanismo de sinalização mais simples de Python para coordenar threads.
-Uma instância de `Event` tem uma flag booleana interna que começa como `False`.
-Uma chamada a `Event.set()` muda a flag para `True`.
-Enquanto a flag for falsa, se uma thread chamar `Event.wait()`, ela será bloqueada até que outra thread chame `Event.set()`, quando então `Event.wait()` retorna `True`.
+A classe `threading.Event` é o mecanismo de sinalização para coordenar threads mais simples no Python.
+Uma instância de `Event` tem um atributo booleano interno que começa como `False`.
+Uma chamada a `Event.set()` muda o atributo para `True`.
+Enquanto o atributo for falso, se uma thread chamar `Event.wait()`, ela será bloqueada até que outra thread chame `Event.set()`
+Então a próxima invocação de `Event.wait()` retornará `True`, sem esperar.
 Se um tempo de espera (_timeout_) em segundos é passado para `Event.wait(s)`, essa chamada retorna `False` quando aquele tempo tiver passado, ou retorna `True` assim que `Event.set()` é chamado por outra thread.
 
 A função `supervisor`, que aparece no <<spinner_thread_rest_ex>>, usa um `Event` para sinalizar para a função `spin` que ela deve encerrar.
@@ -285,16 +302,16 @@ include::../code/19-concurrency/spinner_thread.py[tags=SPINNER_THREAD_REST]
 ====
 <1> `supervisor` retornará o resultado de `slow`.
 <2> A instância de `threading.Event` é a chave para coordenar as atividades das threads `main` e `spinner`, como explicado abaixo.
-<3> Para criar uma nova `Thread`, forneça uma função como argumento palavra-chave `target`, e argumentos posicionais para a `target` como uma tupla passada via `args`.
+<3> Para criar uma nova `Thread`, forneça uma função como nomeado `target`, e argumentos posicionais para a `target` como uma tupla passada via `args`.
 <4> Mostra o objeto `spinner`. A saída é `<Thread(Thread-1, initial)>`, onde `initial`
 é o estado da thread—significando aqui que ela ainda não foi iniciada.
 <5> Inicia a thread `spinner`.
 <6> Chama `slow`, que bloqueia a thread principal. Enquanto isso, a thread secundária está rodando a animação.
-<7> Muda a flag de `Event` para `True`; isso vai encerrar o laço `for` dentro da função `spin`.
+<7> Muda o estado de `Event` para `True`; isso vai encerrar o laço `for` dentro da função `spin`.
 <8> Espera até que a thread `spinner` termine.
 <9> Roda a função `supervisor`. Escrevi `main` e `supervisor` como funções separadas para deixar esse exemplo mais parecido com a versão `asyncio` no <<spinner_async_start_ex>>.
 
-Quando a thread `main` aciona o evento `done`, a thread `spinner` acabará notando e encerrando corretamente.
+Quando a thread `main` sinaliza o evento `done`, a thread `spinner` acabará notando e encerrará corretamente.
 
 Agora vamos ver um exemplo similar usando o pacote `multiprocessing`.((("", startref="Tspin19")))((("", startref="Sthread19")))
 
@@ -304,7 +321,7 @@ Agora vamos ver um exemplo similar usando o pacote `multiprocessing`.((("", star
 O((("spinners (loading indicators)", "created with multiprocessing package")))((("multiprocessing package"))) pacote `multiprocessing` permite executar tarefas concorrentes em processos Python separados em vez de threads.
 Quando você cria uma instância de `multiprocessing.Process`, todo um novo interpretador Python é iniciado como um processo filho, em segundo plano.
 Como cada processo Python tem sua própria GIL, isto permite que seu programa use todos os núcleos de CPU disponíveis—mas isso depende, em última instância, do agendador do sistema operacional.
-Veremos os efeitos práticos em <<naive_multiprocessing_sec>>, mas para esse programa simples não faz grande diferença.
+Veremos os efeitos práticos na <<naive_multiprocessing_sec>>, mas para este programa simples não faz grande diferença.
 
 O objetivo dessa seção é apresentar o `multiprocessing` e mostrar como sua API emula a API de `threading`, tornando fácil converter programas simples de threads para processos, como mostra o _spinner_proc.py_ (<<spinner_proc_ex>>).
 
@@ -315,41 +332,37 @@ O objetivo dessa seção é apresentar o `multiprocessing` e mostrar como sua AP
 ----
 include::../code/19-concurrency/spinner_proc.py[tags=SPINNER_PROC_IMPORTS]
 
-# [snip] the rest of spin and slow functions are unchanged from spinner_thread.py
+# [snip] o resto das funções spin e slow são iguais a spinner_thread.py
 
 include::../code/19-concurrency/spinner_proc.py[tags=SPINNER_PROC_SUPER]
 
 # [snip] main function is unchanged as well
 ----
 ====
-<1> A API básica de `multiprocessing` imita a API de `threading`, mas as dicas de tipo e o Mypy mostram essa diferença: `multiprocessing.Event` é uma função (e não uma classe como `threading.Event`) que retorna uma instância de `synchronize.Event`...
+<1> A API básica de `multiprocessing` imita a API de `threading`, mas as dicas de tipo e o Mypy revelam esta diferença: `multiprocessing.Event` é uma função (e não uma classe como `threading.Event`) que retorna uma instância de `synchronize.Event`...
 <2> ...nos obrigando a importar `multiprocessing.synchronize`...
 <3> ...para escrever essa dica de tipo.
 <4> O uso básico da classe `Process` é similar ao da classe `Thread`.
-<5> O objeto `spinner` aparece como <Process name='Process-1' parent=14868 initial>`,
-onde `14868` é o `id` do processo da instância de Python que está executando o
+<5> O objeto `spinner` aparece como `<Process name='Process-1' parent=14868 initial>`,
+onde `14868` é o `id` do processo filho: a outra instância de Python que está executando o
 _spinner_proc.py_.
 
 As APIs básicas de `threading` e `multiprocessing` são similares,
 mas sua implementação é muito diferente, e `multiprocessing`
 tem uma API muito maior, para dar conta da complexidade adicional da programação multiprocessos.
-Por exemplo, um dos desafios ao converter um programa de threads para processos é a comunicação entre processos, que estão isolados pelo sistema operacional e não podem compartilhar objetos Python.
+Por exemplo, um dos desafios ao converter um programa de threads para processos é a comunicação entre processos, que são isolados pelo sistema operacional e não podem compartilhar objetos Python.
 Isso significa que objetos cruzando fronteiras entre processos precisam ser serializados e deserializados, criando custos adicionais.
 No <<spinner_proc_ex>>, o único dado que cruza a fronteira entre os processos é o estado de `Event`, que é implementado com um semáforo de baixo nível do SO, no código em C sob o módulo `multiprocessing`.footnote:[O semáforo é um bloco fundamental que pode ser usado para implementar outros mecanismos de sincronização. Python fornece diferentes classes de semáforos para uso com threads, processos e corrotinas. Veremos o `asyncio.Semaphore` na <<using_as_completed_sec>> (<<ch_async>>).]
 
 [TIP]
 ====
-Desde o Python 3.8, há o pacote https://fpy.li/a8[`multiprocessing.shared_memory`] (_memória compartilhada para acesso direto entre processos_) na biblioteca padrão, mas ele não suporta instâncias de classes definidas pelo usuário.
-Além bytes nus, o pacote permite que processos compartilhem uma `ShareableList`, uma sequência mutável que pode manter um número fixo de itens dos tipos `int`, `float`, `bool`, e `None`, bem como `str` e `bytes`, até o limite de 10 MB por item.
+Desde o Python 3.8, existe o pacote https://fpy.li/a8[`multiprocessing.shared_memory`]
+na biblioteca padrão, mas ele não suporta instâncias de classes definidas pelo usuário.
+Além bytes puros, o pacote permite que processos compartilhem uma `ShareableList`, uma sequência mutável que pode manter um número fixo de itens dos tipos `int`, `float`, `bool`, e `None`, bem como `str` e `bytes`, até o limite de 10 MB por item.
 Veja a documentação de
 https://fpy.li/a9[`ShareableList`]
 para mais detalhes.
 ====
-
-// [NOTE]
-// ====
-// The semaphore is a fundamental building block that can be used to implement other synchronization mechanisms. Python provides different semaphore classes for use with threads, processes, and coroutines. We'll see `asyncio.Semaphore` in <<using_as_completed_sec>> (<<ch_async>>).
-// ====
 
 Agora vamos ver como o mesmo comportamento pode ser obtido com corrotinas em vez de threads ou processos.
 
@@ -358,12 +371,12 @@ Agora vamos ver como o mesmo comportamento pode ser obtido com corrotinas em vez
 
 [NOTE]
 ====
-O <<ch_async>> é((("spinners (loading indicators)", "created using coroutines", id="Scoroutine19")))((("coroutines", "spinners (loading indicators) using", id="Cspin19"))) inteiramente dedicado à programação assíncrona com corrotinas. Essa seção é apenas um introdução rápida, para contrastar essa abordagem com as threads e os processos. Assim, vamos ignorar muitos detalhes.
+O <<ch_async>> é((("spinners (loading indicators)", "created using coroutines", id="Scoroutine19")))((("coroutines", "spinners (loading indicators) using", id="Cspin19"))) inteiramente dedicado à programação assíncrona com corrotinas. Essa seção é apenas um introdução rápida, para contrastar essa abordagem com as threads e os processos. Por isso, vamos passar por cima de alguns detalhes.
 ====
 
 Alocar tempo da CPU para a execução de threads e processos é trabalho dos agendadores do SO. As corrotinas, por outro lado, são controladas por um laço de evento no nível da aplicação, que gerencia uma fila de corrotinas pendentes, as executa uma por vez, monitora eventos disparados por operações de E/S iniciadas pelas corrotinas, e passa o controle de volta para a corrotina correspondente quando cada evento acontece.
-O laço de eventos e as corrotinas da biblioteca e as corrotinas do usuário todas rodam em uma única thread.
-Assim, o tempo gasto em uma corrotina desacelera laço de eventos—e de todas as outras corrotinas.
+O laço de eventos, as corrotinas da biblioteca, e as corrotinas do usuário rodam todas em uma única thread.
+Assim, o tempo gasto em uma corrotina bloqueia o laço de eventos e todas as outras corrotinas.
 
 A versão com corrotinas do programa de animação é mais fácil de entender se começarmos por uma função `main`, e depois olharmos a `supervisor`.
 É isso que o <<spinner_async_start_ex>> mostra.
@@ -376,40 +389,27 @@ A versão com corrotinas do programa de animação é mais fácil de entender se
 include::../code/19-concurrency/spinner_async.py[tags=SPINNER_ASYNC_START]
 ----
 ====
-<1> `main` é a única função regular definida nesse programa—as outras são corrotinas.
-<2> A função`asyncio.run` inicia o laço de eventos para controlar a corrotina que em algum momento colocará as outras corrotinas em movimento.
+<1> `main` é a única função normal definida nesse programa—as outras são corrotinas.
+<2> A função `asyncio.run` inicia o laço de eventos para acionar a corrotina que em algum momento colocará as outras corrotinas em movimento.
 A função `main` ficará bloqueada até que `supervisor` retorne.
-O valor de retorno de `supervisor` será o valor de retorno de `asyncio.run`.
+O valor devolvido por `supervisor` será o valor devolvido por `asyncio.run`.
 <3> Corrotinas nativas são definidas com `async def`.
 <4> `asyncio.create_task` agenda a execução futura de `spin`, retornando imediatamente uma instância de `asyncio.Task`.
 <5> O `repr` do objeto `spinner` se parece com `<Task pending name='Task-2' coro=<spin() running at /path/to/spinner_async.py:11>>`.
-<6> A palavra-chave `await` chama `slow`, bloqueando `supervisor` até que `slow` retorne. O valor de retorno de `slow` será atribuído a `result`.
-
+<6> A palavra-chave `await` chama `slow`, bloqueando `supervisor` até que `slow` retorne. O devolvido por `slow` é atribuído a `result`.
 <7> O método `Task.cancel` lança uma exceção `CancelledError` dentro da corrotina, como veremos no <<spinner_async_top_ex>>.
 
-////
-PROD: Tech reviewer Caleb Hattingh reported:
-
-"""
-the `async` word is not being syntax highlighted as a keyword,
-it's rendered as a regular identifier, same as "spinner" and unlike "def" or "return"
-I had the same problem in my book where the "async" keyword was not being formatted correctly.
-IIRC I got OReilly tech support to fix it.
-"""
-
-The same issue is affecting other recently introduced Python keywords: `await`, `match`, and `case`.
-////
 
 O <<spinner_async_start_ex>> demonstra as três principais formas de rodar uma corrotina:
 
 `asyncio.run(coro())`::
-    É chamado a partir de uma função regular, para controlar o objeto corrotina, que é normalmente o ponto de entrada para todo o código assíncrono no programa, como a `supervisor` nesse exemplo. Esta chamada bloqueia a função até que `coro` retorne. O valor de retorno da chamada a `run()` é o que quer que `coro` retorne.
+    É invocada a partir de uma função normal, para acionar o objeto corrotina, que é o ponto de entrada para todo o código assíncrono no programa, como a `supervisor` nesse exemplo. Esta chamada bloqueia até que `coro` retorne. O resultado de `coro` será o resultado de `run`.
 `asyncio.create_task(coro())`::
-    É chamado de uma corrotina para agendar a execução futura de outra corrotina.
+    É invocada dentro de uma corrotina para agendar a execução futura de outra corrotina.
     Essa chamada não suspende a corrotina atual.
-    Ela retorna uma instância de `Task`, um objeto que contém o objeto corrotina e fornece métodos para controlar e consultar seu estado.
+    Ela retorna imediatamente uma instância de `Task`, um objeto que contém o objeto corrotina e fornece métodos para controlar e consultar seu estado.
 `await coro()`::
-    É chamado de uma corrotina para transferir o controle para o objeto corrotina retornado por `coro()`. Isso suspende a corrotina atual até que `coro` retorne. O valor da expressão `await` será é o que quer que `coro` retorne.
+    É invocada dentro de uma corrotina para transferir o controle para o objeto corrotina retornado por `coro()`. Isto suspende a corrotina atual até que `coro` retorne. O valor da expressão `await` será o que quer que `coro` devolva como resultado.
 
 [NOTE]
 ====
@@ -432,7 +432,7 @@ include::../code/19-concurrency/spinner_async.py[tags=SPINNER_ASYNC_TOP]
 <3> `asyncio.CancelledError` é lançada quando o método `cancel` é chamado na `Task` que controla essa corrotina. É hora de sair do laço.
 <4> A corrotina `slow` também usa `await asyncio.sleep` em vez de `time.sleep`.
 
-===== Experimento: Estragando a animação para sublinhar um ponto
+===== Experimento: quebrar a animação para revelar um fato
 
 Aqui está um experimento que recomendo para entender como _spinner_async.py_ funciona. Importe o módulo `time`, daí vá até a corrotina `slow` e substitua a linha `await asyncio.sleep(3)` por uma chamada a `time.sleep(3)`, como no <<spinner_async_time_sleep_ex>>.
 
@@ -456,7 +456,7 @@ Quando você roda o experimento, você vê isso:
 . A animação nunca aparece. O programa trava por 3 segundos.
 . `Answer: 42` aparece e o programa termina.
 
-Para entender o que está acontecendo, lembre-se que o código Python que está usando `asyncio` tem apenas um fluxo de execução,
+Para entender o que está acontecendo, lembre-se que o código Python que está usando `asyncio` tem apenas uma unidade de execução,
 a menos que você inicie explicitamente threads ou processos adicionais.
 Isso significa que apenas uma corrotina é executada a qualquer dado momento.
 A concorrência é obtida controlando a passagem de uma corrotina a outra.
@@ -470,26 +470,26 @@ No <<spinner_async_experiment_ex>>, vamos nos concentrar no que ocorre nas corro
 include::../code/19-concurrency/spinner_async_experiment.py[tags=SPINNER_ASYNC_EXPERIMENT]
 ----
 ====
-<1> A tarefa `spinner` é criada para, no futuro, controlar a execução de `spin`.
-<2> O display mostra que `Task` está "pending"(_em espera_).
+<1> A tarefa `spinner` é criada para, no futuro, acionar a corrotina `spin`.
+<2> O display mostra que `Task` está _pending_ (pendente, em espera).
 <3> A expressão `await` transfere  o controle para a corrotina `slow`.
 <4> `time.sleep(3)` bloqueia tudo por 3 segundos; nada pode acontecer no programa, porque a thread principal está bloqueada—e ela é a única thread. O sistema operacional vai seguir com outras atividades. Após 3 segundos, `sleep` desbloqueia, e `slow` retorna.
-<5> Logo após `slow` retornar, a tarefa `spinner` é cancelada. O fluxo de controle jamais chegou ao corpo da corrotina `spin`.
+<5> Logo após `slow` retornar, a tarefa `spinner` é cancelada. O corpo da corrotina `spin` nunca foi acionado.
 
 O _spinner_async_experiment.py_ ensina uma lição importante, como explicado no box abaixo.
 
 [WARNING]
 ====
-Nunca use `time.sleep(…)` em corrotinas `asyncio`, a menos que você queira pausar o programa inteiro.
+Nunca use `time.sleep(…)` em corrotinas assíncronas, a menos que você queira pausar o programa inteiro.
 Se uma corrotina precisa passar algum tempo sem fazer nada, ela deve `await asyncio.sleep(DELAY)`.
-Isso devolve o controle para o laço de eventos de `asyncio`, que pode acionar outras corrotinas em espera.((("", startref="Cspin19")))((("", startref="Scoroutine19")))
+Isso devolve o controle para o laço de eventos do `asyncio`, que pode acionar outras corrotinas em espera.((("", startref="Cspin19")))((("", startref="Scoroutine19")))
 ====
 
 [[gevent_box]]
 .Greenlet e gevent
 ****
 Ao((("greenlet package"))) discutir concorrência com corrotinas,
-é importante mencionar o pacote https://fpy.li/19-14[_greenlet_],
+vale mencionar o pacote https://fpy.li/19-14[_greenlet_],
 que já existe há muitos anos e é muito usado.footnote:[Agradeço aos revisores técnicos Caleb Hattingh e Jürgen Gmach, que não me deixaram esquecer de
 _greenlet_ e _gevent_.]
 O pacote suporta multitarefa cooperativa através de corrotinas leves—chamadas  _greenlets_—que não exigem qualquer sintaxe especial tal como `yield` ou `await`,
@@ -508,7 +508,11 @@ https://fpy.li/gunicorn[_Gunicorn_]—mencionado em <<wsgi_app_server_sec>>.
 
 ==== Supervisores lado a lado
 
-O((("spinners (loading indicators)", "comparing supervisor functions"))) número de linhas de _spinner_thread.py_ e _spinner_async.py_ é quase o mesmo. As funções `supervisor` são o núcleo desses exemplos. Vamos compará-las mais detalhadamente. O <<thread_supervisor_ex>> mostra apenas a `supervisor` do <<spinner_thread_rest_ex>>.
+O((("spinners (loading indicators)", "comparing supervisor functions"))) número
+de linhas de _spinner_thread.py_ e _spinner_async.py_ é quase o mesmo.
+As funções `supervisor` são a parte mais importante destes exemplos. Vamos compará-las mais
+detalhadamente. O <<thread_supervisor_ex>> mostra apenas a `supervisor` do
+<<spinner_thread_rest_ex>>.
 
 [[thread_supervisor_ex]]
 .spinner_thread.py: a função `supervisor` com threads
@@ -550,14 +554,16 @@ Aqui está um resumo das diferenças e semelhanças notáveis entre as duas impl
 * Uma `Task` aciona um objeto corrotina, e uma `Thread` invoca um _callable_.
 * Uma corrotina passa o controle explicitamente com a palavra-chave `await`
 * Você não instancia objetos `Task` diretamente, eles são obtidos passando uma corrotina para `asyncio.create_task(…)`.
-* Quando `asyncio.create_task(…)` retorna um objeto `Task`,
-ele já esta agendado para rodar, mas uma instância de `Thread` precisa ser iniciada explicitamente através de uma chamada a seu método `start`.
-* Na `supervisor` da versão com threads, `slow` é uma função comum e é invocada diretamente pela thread principal. Na versão assíncrona da `supervisor`, `slow` é uma corrotina guiada por `await`.
-* Não há API para terminar uma thread externamente; em vez disso, é preciso enviar um sinal—como acionar o `done` no objeto `Event`. Para objetos `Task`, há o método de instância `Task.cancel()`, que dispara um `CancelledError` na expressão `await` na qual o corpo da corrotina está suspensa naquele momento.
-* A corrotina `supervisor` deve ser iniciada com `asyncio.run` na função `main`.
+* Quando `asyncio.create_task(…)` devolve um objeto `Task`,
+ele já está agendado para rodar, mas uma instância de `Thread` precisa ser iniciada explicitamente através de uma chamada a seu método `start`.
+* Na `supervisor` da versão com threads, `slow` é uma função comum e é invocada diretamente pela thread principal. Na versão assíncrona da `supervisor`, `slow` é uma corrotina acionada por `await`.
+* Não existe um método para terminar uma thread externamente; em vez disso, é preciso enviar um sinal—como invocar `set` no objeto `Event`.
+Objetos `Task` oferecem o método `.cancel()`, que levantará um `CancelledError` na expressão `await` onde a corrotina está suspensa naquele momento.
+* A corrotina `supervisor` é acionada com `asyncio.run` na função `main`.
 
 Essa comparação ajuda a entender como a concorrência é orquestrada com _asyncio_,
-em contraste com como isso é feito com o módulo `Threading`, possivelmente mais familiar ao leitor.
+em contraste com como isso é feito com o módulo `threading`, que pode ser mais familiar
+para quem já usou threads em qualquer linguagem.
 
 Um último ponto relativo a threads versus corrotinas:
 quem já escreveu qualquer programa não-trivial com threads
@@ -571,9 +577,12 @@ corrotinas são "sincronizadas" por definição:
 apenas uma delas está rodando em qualquer momento.
 Para entregar o controle, você usa `await` para passar o controle de volta ao agendador.
 Por isso é possível cancelar uma corrotina de forma segura:
-por definição, uma corrotina só pode ser cancelada quando está suspensa em uma expressão `await`, então é possível realizar qualquer limpeza necessária capturando a exceção `CancelledError`.
+por definição, uma corrotina só pode ser cancelada quando está suspensa em uma expressão `await`, então é possível realizar qualquer limpeza necessária capturando a exceção `CancelledError` naquele ponto da corrotina.
 
-A chamada `time.sleep()` bloqueia mas não faz nada. Vamos agora experimentar com uma chamada de uso intensivo da CPU, para entender melhor a GIL, bem como o efeito de funções de processamento intensivo sobre código assíncrono.((("", startref="CMhello19")))
+A chamada `time.sleep()` bloqueia mas não faz nada. Vamos agora experimentar com
+uma função intensiva em CPU, para entender melhor a GIL, bem como o
+efeito de funções de processamento intensivo sobre código assíncrono.((("",
+startref="CMhello19")))
 
 
 === O verdadeiro impacto da GIL
@@ -616,7 +625,7 @@ Uma das partes da resposta é um pouco mais complicada (pelo menos para mim foi)
 
 [quote]
 ____
-O quê aconteceria à animação se fossem feitas as seguintes modificações, presumindo que `n = 5_000_111_000_222_021`—aquele mesmo número primo que minha máquina levou 3,3s para checar:
+O quê aconteceria à animação se fossem feitas as seguintes modificações, presumindo que `n = 5_000_111_000_222_021`—aquele número primo que minha máquina levou 3,3s para checar:
 
 . Em _spinner_proc.py_, substitua `time.sleep(3)` com uma chamada a `is_prime(n)`?
 . Em _spinner_thread.py_, substitua `time.sleep(3)` com uma chamada a `is_prime(n)`?
@@ -640,16 +649,16 @@ A((("threads", "Global Interpreter Lock impact"))) animação é controlada por 
 Não acertei essa resposta inicialmente:
 Esperava que a animação congelasse, porque superestimei o impacto da GIL.
 
-Nesse exemplo em particular, a animação segue girando porque Python suspende a thread em execução a cada 5ms (por default), tornando a GIL disponível para outras threads pendentes.
+Neste exemplo em particular, a animação segue girando porque Python suspende a thread em execução a cada 5ms (por default), tornando a GIL disponível para outras threads pendentes.
 Assim, a thread principal executando `is_prime` é interrompida a cada 5ms, permitindo à thread secundária acordar e executar uma vez o laço `for`, até chamar o método `wait` do evento `done`, quando então ela liberará a GIL.
 A thread principal então pegará a GIL, e o cálculo de `is_prime` continuará por mais 5 ms.
 
-Isso não tem um impacto visível no tempo de execução deste exemplo específico, porque a função `spin` rapidamente realiza uma iteração e libera a GIL, enquanto espera pelo evento `done`, então não há muita disputa pela GIL.
+Isso não tem um impacto visível no tempo de execução deste exemplo específico, porque a função `spin` rapidamente realiza uma iteração e libera a GIL, enquanto espera pelo evento `done`, então não há muita contenda pela GIL.
 A thread principal executando `is_prime` terá a GIL na maior parte do tempo.
 
 Conseguimos nos safar usando threads para uma tarefa de processamento intensivo nesse experimento simples porque só temos duas threads: uma ocupando a CPU, e a outra acordando apenas 10 vezes por segundo para atualizar a animação.
 
-Mas se você tiver duas ou mais threads disputando por mais tempo da CPU, seu programa será mais lento que um programa sequencial.
+Mas se você tiver duas ou mais threads disputando mais tempo da CPU, seu programa será mais lento que um programa sequencial.
 
 ===== 3. Resposta para asyncio
 Se((("coroutines", "Global Interpreter Lock impact"))) você chamar `is_prime(5_000_111_000_222_021)` na corrotina `slow` do exemplo _spinner_async.py_,
@@ -676,10 +685,14 @@ include::../code/19-concurrency/primes/spinner_prime_async_nap.py[tags=PRIME_NAP
 ====
 <1> Vai dormir a cada 50.000 iterações (porque o argumento `step` em `range` é 2).
 
-O https://fpy.li/19-20[Issue #284] (EN) no repositório do `asyncio` tem uma discussão informativa sobre o uso de `asyncio.sleep(0)`.
+O https://fpy.li/19-20[Issue #284] no repositório do `asyncio` trata do uso de `asyncio.sleep(0)`.
 
-Entretanto, observe que isso vai tornar `is_prime` mais lento, e—mais importante—vai também tornar o laço de eventos e o seu programa inteiro mais lentos.
-Quando eu usei `await asyncio.sleep(0)` a cada 100.000 iterações, a animação foi suave mas o programa rodou por 4,9s na minha máquina, quase 50% a mais que a função `primes.is_prime` rodando sozinha com o mesmo argumento (`5_000_111_000_222_021`).
+Entretanto, observe que isso vai tornar `is_prime` mais lento, e—mais
+importante—vai também atrasar o laço de eventos e tornar o programa inteiro mais
+lento. Quando usei `await asyncio.sleep(0)` a cada 100.000 iterações, a
+animação foi suave mas o programa rodou por 4,9s na minha máquina, quase 50% a
+mais que a função `primes.is_prime` rodando sozinha com o mesmo argumento
+(`5_000_111_000_222_021`).
 
 Usar `await asyncio.sleep(0)` deve ser considerada uma medida paliativa até o código assíncrono ser refatorado para delegar computações de uso intensivo da CPU para outro processo.
 Veremos uma forma de fazer isso com o https://fpy.li/19-21[`asyncio.loop.run_in_executor`], abordado no <<ch_async>>. Outra opção seria uma fila de tarefas, que vamos discutir brevemente na <<distributed_task_queues_sec>>.
@@ -701,7 +714,7 @@ um `ProcessPoolExecutor` do pacote `concurrent.futures`, que internamente usa fi
 
 ====
 
-Nessa seção vamos escrever programas para checar se os números dentro de uma amostra de 20 inteiros são primos. Os números variam de 2 até 9.999.999.999.999.999—isto é, 10^16^ - 1, ou mais de 2^53^.
+Nesta seção vamos escrever programas para checar se os números dentro de uma amostra de 20 inteiros são primos. Os números variam de 2 até 9.999.999.999.999.999—isto é, 10^16^ - 1, ou mais de 2^53^.
 A amostra inclui números primos pequenos e grandes, bem como números compostos com fatores primos pequenos e grandes.
 
 O((("sequential.py program"))) programa _sequential.py_ fornece a linha base de desempenho.
@@ -751,7 +764,7 @@ include::../code/19-concurrency/primes/sequential.py[]
 ----
 ====
 [role="pagebreak-before less_space"]
-<1> A função `check` (na próxima chamada) retorna uma tupla `Result` com o valor booleano da chamada a `is_prime` e o tempo decorrido.
+<1> A função `check` (logo abaixo) devolve uma tupla `Result` com o valor booleano da chamada a `is_prime` e o tempo decorrido.
 <2> `check(n)` chama `is_prime(n)` e calcula o tempo decorrido para retornar um `Result`.
 <3> Para cada número na amostra, chamamos `check` e apresentamos o resultado.
 <4> Calcula e mostra o tempo total decorrido.
@@ -802,15 +815,31 @@ O tempo total neste caso é muito menor que a soma dos tempos decorridos para ca
 
 [NOTE]
 ====
-A função `multiprocessing.cpu_count()` retorna `12` no MacBook Pro que estou usando para escrever esse capítulo. Ele é na verdade um i7 com uma CPU de 6 núcleos, mas o SO informa 12 CPUs devido ao _hyperthreading_, uma tecnologia da Intel que executa duas threads por núcleo. Entretanto, _hyperthreading_ funciona melhor quando uma das threads não está trabalhando tão pesado quanto a outra thread no mesmo núcleo—talvez a primeira esteja parada, esperando por dados após uma perda de cache, e a outra está mastigando números. De qualquer forma, não há almoço grátis: este laptop tem o desempenho de uma máquina com 6 CPUs para atividades de processamento intensivo com pouco uso de memória—como essa checagem simples de números primos.
+
+A função `multiprocessing.cpu_count()` retorna `12` no MacBook Pro que usei para
+escrever este capítulo. Ele é um i7 com uma CPU de 6 núcleos, mas o SO informa
+12 CPUs devido ao _hyperthreading_, uma tecnologia da Intel que executa duas
+threads por núcleo. Entretanto, _hyperthreading_ funciona melhor quando uma das
+threads não está trabalhando tão pesado quanto a outra thread no mesmo
+núcleo—talvez a primeira esteja parada, esperando por dados após a invalidação
+do cache, enquanto a outra está mastigando números. De qualquer forma, não
+existe almoço grátis: este laptop tem o desempenho de uma máquina com 6 CPUs
+para atividades de processamento intensivo com pouco uso de memória,
+como este exemplo.
+
 ====
 
 [[code_for_multicore_prime_sec]]
-==== Código para o checador de números primos com múltiplos núcleos
+==== Código do checador de primos usando múltiplos núcleos
 
-Quando((("process pools", "code for multicore prime checker", id="PPmulticore19"))) delegamos processamento para threads e processos, nosso código não chama a função de trabalho diretamente, então não conseguimos simplesmente retornar um resultado.
-Em vez disso, a função de trabalho é guiada pela biblioteca de threads ou processos, e por fim produz um resultado que precisa ser armazenado em algum lugar.
-Coordenar threads ou processos de trabalho e coletar resultados são usos comuns de filas em programação concorrente—e também em sistemas distribuídos.
+Quando((("process pools", "code for multicore prime checker",
+id="PPmulticore19"))) delegamos processamento para threads e processos, nosso
+código não invoca diretamente a função que realiza o trabalho, então não
+conseguimos simplesmente devolver um resultado com `return`. Em vez disso, a
+função de trabalho é acionada pela biblioteca de threads ou processos, e por fim
+produz um resultado que precisa ser armazenado em algum lugar. Coordenar threads
+ou processos de trabalho e coletar resultados são usos comuns de filas em
+programação concorrente, e também em sistemas distribuídos.
 
 Muito do código novo em  _procs.py_ se refere a configurar e usar filas. O início do arquivo está no <<ex_primes_procs_top>>.
 
@@ -830,24 +859,24 @@ include::../code/19-concurrency/primes/procs.py[tags=PRIMES_PROC_TOP]
 ----
 ====
 <1> Na tentativa de emular `threading`, `multiprocessing` fornece `multiprocessing.SimpleQueue`, mas esse é um método vinculado a uma instância pré-definida de uma classe de nível mais baixo, `BaseContext`.
-Temos que chamar essa `SimpleQueue` para criar uma fila. Por outro lado, não podemos usá-la em dicas de tipo.
+Temos que chamar essa `SimpleQueue` para criar uma fila. Mas não podemos usá-la em dicas de tipo.
 <2> `multiprocessing.queues` contém a classe `SimpleQueue` que precisamos para dicas de tipo.
 <3> `PrimeResult` inclui o número checado. Manter `n` junto com os outros campos do resultado simplifica a exibição mais tarde.
 <4> Isso é um apelido de tipo para uma `SimpleQueue` que a função `main` (<<primes_procs_main_ex>>) vai usar para enviar os números para os processos que farão a checagem.
 <5> Apelido de tipo para uma segunda `SimpleQueue` que vai coletar os resultados em `main`. Os valores na fila serão tuplas contendo o número a ser testado e uma tupla `Result`.
 <6> Isso é similar a _sequential.py_.
 <7> `worker` recebe uma fila com os números a serem checados, e outra para colocar os resultados.
-<8> Nesse código, usei o número `0` como uma _pílula venenosa_: um sinal para que o processo encerre. Se `n` não é `0`, continue com o loop.footnote:[Nesse exemplo, `0` é uma sentinela conveniente. `None` também é comumente usado para essa finalidade, mas usar `0` simplifica a dica de tipo para `PrimeResult` e a implementação de `worker`.]
+<8> Nesse código, usei o número `0` como uma _poison pill_ (pílula venenosa): um sinal para que o processo encerre. Se `n` não é `0`, o laço continua.footnote:[Nesse exemplo, `0` é uma sentinela conveniente. `None` também é comumente usado para essa finalidade, mas usar `0` simplifica a dica de tipo para `PrimeResult` e a implementação de `worker`.]
 <9> Invoca a checagem de número primo e coloca o `PrimeResult` na fila.
 <10> Devolve um `PrimeResult(0, False, 0.0)`, para informar ao laço principal que esse processo terminou seu trabalho.
 <11> `procs` é o número de processos que executarão a checagem de números primos em paralelo.
-<12> Coloca na fila `jobs` os números a serem checados.
+<12> Coloca na fila `jobs`todos os números a serem checados.
 <13> Cria um processo filho para cada `worker`. Cada um desses processos executará o laço dentro de sua própria instância da função `worker`, até encontrar um `0` na fila `jobs`.
 <14> Inicia cada processo filho.
-<15> Coloca um `0` na fila de cada processo, para encerrá-los.
+<15> Coloca um `0` na fila para cada processo, para encerrá-los.
 
 [[good_poison_pill_tip]]
-.laços, sentinelas e pílulas venenosas
+.Laços, sentinelas e pílulas venenosas
 ****
 A((("concurrency models", "indefinite laços and sentinels")))((("indefinite laços")))((("sentinels")))
 função `worker` no <<ex_primes_procs_top>> segue um modelo comum em programação concorrente:
@@ -1442,7 +1471,7 @@ ____
 Para gerenciar a complexidade, precisamos de restrições
 
 Aprendi((("concurrency models", "Soapbox discussion", id="CMsoap19")))((("Soapbox sidebars", "threads-and-locks versus actor-style programming", id="SSthread19"))) a programar em uma calculadora TI-58. Sua "linguagem" era similar ao assembler. Naquele nível, todas as "variáveis" eram globais, e não havia o conforto dos comandos estruturados de controle de fluxo.
-Existiam saltos condicionais: instruções que transferiam a execução diretamente para uma localização arbitrária—à frente ou atrás do local atual—dependendo do valor de um registrador ou de uma flag na CPU.
+Existiam saltos condicionais: instruções que transferiam a execução diretamente para uma localização arbitrária—à frente ou atrás do local atual—dependendo do valor de um registrador na CPU.
 
 É possível fazer basicamente qualquer coisa em assembler, e esse é o desafio:
 há muito poucas restrições para evitar que você cometa erros, e para ajudar mantenedores a entender o código quando mudanças são necessárias.
