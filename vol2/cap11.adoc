@@ -256,7 +256,7 @@ Acabei de usar um decorador `classmethod`, e ele é muito específico do Python.
 Vamos então falar um pouco disso.
 
 [[classmethod_x_staticmethod_sec]]
-=== classmethod versus staticmethod
+=== `classmethod` versus `staticmethod`
 
 O((("Pythonic objects", "classmethod versus staticmethod")))((("classmethod
 decorator")))((("staticmethod decorator")))((("decorators and closures",
@@ -390,8 +390,8 @@ embutida `format()`, que usa apenas a
 https://fpy.li/63[Mini-Linguagem de
 Especificação de Formato].
 Após pegar o jeito dela, leia
-https://fpy.li/64["Literais de string formatados"] e
-https://fpy.li/65["Sintaxe das string de formato"],
+https://fpy.li/64[«Literais de string formatados»] e
+https://fpy.li/65[«Sintaxe das string de formato»],
 para aprender sobre a notação de campo de substituição
 (`{:}`), usada em f-strings e no método `str.format()` (incluindo os marcadores
 de conversão `!s`, `!r`, e `!a`). F-strings não tornam o método `str.format()`
@@ -700,7 +700,7 @@ Até aqui, instâncias de `Vector2d`((("Pythonic objects", "supporting positiona
 patterns")))((("positional patterns"))) são compatíveis com o casamento de padrões
 com instâncias de classe—vistos na https://fpy.li/8a[«Seção 5.8.2»] (vol.1).
 
-No <<vector_match_keyword_ex>>, todos aqueles padrões nomeados funcionam como esperado.
+No <<vector_match_keyword_ex>>, os padrões nomeados funcionam como esperado.
 
 [[vector_match_keyword_ex]]
 .Padrões nomeados para sujeitos `Vector2d`—requer Python 3.10
@@ -726,15 +726,17 @@ o resultado é esse:
 TypeError: Vector2d() accepts 0 positional sub-patterns (1 given)
 ----
 
-Para fazer `Vector2d` funcionar com padrões posicionais, precisamos criar
-um atributo de classe chamado `+__match_args__+`, listando os atributos de
-instância na ordem em que eles serão usados no casamento de padrões posicionais:
+Para resolver, criamos
+um atributo de classe `+__match_args__+`:
 
 [source, python]
 ----
 class Vector2d:
     __match_args__ = ('x', 'y')
 ----
+
+O atributo `+__match_args__+` tem os nomes dos atributos de
+instância na ordem em que eles serão usados no casamento de padrões posicionais.
 
 Agora podemos escrever menos código ao criar padrões para casar com
 sujeitos `Vector2d`, como no <<vector_match_positional_ex>>.
@@ -757,13 +759,15 @@ pode ser razoável nomear apenas os argumentos obrigatórios em
 Agora vamos revisar tudo o que programamos até aqui no `Vector2d`.
 
 
-=== Listagem completa Vector2d, versão 3
+=== Listagem completa `Vector2d`, versão 3
 
 Já((("Pythonic objects", "Vector2d full listing",
 id="POvectorfull11")))((("Vector2d", "full listing", id="V2dfull11"))) estamos
 trabalhando no `Vector2d` há algum tempo, mostrando apenas trechos isolados. O
 <<ex_vector2d_v3_full>> é uma listagem completa e consolidada de
 _vector2d_v3.py_, incluindo os doctests que usei durante o desenvolvimento.
+
+<<<
 
 [[ex_vector2d_v3_full]]
 .vector2d_v3.py: o módulo completo
@@ -795,7 +799,6 @@ Como programado no  <<ex_vector2d_v3_full>>, `Vector2d` é um exemplo didático
 com uma longa lista de métodos especiais relacionados à representação de
 objetos, não um modelo para qualquer classe que você vai escrever.
 
-<<<
 Na próxima seção, deixamos o `Vector2d` de lado por um tempo para discutir o
 design e as limitações do mecanismo de atributos privados no Python—o prefixo
 de duplo sublinhado em `self.__x`.((("", startref="POvectorfull11")))((("",
@@ -819,11 +822,10 @@ métodos herdados de `Dog`. Isso seria bem complicado de depurar.
 Para prevenir esse tipo de problema, se você nomear o atributo de instância no
 formato `+__mood+` (dois sublinhados iniciais e zero ou no máximo um sublinhado
 no final), Python armazena o nome no `+__dict__+` da instância, prefixado com um
-sublinhado seguido do nome da classe. Na classe `Dog`, por exemplo, `__mood` se
+sublinhado seguido do nome da classe. Na classe `Dog`, por exemplo, `+__mood+` se
 torna `+_Dog__mood+` e em `Beagle` ele será `+_Beagle__mood+`.
-
-Esse recurso da linguagem é conhecido pela encantadora alcunha de((("name
-mangling"))) "desfiguração de nome" (_name mangling_).
+Este mecanismo do Python é conhecido pela encantadora alcunha de((("name
+mangling"))) _name mangling_ (desfiguração de nome).
 
 O <<name_mangling_ex>> mostra o resultado na classe `Vector2d` do <<ex_vector2d_v3>>.
 
@@ -1158,8 +1160,10 @@ Estamos falando de criar um novo atributo em uma instância, por isso o
 como aparece no <<ex_vector2d_v3_full>>.
 ====
 
+<<<
+
 [[typecode_instance_demo]]
-.Personalizando uma instância pela definição do atributo `typecode`, que antes era herdado da classe
+.Customizando uma instância para redefinir o atributo `typecode`, sobrescrevendo o valor do `typecode` da classe `Vector2d`
 ====
 [source, python]
 ----
@@ -1344,19 +1348,18 @@ ____
 Este((("Pythonic objects", "further reading on"))) capítulo tratou de vários dos
 métodos especiais do modelo de dados, então naturalmente as referências
 primárias são as mesmas do https://fpy.li/1[«Capítulo 1»] (vol.1), onde tivemos uma ideia geral do
-mesmo tópico. Por conveniência, vou repetir aquelas quatro recomendações
-anteriores aqui, e acrescentar algumas outras:
+mesmo tópico. Por conveniência, vou repetir aquelas indicações aqui:
 
 Modelo de Dados, em A Referência da Linguagem Python::
 A maioria dos métodos usados neste capítulo estão
-documentados em https://fpy.li/69["Customização básica"].
+documentados em https://fpy.li/69[«Customização básica»].
 
 _Python in a Nutshell_, 3rd ed. (Martelli, Ravenscroft & Holden)::
 Trata com profundidade dos métodos especiais .
 
 _Python Cookbook_, 3rd ed. (Beazley & Jones):: 
 Práticas modernas de Python demonstradas através de receitas. Especialmente o Capítulo 8,
-"Classes and Objects" (_Classes e Objetos_), que contém várias receitas
+_Classes and Objects_, que traz várias receitas
 relacionadas às discussões deste capítulo.
 
 _Python Essential Reference_, 4th ed. (Beazley)::
@@ -1377,7 +1380,8 @@ classes*, liberando você do tedioso trabalho de implementar protocolos de objet
 ____
 
 Mencionei `attrs` como uma alternativa mais poderosa ao `@dataclass` na
-https://fpy.li/85[«Seção 5.10»] (vol.1). As fábricas de classes de dados do https://fpy.li/5[«Capítulo 5»] (vol.1),
+https://fpy.li/85[«Seção 5.10»] (vol.1). As fábricas de classes de dados do
+https://fpy.li/5[«Capítulo 5»] (vol.1),
 assim como `attrs`, automaticamente equipam suas classes com vários métodos
 especiais. Mas saber como programar métodos especiais ainda é essencial para
 entender o que aqueles pacotes fazem, para decidir se você realmente precisa
@@ -1386,30 +1390,106 @@ deles e para sobrescrever os métodos que eles geram, quando necessário.
 Vimos neste capítulo todos os métodos especiais relacionados à representação de
 objetos, exceto `+__index__+` e `+__fspath__+`. Discutiremos `+__index__+` no
 <<ch_seq_methods>>, na <<slice_aware_sec>>. Não vou tratar de `+__fspath__+`.
-Para aprender sobre esse método, veja a https://fpy.li/pep519[_PEP 519—Adding a
-file system path protocol_] (Adicionando um protocolo de caminho de sistema de
+Para aprender sobre esse método, veja a
+https://fpy.li/pep519[_PEP 519—Adding a file system path protocol_]
+(Adicionando um protocolo de caminho de sistema de
 arquivos).
 
-Uma percepção precoce da necessidade de strings de representação diferentes para
-objetos apareceu  em Smalltalk.
-
-O artigo https://fpy.li/11-13[_How to
-Display an Object as a String: printString and displayString_]
+A necessidade de diferentes strings de representação para
+objetos apareceu primeiro em Smalltalk. O artigo
+https://fpy.li/11-13[_How to Display an Object as a String: printString and displayString_]
 (Como Exibir um Objeto como uma String: printString e displayString), de Bobby Woolf,
 discute a implementação dos métodos `printString` e `displayString`
 na linguagem Smalltalk em 1996.
-Foi de lá que peguei as descrições
-"como o desenvolvedor quer vê-lo" e "como o usuário quer vê-lo" para definir
-`repr()` e `str()`, na <<object_repr_sec>>.
+Foi lá que encontrei as descrições
+"como o desenvolvedor quer vê-lo" para a `repr()` 
+e "como o usuário quer vê-lo" para a `str()`, na <<object_repr_sec>>.
 
 
 [role="pagebreak-before less_space"]
 [[pythonic_soapbox]]
 .Ponto de Vista
 ****
+**Proteção versus segurança em atributos privados**
 
+[quote, Larry Wall, criador da linguagem Perl]
+____
+O Perl não tem nenhum amor por privacidade forçada.
+Ele preferiria que você não entrasse em sua sala de estar [apenas]
+por não ter sido convidado, e
+não porque ele tem uma espingarda.
+____
 
-[role="soapbox-title"]
+Python((("Soapbox sidebars", "safety versus security in private
+attributes")))((("attributes", "safety versus security in private"))) e Perl
+estão em polos opostos em vários aspectos, mas Guido e Larry parecem concordar
+sobre a privacidade de objetos.
+
+Ensinando Python para muitos programadores Java ao longo do anos, percebi que
+muitos têm uma fé excessiva nas garantias de "privacidade" oferecidas pelo
+Java. Na verdade, os modificadores `private` e `protected` de Java normalmente
+fornecem defesas apenas contra acidentes (isto é, proteção). Eles só oferecem
+segurança contra ataques mal-intencionados se a aplicação for especialmente
+configurada e implantada sob um https://fpy.li/11-15[`SecurityManager`] de
+Java, e isso raramente acontece na prática, mesmo em instalações corporativas
+preocupadas com segurança.
+
+Para provar meu argumento, considere a classe Java a seguir.
+
+[[ex_java_confidential_class]]
+.Confidential.java: uma classe Java com um campo privado chamado `secret`
+====
+[source, java]
+----
+include::../code/11-pythonic-obj/private/Confidential.java[]
+----
+====
+
+No <<ex_java_confidential_class>>, armazeno o `text` no campo `secret` após
+convertê-lo todo para caixa alta, para deixar óbvio que o argumento `text`
+passado para o construtor sofre uma transformação antes de ser armazenado.
+  
+A verdadeira demonstração consiste em rodar _expose.py_ com Jython. Este
+script usa introspecção (_reflection_ ou reflexão no jargão de Java) para acessar
+o valor de um campo privado. O código aparece no <<ex_expose_py>>.
+
+[[ex_expose_py]]
+.expose.py: código em Jython para ler o conteúdo de um campo privado em outra classe
+====
+[source, python]
+----
+include::../code/11-pythonic-obj/private/expose.py[]
+----
+====
+
+Executando o <<ex_expose_py>>, o resultado é esse:
+
+[source]
+----
+$ jython expose.py
+message.secret = TOP SECRET TEXT
+----
+
+A string `'TOP SECRET TEXT'` foi lida do campo privado `secret` da classe `Confidential`.
+
+Não há magia aqui: _expose.py_ usa a API de reflexão de Java para obter uma
+referência para o campo privado chamado `'secret'`, e então chama
+`secret_field.setAccessible(True)` para tornar acessível seu conteúdo. A mesma
+coisa pode ser feita com código Java, claro (mas exige mais que o triplo de
+linhas; veja o arquivo https://fpy.li/11-16[_Expose.java_] no 
+https://fpy.li/code[repositório de código] deste livro.
+
+A chamada `.setAccessible(True)` só falhará se o script Jython ou o programa
+principal em Java (por exemplo, `Expose.class`) estiverem rodando sob a
+supervisão de um https://fpy.li/11-15[`SecurityManager`]. Mas, no mundo
+real, aplicações Java raramente são implantadas com um `SecurityManager`—com a
+exceção das _applets_ Java, quando elas ainda eram suportadas pelos navegadores.
+
+Meu ponto: também em Java, na prática os modificadores de controle de acesso
+oferecem proteção mas não segurança. Então relaxe e aprecie o poder dado a
+você pelo Python. E use esse poder com 
+responsabilidade.((("", startref="POsoap11")))
+
 **Propriedades ajudam a reduzir custos iniciais**
 
 Nas((("attributes", "properties and up-front costs")))((("Pythonic objects",
@@ -1421,10 +1501,10 @@ Apesar de nossos vetores serem iteráveis e poderem ser desempacotados em um par
 de variáveis, também é desejável poder escrever `my_vector.x` e `my_vector.y`
 para obter cada componente.
 
-Quando sentimos a necessidade de evitar modificações acidentais dos atributos
-`x` e `y`, implementamos propriedades, mas nada mudou no restante do código ou
+Quando surge a necessidade de proteger os atributos
+`x` e `y`, implementamos propriedades, mas nada muda no restante do código ou
 na interface pública de `Vector2d`, como se verifica através dos doctests.
-Continuamos podendo acessar `my_vector.x` and `my_vector.y`.
+Continuamos podendo acessar `my_vector.x` e `my_vector.y`.
 
 Isso mostra que podemos sempre iniciar o desenvolvimento de nossas classes da
 maneira mais simples possível, com atributos públicos, pois quando (ou se) for
@@ -1468,88 +1548,7 @@ desde o início é um desvio em relação ao objetivo. Em Python, podemos
 simplesmente usar atributos públicos, sabendo que podemos transformá-los mais
 tarde em propriedades, se essa necessidade surgir.
 
-
-[role="soapbox-title"]
-**Proteção versus segurança em atributos privados**
-
-[quote, Larry Wall, criador da linguagem Perl]
-____
-O Perl não tem nenhum amor por privacidade forçada.
-Ele preferiria que você não entrasse em sua sala de estar [apenas]
-por não ter sido convidado, e
-não porque ele tem uma espingarda.
-____
-
-Python((("Soapbox sidebars", "safety versus security in private
-attributes")))((("attributes", "safety versus security in private"))) e Perl
-estão em polos opostos em vários aspectos, mas Guido e Larry parecem concordar
-sobre a privacidade de objetos.
-
-Ensinando Python para muitos programadores Java ao longo do anos, percebi que
-muitos deles uma fé excessiva nas garantias de privacidade oferecidas pelo
-Java. Na verdade, os modificadores `private` e `protected` de Java normalmente
-fornecem defesas apenas contra acidentes (isto é, proteção). Eles só oferecem
-segurança contra ataques mal-intencionados se a aplicação for especialmente
-configurada e implantada sob um https://fpy.li/11-15[`SecurityManager`] de
-Java, e isso raramente acontece na prática, mesmo em instalações corporativas
-preocupadas com segurança.
-
-Para provar meu argumento, considere a classe Java a seguir.
-
-[[ex_java_confidential_class]]
-.Confidential.java: uma classe Java com um campo privado chamado `secret`
-====
-[source, java]
-----
-include::../code/11-pythonic-obj/private/Confidential.java[]
-----
-====
-
-No <<ex_java_confidential_class>>, armazeno o `text` no campo `secret` após
-convertê-lo todo para caixa alta, para deixar óbvio que o argumento `text`
-passado para o construtor sofre uma transformação antes de ser armazenado.
-
-A verdadeira demonstração consiste em rodar _expose.py_ com Jython. Este
-script usa introspecção (_reflection_ ou reflexão jargão de Java) para acessar
-o valor de um campo privado. O código aparece no <<ex_expose_py>>.
-
-[[ex_expose_py]]
-.expose.py: código em Jython para ler o conteúdo de um campo privado em outra classe
-====
-[source, python]
-----
-include::../code/11-pythonic-obj/private/expose.py[]
-----
-====
-
-Executando o <<ex_expose_py>>, o resultado é esse:
-
-[source]
-----
-$ jython expose.py
-message.secret = TOP SECRET TEXT
-----
-
-A string `'TOP SECRET TEXT'` foi lida do campo privado `secret` da classe `Confidential`.
-
-Não há magia aqui: _expose.py_ usa a API de reflexão de Java para obter uma
-referência para o campo privado chamado `'secret'`, e então chama
-`secret_field.setAccessible(True)` para tornar acessível seu conteúdo. A mesma
-coisa pode ser feita com código Java, claro (mas exige mais que o triplo de
-linhas; veja o arquivo https://fpy.li/11-16[_Expose.java_] no 
-https://fpy.li/code[repositório de código] deste livro.
-
-A chamada `.setAccessible(True)` só falhará se o script Jython ou o programa
-principal em Java (por exemplo, `Expose.class`) estiverem rodando sob a
-supervisão de um https://fpy.li/11-15[`SecurityManager`]. Mas, no mundo
-real, aplicações Java raramente são implantadas com um `SecurityManager`—com a
-exceção das _applets_ Java, quando elas ainda eram suportadas pelos navegadores.
-
-Meu ponto: também em Java, na prática os modificadores de controle de acesso
-oferecem proteção mas não segurança. Então relaxe e aprecie o poder dado a
-você pelo Python. E use esse poder com 
-responsabilidade.((("", startref="POsoap11")))
-
 ****
+
 
 <<<
