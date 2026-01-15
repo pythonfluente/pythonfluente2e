@@ -42,8 +42,6 @@ Tests of `format()` with Cartesian coordinates:
     '(3.000e+00, 4.000e+00)'
 
 
-
-
 Tests of the `.angle()` method::
 
     >>> Vector2d(0, 0).angle()

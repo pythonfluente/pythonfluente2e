@@ -3,13 +3,13 @@
 :example-number: 0
 :figure-number: 0
 
-[quote, PEP 318—Decorators for Functions and Methods ("Decoradores para Funções e Métodos"—EN)]
+[quote, PEP 318—Decorators for Functions and Methods]
 ____
 Houve uma certa quantidade de reclamações sobre a escolha do nome "decorador"
 para esse recurso. A mais frequente foi sobre o nome não ser consistente com seu
 uso no livro da GoF.footnote:[GoF se refere ao livro __Design Patterns__
-(traduzido no Brasil como _"Padrões de Projeto"_), de 1985. Seus quatro
-autores ficaram conhecidos como a "Gang of Four" (_Gangue dos Quatro_).] O nome
+(traduzido no Brasil como Padrões de Projeto). Seus
+autores ficaram conhecidos como a _Gang of Four_ (Gangue dos Quatro).] O nome
 ++decorator++ provavelmente se origina de seu uso no âmbito dos
 compiladores--uma árvore sintática é percorrida e anotada.
 ____
@@ -53,6 +53,7 @@ capítulo é explicar exatamente como funcionam os decoradores de função, desd
 simples decoradores de registro até os complicados decoradores parametrizados.
 Mas antes de chegar a esse objetivo, precisamos tratar de:
 
+<<<
 * Como Python analisa a sintaxe de decoradores
 * Como Python decide se uma variável é local
 * Por que clausuras existem e como elas funcionam
@@ -72,7 +73,7 @@ apresento o decorador de _caching_ `functools.cache` do Python
 3.9 antes do `functools.lru_cache`, que é mais antigo.
 A <<lru_cache_sec>> apresenta também o uso de `lru_cache`
 sem argumentos, uma novidade do Python 3.8.
-Expandi a <<generic_functions_sec>> para incluir dicas de tipo, a sintaxe
+Expandi a <<single_dispatch_sec>> para incluir dicas de tipo, a sintaxe
 recomendada para usar `functools.singledispatch` desde o Python 3.7.
 A <<parameterized_dec_sec>> agora inclui o <<clockdeco_param_cls_ex>>,
 que usa uma classe e não uma clausura para implementar um decorador.
@@ -90,9 +91,11 @@ devolver a mesma função ou substituí-la por outra função ou objeto invocáv
 você substituir "função" por "classe" na sentença anterior, o resultado é uma
 descrição resumida do papel de um decorador de classe, assunto que veremos no
 https://fpy.li/24[«Capítulo 24»] (vol.3).]
+
 Em outras palavras, supondo a existência de uma função decoradora
 chamada `decorate`, este código:
 
+<<<
 [source, python]
 ----
 @decorate
@@ -142,7 +145,6 @@ running inner()
 <2> `target` é decorada por `deco`.
 <3> Invocar a `target` decorada causa, na verdade, a execução de `inner`.
 <4> A inspeção revela que `target` é agora uma referência a `inner`.
-
 
 Estritamente falando, decoradores são apenas açúcar sintático. Como vimos, é
 sempre possível chamar um decorador como um invocável normal, passando outra
@@ -203,7 +205,6 @@ Observe que `register` roda (duas vezes) antes de qualquer outra função no
 módulo. Quando `register` é chamada, ela recebe o objeto função a ser decorado
 como argumento—por exemplo, `<function f1 at 0x100631bf8>`.
 
-<<<
 Após o carregamento do módulo, a lista `registry` contém referências para as
 duas funções decoradas: `f1` e `f2`. Essas funções, bem como `f3`, são executadas
 apenas quando chamadas explicitamente por `main`.
@@ -300,7 +301,6 @@ atribuirmos um valor a um `b` global e então chamarmos `f1`, funciona:
 
 Agora vamos ver um exemplo que pode ser surpreendente.
 
-<<<
 Leia com atenção a função `f2`, no <<ex_local_unbound>>. As primeiras duas linhas
 são as mesmas da `f1` do <<ex_global_undef>>, e então ela faz uma atribuição a
 `b`. Mas para com um erro no segundo `print`, antes da atribuição ser executada.
@@ -369,11 +369,11 @@ Nos exemplos anteriores, vimos dois escopos em ação:
 O escopo global do módulo:: Composto((("scope", "module global scope"))) por
 nomes atribuídos a valores fora de qualquer bloco de classe ou função.
 
-O escopo local da função f3:: Composto((("scope", "function local scope"))) por
+O escopo local da função `f3`:: Composto((("scope", "function local scope"))) por
 nomes atribuídos a valores como parâmetros, ou diretamente no corpo da função.
 
-Há um outro escopo de onde variáveis podem vir, chamado _nonlocal_, e ele é
-fundamental para clausuras; vamos tratar disso em breve.
+Há um outro escopo onde variáveis podem existir, chamado _nonlocal_ (não-local).
+Ele ocorre quando há funções aninhadas; vamos tratar disso em breve.
 
 Agora que vimos como o escopo de variáveis funciona no Python, podemos
 enfrentar as clausuras na <<closures_sec>>.
@@ -455,17 +455,17 @@ https://fpy.li/5x["dis—Disassembler de bytecode de Python"].
 === Clausuras
 
 Na((("decorators and closures", "closure basics", id="DACclos09")))((("anonymous
-functions"))) blogosfera, as clausuras são algumas vezes confundidas com funções
-anônimas. Muita gente confunde por causa da história paralela destes conceitos:
+functions"))) blogosfera, as clausuras (_closures_) são às vezes confundidas com funções
+anônimas. A confusão se deve à história paralela destes conceitos:
 definir funções dentro de outras funções se torna mais comum e conveniente quando
 existem funções anônimas.
 E clausuras só fazem sentido a partir do momento em que você tem funções aninhadas.
 Daí que muitos aprendem as duas ideias ao mesmo tempo.
 
 Na verdade, uma clausura é uma função—vamos chamá-la de `f`—com um escopo
-estendido, incorporando variáveis acessadas no corpo de `f` que não são nem
+estendido, incorporando variáveis acessadas no corpo de `f` que não são
 variáveis globais nem variáveis locais de `f`. Tais variáveis devem vir do
-escopo local de uma função externa que englobe `f`.
+escopo local de uma função que engloba `f`.
 
 Não interessa se a função é anônima ou não; o que importa é que ela pode
 acessar variáveis não-globais definidas fora de seu corpo.
@@ -605,17 +605,15 @@ que representa o corpo compilado da função. O <<ex_average_demo2>> demonstra i
 ====
 
 O valor de `series` é armazenado no atributo `+__closure__+` da função 
-`avg`. Cada item em `+avg.__closure__+` corresponde a um nome em `+__code__+`.
-Esses itens são `cells`, e têm um atributo chamado `cell_contents`, onde o valor
-real pode ser encontrado. O <<ex_average_demo3>> mostra esses atributos.
+`avg`. Cada item em `+avg.__closure__+` corresponde a um nome em `+__code__+`,
+e tem um atributo chamado `cell_contents`, com o valor vinculado.
+Confira o <<ex_average_demo3>>:
 
 [[ex_average_demo3]]
 .Continuando do <<ex_average_demo1>>
 ====
 [source, python]
 ----
->>> avg.__code__.co_freevars
-('series',)
 >>> avg.__closure__
 (<cell at 0x107a44f78: list object at 0x107a91a48>,)
 >>> avg.__closure__[0].cell_contents
@@ -633,7 +631,7 @@ aquelas variáveis sejam parte do escopo local da função externa.((("",
 startref="DACclos09")))
 
 [[nonlocal_sec]]
-=== A declaração nonlocal
+=== A instrução `nonlocal`
 
 A((("decorators and closures", "nonlocal declarations",
 id="DACnonlocal09")))((("nonlocal keyword", id="nonlocal09")))((("keywords",
@@ -665,6 +663,8 @@ def make_averager():
 ====
 
 Ao testar o <<ex_average_broken>>, o resultado é um erro:
+
+<<<
 
 [source, python]
 ----
@@ -744,6 +744,8 @@ O <<ex_clockdeco0>> é((("decorators and closures", "decorator implementation",
 id="DACdecimp09"))) um decorador que cronometra cada invocação da função
 decorada e exibe o tempo decorrido, os argumentos passados, e o resultado da
 chamada.
+
+<<<
 
 [[ex_clockdeco0]]
 ._clockdeco0.py_: decorador que exibe o tempo de execução da função
@@ -880,7 +882,7 @@ interessantes da biblioteca padrão são `cache`, `lru_cache` e
 `singledispatch`—todos do módulo `functools`. Falaremos deles a seguir.
 
 [[memoization_sec]]
-==== Memoização com functools.cache
+==== Memoização com `functools.cache`
 
 O((("memoization", id="memoiz09")))((("functools module", "functools.cache
 decorator", id="functool09"))) decorador `functools.cache` implementa
@@ -1023,7 +1025,7 @@ startref="memoiz09")))((("", startref="functool09")))
 
 
 [[lru_cache_sec]]
-==== Usando o lru_cache
+==== Usando o `functools.lru_cache`
 
 O((("functools module", "functools.lru_cache function"))) decorador
 `functools.cache` é, na realidade, um mero invólucro em torno da antiga função
@@ -1089,7 +1091,7 @@ def costly_function(a, b):
 
 Vamos agora examinar outro decorador poderoso: `functools.singledispatch`.
 
-[[generic_functions_sec]]
+[[single_dispatch_sec]]
 ==== Funções genéricas com despacho único
 
 Imagine((("single dispatch generic functions",
@@ -1146,9 +1148,6 @@ e a sequência inteira é apresentada como uma lista HTML.
 <6> Mostra `Fraction` como uma fração.
 <7> Mostra `float` e `Decimal` com a fração equivalente aproximada.
 
-[[single_dispatch_sec]]
-===== Despacho único de funções
-
 Como não temos no Python a sobrecarga de métodos ao estilo de Java, não podemos
 simplesmente criar variações de `htmlize` com assinaturas diferentes para cada
 tipo de dado que queremos tratar de forma distinta. Uma solução possível em
@@ -1170,7 +1169,7 @@ Se mais argumentos fossem usados para selecionar a função específica,
 teríamos despacho múltiplo (_multiple dispatch_), um recurso nativo em
 linguagens como Common Lisp, Julia e C#.
 
-O <<singledispatch_ex>> mostra como funciona o despacho único.
+O <<singledispatch_ex>> mostra como implementar o despacho único.
 
 [WARNING]
 ====
@@ -1386,17 +1385,15 @@ revisitar o decorador `clock`, acrescentando um recurso: os usuários podem
 passar uma string para formatar o relatório sobre a função cronometrada.
 Veja o <<clockdeco_param_ex>>.
 
-
-<<<
 [NOTE]
 ====
-
 Para simplificar, o <<clockdeco_param_ex>> está baseado na implementação inicial
 de `clock` no <<ex_clockdeco0>>, e não na versão melhorada do
-<<ex_clockdeco2>> que usa `@functools.wraps`, acrescentando assim mais uma
-camada de função.
-
+<<ex_clockdeco2>> que usa `@functools.wraps`,
+evitando mais um nível de aninhamento de funções.
 ====
+
+<<<
 
 [[clockdeco_param_ex]]
 .Módulo clockdeco_param.py: o decorador `clock` parametrizado
@@ -1572,8 +1569,8 @@ O((("decorators and closures", "further reading on"))) item #26 do livro
 https://fpy.li/effectpy[_Effective Python_, 2nd ed.] (Addison-Wesley), de
 Brett Slatkin, trata das melhores práticas para decoradores de função, e
 recomenda sempre usar `functools.wraps`—que vimos no
-<<ex_clockdeco2>>.footnote:[Como queria manter o código o mais simples possível,
-não segui o excelente conselho de Slatkin em todos os exemplos.]
+<<ex_clockdeco2>>. Como eu queria manter o código o mais simples possível,
+não segui o excelente conselho de Slatkin em todos os exemplos.
 
 Graham Dumpleton tem, em seu blog, uma https://fpy.li/9-5[série de posts
 abrangentes] sobre técnicas para implementar decoradores bem comportados,
@@ -1586,13 +1583,13 @@ que suportam introspecção e se comportam de forma correta quando decorados
 novamente, quando aplicados a métodos e quando usados como descritores de
 atributos (o https://fpy.li/23[«Capítulo 23»] (vol.3) é sobre descritores).
 
-https://fpy.li/9-8["Metaprogramming" (_Metaprogramação_)] (EN), o capítulo 9 do
+https://fpy.li/9-8[_Metaprogramming_], o capítulo 9 do
 _Python Cookbook_, 3ª ed. de David Beazley e Brian K. Jones (O'Reilly), tem
 várias receitas ilustrando desde decoradores elementares até alguns muito
 sofisticados, incluindo um que pode ser invocado como um decorador regular ou
 como uma fábrica de decoradores, por exemplo, `@clock` ou `@clock()`. É a
-"Recipe 9.6. Defining a Decorator That Takes an Optional Argument" (_Receita
-9.6. Definindo um Decorador Que Recebe um Argumento Opcional_)  desse livro de
+_Recipe 9.6. Defining a Decorator That Takes an Optional Argument_
+(Definindo um Decorador Que Recebe um Argumento Opcional) daquele livro de
 receitas.
 
 Michele Simionato criou https://fpy.li/9-9[_decorator_],
@@ -1626,7 +1623,7 @@ A https://fpy.li/9-14[_PEP 443_] traz a justificativa e uma descrição
 detalhada do mecanismo de funções genéricas de despacho único. Um post de Guido
 van Rossum de março de 2005
 https://fpy.li/9-15[_Five-Minute Multimethods in Python_]
-(Multi-métodos de cinco minutos em Python_), mostra os passos
+(Multi-métodos de cinco minutos em Python), mostra os passos
 para uma implementação de funções genéricas (também chamadas multi-métodos)
 usando decoradores. O código de multi-métodos de Guido é interessante, mas é
 apenas um exemplo didático. Para conhecer uma implementação de funções genéricas
