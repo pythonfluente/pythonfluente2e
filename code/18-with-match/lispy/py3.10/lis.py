@@ -177,7 +177,10 @@ class Procedure:
     "A user-defined Scheme procedure."
 
     def __init__(  # <1>
-        self, parms: list[Symbol], body: list[Expression], env: Environment
+        self,
+        parms: list[Symbol],
+        body: list[Expression],
+        env: Environment
     ):
         self.parms = parms  # <2>
         self.body = body
