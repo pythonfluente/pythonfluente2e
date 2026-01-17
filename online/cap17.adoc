@@ -1225,29 +1225,43 @@ https://fpy.li/17-12[os.walk], que produz nomes de arquivos percorrendo uma
 árvore de diretórios, reduzindo uma busca recursiva no sistema de arquivos
 a um simples laço `for`.
 
-A função geradora `os.walk` é impressionante, mas nesta seção quero me concentrar em funções genéricas que recebem iteráveis arbitrários como argumento e devolvem geradores que produzem itens selecionados, calculados ou reordenados. Nas tabelas a seguir, resumi duas dúzias delas, algumas embutidas, outras dos módulos `itertools` e `functools`. Por conveniência, elas estão agrupadas por sua funcionalidade de alto nível, independente de onde são definidas.
+A função geradora `os.walk` é impressionante, mas nesta seção quero me
+concentrar em funções genéricas que recebem iteráveis arbitrários como argumento
+e devolvem geradores que produzem itens selecionados, agregados ou reordenados.
 
-O primeiro grupo contém funções geradoras de filtragem: elas produzem um subconjunto dos itens produzidos pelo iterável de entrada, sem mudar os itens em si. Como `takewhile`, a maioria das funções listadas na <<filter_genfunc_tbl>> recebe um `predicate`, uma função booleana de um argumento que será aplicada a cada item no iterável de entrada, para determinar se aquele item será incluído na saída.((("filtering generator functions")))
+((("filtering generator functions")))O primeiro grupo são funções geradoras de
+filtragem: elas devolvem um gerador que produz um subconjunto dos itens do
+iterável de entrada, sem mudar os itens em si.
+
+O exemplo mais conhecido é a função embutida `filter`:
+
+`filter(predicate, it)`::
+    Aplica `predicate` para cada item de `iterable`, produzindo o item se
+    `predicate(item)` for verdadeiro. Quando `predicate` é `None`, apenas itens verdadeiros serão produzidos.
+
+Como `filter`, a maioria das funções listadas na <<filter_genfunc_tbl>>
+recebe uma `predicate` (uma função booleana de um argumento) que será aplicada a
+cada item no iterável de entrada, para determinar se aquele item será incluído
+na saída. A exceção é `itertools.compress`, que consome dois iteráveis, sendo
+que o segundo iterável fornece valores para decidir quais itens do primeiro iterável serão produzidos.
+Veja o uso de `compress` no <<demo_filter_genfunc>>.
+
+<<<
 
 [[filter_genfunc_tbl]]
-.Funções geradoras de filtragem
-[options="header"]
-|=============================================================================================================================================================================================================================================================
-|Módulo|Função|Descrição
-|`itertools`|`compress(it, selector_it)`|Consome dois iteráveis em paralelo; produz itens de `it` sempre que o item correspondente em `selector_it` é verdadeiro
-|`itertools`|`dropwhile(predicate, it)`|Consome `it`, pulando itens enquanto `predicate` resultar verdadeiro, e daí produz todos os elementos restantes (nenhuma verificação adicional é realizada)
-|(Embutida)|`filter(predicate, it)`|Aplica `predicate` para cada item de `iterable`, produzindo o item se `predicate(item)` for verdadeiro; se `predicate` for `None`, apenas itens verdadeiros serão produzidos
-|`itertools`|`filterfalse(predicate, it)`|Igual a `filter`, mas negando a lógica de `predicate`: produz itens sempre que `predicate` resultar falso
-|`itertools`|`islice(it, stop) ou islice(it, start, stop, step=1)`|Produz itens de uma fatia de `it`, similar a `s[:stop]` ou `s[start:stop:step]`, exceto por `it` poder ser qualquer iterável e a operação ser preguiçosa
-|`itertools`|`takewhile(predicate, it)`|Produz itens enquanto `predicate`  resultar verdadeiro, e daí para (nenhuma verificação adicional é realizada).
-|=============================================================================================================================================================================================================================================================
+.`itertools`: funções geradoras de filtragem
+[options="header", cols="5,9"]
+|=======================
+|Função|Descrição
+|`compress(it, selector_it)`|Consome dois iteráveis em paralelo; produz itens de `it` sempre que o item correspondente em `selector_it` é verdadeiro
+|`dropwhile(predicate, it)`|Consome `it`, pulando itens enquanto `predicate` resultar verdadeiro, e daí produz todos os elementos restantes (nenhuma verificação adicional é realizada)
+|`filterfalse(predicate, it)`|Como a `filter`, mas invertendo a lógica: produz itens quando `predicate` resulta falso
+|`islice(it, stop)` +
+ `islice(it, start, stop, step=1)`|Produz itens de uma fatia de `it`, similar a `s[:stop]` ou `s[start:stop:step]`, mas `it` é qualquer iterável e a operação é preguiçosa
+|`takewhile(predicate, it)`|Produz itens enquanto `predicate`  resultar verdadeiro, e daí para (nenhuma verificação adicional é realizada).
+|=======================
 
-////
-PROD: In the table above, the word `itertools` appears split in two lines as `iter` and `tools`. Can we make the 1st column wider to prevent that? Thanks!
-////
-
-
-A seção de console no <<demo_filter_genfunc>> demonstra o uso de todas as funções na <<filter_genfunc_tbl>>.
+A seção de console no <<demo_filter_genfunc>> demonstra o uso das funções de filtragem.
 
 [[demo_filter_genfunc]]
 .Exemplos de funções geradoras de filtragem
@@ -1277,22 +1291,33 @@ A seção de console no <<demo_filter_genfunc>> demonstra o uso de todas as fun�
 ----
 ====
 
-O((("mappings", "mapping generator functions"))) grupo seguinte contém os geradores de mapeamento: eles produzem itens computados a partir de cada item individual no iterável de entrada--ou iteráveis, nos casos de `map` e `starmap`.footnote:[O termo "mapeamento" aqui não está relacionado a dicionários, mas com a função embutida `map`.] Os geradores na <<mapping_genfunc_tbl>> produzem um resultado por item dos iteráveis de entrada. Se a entrada vier de mais de um iterável, a saída para assim que o primeiro iterável de entrada for exaurido.
+O((("mappings", "mapping generator functions"))) grupo seguinte contém os
+geradores de mapeamento. O termo "mapeamento" aqui não está relacionado a
+dicionários, mas com a função embutida `map`. Este grupo de funções produzem
+itens computados a partir de cada item individual no iterável de entrada—ou
+iteráveis, nos casos de `map` e `starmap`. 
+Se a entrada vier de mais de um iterável, a saída para assim que o primeiro
+iterável de entrada for exaurido.
 
 [[mapping_genfunc_tbl]]
-.Funções geradoras de mapeamento
-[options="header"]
-|=============================================================================================================================================================================================================================================================
-|Módulo|Função|Descrição
-|`itertools`|`accumulate(it, [func])`|Produz somas cumulativas; se `func` for fornecida, produz o resultado da aplicação de `func` ao primeiro par de itens, depois ao primeiro resultado e ao próximo item, etc.
-|(embutida)|`enumerate(iterable, start=0)`|Produz tuplas de dois itens na forma `(index, item)`, onde `index` é contado a partir de `start`, e `item` é obtido do `iterable`
-|(embutida)|`map(func, it1, [it2, …, itN])`|Aplica `func` a cada item de `it`, produzindo o resultado; se forem fornecidos N iteráveis, `func` deve aceitar N argumentos, e os iteráveis serão consumidos em paralelo
-|`itertools`|`starmap(func, it)`|Aplica `func` a cada item de `it`, produzindo o resultado; o iterável de entrada deve produzir itens iteráveis `iit`, e `func` é aplicada na forma `func(*iit)`
-|=============================================================================================================================================================================================================================================================
+.Funções geradoras de mapeamento (embutidas)
+[options="header", cols="7,10"]
+|============================
+|Função|Descrição
+|`enumerate(iterable, start=0)`|Produz tuplas de dois itens na forma `(index, item)`, onde `index` é contado a partir de `start`, e `item` é obtido do `iterable`
+|`map(func, it1, [it2, …, itN])`|Aplica `func` a cada item de `it`, produzindo o resultado; se forem fornecidos N iteráveis, `func` deve aceitar N argumentos, e os iteráveis serão consumidos em paralelo
+|============================
 
-////
-PROD: Again, the word `itertools` appears split in two lines as `iter` and `tools`. Can we make the 1st column wider to prevent that? Thanks!
-////
+O módulo `itertools` oferece mais duas funções geradoras de mapeamento:
+
+[[mapping_genfunc_itertools_tbl]]
+.`itertools`: funções geradoras de mapeamento
+[options="header", cols="4,9"]
+|==========================
+|Função|Descrição
+|`starmap(func, it)`|Aplica `func` a cada item de `it`, produzindo o resultado; o iterável de entrada deve produzir itens iteráveis `iit`, e `func` é aplicada na forma `func(*iit)`
+|`accumulate(it, [func])`|Produz somas cumulativas; se `func` for fornecida, produz o resultado da aplicação de `func` ao primeiro par de itens, depois ao primeiro resultado e ao próximo item, etc.
+|==========================
 
 
 O <<demo_accumulate_genfunc>> demonstra alguns usos de `itertools.accumulate`.
@@ -1302,8 +1327,8 @@ O <<demo_accumulate_genfunc>> demonstra alguns usos de `itertools.accumulate`.
 ====
 [source, python]
 ----
->>> sample = [5, 4, 2, 8, 7, 6, 3, 0, 9, 1]
 >>> import itertools
+>>> sample = [5, 4, 2, 8, 7, 6, 3, 0, 9, 1]
 >>> list(itertools.accumulate(sample))  # <1>
 [5, 9, 11, 19, 26, 32, 35, 35, 44, 45]
 >>> list(itertools.accumulate(sample, min))  # <2>
@@ -1323,7 +1348,7 @@ O <<demo_accumulate_genfunc>> demonstra alguns usos de `itertools.accumulate`.
 <4> Produto acumulado.
 <5> Fatoriais de `1!` a `10!`.
 
-As funções restantes da <<mapping_genfunc_tbl>> são demonstradas no <<demo_mapping_genfunc>>.
+As demais funçnoes de mapeamento são demonstradas no <<demo_mapping_genfunc>>.
 
 [[demo_mapping_genfunc]]
 .Exemplos de funções geradoras de mapeamento
@@ -1356,21 +1381,34 @@ As funções restantes da <<mapping_genfunc_tbl>> são demonstradas no <<demo_ma
 <5> Repete cada letra na palavra de acordo com a posição da letra na palavra, começando por `1`.
 <6> Média corrente.
 
-A seguir temos o grupo de geradores de fusão—todos eles produzem itens a partir de múltiplos iteráveis de entrada. `chain` e `chain.from_iterable` consomem os iteráveis de entrada em sequência (um após o outro), enquanto `product`, `zip`, e `zip_longest` consomem os iteráveis de entrada em paralelo. Veja a <<merging_genfunc_tbl>>.
+A seguir temos o grupo de geradores de mesclagem (_merge_).
+Elas mesclam os itens de vários iteráveis de entrada.
+
+O exemplo mais conhecido é a função embutida `zip`:
+
+`zip(it1, …, itN, strict=False)`::
+    Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando silenciosamente quando o menor iterável é exaurido, a menos que `strict=True` for passado (a partir do Python 3.10). Quando `strict=True`, um `ValueError` é gerado se algum iterável esgotar antes dos outros. O default é `False`, para manter a compatibilidade retroativa.
+
+Na <<merging_genfunc_tbl>>, vale notar que `chain` e `chain.from_iterable`
+consomem os iteráveis de entrada um após o outro, enquanto `product`, e
+`zip_longest` consomem os iteráveis de entrada em paralelo, como faz a função
+`zip`.
 
 [[merging_genfunc_tbl]]
-.Funções geradoras que fundem os iteráveis de entrada
-[options="header"]
-|=============================================================================================================================================================================================================================================================
-|Módulo|Função|Descrição
-|`itertools`|`chain(it1, …, itN)`|Produz todos os itens de `it1`, a seguir de `it2`, etc., continuamente.
-|`itertools`|`chain.from_iterable(it)`|Produz todos os itens de cada iterável produzido por `it`, um após o outro, continuamente; `it` é um iterável cujos itens também são iteráveis, uma lista de tuplas, por exemplo
-|`itertools`|`product(it1, …, itN, repeat=1)`|Produto cartesiano: produz tuplas de N elementos criadas combinando itens de cada iterável de entrada, como laços `for` aninhados produziriam; `repeat` permite que os iteráveis de entrada sejam consumidos mais de uma vez
-|(embutida)|`zip(it1, …, itN, strict=False)`|Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando silenciosamente quando o menor iterável é exaurido, a menos que `strict=True` for passadofootnote:[O argumento apenas nomeado `strict` é novo, surgiu no Python 3.10. Quando `strict=True`, um `ValueError` é gerado se qualquer iterável tiver um tamanho diferente. O default é `False`, para manter a compatibilidade retroativa.]
-|`itertools`|`zip_longest(it1, …, itN, fillvalue=None)`|Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando apenas quando o último iterável for exaurido,  preenchendo os itens ausentes com o `fillvalue`
-|=============================================================================================================================================================================================================================================================
+.`itertools`: funções geradoras que mesclam os iteráveis de entrada
+[options="header", cols="6,12"]
+|===================
+|Função|Descrição
+|`chain(it1, …, itN)`|Produz todos os itens de `it1`, a seguir de `it2`, etc., continuamente.
+|`chain.from_iterable(it)`|Produz todos os itens de cada iterável produzido por `it`, um após o outro, continuamente; `it` é um iterável cujos itens também são iteráveis, uma lista de tuplas, por exemplo
+|`product(it1, …, itN, repeat=1)`|Produto cartesiano: produz tuplas de N elementos criadas combinando itens de cada iterável de entrada, como laços `for` aninhados produziriam; `repeat` permite que os iteráveis de entrada sejam consumidos mais de uma vez
+|`zip_longest(it1, …, itN, fillvalue=None)`|Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando apenas quando o último iterável for exaurido,  preenchendo os itens ausentes com o `fillvalue`
+|===================
 
-O <<demo_merging_genfunc>> demonstra o uso das funções geradoras `itertools.chain` e `zip`, e de suas pares. Lembre-se que o nome da função `zip` vem do zíper ou fecho-éclair (nenhuma relação com a compreensão de dados). Tanto `zip` quanto `itertools.zip_longest` foram apresentadas no <<zip_box>>.
+O <<demo_merging_genfunc>> demonstra o uso das funções geradoras
+`itertools.chain` e `zip`, e de suas pares. Lembre-se que o nome da função `zip`
+vem do zíper ou fecho-éclair (nenhuma relação com a compreensão de dados). Tanto
+`zip` quanto `itertools.zip_longest` foram apresentadas no <<zip_box>>.
 
 
 [[demo_merging_genfunc]]
@@ -1450,22 +1488,24 @@ O gerador `itertools.product` é uma forma preguiçosa para calcular produtos ca
 Algumas((("input expanding generator functions"))) funções geradoras expandem a entrada, produzindo mais de um valor por item de entrada. Elas estão listadas na <<expanding_genfunc_tbl>>.
 
 [[expanding_genfunc_tbl]]
-.Funções geradoras que expandem cada item de entrada em múltiplos itens de saída
-[options="header"]
-|=============================================================================================================================================================================================================================================================
-|Module|Function|Description
-|`itertools`|`combinations(it, out_len)`|Produz combinações de `out_len` itens a partir dos itens produzidos por `it`
-|`itertools`|`combinations_with_replacement(it, out_len)`|Produz combinações de `out_len` itens a partir dos itens produzidos por `it`, incluindo combinações com itens repetidos
-|`itertools`|`count(start=0, step=1)`|Produz números começando em `start` e adicionando `step` para obter o número seguinte, indefinidamente
-|`itertools`|`cycle(it)`|Produz itens de `it`, armazenando uma cópia de cada, e então produz a sequência inteira repetida e indefinidamente
-|`itertools`|`pairwise(it)`|Produz pares sobrepostos sucessivos, obtidos do iterável de entradafootnote:[`itertools.pairwise` foi introduzido no Python 3.10.]
-|`itertools`|`permutations(it, out_len=None)`|Produz permutações de `out_len` itens a partir dos itens produzidos por `it`; por default, `out_len` é `len(list(it))`
-|`itertools`|`repeat(item, [times])`|Produz um dado item repetidamente e, a menos que um número de `times` (_vezes_) seja passado, indefinidamente
-|=============================================================================================================================================================================================================================================================
+.`itertools`: funções geradoras que expandem cada item de entrada em múltiplos itens de saída
+[options="header", cols="6, 9"]
+|====================
+|Função|Descrição
+|`combinations(it, out_len)`|Produz combinações de `out_len` itens a partir dos itens produzidos por `it`
+|`combinations_with_replacement( +
+it, out_len)`|Produz combinações de `out_len` itens a partir dos itens produzidos por `it`, incluindo combinações com itens repetidos
+|`count(start=0, step=1)`|Produz números começando em `start` e adicionando `step` para obter o número seguinte, indefinidamente
+|`cycle(it)`|Produz itens de `it`, armazenando uma cópia de cada, e então produz a sequência inteira repetida e indefinidamente
+|`pairwise(it)`|Produz pares sobrepostos sucessivos, obtidos do iterável de entradafootnote:[`itertools.pairwise` foi introduzido no Python 3.10.]
+|`permutations(it, out_len=None)`|Produz permutações de `out_len` itens a partir dos itens produzidos por `it`; por default, `out_len` é `len(list(it))`
+|`repeat(item, [times])`|Produz um dado item repetidamente e, a menos que um número de `times` (_vezes_) seja passado, indefinidamente
+|====================
 
 As funções `count` e `repeat` de `itertools` devolvem geradores que conjuram itens do nada:
-nenhum deles recebe um iterável como parâmetro.
-Vimos `itertools.count` na <<ap_itertools_sec>>.
+elas não consomem itens de um itereavel.
+Já vimos `itertools.count` na <<ap_itertools_sec>>.
+
 O gerador `cycle` faz uma cópia do iterável de entrada e produz seus itens repetidamente.
 O <<demo_count_repeat_genfunc>> ilustra o uso de `count`, `cycle`, `pairwise` e `repeat`.
 
@@ -1532,17 +1572,30 @@ Também há um relação muito próxima entre `itertools.product` e o restante d
 <3> Todas as permutações com `len()==2` a partir dos itens em `'ABC'`; a ordem dos itens nas tuplas geradas é relevante.
 <4> Produto cartesiano de `'ABC'` e `'ABC'` (esse é o efeito de `repeat=2`).
 
-O último grupo de funções geradoras que vamos examinar nessa seção foram projetados para produzir todos os itens dos iteráveis de entrada, mas rearranjados de alguma forma. Aqui estão duas funções que devolvem múltiplos geradores: `itertools.groupby` e `itertools.tee`. O outro gerador nesse grupo, a função embutida `reversed`, é o unico gerador tratado neste capítulo que não aceita qualquer iterável como entrada, apenas sequências. Faz sentido: como `reversed` vai produzir os itens do último para o primeiro, só funciona com uma sequência de tamanho conhecido. Mas ela evita o custo de criar uma cópia invertida da sequência produzindo cada item quando necessário. Coloquei a função `itertools.product` junto com os geradores de _fusão_, na <<merging_genfunc_tbl>>, porque todas aquelas consomem mais de um iterável, enquanto todos os geradores na <<expanding_genfunc_tbl2>> aceitam no máximo um iterável como entrada.
+O último grupo de funções geradoras que vamos examinar nessa seção foram projetados para produzir todos os itens dos iteráveis de entrada, mas rearranjados de alguma forma. Aqui estão duas funções que devolvem múltiplos geradores: `itertools.groupby` e `itertools.tee`.
+
+A função embutida `reversed` é o unico gerador tratado neste capítulo que não
+aceita qualquer iterável como entrada, apenas sequências. Faz sentido: como
+`reversed` vai produzir os itens do último para o primeiro, só funciona com uma
+sequência, porque seu tamanho é conhecido então é possível acessar o último item
+diretamente.
+Ao produzir cada item sob demanda, `reversed` evita o custo de criar uma cópia
+invertida da sequência.
+Coloquei a função
+`itertools.product` junto com os geradores de mesclagem, na
+<<merging_genfunc_tbl>>, porque todas aquelas consomem mais de um iterável,
+enquanto os geradores na <<expanding_genfunc_tbl2>> aceitam no máximo um
+iterável como entrada.
 
 [[expanding_genfunc_tbl2]]
 .Funções geradoras de rearranjo
-[options="header"]
-|=============================================================================================================================================================================================================================================================
+[options="header", cols="2,4,7"]
+|=====================
 |Módulo|Função|Descrição
 |`itertools`|`groupby(it, key=None)`|Produz tuplas de 2 elementos na forma `(key, group)`, onde `key` é o critério de agrupamento e `group` é um gerador que produz os itens no grupo
 |(embutida)|`reversed(seq)`|Produz os itens de `seq` na ordem inversa, do último para o primeiro; `seq` deve ser uma sequência ou implementar o método especial `+__reversed__+`
 |`itertools`|`tee(it, n=2)`|Produz uma tupla de _n_ geradores, cada um produzindo os itens do iterável de entrada de forma independente
-|=============================================================================================================================================================================================================================================================
+|=====================
 
 ////
 PROD: Again, the word `itertools` appears split in two lines as `iter` and `tools`. Can we make the 1st column wider to prevent that? Thanks!
@@ -1630,26 +1683,36 @@ Vamos agora revisar outro grupo de funções da biblioteca padrão que lidam com
 
 Todas((("generators", "iterable reducing functions", id="Greduc17")))((("iterables", "iterable reducing functions", id="Ireduc17")))((("reducing functions", id="redfunc17"))) as funções na <<tbl_iter_reducing>> recebem um iterável e devolvem um resultado único.
 Elas são conhecidas como funções de "redução", "dobra" (_folding_) ou "acumulação".
-Podemos implementar cada uma das funções embutidas listadas a seguir com `functools.reduce`, mas elas existem embutidas por resolverem algums casos de uso comuns de forma mais fácil.
-Já vimos uma explicação mais aprofundada sobre `functools.reduce` na <<multi_hashing_sec>>.
 
-Nos casos de `all` e `any`, há uma importante otimização não suportada por `functools.reduce`: `all` e `any` conseguem criar um curto-circuito—isto é, elas param de consumir o iterador assim que o resultado esteja determinado.
+A função de redução mais flexível é `functools.reduce`:
+
+`functools.reduce(func, it, [initial])`::
+    Devolve o resultado da aplicação de `func` ao primeiro par de itens,
+    depois aplica `func` ao resultado anterior e o terceiro item, e assim por diante.
+    Se `initial` for passado, esse argumento formará o par inicial com o primeiro item do iterável `it`.
+
+Podemos implementar cada uma das funções embutidas listadas a seguir com `functools.reduce`,
+mas elas estão embutidas no Python por resolverem mais facilmente algums casos de uso comuns de `functools.reduce`.
+Vimos uma explicação mais aprofundada sobre `functools.reduce` na <<multi_hashing_sec>>.
+
+Nos casos de `all` e `any`, há uma importante otimização não suportada por `functools.reduce`:
+`all` e `any` conseguem criar um curto-circuito—isto é,
+elas param de consumir o iterador assim que o resultado é determinado.
 Veja o último teste com `any` no <<all_any_demo>>.
 
 [[tbl_iter_reducing]]
 .Funções embutidas que leem iteráveis e devolvem um único valor
-[options="header"]
-|=============================================================================================================================================================================================================================================================
-|Módulo|Função|Descrição
-|(embutida)|`all(it)`|Devolve `True` se todos os itens em `it` forem verdadeiros, `False` em caso contrário; `all([])` devolve `True`
-|(embutida)|`any(it)`|Devolve `True` se qualquer item em `it` for verdadeiro, `False` em caso contrário; `any([])` devolve `False`
-|(embutida)|`max(it, [key=,] [default=])`|Devolve o valor máximo entre os itens de `it`;footnote:[Pode também ser invocado na forma
+[options="header", cols="2,5"]
+|===============================================
+|Função|Descrição
+|`all(it)`|Devolve `True` se todos os itens em `it` forem verdadeiros, `False` em caso contrário; `all([])` devolve `True`
+|`any(it)`|Devolve `True` se qualquer item em `it` for verdadeiro, `False` em caso contrário; `any([])` devolve `False`
+|`max(it, [key=,] [default=])`|Devolve o valor máximo entre os itens de `it`;footnote:[Pode também ser invocado na forma
 `+max(arg1, arg2, …, [key=?])+`, devolvendo então o valor máximo entre os argumentos passados.] `key` é uma função de ordenação, como em `sorted`; `default` é devolvido se o iterável estiver vazio
-|(embutida)|`min(it, [key=,] [default=])`|Devolve o valor mínimo entre os itens de `it`.footnote:[Pode também ser invocado na forma
+|`min(it, [key=,] [default=])`|Devolve o valor mínimo entre os itens de `it`.footnote:[Pode também ser invocado na forma
 `+min(arg1, arg2, …, [key=?])+`, devolvendo então o valor mínimo entre os argumentos passados.] `key` é uma função de ordenação, como em `sorted`; `default` é devolvido se o iterável estiver vazio
-|`functools`|`reduce(func, it, [initial])`|Devolve o resultado da aplicação de `func` consecutivamente ao primeiro par de itens, depois deste último resultado e o terceiro item, e assim por diante; se `initial` for passado, esse argumento formará o par inicial com o primeiro item
-|(embutida)|`sum(it, start=0)`|A soma de todos os itens em `it`, acrescida do valor opcional `start` (para uma precisão melhor na adição de números de ponto flutuante, use `math.fsum`)
-|=============================================================================================================================================================================================================================================================
+|`sum(it, start=0)`|A soma de todos os itens em `it`, acrescida do valor opcional `start` (para uma precisão melhor na adição de números de ponto flutuante, use `math.fsum`)
+|===============================================
 
 O <<all_any_demo>> exemplifica a operação de `all` e de `any`.
 
