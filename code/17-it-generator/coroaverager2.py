@@ -25,7 +25,7 @@ the coroutine::
     >>> coro_avg.send(30)
     >>> coro_avg.send(6.5)
     >>> try:
-    ...     coro_avg.send(STOP)  # <1>
+    ...     coro_avg.send(Sentinel())  # <1>
     ... except StopIteration as exc:
     ...     result = exc.value  # <2>
     ...
@@ -45,7 +45,7 @@ Using `yield from`:
     ...     return res  # <3>
     ...
     >>> comp = compute()  # <4>
-    >>> for v in [None, 10, 20, 30, STOP]:  # <5>
+    >>> for v in [None, 10, 20, 30, Sentinel()]:  # <5>
     ...     try:
     ...         comp.send(v)  # <6>
     ...     except StopIteration as exc:  # <7>

@@ -951,7 +951,7 @@ end.
 ====
 <1> Esta é a mesma função `gen_AB` do <<ex_gen_ab>>.
 <2> A compreensão de lista itera avidamente sobre os itens produzidos pelo objeto gerador devolvido por `gen_AB()`: `'A'` e `'B'`. Observe a saída nas linhas seguintes: `start`, `continue`, `end.`
-<3> Esse laço `for` itera sobre a lista `res1` criada pela compreensão de lista.
+<3> Este laço `for` itera sobre a lista `res1` criada pela compreensão de lista.
 <4> A expressão geradora devolve `res2`, um objeto gerador. O gerador não é consumido aqui.
 <5> Este gerador obtém itens de `gen_AB` apenas quando o laço `for` itera sobre `res2`. Cada iteração do laço `for` invoca, implicitamente, `next(res2)`, que por sua vez invoca `next()` sobre o objeto gerador devolvido por `gen_AB()`, fazendo este último avançar até o próximo `yield`.
 <6> Observe como a saída de `gen_AB()` se intercala com a saída do `print` no laço `for`.
@@ -1423,7 +1423,7 @@ consomem os iteráveis de entrada um após o outro, enquanto `product`, e
 
 [[merging_genfunc_tbl]]
 .`itertools`: funções geradoras que mesclam os iteráveis de entrada
-[options="header", cols="6,12"]
+[options="header", cols="7,13"]
 |===================
 |Função|Descrição
 |`chain(it1, …, itN)`|Produz todos os itens de `it1`, a seguir de `it2`, etc., continuamente.
@@ -1623,7 +1623,7 @@ invertida da sequência.
 |Módulo|Função|Descrição
 |`itertools`|`groupby(it, key=None)`|Produz tuplas de 2 elementos na forma `(key, group)`, onde `key` é o critério de agrupamento e `group` é um gerador que produz os itens no grupo
 |(embutida)|`reversed(seq)`|Produz os itens de `seq` na ordem inversa, do último para o primeiro; `seq` deve ser uma sequência ou implementar o método especial `+__reversed__+`
-|`itertools`|`tee(it, n=2)`|Produz uma tupla de _n_ geradores, cada um produzindo os itens do iterável de entrada de forma independente
+|`itertools`|`tee(it, n=2)`|Produz uma tupla de N geradores, cada um produzindo os itens do iterável de entrada de forma independente
 |=====================
 
 O <<demo_groupby_reversed_genfunc>> demonstra o uso de `itertools.groupby` e da função embutida `reversed`. Observe que `itertools.groupby` assume que o iterável de entrada está ordenado pelo critério de agrupamento, ou que pelo menos os itens estejam agrupados por aquele critério—mesmo que não estejam completamente ordenados.
@@ -1808,7 +1808,7 @@ A sintaxe `yield from` fornece uma nova forma de combinar geradores. É nosso pr
 
 
 [[yield_from_sec0]]
-=== Subgeradoras com yield from
+=== Subgeradores com `yield from`
 
 A sintaxe da expressão `yield from`((("generators", "subgenerators with yield from expression", id="Gsubyield17")))((("yield from expression", id="yieldfrom17"))) foi introduzida no Python 3.3, para permitir que um gerador delegue tarefas a um subgerador.
 
@@ -1902,14 +1902,14 @@ Veja a demonstração no <<ex_simple_yield_from_return>>.
 Agora que já vimos o básico sobre `yield from`, vamos estudar alguns exemplos simples mas práticos de sua utilização.
 
 [[reinventing_chain_sec]]
-==== Reinventando chain
+==== Reinventando `chain`
 
 Vimos((("chain generator"))) na <<merging_genfunc_tbl>> que `itertools` fornece
 um gerador `chain`, que produz itens a partir de vários iteráveis, iterando
 sobre o primeiro, depois sobre o segundo, e assim por diante, até o último.
-Abaixo está uma implementação caseira de `chain`, com laços `for` aninhados, em
-Python:footnote:[`chain` e a maioria das funções de `itertools` são escritas em
-C.]
+A maioria das funções de `itertools` são escritas em C, incluindo `chain`.
+Abaixo está uma implementação caseira de `chain`, com laços `for`
+aninhados, em Python:
 
 [source, python]
 ----
@@ -1945,12 +1945,14 @@ Vamos então desenvolver um exemplo mais interessante.
 ==== Percorrendo uma árvore
 
 Nessa((("tree structures, traversing", id="treetravers17"))) seção, veremos `yield from` em um script para percorrer uma estrutura de árvore.
-Vou desenvolvê-lo bem devagar.
+Vou desenvolvê-lo passo a passo, em _baby steps_ (passinhos de bebê).
 
-A estrutura de árvore nesse exemplo é a https://fpy.li/9d[hierarquia das exceções] de Python.
+A estrutura de árvore nesse exemplo é a https://fpy.li/9d[«hierarquia das exceções»] de Python.
 Mas o padrão pode ser adaptado para exibir uma árvore de diretórios ou qualquer outra estrutura de árvore.
 
-Começando de `BaseException` no nível zero, a hierarquia de exceções tem cinco níveis de profundidade no Python 3.10. Nosso primeiro pequeno passo será exibir o nível zero.
+Começando de `BaseException` no nível zero, a hierarquia de exceções tem cinco
+níveis de profundidade no Python 3.10. Nosso primeiro passinho será exibir
+o nível zero.
 
 Dada uma classe raiz, o gerador `tree` no <<ex_tree_step0>> produz o nome dessa classe e para.
 
@@ -2015,7 +2017,7 @@ include::../code/17-it-generator/tree/step2/tree.py[]
 <2> Produz o nome de cada subclasse e o nível (`1`). Por causa do `yield from sub_tree(cls)` dentro de `tree`, esses valores escapam completamente ao gerador `tree` ...
 <3> ... e são recebidos aqui diretamente.
 
-Seguindo com nosso método de pequenos passos, vou escrever o código mais simples que consigo imaginar para chegar ao nível 2.
+Seguindo com o método de _baby steps_, apresento o código mais simples que consigo imaginar para chegar ao nível 2.
 Para percorrer uma árvore https://fpy.li/9e[primeiro em produndidade (_depth-first_)], após produzir cada nó do nível 1, quero produzir os filhotes daquele nó no nível 2 antes de voltar ao nível 1.
 Um laço `for` aninhado cuida disso, como no <<ex_tree_step3>>.
 
@@ -2061,7 +2063,7 @@ BaseException
 
 Você pode já ter percebido para onde isso segue, mas vou insistir mais uma vez nos pequenos passos:
 vamos atingir o nível 3, acrescentando ainda outro laço `for` aninhado.
-Não há qualquer alteração no restante do programa, então o <<ex_tree_step4>> mostra apenas o gerador `sub_tree`.
+Não há novidades no resto do programa, então o <<ex_tree_step4>> mostra apenas o gerador `sub_tree`.
 
 [[ex_tree_step4]]
 .O gerador `sub_tree` de _tree/step4/tree.py_
@@ -2073,8 +2075,8 @@ include::../code/17-it-generator/tree/step4/tree.py[tags=SUB_TREE]
 ====
 
 Há um padrão claro no <<ex_tree_step4>>.
-Entramos em um laço `for` para obter as subclasses do nível _N_.
-A cada volta do laço, produzimos uma subclasse do nível _N_, e então iniciamos outro laço `for` para visitar o nível __N__+1.
+Entramos em um laço `for` para obter as subclasses do nível N.
+A cada volta do laço, produzimos uma subclasse do nível N, e então iniciamos outro laço `for` para visitar o nível N+1.
 
 Na <<reinventing_chain_sec>>, vimos como é possível substituir um laço `for` aninhado controlando um gerador com `yield from` sobre o mesmo gerador.
 Podemos aplicar aquela ideia aqui, se fizermos `sub_tree` aceitar um parâmetro `level`, usando `yield from` recursivamente e
@@ -2106,10 +2108,10 @@ O caso base ocorre quando a classe `cls` não tem subclasses.
 Nesse caso, `sub_tree` não produz nada, apenas retorna.
 
 O <<ex_tree_step5>> funciona como planejado,
-mas podemos fazê-la mais concisa recordando do padrão que observamos quando
+mas podemos fazê-lo mais conciso recordando o padrão que observamos quando
 alcançamos o nível 3 (no <<ex_tree_step4>>):
-produzimos uma subclasse de nível _N_, e então iniciamos um laço `for`
-aninhado para visitar o nível __N__+1.
+produzimos uma subclasse de nível N, e então iniciamos um laço `for`
+aninhado para visitar o nível N+1.
 No <<ex_tree_step5>>, substituímos o laço aninhado por `yield from`.
 Agora podemos fundir `tree` e `sub_tree` em um unico gerador.
 O <<ex_tree_step6>> é o último passo deste exemplo.
@@ -2144,7 +2146,8 @@ include::../code/08-def-type-hints/replacer.py[tags=ZIP_REPLACE]
 ----
 ====
 <1> Define um apelido (_alias_) de tipo; isso não é obrigatório, mas torna a próxima dica de tipo mais legível.
-Desde o Python 3.10, `FromTo` deve ter uma dica de tipo de `typing.TypeAlias`, para esclarecer a razão para essa linha: `FromTo: TypeAlias = tuple[str, str]`.
+Desde o Python 3.10, a variável `FromTo` deve ter uma dica de tipo `typing.TypeAlias`, para esclarecer a razão para esta atribuição: +
+`FromTo: TypeAlias = tuple[str, str]`
 <2> Anota `changes` para aceitar um `Iterable` de tuplas `FromTo`.
 
 Tipos `Iterator` não aparecem com a mesma frequência de tipos `Iterable`, mas eles também são simples de escrever.
@@ -2187,7 +2190,7 @@ assim o Mypy não reporta erros na checagem de tiposs no <<iter_gen_type_ex>>.
 
 `Iterator[T]` é um atalho para `Generator[T, None, None]`.
 Ambas as anotações significam "um gerador que produz itens do tipo `T`, mas não consome ou devolve valores."
-Geradoras capazes de consumir e devolver valores são corrotinas, nosso próximo tópico.
+Geradores capazes de consumir e devolver valores são corrotinas, nosso próximo tópico.
 
 
 [[classic_coroutines_sec]]
@@ -2195,19 +2198,32 @@ Geradoras capazes de consumir e devolver valores são corrotinas, nosso próximo
 
 [NOTE]
 ====
-A https://fpy.li/pep342[PEP 342—Coroutines via Enhanced Generators (_Corrotinas via geradores aprimorados_)] introduziu `.send()` e outros recursos que tornaram possível usar geradores como corrotinas. A PEP 342 usa a palavra "corrotina" (_coroutine_) no mesmo sentido que estou usando aqui.
-É lamentável que a documentação oficial de Python e da biblioteca padrão agora usem uma terminologia inconsistente para se referir a geradores usadas como corrotinas, me obrigando a adotar o qualificador "corrotina clássica", para diferenciar estas últimas   com os novos objetos "corrotinas nativas".
 
-Após o lançamento de Python 3.5, a tendência é usar "corrotina" como sinônimo de "corrotina nativa". Mas a PEP 342 não está descontinuada, e as corrotinas clássicas ainda funcionam como originalmente projetadas, apesar de não serem mais suportadas por _asyncio_.
+A https://fpy.li/pep342[_PEP 342—Coroutines via Enhanced Generators_]
+(Corrotinas via geradores aprimorados) introduziu o método `.send()` e outros
+recursos que tornaram possível usar geradores como corrotinas. A PEP 342 usa a
+palavra "corrotina" (_coroutine_) no mesmo sentido que estou usando aqui. É
+lamentável que a documentação oficial de Python e da biblioteca padrão agora
+usem uma terminologia inconsistente para se referir a geradores usados como
+corrotinas, obrigando-me a adotar o qualificador "corrotina clássica", para
+diferenciá-las das novas "corrotinas nativas".
+
+Após o lançamento de Python 3.5, a tendência é usar "corrotina" como sinônimo de
+"corrotina nativa". Mas a PEP 342 não está descontinuada, e as corrotinas
+clássicas ainda funcionam como originalmente projetadas, apesar de não serem
+mais suportadas pela biblioteca _asyncio_.
+
 ====
 
-Entender as corrotinas clássicas((("coroutines", "understanding classic"))) no Python é mais confuso porque elas são, na verdade, geradores usadas de uma forma diferente.
-Vamos então dar um passo atrás e examinar outro recurso de Python que pode ser usado de duas maneiras.
+Entender as corrotinas clássicas((("coroutines", "understanding classic"))) no
+Python é mais confuso porque elas são, na verdade, geradores usados de uma forma
+diferente. Vamos então dar um passo atrás e examinar outro recurso de Python que
+pode ser usado de duas maneiras.
 
 Vimos na <<tuples_more_than_lists_sec>> que é possível usar instâncias de `tuple` como registros ou como sequências imutáveis.
 Quando usadas como um registro, se espera que uma tupla tenha um número específico de itens, e cada item pode ter um tipo diferente.
 Quando usadas como listas imutáveis, uma tupla pode ter qualquer tamanho, e se espera que todos os itens sejam do mesmo tipo.
-Por essa razão, há duas formas de anotar tuplas com dicas de tipo:
+Por isso, há duas formas de anotar tuplas com dicas de tipo:
 
 [source, python]
 ----
@@ -2226,11 +2242,11 @@ Apesar de compartilharem a mesma implementação subjacente em C, os casos de us
 
 [source, python]
 ----
-# A variável `readings` pode ser delimitada a um iterador
+# A variável `readings` pode ser vinculada a um iterador
 # ou a um objeto gerador que produz itens `float`:
 readings: Iterator[float]
 
-# A variável `sim_taxi` pode ser delimitada a uma corrotina
+# A variável `sim_taxi` pode ser vinculada a uma corrotina
 # representando um táxi em uma simulação de eventos discretos.
 # Ela produz eventos, recebe um `float` de data/hora, e devolve
 # o número de viagens realizadas durante a simulação:
@@ -2243,24 +2259,26 @@ objeto gerador projetado para ser usado como uma corrotina,
 enquanto geradores são mais frequentemente usados como iteradores.
 
 A
-https://fpy.li/9f[documentação do módulo `typing`] (EN) descreve assim os parâmetros de tipo formais de `Generator`:
+https://fpy.li/9f[«documentação do módulo `typing`»]
+descreve assim os parâmetros de tipo formais de `Generator`:
 
 [source, python]
 ----
 Generator[YieldType, SendType, ReturnType]
 ----
 
-O `SendType` só é relevante quando o gerador é usada como uma corrotina.
-Aquele parâmetro de tipo é o tipo de `x` na chamada `gen.send(x)`.
+O `SendType` só é relevante quando o gerador é usado como uma corrotina.
+Aquele parâmetro é o tipo de `x` na chamada `gen.send(x)`.
 É um erro invocar `.send()` em um gerador escrito para se comportar como um iterador em vez de uma corrotina.
 Da mesma forma, `ReturnType` só faz sentido para anotar uma corrotina,
-pois iteradores não devolvem valores como funções regulares.
+pois iteradores não devolvem valores como fazem as funções comuns.
 A única operação razoável em um gerador usado como um iterador é
 invocar `next(it)` direta ou indiretamente, via laços `for` e
 outras formas de iteração. O `YieldType` é o tipo do valor
 devolvido em uma chamada a `next(it)`.
 
-O tipo `Generator` tem os mesmo parâmetros de tipo de https://fpy.li/typecoro[`typing.Coroutine`]:
+O tipo `Generator` tem os mesmos parâmetros de tipo de
+https://fpy.li/typecoro[`typing.Coroutine`]:
 
 [source, python]
 ----
@@ -2274,19 +2292,23 @@ diz literalmente:
 Mas `typing.Coroutine` (descontinuada)
 e `collections.abc.Coroutine` (genérica a partir de Python 3.9)
 foram projetadas para anotar apenas corrotinas nativas, e não corrotinas clássicas.
-Se você quiser usar dicas de tipo com corrotinas clássicas,
-vai sofrer com a confusão advinda de anotá-las como
+Se você quiser usar dicas de tipo em corrotinas clássicas,
+terá que anotá-las como
 `Generator[YieldType, SendType, ReturnType]`.
 
 David Beazley criou algumas das melhores palestras e algumas das oficinas mais abrangentes sobre corrotinas clássicas.
-No https://fpy.li/17-18[material de seu curso na PyCon 2009] há um slide chamado "Keeping It Straight" (_Cada Coisa em Seu Lugar_), onde se lê:
+No https://fpy.li/17-18[material de seu curso na PyCon 2009] há um slide chamado
+_Keeping It Straight_ ("Cada coisa em seu lugar"), onde se lê:
 
 ____
 * Geradoras produzem dados para iteração
 * Corrotinas são consumidoras de dados
-* Para evitar que seu cérebro exploda, não misture os dois conceitos
+* Para não explodir seu cérebro, não misture os dois conceitos
 * Corrotinas não têm relação com iteração
-* Nota: Há uma forma de fazer `yield` produzir um valor em uma corrotina, mas isso não está ligado à iteração.footnote:[Slide 33, "Keeping It Straight" (_Cada Coisa em seu Lugar_) em https://fpy.li/17-18["A Curious Course on Coroutines and Concurrency" (_Um Curioso Curso sobre Corrotinas e Concorrência_)].]
+* Nota: Há uma forma de fazer `yield` produzir um valor em uma corrotina,
+mas isso não está ligado à iteração.footnote:[Slide 33, _Keeping It Straight_ em
+https://fpy.li/17-18[_A Curious Course on Coroutines and Concurrency_]
+(Um Curioso Curso sobre Corrotinas e Concorrência).]
 ____
 
 
@@ -2308,15 +2330,27 @@ O <<ex_coroaverager>> mostra como fazer o mesmo com uma corrotina.footnote:[Este
 include::../code/17-it-generator/coroaverager.py[tags=CORO_AVERAGER]
 ----
 ====
-<1> Essa função devolve um gerador que produz valores `float`, aceita
-valores `float` via `.send()`, e não devolve um valor útil.footnote:[Na verdade, ela nunca retorna, a menos que uma exceção interrompa o laço. O Mypy 0.910 aceita tanto `None` quanto pass:[<code>typing&#x200b;.NoReturn</code>] como parâmetro de tipo devolvido pelo gerador—mas ele também aceita `str` naquela posição, então aparentemente o Mypy não consegue, neste momento, analisar completamente o código da corrotina.]
-<2> Esse laço infinito significa que a corrotina continuará produzindo médias enquanto o código cliente enviar valores.
-<3> O comando `yield` aqui suspende a corrotina, produz um resultado para o cliente e—mais tarde—recebe um valor enviado pelo código de invocação para a corrotina, iniciando outra iteração do laço infinito.
+
+<1> Esta função devolve um gerador que produz valores `float`, aceita valores
+`float` via `.send()`, e não devolve um valor útil ao retornar.footnote:[Na
+verdade, ela nunca retorna, a menos que uma exceção interrompa o laço. O Mypy
+0.910 aceita tanto `None` quanto `typing.NoReturn` como parâmetro de tipo
+devolvido pelo gerador—mas ele também aceita `str` naquela posição, então
+aparentemente o Mypy não consegue analisar completamente o
+código da corrotina, pelo menos em sua versão 0.910.]
+
+<2> Este laço infinito significa que a corrotina continuará produzindo médias
+enquanto o código cliente enviar valores.
+
+<3> A instrução `yield` aqui suspende a corrotina, produz um resultado para o
+cliente e—mais tarde—recebe um valor enviado pelo código de invocação para a
+corrotina, iniciando outra iteração do laço infinito.
 
 Em uma corrotina, `total` e `count` podem ser variáveis locais:
-atributos de instância ou uma clausura não são necessários para manter o contexto
+não precisamos usar atributos de uma instância ou uma clausura para preservar o contexto
 enquanto a corrotina está suspensa, esperando pelo próximo `.send()`.
-Por isso as corrotinas são substitutas atraentes para _callbacks_ em programação assíncrona—elas mantêm o estado local entre ativações.
+Por isso as corrotinas são substitutas atraentes para _callbacks_
+em programação assíncrona—elas mantêm o estado local entre ativações.
 
 O <<ex_coroaverager_test>> executa doctests mostrando a corrotina `averager` em operação.
 
@@ -2336,7 +2370,8 @@ No <<ex_coroaverager_test>>, a chamada `next(coro_avg)` faz a corrotina avançar
 Também é possível inicializar a corrotina chamando `coro_avg.send(None)`—na verdade é isso que a função embutida `next()` faz.
 Mas você não pode enviar qualquer valor diferente de `None`,
 pois a corrotina só pode aceitar um valor enviado quando está suspensa, em uma linha de `yield`.
-Invocar `next()` ou `.send(None)` para avançar até o primeiro `yield` é conhecido como "preparar (priming) a corrotina".
+Invocar `next()` ou `.send(None)` para avançar até o primeiro `yield` é conhecido como 
+_priming the coroutine_ (preparando a corrotina).
 
 Após cada ativação, a corrotina é suspensa exatamente na((("yield keyword")))((("keywords", "yield keyword"))) palavra-chave `yield`, e espera que um valor seja enviado.
 A linha `coro_avg.send(10)` fornece aquele valor, ativando a corrotina.
@@ -2365,7 +2400,8 @@ Se não for tratada na função corrotina, a exceção a encerra.
 <4> Tentar usar `.send()` em uma corrotina encerrada levanta `StopIteration`.
 
 Além do método `.send()`, a
-https://fpy.li/pep342[PEP 342—Coroutines via Enhanced Generators (_Corrotinas via geradores aprimorados_)] também introduziu uma forma de uma corrotina devolver um valor.
+https://fpy.li/pep342[_PEP 342—Coroutines via Enhanced Generators_]
+(Corrotinas via geradores aprimorados) também criou uma forma de uma corrotina devolver um valor.
 A próxima seção mostra como fazer isso.((("", startref="avg17")))((("", startref="runavg17")))((("", startref="CRavg17")))
 
 [[coro_return_sec]]
@@ -2384,13 +2420,31 @@ Dividi a listagem em duas partes, no <<ex_returning_averager_top>> e no <<ex_ret
 include::../code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER_TOP]
 ----
 ====
-<1> A corrotina `averager2` no <<ex_returning_averager_coro>> vai devolver uma instância de `Result`.
-<2> `Result` é, na verdade, uma subclasse de `tuple`, que tem um método `.count()`, que não preciso aqui. O comentário `# type: ignore` evita que o Mypy reclame sobre a existência do campo `count`.footnote:[Considerei renomear o campo, mas `count` é o melhor nome para a variável local na corrotina, e é o nome que usei para essa variável em exemplos similares ao longo do livro, então faz sentido usar o mesmo nome no campo de `Result`. Não hesitei em usar `# type: ignore` para evitar as limitações e os aborrecimentos de checadores de tipos estáticos, quando se submeteer à ferramenta tornaria o código pior ou desnecessariamente complicado.]
-<3> Uma classe para criar um valor sentinela com um `+__repr__+` legível.
-<4> O valor sentinela que vou usar para fazer a corrotina parar de coletar dados e devolver uma resultado.
-<5> Vou usar esse apelido de tipo para o segundo parâmetro de tipo devolvido pela corrotina `Generator`, o parâmetro `SendType`.
 
-A definição de `SendType` também funciona no Python 3.10 mas, se não for necessário suportar versões mais antigas, é melhor escrever a anotação assim, após importar `TypeAlias` de `typing`:
+<1> A corrotina `averager2` no <<ex_returning_averager_coro>> vai devolver uma
+instância de `Result`.
+
+<2> `Result` é, na verdade, uma subclasse de `tuple`, que tem um método
+`.count()`, que não preciso neste exemplo. O comentário `# type: ignore` evita que o Mypy
+reclame sobre a redeclaração do atributo `count`.footnote:[Considerei renomear o
+atributo, mas `count` é o melhor nome para a variável local na corrotina, e é o
+nome que usei para essa variável em exemplos similares ao longo do livro, então
+faz sentido usar o mesmo nome no atributo de `Result`. Não hesito em usar `# type:
+ignore` para evitar as limitações e os aborrecimentos de checadores de tipos
+estáticos, quando se submeteer à ferramenta tornaria o código pior ou
+desnecessariamente complicado.]
+
+<3> Uma classe para criar um valor sentinela com um `+__repr__+` legível.
+
+<4> O valor sentinela que vou usar para fazer a corrotina parar de coletar dados
+e devolver uma resultado.
+
+<5> Vou usar esse apelido de tipo para o segundo parâmetro de tipo devolvido
+pela corrotina `Generator`, o parâmetro `SendType`.
+
+A definição de `SendType` também funciona no Python 3.10 mas, se não for
+necessário suportar versões mais antigas, é melhor escrever a anotação assim,
+após importar `TypeAlias` de `typing`:
 
 [source, python]
 ----
@@ -2407,20 +2461,21 @@ def averager2(verbose: bool=False) -> Generator[None, float | Sentinel, Result]:
 Vamos agora estudar o código da corrotina em si (no <<ex_returning_averager_coro>>).
 
 [[ex_returning_averager_coro]]
-.coroaverager2.py: uma corrotina que devolve um valor resultante
+.coroaverager2.py: corrotina que devolve um resultado final
 ====
 [source, python]
 ----
 include::../code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER]
 ----
 ====
-<1> Para essa corrotina, o tipo produzido é `None`, porque ela não produz dados. Ela recebe dados do tipo `SendType` e devolve uma tupla `Result` quando termina o processamento.
+<1> Para essa corrotina, o tipo produzido ('YieldType') é `None`, porque ela não produz dados. Ela recebe dados do tipo `SendType` e devolve uma tupla `Result` quando termina o processamento.
 <2> Usar `yield` assim só faz sentido em corrotinas, que são projetadas para consumir dados. Isso produz `None`, mas recebe um `term` de `.send(term)`.
 <3> Se `term` é um `Sentinel`, sai do laço. Graças a essa checagem com `isinstance`...
-<4> ...Mypy me permite somar `term` a `total` sem sinalizar um erro (que eu não poderia somar um `float` a um objeto que pode ser um `float` ou um `Sentinel`).
-<5> Essa linha só será alcançada de um `Sentinel` for enviado para a corrotina.
+<4> ...Mypy me permite somar `term` a `total` sem sinalizar um erro (eu não poderia somar um `float` a um objeto que pode ser um `float` ou um `Sentinel`).
+<5> Esta linha só será alcançada de um `Sentinel` for enviado para a corrotina.
 
-Vamos ver agora como podemos usar essa corrotina, começando por um exemplo simples, que sequer produz um resultado (no <<ex_coro_averager2_demo_1>>).
+Vamos ver agora como podemos usar essa corrotina,
+começando por um exemplo simples, que não devolve um resultado (no <<ex_coro_averager2_demo_1>>).
 
 [[ex_coro_averager2_demo_1]]
 .coroaverager2.py: doctest mostrando `.cancel()`
@@ -2443,18 +2498,19 @@ Vamos então fazê-la funcionar, no <<ex_coro_averager2_demo_2>>.
 include::../code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER_DEMO_2]
 ----
 ====
-<1> Enviar o valor sentinela `STOP` faz a corrotina sair do laço e devolver um `Result`. O objeto gerador que encapsula a corrotina gera então uma `StopIteration`.
+<1> Enviar um valor `Sentinel()` faz a corrotina sair do laço e devolver um `Result`. O objeto gerador que encapsula a corrotina gera então uma `StopIteration`.
 <2> A instância de `StopIteration` tem um atributo `value` vinculado ao valor do comando `return` que encerrou a corrotina.
 <3> Acredite se quiser!
 
-Essa ideia de "contrabandear" o valor devolvido para fora de uma corrotina dentro de uma exceção `StopIteration` é um truque bizarro. Entretanto, esse truque é parte da
-https://fpy.li/pep342[_PEP 342—Coroutines via Enhanced Generators_ (Corrotinas via geradores aprimorados)],
+Esta ideia de "contrabandear" o valor devolvido para fora de uma corrotina
+dentro de uma exceção `StopIteration` é um truque bizarro. Entretanto, este truque é parte da
+https://fpy.li/pep342[_PEP 342—Coroutines via Enhanced Generators_],
 e está documentada com a
-https://fpy.li/9m[exceção `StopIteration`]
+https://fpy.li/9m[«exceção `StopIteration`»]
 e na seção
-https://fpy.li/9n["Expressões yield"]
+https://fpy.li/9n[_Expressões yield_]
 do capítulo 6 de
-https://fpy.li/9p[A Referência da Linguagem Python].
+_A Referência da Linguagem Python_.
 
 
 Um gerador delegante pode obter o valor devolvido por uma corrotina diretamente, usando a sintaxe
@@ -2468,22 +2524,40 @@ Um gerador delegante pode obter o valor devolvido por uma corrotina diretamente,
 include::../code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER_DEMO_3]
 ----
 ====
-<1> `res` vai coletar o valor devolvido por `averager2`; o mecanismo de `yield from` recupera o valor devolvido quando trata a exceção `StopIteration`, que marca o encerramento da corrotina. Quando `True`, o parâmetro `verbose` faz a corrotina exibir o valor recebido, tornando sua operação visível.
+
+<1> `res` vai coletar o valor devolvido por `averager2`; o mecanismo de `yield
+from` recupera o valor devolvido ao tratar a exceção `StopIteration`, que
+sinaliza o encerramento da corrotina. Quando `True`, o parâmetro `verbose` faz a
+corrotina exibir o valor recebido, tornando sua operação visível.
+
 <2> Preste atenção na saída desta linha quando o gerador for acionado.
-<3> Devolve o resultado. Isso também estará encapsulado em `StopIteration`.
+
+<3> Devolve o resultado. Ele também estará encapsulado em `StopIteration`.
+
 <4> Cria o objeto corrotina delegante.
-<5> Esse laço vai controlar a corrotina delegante.
-<6> O primeiro valor enviado é `None`, para preparar a corrotina; o último é a sentinela, para pará-la.
+
+<5> Este laço vai controlar a corrotina delegante.
+
+<6> O primeiro valor enviado é `None`, para preparar a corrotina; o último é a
+sentinela, para pará-la.
+
 <7> Captura `StopIteration` para obter o valor devolvido por `compute`.
-<8> Após as linhas exibidas por `averager2` e `compute`, recebemos a instância de `Result`.
 
-Mesmo com esses exemplos aqui, que não fazem muita coisa, o código é difícil de entender.
-Controlar a corrotina com chamadas `.send()` e recuperar os resultados é complicado, exceto com `yield from`—mas só podemos usar essa sintaxe dentro de um gerador/corrotina,
-que no fim precisa ser controlada por algum código não-trivial, como mostra o <<ex_coro_averager2_demo_3>>.
+<8> Após as linhas exibidas por `averager2` e `compute`, recebemos a instância
+de `Result`.
 
-Os exemplos anteriores mostram que o uso direto de corrotinas é incômodo e confuso.
-Acrescente o tratamento de exceções e o método de corrotina `.throw()`, e os exemplos ficam ainda mais complicados.
-Não vou tratar de `.throw()` nesse livro porque—como `.send()`—ele só é útil para controlar corrotinas "manualmente", e não recomendo fazer isso, a menos que você esteja criando um novo framework baseado em corrotinas do zero .
+Mesmo com esses exemplos aqui, que não fazem muita coisa, o código é difícil de
+entender. Controlar a corrotina com chamadas `.send()` e recuperar os resultados
+é complicado, exceto com `yield from`—mas só podemos usar essa sintaxe dentro de
+um gerador/corrotina, que no fim precisa ser controlada por algum código
+não-trivial, como mostra o <<ex_coro_averager2_demo_3>>.
+
+Os exemplos anteriores mostram que o uso direto de corrotinas é incômodo e
+confuso. Acrescente o tratamento de exceções e o método de corrotina `.throw()`,
+e os exemplos ficam ainda mais complicados. Não vou tratar de `.throw()` nesse
+livro porque—como `.send()`—ele só é útil para controlar corrotinas
+"manualmente", e não recomendo fazer isso, a menos que você esteja criando um
+novo framework baseado em corrotinas do zero .
 
 [NOTE]
 ====
