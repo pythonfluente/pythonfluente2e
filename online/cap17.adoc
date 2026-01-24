@@ -24,7 +24,7 @@ A iteração((("iterators", "role of"))) é fundamental para o processamento de
 dados: programas aplicam computações sobre séries de dados, de pixels a
 nucleotídeos. Se os dados não cabem na memória, precisamos buscar esses itens de
 forma _preguiçosa_—um de cada vez e sob demanda. É isso que um iterador faz.
-Este capítulo mostra como o padrão de projeto _Iterator_ ("Iterador") está
+Este capítulo mostra como o padrão de projeto _Iterator_ (Iterador) está
 embutido na linguagem Python, de modo que nunca será necessário programá-lo
 manualmente.
 
@@ -54,7 +54,7 @@ ou por uma expressão geradora
 
 * Usando expressões `yield from` para combinar geradores
 
-* Porque geradores e corrotinas clássicas se parecem, mas são usadas de formas
+* Porque geradores e corrotinas clássicas se parecem, mas são usados de formas
 muito diferentes e não devem ser misturadas
 
 
@@ -90,8 +90,8 @@ o protocolo de sequência e será iterável, pois todas as sequências são
 iteráveis—como sabemos desde o <<ch_data_model>>. Agora veremos exatamente
 porque isso acontece.
 
-O <<ex_sentence0>> mostra uma classe `Sentence` que extrai palavras de um texto
-por índice.
+O <<ex_sentence0>> mostra uma classe `Sentence` que permite
+ler as palavras de um texto por índice.
 
 [[ex_sentence0]]
 .sentence.py: `Sentence` como uma sequência de palavras
@@ -143,7 +143,7 @@ said
 
 <1> Uma sentença criada a partir de uma string.
 
-<2> Observe a saída de `+__repr__+` gerada por `reprlib.repr`, usando `\...`.
+<2> Observe a saída de `+__repr__+` gerada por `reprlib.repr`, usando `'\...'`.
 
 <3> Instâncias de `Sentence` são iteráveis; veremos a razão em seguida.
 
@@ -174,7 +174,7 @@ startref="seqpro17")))
 
 Para((("functions", "iter() function")))((("iterators", "iter() function",
 id="Iinterfun17")))((("iter() function", id="iterfunc17")))
-iterar sobre um objeto `x`, o interpretador Python `iter(x)`.
+iterar sobre um objeto `x`, o interpretador Python invoca `iter(x)`.
 
 A função embutida `iter`:
 
@@ -190,10 +190,9 @@ not iterable` ("objeto 'C' não é iterável"), onde `C` é a classe do objeto a
 Por isso todas as sequências de Python são iteráveis: por definição, todas
 implementam `+__getitem__+`. Na verdade, todas as sequências padrão também
 implementam `+__iter__+`, e as classes de sequências que você criar também devem
-implementar esse método. A iteração via `+__getitem__+` existe para
-manter a compatibilidade retroativa, e pode desaparecer em algum momento—apesar
-dela não ter sido descontinuada no Python 3.10, e eu duvidar que vá ser removida
-algum dia.
+implementar este método. A iteração automática via `+__getitem__+` existe para
+manter a compatibilidade retroativa, e pode desaparecer em algum momento—mas
+eu duvido que será removida no futuro.
 
 Como mencionado na <<python_digs_seq_sec>>, esta é uma forma extrema de tipagem pato:
 um objeto é considerado iterável não apenas quando implementa o método
@@ -259,19 +258,19 @@ considera tal método.
 
 Verificar explicitamente se um objeto é iterável pode não valer a pena, se você
 for iterar sobre o objeto logo após a checagem. Afinal, quando se tenta iterar
-sobre um não-iterável, a exceção gerada pelo Python é bastante clara:
+sobre um não-iterável, a exceção gerada pelo Python é bem explícita:
 `TypeError: 'C' object is not iterable` (TypeError: o objeto 'C' não é
-iterável). Se você puder fazer algo mais além de gerar um `TypeError`, então
+iterável). Se você quiser fazer algo além de gerar um `TypeError`, então
 faça isso em um bloco `try/except` ao invés de realizar uma checagem explícita.
 A checagem explícita pode fazer sentido se você estiver guardando o objeto para
-iterar sobre ele mais tarde; neste caso, falhar logo facilita o diagnóstico de falhas.
+iterar sobre ele mais tarde; neste caso, falhar logo facilita o diagnóstico de erros.
 
 A função embutida `iter()` é usada mais frequentemente pelo Python que no nosso
 código. Há uma segunda maneira de usá-la, mas não é muito conhecida.
 
 
 [[iter_closer_look_sec]]
-==== Usando iter com um invocável
+==== Usando `iter` com um invocável
 
 Podemos((("objects", "callable objects", id="Oiter17")))((("callable objects",
 "using iter() with", id="COiter17"))) chamar `iter()` com dois argumentos, para
@@ -282,8 +281,8 @@ https://fpy.li/17-2[«sentinel value»] (valor sentinela): um valor que, quando 
 pelo invocável, faz o iterador gerar um `StopIteration` ao invés de produzir o
 valor sentinela.
 
-O exemplo a seguir mostra como usar `iter` para rolar um dado de seis faces até
-que o valor `1` seja sorteado:
+O exemplo a seguir mostra como usar `iter` para rolar um dado de seis faces
+enquanto o valor `1` não é sorteado:
 
 [source, python]
 ----
@@ -308,8 +307,8 @@ valor sentinela. Como é comum com iteradores, o objeto `d6_iter` se torna inút
 após ser exaurido. Para recomeçar, é necessário reconstruir o iterador,
 invocando novamente `iter()`.
 
-A https://fpy.li/97[documentação de
-`iter`] inclui a seguinte explicação e código de exemplo:footnote:[NT:
+A https://fpy.li/97[«documentação de
+`iter`»] inclui a seguinte explicação e código de exemplo:footnote:[NT:
 Mudei um pouco a tradução, e
 https://fpy.li/98[«sugeri a melhoria»] no
 repositório oficial da tradução PT-BR da documentação do Python.]
@@ -317,7 +316,7 @@ repositório oficial da tradução PT-BR da documentação do Python.]
 [quote]
 ____
 
-Uma aplicação útil da segunda forma de `iter()` é para construir um
+Uma aplicação útil da segunda forma de `iter()` é construir um
 leitor bloco-a-bloco (_block reader_).
 Por exemplo, ler blocos de 64 bytes do arquivo binário de um de banco de dados
 até que o final do arquivo seja atingido:
@@ -356,7 +355,7 @@ definição:
 
 iterável:: Qualquer objeto a partir do qual a função embutida `iter` consegue
 obter um iterador. Objetos que implementam um método `+__iter__+` devolvendo um
-_iterador_ são iteráveis. Sequências são sempre iteráveis, bem como objetos que
+iterador são iteráveis. Sequências são sempre iteráveis, bem como objetos que
 implementam um método `+__getitem__+` que aceite índices iniciando em 0.
 
 É importante deixar clara a relação entre iteráveis e iteradores: Python obtém
