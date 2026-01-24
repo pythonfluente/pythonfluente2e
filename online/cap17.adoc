@@ -400,9 +400,9 @@ C
 <5> Sai do laço.
 <6> Exibe `char`. Esta variável continua existindo depois do laço.
 
-`StopIteration` sinaliza que o iterador foi esgotado.
-Esta exceção é tratada internamente pela função embutida `iter()`,
-que é parte da lógica dos laços `for` e de outros contextos de iteração,
+`StopIteration` sinaliza que o iterador esgotou.
+Esta exceção é tratada internamente pelo Python, dentro da lógica dos
+laços `for` e de outros contextos de iteração,
 como compreensões de lista, desempacotamento de iteráveis, etc.
 
 A interface padrão de um iterador em Python tem dois métodos:
@@ -435,7 +435,8 @@ class Iterator(Iterable):
 
     @abstractmethod
     def __next__(self):
-        'Return the next item from the iterator. When exhausted, raise StopIteration'
+        """Return the next item from the iterator.
+        When exhausted, raise StopIteration"""
         raise StopIteration
 
     def __iter__(self):
@@ -452,8 +453,9 @@ class Iterator(Iterable):
 <1> `+__subclasshook__+` suporta a checagem de tipos estrutural com `isinstance`
 e `issubclass`. Vimos isso na <<subclasshook_sec>>.
 
-<2> `_check_methods` percorre o parâmetro `+__mro__+` da classe, para checar se
-os métodos estão implementados em sua classe base. Ele está definido no mesmo
+<2> `_check_methods` percorre o atributo `+__mro__+` da classe, para checar se
+os métodos estão implementados em sua classe base ou outra superclasse.
+Ele está definido no mesmo
 módulo, __Lib/_collections_abc.py__. Se os métodos estiverem implementados, a
 classe `C` será reconhecida como uma subclasse virtual de `Iterator`. Em outras
 palavras, `issubclass(C, Iterable)` devolverá `True`.
@@ -472,13 +474,13 @@ O código-fonte do módulo https://fpy.li/17-6[_Lib/types.py_] no Python 3.9 tem
 um comentário dizendo:
 
 ----
-# Iteradores no Python não são uma questão de tipo, mas sim de protocolo.
-# Um número grande e variável de tipos embutidos implementa *alguma* forma
-# de iterador.  Não verifique o tipo! Em vez disso, use `hasattr` para
-# detectar os atributos "__iter__" e "__next__".
+Iteradores no Python não são uma questão de tipo, mas sim de protocolo.
+Um número grande e variável de tipos embutidos implementa *alguma*
+forma de iterador. Não verifique o tipo! Em vez disso, use `hasattr`
+para detectar os atributos "__iter__" e "__next__".
 ----
 
-E de fato, é exatamente o que o método `+__subclasshook__+` da ABC
+Isto é exatamente o que o método `+__subclasshook__+` da ABC
 `abc.Iterator` faz.
 
 [TIP]
@@ -487,8 +489,8 @@ E de fato, é exatamente o que o método `+__subclasshook__+` da ABC
 Dado o conselho de __Lib/types.py__ e a lógica implementada em
 __Lib/_collections_abc.py__, a melhor forma de checar se um objeto `x` é um
 iterador é invocar `isinstance(x, abc.Iterator)`. Graças ao
-`+Iterator.__subclasshook__+`, esse teste funciona mesmo se a classe de `x` não
-for uma subclasse real ou virtual de `Iterator`.
+`+Iterator.__subclasshook__+`, esse teste funciona mesmo quando
+classe de `x` não é uma subclasse real ou virtual de `Iterator`.
 
 ====
 
@@ -527,13 +529,13 @@ indicando que não há mais itens.
 
 Como os únicos métodos exigidos de um iterador são `+__next__+` e `+__iter__+`,
 não há como checar se há itens restantes, exceto invocando `next()` e capturando
-`StopIteration`. Além disso, não é possível "reiniciar" um iterador. Se for
-necessário começar de novo, é preciso invocar `iter()` no iterável que criou o
-iterador original. Invocar `iter()` no próprio iterador também não funciona,
+`StopIteration`. Além disso, não é possível "reiniciar" um iterador. Se precisar
+começar de novo, você preciso invocar `iter()` novamente no iterável que criou o
+iterador original. Invocar `iter()` no próprio iterador esgotado não funciona,
 pois—como já mencionado—a implementação de `+Iterator.__iter__+`
-apenas devolve `self`, e isso não reinicia um iterador esgotado.
+apenas devolve `self`, e isso não reinicia o iterador.
 
-Essa interface mínima é bastante razoável porque, na realidade, nem todos os
+Esta interface minimalista faz sentido porque, na realidade, nem todos os
 iteradores são reiniciáveis. Por exemplo, se um iterador está lendo pacotes da
 rede, não há como "rebobiná-lo".footnote:[Agradeço ao revisor técnico Leonardo
 Rochael por esse ótimo exemplo.]
@@ -571,7 +573,7 @@ include::../code/17-it-generator/sentence_iter.py[tags=SENTENCE_ITER]
 ----
 ====
 <1> O método `+__iter__+` é o único acréscimo à implementação anterior de
-`Sentence`. Essa versão não inclui um `+__getitem__+`, para deixar claro que a
+`Sentence`. Esta versão não tem `+__getitem__+`, para deixar claro que a
 classe é iterável por implementar `+__iter__+`.
 <2> `+__iter__+` atende ao protocolo iterável instanciando e devolvendo um iterador.
 <3> `SentenceIterator` mantém uma referência para a lista de palavras.
@@ -634,10 +636,11 @@ iterador independente. Por isso precisamos da classe
 `SentenceIterator` neste exemplo.
 
 Agora((("yield keyword", id="yielda17")))((("keywords", "yield keyword",
-id=Kyielda17"))) que demonstramos de forma apropriada o padrão _Iterator_
-clássico, vamos em frente. Python incorporou a instrução `yield` da
-https://fpy.li/17-7[linguagem CLU], de Barbara Liskov, para não termos que
-"escrever à mão" o código implementando iteradores.
+id=Kyielda17"))) que sabemos como funciona o padrão _Iterator_
+clássico, veremos que não precisamos
+"escrever à mão" nenhuma classe de iterador em Python,
+graças à instrução `yield` que foi inspirada pela linguagem
+https://fpy.li/17-7[_CLU_], de Barbara Liskov.
 
 As próximas seções apresentam versões mais idiomáticas de `Sentence`.
 
@@ -661,12 +664,11 @@ include::../code/17-it-generator/sentence_gen.py[tags=SENTENCE_GEN]
 
 <2> Produz a `word` atual.
 
-<3> Um `return` explícito não é necessário; a função pode apenas seguir em
-frente e retornar automaticamente. De qualquer forma, uma função geradora
+<3> Um `return` explícito não é necessário. Uma função geradora
 não gera `StopIteration`: ela simplesmente termina quando acaba de produzir
 valores.footnote:[Ao revisar esse código, Alex Martelli sugeriu que o corpo
 deste método poderia ser simplesmente `return iter(self.words)`. Ele está certo:
-o resultado da invocação de `self.words.__iter__()` também seria um iterador,
+o resultado da invocação de `+self.words.__iter__()+` também seria um iterador,
 como deve ser. Entretanto, usei um laço `for` com `yield` aqui para introduzir a
 sintaxe de uma função geradora, que exige a instrução `yield`, como veremos na
 próxima seção. Durante a revisão da segunda edição deste livro, Leonardo Rochael
@@ -674,15 +676,15 @@ sugeriu ainda outro atalho para o corpo de `+__iter__+`: `yield from
 self.words`. Também vamos falar de `yield from` mais adiante neste mesmo
 capítulo.]
 
-<4> Não há necessidade de uma classe iteradora separada!
+<4> Não precisamos escrever uma classe iteradora!
 
 Temos aqui mais uma implementação de `Sentence` que passa nos
 testes do <<demo_sentence0>>.
 
 No código de `Sentence` do <<ex_sentence1>>, `+__iter__+` chamava o construtor
 `SentenceIterator` para criar e devolver um iterador. Agora o iterador do
-<<ex_sentence2>> é na verdade um objeto gerador, criado automaticamente quando o
-método `+__iter__+` é invocado, porque aqui `+__iter__+` é uma função geradora.
+<<ex_sentence2>> é um objeto gerador, criado automaticamente quando o
+método `+__iter__+` é invocado, porque neste exemplo `+__iter__+` é uma função geradora.
 
 A seguir: uma explicação bem completa sobre geradores.
 
@@ -761,7 +763,7 @@ funcionamento.
 <6> Como `g` é um iterador, chamar `next(g)` obtém o próximo item produzido por
 `yield`.
 
-<7> Quando a função geradora retorna, o objeto gerador levanta uma `StopIteration`.
+<7> Quando a função geradora termina, o objeto gerador levanta uma `StopIteration`.
 
 Uma função geradora cria um objeto gerador que encapsula o corpo da função.
 Quando invocamos `next()` no objeto gerador,
@@ -784,7 +786,7 @@ sintaxe `yield from`, como veremos na <<coro_return_sec>>.
 
 ====
 
-O <<ex_gen_ab>> torna a interação entre um laço `for` e o corpo da função mais explícita.
+O <<ex_gen_ab>> torna mais explícita a interação entre um laço `for` e o corpo da função geradora.
 
 [[ex_gen_ab]]
 .Uma função geradora que exibe mensagens quando roda
@@ -879,18 +881,10 @@ das linguagens de programação.footnote:[NT: Em português a
 literatura usa também avaliação _estrita_ e _não estrita_.
 Optamos pelos termos "preguiçosa" e "ávida", que parecem mais claros.]
 
-////
-parei aqui em 23/dez, 19:20
-
-TODO: trocar "loop" por "laço" ao longo do livro, começando por
-"laço `for`" -> "laço `for`"
-"loop infinito" -> "laço infito".
-
-////
-
-Até aqui, nossas implementações de `Sentence` não são preguiçosas, pois o `+__init__+` cria avidamemente uma lista com todas as palavras no texto, vinculando-as ao atributo `self.words`.
+Até aqui, nossas implementações de `Sentence` não são preguiçosas,
+pois o `+__init__+` cria avidamemente uma lista com todas as palavras no texto, vinculando-as ao atributo `self.words`.
 Isso exige o processamento do texto inteiro, e a lista pode acabar usando tanta memória quanto o próprio texto (provavelmente mais: vai depender de quantos caracteres que não fazem parte de palavras existirem no texto).
-A maior parte desse trabalho será inútil se o usuário iterar apenas sobre as primeiras palavras.
+A maior parte deste trabalho será inútil se o usuário iterar apenas sobre as primeiras palavras.
 Se você está se perguntado se "Existiria uma forma preguiçosa de fazer isso em Python?", a resposta muitas vezes é "Sim".
 
 A função `re.finditer` é uma versão preguiçosa de `re.findall`. Em vez de uma lista, `re.finditer` devolve um gerador que produz instâncias de `re.MatchObject` sob demanda.
@@ -916,7 +910,8 @@ Geradores são um ótimo atalho, mas o código pode ser ainda mais conciso com u
 
 ==== Sentence versão #5: Expressão geradora preguiçosa
 
-Podemos substituir funções geradoras simples como aquela na última classe `Sentence (no <<ex_sentence3>>) por uma expressão geradora.
+Podemos substituir funções geradoras simples como aquela na última
+classe `Sentence` (no <<ex_sentence3>>) por uma expressão geradora.
 Assim como uma compreensão de lista cria listas, uma expressão geradora cria objetos geradores.
 O <<ex_gen_ab_genexp>> compara o comportamento nos dois casos.
 
@@ -954,7 +949,7 @@ continue
 end.
 ----
 ====
-<1> Está é a mesma função `gen_AB` do <<ex_gen_ab>>.
+<1> Esta é a mesma função `gen_AB` do <<ex_gen_ab>>.
 <2> A compreensão de lista itera avidamente sobre os itens produzidos pelo objeto gerador devolvido por `gen_AB()`: `'A'` e `'B'`. Observe a saída nas linhas seguintes: `start`, `continue`, `end.`
 <3> Esse laço `for` itera sobre a lista `res1` criada pela compreensão de lista.
 <4> A expressão geradora devolve `res2`, um objeto gerador. O gerador não é consumido aqui.
@@ -979,12 +974,20 @@ Expressões geradoras são "açúcar sintático": elas pode sempre ser substitu�
 
 === Quando usar expressões geradoras
 
-Eu((("generators", "when to use generator expressions")))((("generator expressions (genexps)"))) usei várias expressões geradoras quando implementamos a classe `Vector` no <<ex_vector_v5>> do <<ch_seq_methods>>. Cada um destes métodos contém uma expressão geradora: `+__eq__+`, `+__hash__+`, `+__abs__+`, `angle`, `angles`, pass:[<span class="keep-together"><code>format</code></span>], `+__add__+`, e `+__mul__+`.
-//  has a generator expression.
-Em todos aqueles métodos, uma compreensão de lista também funcionaria, com um custo adicional de memória para armazenar os valores da lista intermediária.
+Usei((("generators", "when to use generator expressions")))((("generator
+expressions (genexps)"))) expressões geradoras quando implementamos a
+classe `Vector` no <<ex_vector_v5>> do <<ch_seq_methods>>. Estes
+métodos contém expressões geradoras: `+__eq__+`, `+__hash__+`, `+__abs__+`,
+`angle`, `angles`, `format`, `+__add__+`, e `+__mul__+`.
+Em todos eles, uma compreensão de
+lista também funcionaria, usando mais memória para armazenar os
+valores da lista intermediária.
 
-No <<ex_sentence4>>, vimos que uma expressão geradora é um atalho sintático para criar um gerador sem definir e invocar uma função.
-Por outro lado, funções geradoras são mais flexíveis: podemos programar uma lógica complexa, com múltiplos comandos, e podemos até usá-las como _corrotinas_, como veremos na <<classic_coroutines_sec>>.
+No <<ex_sentence4>>, vimos que uma expressão geradora é um atalho sintático para
+criar um gerador sem definir e invocar uma função. Por outro lado, funções
+geradoras são mais flexíveis: podemos programar uma lógica complexa, com
+várias instruções, e podemos até usá-las como _corrotinas_, como veremos na
+<<classic_coroutines_sec>>.
 
 Nos casos mais simples, uma expressão geradora é mais fácil de ler de relance, como mostra o exemplo de `Vector`.
 
@@ -993,7 +996,13 @@ Minha regra básica para escolher qual sintaxe usar é simples: se a expressão 
 [TIP]
 .Dica de sintaxe
 ====
-Quando uma expressão geradora é passada como único argumento a uma função ou a um construtor, não é necessário escrever um conjunto de parênteses para a chamada da função e outro par cercando a expressão geradora. Um único par é suficiente, como na chamada a `Vector` no método `+__mul__+` do <<ex_vector_v5>> do <<ch_seq_methods>>, reproduzido abaixo:
+
+Quando uma expressão geradora é passada como único argumento a uma função ou construtor,
+não é necessário escrever par de parênteses 
+invocar função e outro par a redor da expressão geradora.
+Um único par é
+suficiente, como na invocação do construtor `Vector` no método `+__mul__+` do
+<<ex_vector_v5>>, reproduzido abaixo:
 
 [source, python]
 ----
@@ -1004,7 +1013,9 @@ def __mul__(self, scalar):
         return NotImplemented
 ----
 
-Entretanto, se existirem mais argumentos para a função após a expressão geradora, é preciso cercar a expressão com parênteses para evitar um `SyntaxError`.
+Entretanto, se a invocação exigir mais argumentos após a expressão
+geradora, é preciso cercá-la com parênteses para evitar um
+`SyntaxError`.
 
 ====
 
@@ -1022,11 +1033,11 @@ Adotei as seguintes definições:
 
 iterador::
     Termo geral para qualquer objeto que implementa um método `+__next__+`.
-    Iteradores são projetados para produzir dados a serem consumidos pelo código cliente, isto é, o código que controla o iterador através de um laço `for` ou outro mecanismo de iteração, ou chamando `next(it)` explicitamente no iterador—apesar desse uso explícito ser menos comum.
+    Iteradores são projetados para produzir dados a serem consumidos pelo código cliente, isto é, o código que controla o iterador através de um laço `for` ou outro mecanismo de iteração, ou chamando `next(it)` explicitamente no iterador—apesar desse uso explícito incomum.
     Na prática, a maioria dos iteradores que usamos no Python são _geradores_.
 
 gerador::
-    Um iterador criado pelo compilador Python.
+    Um iterador criado pelo compilador do Python.
     Para criar um gerador, não implementamos uma classe com `+__next__+`.
     Em vez disso, usamos((("yield keyword")))((("keywords", "yield keyword"))) a palavra reservada `yield` para criar uma _função geradora_, que é uma fábrica de _objetos geradores_.
     Uma _expressão geradora_ é outra maneira de criar um objeto gerador.
@@ -1122,7 +1133,7 @@ Na última linha do <<ex_ap_class>>,
 em vez de somar `self.step` ao `result` anterior a cada volta do laço,
 optei por ignorar o `result` existente: cada novo `result` é criado somando `self.begin` a `self.step` multiplicado por `index`.
 Isso evita o efeito cumulativo de erros após a adição sucessiva de números de ponto flutuante.
-Alguns experimentos simples tornam clara a diferença:
+Alguns experimentos simples revelam a diferença:
 
 [source, python]
 ----
@@ -1136,9 +1147,11 @@ Alguns experimentos simples tornam clara a diferença:
 1100.0000000000086
 ----
 
-A classe `ArithmeticProgression` do <<ex_ap_class>> funciona como esperado, é outro exemplo do uso de uma função geradora para implementar o método especial `+__iter__+`.
-Entretanto, se o único objetivo de uma classe é criar um gerador pela implementação de `+__iter__+`,
-podemos substituir a classe por uma função geradora. Pois afinal, uma função geradora é uma fábrica de geradores.
+A classe `ArithmeticProgression` do <<ex_ap_class>> 
+é outro exemplo do uso de uma função geradora para implementar o método especial `+__iter__+`.
+Agora, se o único objetivo de uma classe é criar um gerador pela implementação de `+__iter__+`,
+podemos substituir a classe inteira por uma função geradora.
+Afinal, uma função geradora é uma fábrica de geradores.
 
 O <<ex_ap_genfunc1>> mostra uma função geradora chamada `aritprog_gen`, que realiza a mesma tarefa da `ArithmeticProgression`, mas com menos código. Se, em vez de chamar `ArithmeticProgression`, você chamar `aritprog_gen`, os testes no <<ap_class_demo>> são todos bem-sucedidos.footnote:[O diretório __17-it-generator/__ no https://fpy.li/code[repositório de código do _Python Fluente_] inclui doctests e um script, __aritprog_runner.py__, que roda os testes contra todas as variações dos scripts __aritprog*.py__.]
 
@@ -1183,7 +1196,9 @@ Por exemplo, a função `itertools.count` devolve um gerador que produz números
 Na prática, sua máquina vai ficar muito mal-humorada bem antes da chamada fracassar.
 ====
 
-Por outro lado, temos também a função `itertools.takewhile`: ela devolve um gerador que consome outro gerador e para quando um dado predicado é avaliado como `False`. Então podemos combinar os dois e escrever o seguinte:
+Por outro lado, temos também a função `itertools.takewhile`: ela devolve um
+gerador que consome outro gerador e para quando um predicado resulta falso.
+Então podemos combinar os dois e escrever o seguinte:
 
 [source, python]
 ----
@@ -1192,7 +1207,7 @@ Por outro lado, temos também a função `itertools.takewhile`: ela devolve um g
 [1, 1.5, 2.0, 2.5]
 ----
 
-Se valendo de `takewhile` e `count`, o <<ex_almost_aritprog>> é ainda mais conciso.
+Aproveitando `takewhile` e `count`, o <<ex_almost_aritprog>> fica mais conciso.
 
 [[ex_almost_aritprog]]
 .aritprog_v3.py: funciona como as funções `aritprog_gen` anteriores
@@ -1206,11 +1221,9 @@ include::../code/17-it-generator/aritprog_v3.py[tags=ARITPROG_ITERTOOLS]
 Observe que  `aritprog_gen` no <<ex_almost_aritprog>> não é uma função geradora: não há um `yield` em seu corpo.
 Mas ela devolve um gerador, exatamente como faz uma função geradora.
 
-Entretanto, lembre-se que `itertools.count` soma o `step` repetidamente,
-então a série de números de ponto flutuante que ela produz não é tão precisa quanto a do <<ex_ap_genfunc1>>.
-
-O importante no <<ex_almost_aritprog>> é:
-ao implementar geradores, olhe o que já está disponível na biblioteca padrão, caso contrário você tem uma boa chance de reinventar a roda.
+A lição do <<ex_almost_aritprog>> é:
+ao implementar geradores, veja o que já está disponível na biblioteca padrão,
+caso contrário você tem uma boa chance de reinventar a roda.
 Por isso a próxima seção trata de várias funções geradoras prontas para usar.((("", startref="Garith17")))
 
 
@@ -1228,15 +1241,22 @@ A função geradora `os.walk` é impressionante, mas nesta seção quero me
 concentrar em funções genéricas que recebem iteráveis arbitrários como argumento
 e devolvem geradores que produzem itens selecionados, agregados ou reordenados.
 
+==== Funções geradoras de seleção
+
+[[filter_fig_2]]
+.Funções geradoras de seleção criam geradores que selecionam itens conforme algum critério.
+image::../images/diag-filter.png[align="center",pdfwidth=8cm]
+
 ((("filtering generator functions")))O primeiro grupo são funções geradoras de
-filtragem: elas devolvem um gerador que produz um subconjunto dos itens do
+seleção: elas devolvem um gerador que produz um subconjunto dos itens do
 iterável de entrada, sem mudar os itens em si.
 
 O exemplo mais conhecido é a função embutida `filter`:
 
 `filter(predicate, it)`::
     Aplica `predicate` para cada item de `iterable`, produzindo o item se
-    `predicate(item)` for verdadeiro. Quando `predicate` é `None`, apenas itens verdadeiros serão produzidos.
+    `predicate(item)` resulta verdadeiro. Quando `predicate` é `None`,
+    apenas itens verdadeiros serão produzidos.
 
 Como `filter`, a maioria das funções listadas na <<filter_genfunc_tbl>>
 recebe uma `predicate` (uma função booleana de um argumento) que será aplicada a
@@ -1248,7 +1268,7 @@ Veja o uso de `compress` no <<demo_filter_genfunc>>.
 <<<
 
 [[filter_genfunc_tbl]]
-.`itertools`: funções geradoras de filtragem
+.`itertools`: funções geradoras de seleção
 [options="header", cols="5,9"]
 |=======================
 |Função|Descrição
@@ -1260,10 +1280,10 @@ Veja o uso de `compress` no <<demo_filter_genfunc>>.
 |`takewhile(predicate, it)`|Produz itens enquanto `predicate`  resultar verdadeiro, e daí para (nenhuma verificação adicional é realizada).
 |=======================
 
-A seção de console no <<demo_filter_genfunc>> demonstra o uso das funções de filtragem.
+A seção de console no <<demo_filter_genfunc>> demonstra o uso dos geradores de seleção.
 
 [[demo_filter_genfunc]]
-.Exemplos de funções geradoras de filtragem
+.Exemplos de funções geradoras de seleção
 ====
 [source, python]
 ----
@@ -1289,6 +1309,12 @@ A seção de console no <<demo_filter_genfunc>> demonstra o uso das funções de
 ['a', 'd', 'a']
 ----
 ====
+
+==== Funções geradoras de transformação
+
+[[map_fig_2]]
+.Funções geradoras de transformação criam geradores que aplicam uma função aos itens da entrada, produzindo itens transformados.
+image::../images/diag-map.png[align="center",pdfwidth=8cm]
 
 O((("mappings", "mapping generator functions"))) grupo seguinte contém os
 geradores de transformação. Este grupo de funções produzem
@@ -1346,7 +1372,7 @@ O <<demo_accumulate_genfunc>> demonstra alguns usos de `itertools.accumulate`.
 <4> Produto acumulado.
 <5> Fatoriais de `1!` a `10!`.
 
-As demais funçnoes de transformação são demonstradas no <<demo_mapping_genfunc>>.
+As demais funções de transformação são demonstradas no <<demo_mapping_genfunc>>.
 
 [[demo_mapping_genfunc]]
 .Exemplos de funções geradoras de transformação
@@ -1378,6 +1404,9 @@ As demais funçnoes de transformação são demonstradas no <<demo_mapping_genfu
 <4> Isso é o que faz a função embutida `zip`.
 <5> Repete cada letra na palavra de acordo com a posição da letra na palavra, começando por `1`.
 <6> Média corrente.
+
+
+==== Funções geradoras de mesclagem
 
 A seguir temos o grupo de geradores de mesclagem (_merge_).
 Elas mesclam os itens de vários iteráveis de entrada.
@@ -1433,10 +1462,15 @@ vem do zíper ou fecho-éclair (nenhuma relação com a compreensão de dados). 
 <2> `chain` não faz nada de útil se invocada com um único iterável.
 <3> Mas `chain.from_iterable` pega cada item do iterável e os encadeia em sequência, desde que cada item seja também iterável.
 <4> Qualquer número de iteráveis pode ser consumido em paralelo por `zip`, mas o gerador sempre para assim que o primeiro iterável acaba. No Python ≥ 3.10, se o argumento `strict=True` for passado e um iterável terminar antes dos outros, um `ValueError` é gerado.
-<5> `itertools.zip_longest` funciona como `zip`, exceto por consumir todos os iteráveis de entrada, preenchendo as tuplas de saída com `None` onde necessário.
+<5> `itertools.zip_longest` funciona como `zip`, exceto por consumir todos os iteráveis de entrada até o fim, preenchendo as tuplas de saída com `None` nas posições correspondentes aos iteráveis esgotados antes do iterável mais longo.
 <6> O argumento nomeado `fillvalue` especifica um valor de preenchimento customizado.
 
-O gerador `itertools.product` é uma forma preguiçosa para calcular produtos cartesianos, que criamos usando compreensões de lista com mais de uma instrução `for` na <<cartesian_product_sec>>. Expressões geradoras com múltiplas instruções `for` também podem ser usadas para produzir produtos cartesianos de forma preguiçosa. O <<demo_product_genfunc>> demonstra `itertools.product`.
+O gerador `itertools.product` é uma forma preguiçosa de gerar produtos cartesianos.
+Na <<cartesian_product_sec>>, criamos produtos cartesianos de modo ávido
+usando compreensões de lista com mais de uma instrução `for`.
+Expressões geradoras com várias instruções `for` também podem ser usadas
+para produzir produtos cartesianos de forma preguiçosa.
+O <<demo_product_genfunc>> demonstra `itertools.product`.
 
 [[demo_product_genfunc]]
 .Exemplo da função geradora `itertools.product`
@@ -1483,25 +1517,25 @@ O gerador `itertools.product` é uma forma preguiçosa para calcular produtos ca
 <3> Dado um único iterável, `product` produz uma série de tuplas de um elemento—muito pouco útil.
 <4> O argumento nomeado `repeat=N` diz à função para consumir cada iterável de entrada `N` vezes.
 
-Algumas((("input expanding generator functions"))) funções geradoras expandem a entrada, produzindo mais de um valor por item de entrada. Elas estão listadas na <<expanding_genfunc_tbl>>.
+Outras((("input expanding generator functions"))) funções geradoras expandem a entrada, produzindo mais de um valor por item de entrada. Elas estão listadas na <<expanding_genfunc_tbl>>.
 
 [[expanding_genfunc_tbl]]
 .`itertools`: funções geradoras que expandem cada item de entrada em múltiplos itens de saída
 [options="header", cols="6, 9"]
 |====================
 |Função|Descrição
-|`combinations(it, out_len)`|Produz combinações de `out_len` itens a partir dos itens produzidos por `it`
+|`combinations(it, out_len)`|Produz combinações com `out_len` itens a partir dos itens produzidos por `it`
 |`combinations_with_replacement( +
-it, out_len)`|Produz combinações de `out_len` itens a partir dos itens produzidos por `it`, incluindo combinações com itens repetidos
-|`count(start=0, step=1)`|Produz números começando em `start` e adicionando `step` para obter o número seguinte, indefinidamente
-|`cycle(it)`|Produz itens de `it`, armazenando uma cópia de cada, e então produz a sequência inteira repetida e indefinidamente
-|`pairwise(it)`|Produz pares sobrepostos sucessivos, obtidos do iterável de entradafootnote:[`itertools.pairwise` foi introduzido no Python 3.10.]
+it, out_len)`|Produz combinações com `out_len` itens a partir dos itens produzidos por `it`, incluindo combinações com itens repetidos
+|`count(start=0, step=1)`|Produz números começando em `start`, somando `step` para obter o número seguinte, indefinidamente
+|`cycle(it)`|Produz itens de `it`, armazenando uma cópia de cada, e então produz a sequência inteira repetida, indefinidamente
+|`pairwise(it)`|Produz pares sobrepostos sucessivos, obtidos do iterável de entrada (novidade do Python 3.10)
 |`permutations(it, out_len=None)`|Produz permutações de `out_len` itens a partir dos itens produzidos por `it`; por default, `out_len` é `len(list(it))`
-|`repeat(item, [times])`|Produz um dado item repetidamente e, a menos que um número de `times` (_vezes_) seja passado, indefinidamente
+|`repeat(item, [times])`|Produz um item repetidamente, indefinidamente, a menos que um número de `times` (_vezes_) seja especificado
 |====================
 
 As funções `count` e `repeat` de `itertools` devolvem geradores que conjuram itens do nada:
-elas não consomem itens de um itereavel.
+elas não consomem itens de um iterável de entrada.
 Já vimos `itertools.count` na <<ap_itertools_sec>>.
 
 O gerador `cycle` faz uma cópia do iterável de entrada e produz seus itens repetidamente.
@@ -1570,6 +1604,8 @@ Também há um relação muito próxima entre `itertools.product` e o restante d
 <3> Todas as permutações com `len()==2` a partir dos itens em `'ABC'`; a ordem dos itens nas tuplas geradas é relevante.
 <4> Produto cartesiano de `'ABC'` e `'ABC'` (esse é o efeito de `repeat=2`).
 
+==== Funções geradoras de rearranjo
+
 O último grupo de funções geradoras que vamos examinar nessa seção foram projetados para produzir todos os itens dos iteráveis de entrada, mas rearranjados de alguma forma. Aqui estão duas funções que devolvem múltiplos geradores: `itertools.groupby` e `itertools.tee`.
 
 A função embutida `reversed` é o unico gerador tratado neste capítulo que não
@@ -1579,11 +1615,6 @@ sequência, porque seu tamanho é conhecido então é possível acessar o últim
 diretamente.
 Ao produzir cada item sob demanda, `reversed` evita o custo de criar uma cópia
 invertida da sequência.
-Coloquei a função
-`itertools.product` junto com os geradores de mesclagem, na
-<<merging_genfunc_tbl>>, porque todas aquelas consomem mais de um iterável,
-enquanto os geradores na <<expanding_genfunc_tbl2>> aceitam no máximo um
-iterável como entrada.
 
 [[expanding_genfunc_tbl2]]
 .Funções geradoras de rearranjo
@@ -1595,11 +1626,12 @@ iterável como entrada.
 |`itertools`|`tee(it, n=2)`|Produz uma tupla de _n_ geradores, cada um produzindo os itens do iterável de entrada de forma independente
 |=====================
 
-////
-PROD: Again, the word `itertools` appears split in two lines as `iter` and `tools`. Can we make the 1st column wider to prevent that? Thanks!
-////
-
 O <<demo_groupby_reversed_genfunc>> demonstra o uso de `itertools.groupby` e da função embutida `reversed`. Observe que `itertools.groupby` assume que o iterável de entrada está ordenado pelo critério de agrupamento, ou que pelo menos os itens estejam agrupados por aquele critério—mesmo que não estejam completamente ordenados.
+
+[[groupby_fig_2]]
+.A função geradora `groupby` produz vários geradores, agrupando os itens da entrada segundo algum critério.
+image::../images/diag-groupby.png[align="center",pdfwidth=8cm]
+
 O revisor técnico Miroslav Šedivý sugeriu esse caso de uso:
 você pode ordenar objetos `datetime` em ordem cronológica, e então `groupby` por dia da semana, para obter o grupo com os dados de segunda-feira, seguidos pelos dados de terça, etc., e então da segunda (da semana seguinte) novamente, e assim por diante.
 
@@ -1643,11 +1675,15 @@ G -> ['G', 'G', 'G']
 ====
 <1> `groupby` produz tuplas de `(key, group_generator)`.
 <2> Tratar geradores `groupby` envolve iteração aninhada: neste caso, o laço `for` externo e o construtor de `list` interno.
-<3> Ordena `animals` por tamanho.
+<3> Ordena `animals` pelo tamanho de cada string.
 <4> Novamente, um laço sobre o par `key` e `group`, para exibir `key` e expandir o `group` em uma `list`.
 <5> Aqui o gerador `reverse` itera sobre `animals` da direita para a esquerda.
 
-A última das funções geradoras nesse grupo é `iterator.tee`, que apresenta um comportamento singular: ela produz múltiplos geradores a partir de um único iterável de entrada, cada um deles produzindo todos os itens daquele iterável. Esse geradores podem ser consumidos de forma independente, como mostra o <<demo_tee_genfunc>>.
+A última das funções geradoras nesse grupo é `iterator.tee`, que apresenta um
+comportamento singular: ela produz múltiplos geradores a partir de um único
+iterável de entrada, cada um deles produzindo todos os itens daquele iterável.
+Esse geradores podem ser consumidos de forma independente, como mostra o
+<<demo_tee_genfunc>>.
 
 [[demo_tee_genfunc]]
 .`itertools.tee` produz múltiplos geradores, cada um produzindo todos os itens do gerador de entrada
@@ -1672,12 +1708,19 @@ A última das funções geradoras nesse grupo é `iterator.tee`, que apresenta u
 ----
 ====
 
-Observe que vários exemplos nesta seção usam combinações de funções geradoras. Essa é uma excelente característica dessas funções: como recebem como argumentos e devolvem geradores, elas podem ser combinadas de muitas formas diferentes.
+Observe que vários exemplos nesta seção usam combinações de funções geradoras.
+Esta é uma característica poderosa destas funções:
+como recebem geradores como argumentos e devolvem geradores como resultado,
+elas podem ser combinadas de muitas formas diferentes.
 
 Vamos agora revisar outro grupo de funções da biblioteca padrão que lidam com iteráveis.((("", startref="Ggenfunc17")))
 
 [[iterable_reducing_sec]]
 === Funções de redução de iteráveis
+
+[[reduce_fig_2]]
+.A função `reduce` aplica uma função aos sucessivos itens da entrada, gerando um único resultado acumulado.
+image::../images/diag-reduce.png[align="center",pdfwidth=8cm]
 
 Todas((("generators", "iterable reducing functions", id="Greduc17")))((("iterables", "iterable reducing functions", id="Ireduc17")))((("reducing functions", id="redfunc17"))) as funções na <<tbl_iter_reducing>> recebem um iterável e devolvem um resultado único.
 Elas são conhecidas como funções de "redução", "dobra" (_folding_) ou "acumulação".
@@ -1690,11 +1733,11 @@ A função de redução mais flexível é `functools.reduce`:
     Se `initial` for passado, esse argumento formará o par inicial com o primeiro item do iterável `it`.
 
 Podemos implementar cada uma das funções embutidas listadas a seguir com `functools.reduce`,
-mas elas estão embutidas no Python por resolverem mais facilmente algums casos de uso comuns de `functools.reduce`.
+mas elas estão embutidas no Python por simplificarem os casos de uso mais comuns de `functools.reduce`.
 Vimos uma explicação mais aprofundada sobre `functools.reduce` na <<multi_hashing_sec>>.
 
 Nos casos de `all` e `any`, há uma importante otimização não suportada por `functools.reduce`:
-`all` e `any` conseguem criar um curto-circuito—isto é,
+`all` e `any` implementam o retorno por curto-circuito—isto é,
 elas param de consumir o iterador assim que o resultado é determinado.
 Veja o último teste com `any` no <<all_any_demo>>.
 
@@ -1748,13 +1791,15 @@ Diferente de `reversed`, que é uma função geradora, `sorted` cria e devolve u
 Afinal, cada um dos itens no iterável de entrada precisa ser lido para que todos possam ser ordenados, e a ordenação acontece em uma `list`; `sorted` então apenas devolve aquela `list` após terminar seu processamento.
 Menciono `sorted` aqui porque ela consome um iterável arbitrário.
 
-Claro, `sorted` e as funções de redução só funcionam com iteráveis que terminam em algum momento.
-Caso contrário, eles seguirão coletando itens e nunca devolverão um resultado.
+Claro, `sorted` e as funções de redução só funcionam com iteráveis que terminam.
+Caso contrário, eles seguirão consumindo itens e nunca devolverão um resultado.
 
 [NOTE]
 ====
 Se você chegou até aqui, já viu o conteúdo mais importante e útil deste capítulo.
-As seções restantes tratam de recursos avançados de geradores, que a maioria de nós não vê ou precisa com muita frequência, tal como a instrução `yield from` e as corrotinas clássicas.
+As seções restantes tratam de recursos avançados de geradores,
+que a maioria de nós não vê ou precisa com muita frequência,
+tal como a instrução `yield from` e as corrotinas clássicas.
 
 Há também seções sobre dicas de tipo para iteráveis, iteradores e corrotinas clássicas.
 ====
@@ -1816,10 +1861,11 @@ Podemos obter o mesmo resultado usando `yield from`, como se vê no <<ex_simple_
 ----
 ====
 
-No <<ex_simple_yield_from>>, o((("delegating generators")))((("subgenerators")))((("client codes"))) laço `for` é o _código cliente_,
+No <<ex_simple_yield_from>>, o((("delegating generators")))((("subgenerators")))((("client codes")))
+laço `for` é o _código cliente_,
 `gen` é o _gerador delegante_ e `sub_gen` é o _subgerador_.
 Observe que `yield from` suspende `gen`, e `sub_gen` toma o controle até se esgotar.
-Os valores produzidos por `sub_gen` passam através de `gen` diretamente para o laço `for` cliente.
+Os valores produzidos por `sub_gen` passam através de `gen` diretamente para o laço `for` do cliente.
 Enquanto isso, `gen` está suspenso e não pode ver os valores que passam por ele.
 `gen` continua apenas quando `sub_gen` termina.
 
@@ -1858,9 +1904,12 @@ Agora que já vimos o básico sobre `yield from`, vamos estudar alguns exemplos 
 [[reinventing_chain_sec]]
 ==== Reinventando chain
 
-Vimos((("chain generator"))) na <<merging_genfunc_tbl>> que `itertools` fornece um gerador `chain`, que produz itens a partir de vários iteráveis,
-iterando sobre o primeiro, depois sobre o segundo, e assim por diante, até o último.
-Abaixo está uma implementação caseira de `chain`, com laços `for` aninhados, em Python:footnote:[`chain` e a maioria das funções de `itertools` são escritas em C.]
+Vimos((("chain generator"))) na <<merging_genfunc_tbl>> que `itertools` fornece
+um gerador `chain`, que produz itens a partir de vários iteráveis, iterando
+sobre o primeiro, depois sobre o segundo, e assim por diante, até o último.
+Abaixo está uma implementação caseira de `chain`, com laços `for` aninhados, em
+Python:footnote:[`chain` e a maioria das funções de `itertools` são escritas em
+C.]
 
 [source, python]
 ----
