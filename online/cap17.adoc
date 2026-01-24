@@ -304,7 +304,7 @@ enquanto o valor `1` não é sorteado:
 Observe que a função `iter` devolve um `callable_iterator`. O laço `for` no
 exemplo pode rodar por um longo tempo, mas nunca vai devolver `1`, pois esse é o
 valor sentinela. Como é comum com iteradores, o objeto `d6_iter` se torna inútil
-após ser exaurido. Para recomeçar, é necessário reconstruir o iterador,
+após ser esgotado. Para recomeçar, é necessário reconstruir o iterador,
 invocando novamente `iter()`.
 
 A https://fpy.li/97[«documentação de
@@ -400,7 +400,7 @@ C
 <5> Sai do laço.
 <6> Exibe `char`. Esta variável continua existindo depois do laço.
 
-`StopIteration` sinaliza que o iterador foi exaurido.
+`StopIteration` sinaliza que o iterador foi esgotado.
 Esta exceção é tratada internamente pela função embutida `iter()`,
 que é parte da lógica dos laços `for` e de outros contextos de iteração,
 como compreensões de lista, desempacotamento de iteráveis, etc.
@@ -521,7 +521,7 @@ StopIteration
 <2> Obtém um iterador a partir de `s3`.
 <3> `next(it)` devolve a próxima palavra.
 <4> Não há mais palavras, então o iterador gera uma exceção `StopIteration`.
-<5> Uma vez exaurido, um iterador vai sempre lançar `StopIteration`,
+<5> Uma vez esgotado, um iterador vai sempre lançar `StopIteration`,
 indicando que não há mais itens.
 <6> Para percorrer a sentença novamente é preciso criar um novo iterador.
 
@@ -531,7 +531,7 @@ não há como checar se há itens restantes, exceto invocando `next()` e captura
 necessário começar de novo, é preciso invocar `iter()` no iterável que criou o
 iterador original. Invocar `iter()` no próprio iterador também não funciona,
 pois—como já mencionado—a implementação de `+Iterator.__iter__+`
-apenas devolve `self`, e isso não reinicia um iterador exaurido.
+apenas devolve `self`, e isso não reinicia um iterador esgotado.
 
 Essa interface mínima é bastante razoável porque, na realidade, nem todos os
 iteradores são reiniciáveis. Por exemplo, se um iterador está lendo pacotes da
@@ -1291,15 +1291,14 @@ A seção de console no <<demo_filter_genfunc>> demonstra o uso das funções de
 ====
 
 O((("mappings", "mapping generator functions"))) grupo seguinte contém os
-geradores de mapeamento. O termo "mapeamento" aqui não está relacionado a
-dicionários, mas com a função embutida `map`. Este grupo de funções produzem
+geradores de transformação. Este grupo de funções produzem
 itens computados a partir de cada item individual no iterável de entrada—ou
 iteráveis, nos casos de `map` e `starmap`. 
 Se a entrada vier de mais de um iterável, a saída para assim que o primeiro
-iterável de entrada for exaurido.
+iterável de entrada for esgotado.
 
 [[mapping_genfunc_tbl]]
-.Funções geradoras de mapeamento (embutidas)
+.Funções geradoras de transformação (embutidas)
 [options="header", cols="7,10"]
 |============================
 |Função|Descrição
@@ -1307,10 +1306,10 @@ iterável de entrada for exaurido.
 |`map(func, it1, [it2, …, itN])`|Aplica `func` a cada item de `it`, produzindo o resultado; se forem fornecidos N iteráveis, `func` deve aceitar N argumentos, e os iteráveis serão consumidos em paralelo
 |============================
 
-O módulo `itertools` oferece mais duas funções geradoras de mapeamento:
+O módulo `itertools` oferece mais duas funções geradoras de transformação:
 
 [[mapping_genfunc_itertools_tbl]]
-.`itertools`: funções geradoras de mapeamento
+.`itertools`: funções geradoras de transformação
 [options="header", cols="4,9"]
 |==========================
 |Função|Descrição
@@ -1347,10 +1346,10 @@ O <<demo_accumulate_genfunc>> demonstra alguns usos de `itertools.accumulate`.
 <4> Produto acumulado.
 <5> Fatoriais de `1!` a `10!`.
 
-As demais funçnoes de mapeamento são demonstradas no <<demo_mapping_genfunc>>.
+As demais funçnoes de transformação são demonstradas no <<demo_mapping_genfunc>>.
 
 [[demo_mapping_genfunc]]
-.Exemplos de funções geradoras de mapeamento
+.Exemplos de funções geradoras de transformação
 ====
 [source, python]
 ----
@@ -1386,7 +1385,7 @@ Elas mesclam os itens de vários iteráveis de entrada.
 O exemplo mais conhecido é a função embutida `zip`:
 
 `zip(it1, …, itN, strict=False)`::
-    Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando silenciosamente quando o menor iterável é exaurido, a menos que `strict=True` for passado (a partir do Python 3.10). Quando `strict=True`, um `ValueError` é gerado se algum iterável esgotar antes dos outros. O default é `False`, para manter a compatibilidade retroativa.
+    Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando silenciosamente quando o menor iterável é esgotado, a menos que `strict=True` for passado (a partir do Python 3.10). Quando `strict=True`, um `ValueError` é gerado se algum iterável esgotar antes dos outros. O default é `False`, para manter a compatibilidade retroativa.
 
 Na <<merging_genfunc_tbl>>, vale notar que `chain` e `chain.from_iterable`
 consomem os iteráveis de entrada um após o outro, enquanto `product`, e
@@ -1401,7 +1400,7 @@ consomem os iteráveis de entrada um após o outro, enquanto `product`, e
 |`chain(it1, …, itN)`|Produz todos os itens de `it1`, a seguir de `it2`, etc., continuamente.
 |`chain.from_iterable(it)`|Produz todos os itens de cada iterável produzido por `it`, um após o outro, continuamente; `it` é um iterável cujos itens também são iteráveis, uma lista de tuplas, por exemplo
 |`product(it1, …, itN, repeat=1)`|Produto cartesiano: produz tuplas de N elementos criadas combinando itens de cada iterável de entrada, como laços `for` aninhados produziriam; `repeat` permite que os iteráveis de entrada sejam consumidos mais de uma vez
-|`zip_longest(it1, …, itN, fillvalue=None)`|Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando apenas quando o último iterável for exaurido,  preenchendo os itens ausentes com o `fillvalue`
+|`zip_longest(it1, …, itN, fillvalue=None)`|Produz tuplas de N elementos criadas a partir de itens obtidos dos iteráveis em paralelo, terminando apenas quando o último iterável for esgotado,  preenchendo os itens ausentes com o `fillvalue`
 |===================
 
 O <<demo_merging_genfunc>> demonstra o uso das funções geradoras
@@ -1819,7 +1818,7 @@ Podemos obter o mesmo resultado usando `yield from`, como se vê no <<ex_simple_
 
 No <<ex_simple_yield_from>>, o((("delegating generators")))((("subgenerators")))((("client codes"))) laço `for` é o _código cliente_,
 `gen` é o _gerador delegante_ e `sub_gen` é o _subgerador_.
-Observe que `yield from` suspende `gen`, e `sub_gen` toma o controle até se exaurir.
+Observe que `yield from` suspende `gen`, e `sub_gen` toma o controle até se esgotar.
 Os valores produzidos por `sub_gen` passam através de `gen` diretamente para o laço `for` cliente.
 Enquanto isso, `gen` está suspenso e não pode ver os valores que passam por ele.
 `gen` continua apenas quando `sub_gen` termina.
