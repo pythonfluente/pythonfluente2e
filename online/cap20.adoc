@@ -3,30 +3,31 @@
 :example-number: 0
 :figure-number: 0
 
-++++
-<blockquote>
-<p>Quem fala mal de threads são tipicamente programadoras de sistemas,
-que tem em mente casos de uso que o típico programador de aplicações nunca vai encontrar na vida.[...]
-Em 99% dos casos de uso que o programador de aplicações vai encontrar,
-o modelo simples de gerar um monte de threads e coletar os resultados em uma fila é tudo que se precisa saber.</p>
-<p data-type="attribution">Michele Simionato, profundo pensador de Python.<span data-type="footnote">
-Do post de Michele Simionato,
-<a href="https://fpy.li/20-1">"Threads, processes and concurrency in Python: some thoughts"
-(_Threads, processos e concorrência em Python: algumas reflexões_)</a>,
-resumido assim: "Removendo exageros sobre a (não-)revolução dos múltiplos núcleos
-e alguns comentários sensatos (oxalá) sobre threads e outras formas de concorrência."</span></p>
-</blockquote>
-
-++++
+[quote, Michele Simionato, profundo pensador de Python.]
+____
+Quem fala mal de threads são tipicamente programadoras de sistemas,
+que tem em mente casos de uso que a programadora de aplicações típica nunca encontrará na vida.[...]
+Em 99% dos casos de uso que a programadora de aplicações poderá encontrar,
+o modelo simples de disparar um monte de threads independentes
+e coletar os resultados em uma fila é tudo que se precisa
+saber.footnote:[Trecho do texto 
+https://fpy.li/20-1[_Threads, processes and concurrency in Python: some thoughts_]
+(Threads, processos e concorrência em Python: algumas reflexões), resumido assim pelo autor:
+"Removendo exageros sobre a (não-)revolução dos múltiplos núcleos e alguns comentários
+sensatos (oxalá) sobre threads e outras formas de concorrência."]
+____
 
 
-Este((("concurrent executors", "purpose of"))) capítulo se concentra nas classes do `concurrent.futures.Executor`,
-que encapsulam o modelo de "gerar um monte de threads independentes e coletar os resultados em uma fila" descrito por Michele Simionato.
-Executores concorrentes tornam o uso desse modelo quase trivial,
-não apenas com threads mas também com processos—úteis para tarefas de processamento intensivo em CPU.
+Este((("concurrent executors", "purpose of"))) capítulo se concentra nas subclasses
+de `concurrent.futures.Executor`, que encapsulam o modelo de "disparar um monte
+de threads independentes e coletar os resultados em uma fila" descrito por
+Michele Simionato.
+Executores concorrentes automatizam este modelo,
+não apenas com threads mas também com processos—que oferecem melhor desempenho
+em tarefas de processamento intensivas no uso de CPUs.
 
 Também((("futures", "definition of term"))) introduzo aqui o conceito de
-_futures_—objetos que representam a execução assíncrona de uma operação, similares às _promises_ de Javascript.
+_futures_—objetos que representam a execução assíncrona de uma operação, similares às _promises_ de JavaScript.
 Essa ideia básica é a fundação de `concurrent.futures` bem como do pacote `asyncio`, assunto do <<ch_async>>.
 
 
@@ -181,9 +182,10 @@ Vamos ver agora uma reimplementação usando `concurrent.futures`.((("", startre
 [[downloading_with_futures_sec]]
 ==== Download com concurrent.futures
 
-Os((("network I/O", "downloading with concurrent.futures", id="IOfutures20")))((("concurrent.futures", "downloading with", id="confut20"))) principais recursos do pacote `concurrent.futures` são as classes `ThreadPoolExecutor` e `ProcessPoolExecutor`, que implementam uma API para submissão de _callables_ (_"chamáveis"_) para execução em diferentes threads ou processos, respectivamente.
-As classes gerenciam de forma transparente um grupo de threads ou processos de trabalho, e filas para distribuição de tarefas e coleta de resultados.
-Mas a interface é de um nível muito alto, e não precisamos saber nada sobre qualquer desses detalhes para um caso de uso simples como nossos downloads de bandeiras.
+Os((("network I/O", "downloading with concurrent.futures", id="IOfutures20")))((("concurrent.futures", "downloading with", id="confut20"))) principais recursos do pacote `concurrent.futures` são as classes `ThreadPoolExecutor` e `ProcessPoolExecutor`, que implementam uma API para submissão de _callables_ (_"chamáveis"_) para execução em um banco de threads ou processos.
+As classes gerenciam de forma transparente um banco de threads ou processos de trabalho, e filas para distribuição de tarefas e coleta de resultados.
+Mas a interface é de um nível muito alto, estas classes criam um banco de threads ou processos (_thread pool_ ou _process pool_),
+e gerenciam a comunicação através de filas, de modo que não precisamos lidar com estes componentes em um caso de uso simples como nossos downloads de bandeiras.
 
 O <<flags_threadpool_ex>> mostra a forma mais fácil de implementar os downloads de forma concorrente, usando o método `ThreadPoolExecutor.map`.
 
@@ -247,7 +249,7 @@ Elas têm o mesmo propósito:
 uma instância de qualquer das classes `Future` representa um processamento adiado,
 que pode ou não ter sido completado.
 Isso é algo similar à classe `Deferred` no Twisted,
-a classe `Future` no Tornado, e objetos `Promise` em Javascript moderno.
+a classe `Future` no Tornado, e objetos `Promise` em JavaScript moderno.
 
 Os _futures_ encapsulam operações pendentes de forma que possamos colocá-los em filas,
 verificar se terminaram, e recuperar resultados (ou exceções) quando eles ficam #disponíveis#.
@@ -793,7 +795,7 @@ include::../code/20-executors/getflags/flags2_threadpool.py[tags=FLAGS2_THREADPO
 ----
 ====
 <1> Reutiliza `download_one` de `flags2_sequential` (<<flags2_basic_http_ex>>).
-<2> Se a opção de linha de comando `-m/--max_req` não é passada, este será o número máximo de requisições concorrentes, implementado como o tamanho do poll de threads; o número real pode ser menor se o número de bandeiras a serem baixadas for menor.
+<2> Se a opção de linha de comando `-m/--max_req` não é passada, este será o número máximo de requisições concorrentes, implementado como o tamanho do pool de threads; o número real pode ser menor se o número de bandeiras a serem baixadas for menor.
 <3> `MAX_CONCUR_REQ` limita o número máximo de requisições concorrentes independente do número de bandeiras a serem baixadas ou da opção de linha de comando `-m/--max_req`. É uma medida de segurança, para evitar iniciar threads demais, com seu uso significativo de memória.
 <4> Cria o `executor` com `max_workers` determinado por `concur_req`, calculado pela função `main` como o menor de: `MAX_CONCUR_REQ`, o tamanho de `cc_list`, ou o valor da opção de linha de comando `-m/--max_req`. Isso evita criar mais threads que o necessário.
 <5> Este `dict` vai mapear cada instância de `Future`—representando um download—com o respectivo código de país, para exibição de erros.
@@ -841,34 +843,60 @@ Todas as referências que tratam de `threading` e `multiprocessing` de Python na
 .Ponto de vista
 ****
 
-[role="soapbox-title"]
-Evitando Threads
+*Evitando Threads*
 
-++++
-<blockquote>
-    <p>Concorrência: um dos tópicos mais difíceis na ciência da computação (normalmente é melhor evitá-lo).</p>
-    <p data-type="attribution">David Beazley, educador Python e cientista louco<span data-type="footnote">—Slide #9 do tutorial <a href="https://fpy.li/20-21">"A Curious Course on Coroutines and Concurrency" ("Um Curioso Curso sobre Corrotinas e Concorrência") (EN)</a>, apresentado na PyCon 2009.</span></p>
-</blockquote>
-++++
+[quote, David Beazley, instrutor de Python e cientista louco.]
+____
+Concorrência: um dos tópicos mais difíceis na ciência da computação (normalmente é melhor
+evitá-lo).footnote:[Slide #9 do tutorial
+https://fpy.li/20-21[_A Curious Course on Coroutines and Concurrency_]
+(Um Curioso Curso sobre Corrotinas e Concorrência), apresentado na PyCon 2009.]
+____
 
-// [quote, David Beazley, Python coach and mad scientist]
-// ____
-// Concurrency: one of the most difficult topics in computer science (usually best avoided).footnote:[Slide #9 from https://fpy.li/20-21["A Curious Course on Coroutines and Concurrency,"] tutorial presented at PyCon 2009.]
-// ____
+
 
 Eu((("concurrent executors", "Soapbox discussion")))((("Soapbox sidebars", "thread avoidance")))((("threads", "thread avoidance"))) concordo com as citações aparentemente contraditórias de David Beazley e Michele Simionato no início desse capítulo.
 
-Assisti um curso de graduação sobre concorrência.
+Assisti um curso de graduação sobre concorrência no IME/USP.
 Tudo o que vimos foi programação de https://fpy.li/an[threads POSIX].
-O que aprendi: que não quero gerenciar threads e travas pessoalmente, pela mesma razão que não quero gerenciar a alocação e desalocação de memória pessoalmente.
-Essas tarefas são melhor desempenhadas por programadores de sistemas, que tem o conhecimento, a inclinação e o tempo para fazê-las direito—ou assim esperamos.
-Sou pago para desenvolver aplicações, não sistemas operacionais. Não preciso desse controle fino de threads, travas, `malloc` e `free`—veja https://fpy.li/ap["Alocação dinâmica de memória em C"].
+O que aprendi: que não quero gerenciar threads e travas pessoalmente,
+pela mesma razão que não quero gerenciar a alocação e desalocação de memória pessoalmente.
+Essas tarefas são melhor desempenhadas por programadores de sistemas, que tem o conhecimento,
+a inclinação e o tempo para fazê-las direito—ou assim esperamos.
+Sou pago para desenvolver aplicações, não sistemas operacionais.
+Não preciso desse controle fino de threads, travas, `malloc` e `free`—veja https://fpy.li/ap["Alocação dinâmica de memória em C"].
 
-Por isso acho o pacote `concurrent.futures` interessante: ele trata threads, processos, e filas como infraestrutura, algo a seu serviço, não algo que você precisa controlar diretamente. Claro, ele foi projetado pensando em tarefas simples, os assim chamado problemas embaraçosamente paralelos—ao contrário de sistemas operacionais ou servidores de banco de dados, como aponta Simionato naquela citação.
+Por isso acho o pacote `concurrent.futures` interessante: ele trata threads,
+processos, e filas como infraestrutura, algo a seu serviço, não algo que você
+precisa controlar diretamente. Claro, ele foi projetado pensando em tarefas
+simples, os assim chamado problemas embaraçosamente paralelos—ao contrário de
+sistemas operacionais ou servidores de banco de dados, como aponta Simionato
+naquela citação.
 
-Para problemas de concorrência "não embaraçosos", threads e travas também não são a solução. Ao nível do sistema operacional, as threads nunca vão desaparecer. Mas todas as linguagens de programação que achei empolgantes nos últimos muitos anos fornecem abstrações de alto nível para concorrência, como demonstra o excelente livro de Paul Butcher, https://fpy.li/20-24[_Seven Concurrency Models in Seven Weeks_] (_Sete Modelos de Concorrência em Sete Semanas_) (EN). Go, Elixir, e Clojure estão entre elas. Erlang—a linguagem de implementação do Elixir—é um exemplo claro de uma linguagem projetada desde o início pensando em concorrência. Erlang não me excita por uma razão simples: acho sua sintaxe feia. Python me acostumou mal.
+Para problemas de concorrência mais complexos, threads e travas também não são a
+solução. Ao nível do sistema operacional, as threads nunca vão desaparecer. Mas
+todas as linguagens de programação que achei empolgantes nos últimos muitos anos
+fornecem abstrações de alto nível para concorrência, como demonstra o excelente
+livro de Paul Butcher, https://fpy.li/20-24[_Seven Concurrency Models in Seven
+Weeks_] (_Sete Modelos de Concorrência em Sete Semanas_) (EN). Go, Elixir, e
+Clojure estão entre elas. Erlang—a linguagem de implementação do Elixir—é um
+exemplo claro de uma linguagem projetada desde o início pensando em
+concorrência. Erlang não me excita por uma razão simples: acho sua sintaxe feia.
+Python me acostumou mal.
 
-José Valim, antes um dos contribuidores centrais de Ruby on Rails, projetou o Elixir com uma sintaxe moderna e agradável. Como Lisp e Clojure, o Elixir implementa macros sintáticas. Isso é uma faca de dois gumes. Macros sintáticas permitem criar DSLs poderosas, mas a proliferação de sub-linguagens pode levar a bases de código incompatíveis e à fragmentação da comunidade. O Lisp se afogou em um mar de macros, cada empresa e grupo de desenvolvedores Lisp usando seu próprio dialeto arcano. A padronização em torno do Common Lisp resultou em uma linguagem inchada. Espero que José Valim inspire a comunidade do Elixir a evitar um destino semelhante. Até agora, o cenário parece bom. O invólucro de bancos de dados e gerador de queries https://fpy.li/20-25[Ecto] é muito agradável de usar: um grande exemplo do uso de macros para criar uma DSL—sigla de Domain-Specific Language, _Linguagem de Domínio Específico_—flexível mas amigável, para interagir com bancos de dados relacionais e não-relacionais.
+José Valim, antigo mantenedor do _Ruby on Rails_, projetou o
+Elixir com uma sintaxe moderna e agradável. Como Lisp e Clojure, o Elixir
+implementa macros sintáticas. Isso é uma faca de dois gumes. Macros sintáticas
+permitem criar DSLs poderosas, mas a proliferação de sub-linguagens pode levar a
+bases de código incompatíveis e à fragmentação da comunidade. O Lisp se afogou
+em um mar de macros, cada empresa e grupo de desenvolvedores Lisp usando seu
+próprio dialeto arcano. A padronização em torno do Common Lisp resultou em uma
+linguagem inchada. Espero que José Valim inspire a comunidade do Elixir a evitar
+um destino semelhante. Até agora, o cenário parece bom. O invólucro de bancos de
+dados e gerador de queries https://fpy.li/20-25[Ecto] é muito agradável de usar:
+um grande exemplo do uso de macros para criar uma DSL—sigla de Domain-Specific
+Language, _Linguagem de Domínio Específico_—flexível mas amigável, para
+interagir com bancos de dados relacionais e não-relacionais.
 
 Como o Elixir, o Go é uma linguagem moderna com ideias novas.
 Mas, em alguns aspectos, é uma linguagem conservadora, comparada ao Elixir.
