@@ -19,41 +19,53 @@ ____
 
 
 Este((("concurrent executors", "purpose of"))) capítulo se concentra nas subclasses
-de `concurrent.futures.Executor`, que encapsulam o modelo de "disparar um monte
-de threads independentes e coletar os resultados em uma fila" descrito por
-Michele Simionato.
-Executores concorrentes automatizam este modelo,
+de `concurrent.futures.Executor`, que incorporam o modelo descrito por
+Michele Simionato: "disparar um monte
+de threads independentes e coletar os resultados em uma fila".
+Executores concorrentes implementam internamente este modelo,
 não apenas com threads mas também com processos—que oferecem melhor desempenho
 em tarefas de processamento intensivas no uso de CPUs.
 
 Também((("futures", "definition of term"))) introduzo aqui o conceito de
-_futures_—objetos que representam a execução assíncrona de uma operação, similares às _promises_ de JavaScript.
-Essa ideia básica é a fundação de `concurrent.futures` bem como do pacote `asyncio`, assunto do <<ch_async>>.
+_futures_—objetos que representam a execução assíncrona de uma operação,
+similares aos _promises_ de JavaScript.
+Esta ideia é a fundação de `concurrent.futures`
+bem como do pacote `asyncio`, assunto do <<ch_async>>.
 
 
 === Novidades neste capítulo
-Renomeei((("concurrent executors", "significant changes to"))) este capítulo de "Concorrência com futures" para "Executores concorrentes", porque os executores são o recurso de alto nível mais importante tratado aqui.
+Mudei((("concurrent executors", "significant changes to"))) o título deste capítulo de
+"Concorrência com futures" para "Executores concorrentes",
+porque os executores são o recurso de alto nível mais importante tratado aqui.
 _Futures_ são objetos de baixo nível, tratados na <<where_futures_sec>>,
 mas quase invisíveis no resto do capítulo.
 
-Todos os exemplos de clientes HTTP agora usam a nova biblioteca https://fpy.li/httpx[_HTTPX_], que oferece APIs síncronas e assíncronas.
+Todos os exemplos de clientes HTTP agora usam a biblioteca
+https://fpy.li/httpx[_HTTPX_], que oferece APIs síncronas e assíncronas.
 
-A configuração para os experimentos na <<flags2_sec>> ficou mais simples,
-graças ao servidor de múltiplas threads adicionado ao pacote https://fpy.li/20-2[`http.server`] no Python 3.7.
-Antes, a biblioteca padrão oferecia apenas o `BaseHttpServer` de thread única,
-que não era adequado para experiências com clientes concorrentes,
-então na primeira edição desse livro precisei usar um servidor externo.
+Simplifiquei a configuração para os experimentos na <<flags2_sec>>,
+porque desde o Python 3.7 o pacote https://fpy.li/20-2[`http.server`]
+é _multi-thread_. Antes, o `http.server` só usava uma thread,
+então não servia para experimentos com clientes concorrentes,
+o que me obrigou a usar um servidor externo na primeira edição.
 
-A <<launching_processes_sec>> agora demonstra como um executor simplifica o código que vimos na <<code_for_multicore_prime_sec>>.
+A <<launching_processes_sec>> agora demonstra como um executor simplifica o
+código que vimos na <<code_for_multicore_prime_sec>>.
 
-Por fim, movi a maior parte da teoria para o novo <<ch_concurrency_models>>.
+Por fim, movi a maior parte da teoria para o <<ch_concurrency_models>>,
+_Modelos de concorrência em Python_.
 
 [[ex_web_downloads_sec]]
 === Downloads concorrentes da web
 
-A((("network I/O", "essential role of concurrency in", id="IOconcur20")))((("concurrent executors", "concurrent web downloads", id="CEwebdown20"))) concorrência é essencial para uma comunicação eficiente via rede: em vez de esperar de braços cruzados por respostas de máquinas remotas, a aplicação deveria fazer alguma outra coisa até a resposta chegar.footnote:[Especialmente se o seu provedor de serviços na nuvem aluga máquinas por tempo de uso, independente de quão ocupada esteja a CPU.]
+A((("network I/O", "essential role of concurrency in",
+id="IOconcur20")))((("concurrent executors", "concurrent web downloads",
+id="CEwebdown20"))) concorrência é essencial para uma comunicação eficiente via
+rede: em vez de esperar de braços cruzados por respostas de máquinas remotas, a
+aplicação pode fazer outra coisa enquanto a resposta não
+chega.
 
-Para demonstrar com código, escrevi três programas simples que baixam da web imagens de 20 bandeiras de países.
+Para demonstrar, escrevi três programas simples que baixam da web imagens de 20 bandeiras de países.
 O primeiro, _flags.py_, roda sequencialmente:
 ele só requisita a imagem seguinte quando a anterior foi baixada e salva localmente.
 Os outros dois scripts fazem downloads concorrentes:
@@ -61,16 +73,16 @@ eles requisitam várias imagens quase ao mesmo tempo, e as salvam conforme chega
 O script _flags_threadpool.py_ usa o pacote `concurrent.futures`,
 enquanto _flags_asyncio.py_ usa `asyncio`.
 
+Os scripts baixam imagens de _https://fluentpython.com_, que usa uma CDN
+(_Content Delivery Network_, Rede de Entrega de Conteúdo),
+então você pode observar resultados mais lentos nos primeiros testes.
+Os resultados no <<ex_flags_sample_runs>> foram obtidos após vários testes,
+então o cache da CDN estava "quente" (carregado com os dados).
+
 O <<ex_flags_sample_runs>> mostra o resultado da execução dos três scripts, três vezes cada um.
 
-Os scripts baixam imagens de _https://fluentpython.com_, que usa uma CDN
-(_Content Delivery Network_, _Rede de Fornecimento de Conteúdo_),
-então você pode notar os resultados mais lentos nas primeiras passagens.
-Os resultados no <<ex_flags_sample_runs>> foram obtidos após várias execuções,
-então o cache da CDN estava carregado.
-
 [[ex_flags_sample_runs]]
-.Três execuções típicas dos scripts flags.py, flags_threadpool.py, e flags_asyncio.py
+.Saida dos scripts flags.py, flags_threadpool.py, e flags_asyncio.py
 ====
 [source, text]
 ----
@@ -103,38 +115,72 @@ RU IN ID DE BR VN PK MX US IR ET EG NG BD FR CN JP PH CD TR  <5>
 20 flags downloaded in 1.42s
 ----
 ====
-<1> A saída de cada execução começa com os códigos dos países de cada bandeira a medida que as imagens são baixadas, e termina com uma mensagem mostrando o tempo decorrido.
+
+<1> A saída de cada execução começa com os códigos dos países de cada bandeira a medida que as imagens são baixadas, e termina com uma mensagem mostrando o tempo decorrido. Note que as siglas dos países estão em ordem alfabética, para podermos comparar com a ordem dos resultados nas versões concorrentes.
+
 <2> _flags.py_ precisou em média de 7,18s para baixar 20 imagens.
+
 <3> A média para _flags_threadpool.py_ foi 1,40s.
+
 <4> Já _flags_asyncio.py_, obteve um tempo médio de 1,35s.
+
 <5> Observe a ordem do códigos de país: nos scripts concorrentes, as imagens foram baixadas em um ordem diferente a cada vez.
 
-A diferença de desempenho entre os scripts concorrentes não é significativa, mas ambos são mais de cinco vezes mais rápidos que o script sequencial—e isto apenas para a pequena tarefa de baixar 20 arquivos, cada um com uns poucos kilobytes.
-Se você escalar a tarefa para centenas de downloads, os scripts concorrentes podem superar o código sequencial por um fator de 20 ou mais.
+As versões concorrentes são mais de cinco vezes mais rápidas que o script sequencial,
+mas entre as versões concorrentes não há diferença significativa de desempenho. 
+Nestes exemplos, a tarefa é baixar 20 arquivos, com poucos kilobytes cada um.
+Se você escalar a tarefa para centenas de downloads,
+os scripts concorrentes podem superar o código sequencial por um fator de 20 ou mais.
 
 [WARNING]
 ====
-Ao testar clientes HTTP concorrentes usando servidores web públicos, você pode inadvertidamente lançar um ataque de negação de serviço (DoS, _Denial of Service attack_), ou se tornar suspeito de estar tentando um ataque.
-No caso do <<ex_flags_sample_runs>> não há problema, pois aqueles scripts estão codificados para realizar apenas 20 requisições.
-Mais adiante nesse capítulo usaremos o pacote `http.server` de Python para executar nossos testes localmente.
+
+Ao testar clientes HTTP concorrentes usando servidores web públicos, você pode
+acidentalmente lançar um ataque de negação de serviço (DoS, _Denial of Service_,
+negação de serviço),
+ou se tornar suspeito de tentar um ataque. No caso do
+<<ex_flags_sample_runs>> não há problema, pois aqueles scripts estão codificados
+para realizar apenas 20 requisições. Mais adiante neste capítulo usaremos o
+pacote `http.server` de Python para executar localmente outros testes com
+centenas de requisições.
+
 ====
 
-Vamos agora estudar as implementações de dois dos scripts testados no <<ex_flags_sample_runs>>: _flags.py_ e _flags_threadpool.py_. Vou deixar o terceiro, _flags_asyncio.py_, para o <<ch_async>>, mas queria demonstrar os três juntos para fazer duas observações:
+Vamos agora estudar as implementações de dois dos scripts testados no
+<<ex_flags_sample_runs>>: _flags.py_ e _flags_threadpool.py_. Vou deixar o
+terceiro, _flags_asyncio.py_, para o <<ch_async>>, mas queria demonstrar os três
+juntos para fazer duas observações:
 
-. Independente dos elementos de concorrência que você use—threads ou corrotinas—haverá um ganho enorme de desempenho sobre código sequencial em operações de E/S de rede, se o script for escrito corretamente.
-. Para clientes HTTP que podem controlar quantas requisições eles fazem, não há diferenças significativas de desempenho entre threads e corrotinas.footnote:[Para servidores que podem ser acessados por muitos clientes, há uma diferença: as corrotinas escalam melhor, pois usam menos memória que as threads, e também reduzem o custo das mudanças de contexto, que mencionei na <<thread_non_solution_sec>>.]
+. Independente dos elementos de concorrência que você use—threads ou
+corrotinas—haverá um ganho enorme de desempenho sobre código sequencial em
+operações de E/S de rede, se o script for escrito corretamente.
 
-Vamos ver o código.((("", startref="IOconcur20")))
+. Para clientes HTTP que podem controlar quantas requisições eles fazem, não há
+diferenças significativas de desempenho entre threads e
+corrotinas.footnote:[Para servidores que podem receber requisicões de muitos
+clientes, há uma diferença: as corrotinas escalam melhor, pois usam menos
+memória que as threads, e também reduzem o custo das mudanças de contexto, que
+mencionei na <<thread_non_solution_sec>>.]
+
+Agora vamos ao código.((("", startref="IOconcur20")))
 
 
 ==== Um script de download sequencial
 
-O <<flags_module_ex>> contém((("network I/O", "sequential download script", id="IOsequen20"))) a implementação de _flags.py_, o primeiro script que rodamos no <<ex_flags_sample_runs>>.
-Não é muito interessante, mas vamos reutilizar a maior parte do código e das configurações para implementar os scripts concorrentes, então ele merece alguma atenção.
+O <<flags_module_ex>> contém((("network I/O", "sequential download script",
+id="IOsequen20"))) a implementação de _flags.py_, o primeiro script que rodamos
+no <<ex_flags_sample_runs>>. Não é muito interessante, mas vamos reutilizar a
+maior parte do código e das configurações para implementar os scripts
+concorrentes, então ele merece alguma atenção.
 
 [NOTE]
 ====
-Por clareza, não há qualquer tipo de tratamento de erro no <<flags_module_ex>>. Vamos lidar come exceções mais tarde, mas aqui quero me concentrar na estrutura básica do código, para facilitar a comparação deste script com os scripts que usam concorrência.
+
+Por uma questão didática, o <<flags_module_ex>> não faz tratamento de erros.
+Vamos tratar exceções em outros exemplos, mas agora vamos focar na
+estrutura básica do código, para facilitar a comparação deste script com os
+scripts que usam concorrência.
+
 ====
 
 [[flags_module_ex]]
@@ -145,34 +191,77 @@ Por clareza, não há qualquer tipo de tratamento de erro no <<flags_module_ex>>
 include::../code/20-executors/getflags/flags.py[tags=FLAGS_PY]
 ----
 ====
-<1> Importa a biblioteca `httpx`. Ela não é parte da biblioteca padrão. Assim, por convenção, a importação aparece após os módulos da biblioteca padrão e uma linha em branco.
-<2> Lista do código de país ISO 3166 para os 20 países mais populosos, em ordem decrescente de população.
-<3> O diretório com as imagens das bandeiras.footnote:[As imagens são originalmente do https://fpy.li/20-4[CIA World Factbook], uma publicação de domínio público do governo norte-americano. Copiei as imagens para o meu site, para evitar o risco de lançar um ataque de DoS contra _cia.gov_.]
+
+<1> Importa a biblioteca `httpx`. Ela não é parte da biblioteca padrão. Assim,
+por convenção, a importação aparece após os módulos da biblioteca padrão e uma
+linha em branco.
+
+<2> Lista do código de país ISO 3166 para os 20 países mais populosos, em ordem
+decrescente de população.
+
+<3> O diretório com as imagens das bandeiras.footnote:[As imagens são
+originalmente do https://fpy.li/20-4[CIA World Factbook], uma publicação de
+domínio público do governo norte-americano. Copiei as imagens para o meu site,
+para evitar o risco de lançar um ataque de DoS contra _cia.gov_.]
+
 <4> Diretório local onde as imagens são salvas.
-<5> Salva os bytes de `img` para `filename` no `DEST_DIR`.
-<6> Dado um código de país, constrói a URL e baixa a imagem, retornando o conteúdo binário da resposta.
-<7> É uma boa prática adicionar um timeout razoável para operações de rede, para evitar ficar bloqueado  sem motivo por vários minutos.
-<8> Por default, o _HTTPX_ não segue redirecionamentos.footnote:[Definir `follow_redirects=True` não é necessário nesse exemplo, mas eu queria destacar essa importante diferença entre _HTTPX_ e _requests_. Além disso, definir `follow_redirects=True` nesse exemplo me dá a flexibilidade de armazenar os arquivos de imagem em outro lugar no futuro. Acho sensata a configuração default do _HTTPX_, pass:[<code>follow_redirects&#x200b;=False</code>], pois redirecionamentos inesperados podem mascarar requisições desnecessárias e complicar o diagnóstico de erro.]
-<9> Não há tratamento de erros nesse script, mas esse método lança uma exceção se o status do HTTP não está na faixa 2XX—algo mutio recomendado para evitar falhas silenciosas.
-<10> `download_many` é a função chave para comparar com as implementações concorrentes.
-<11> Percorre a lista de códigos de país em ordem alfabética, para facilitar a confirmação de que a ordem é preservada na saída; retorna o número de códigos de país baixados.
-<12> Mostra um código de país por vez na mesma linha, para vermos o progresso a cada download.
-O argumento `end=' '` substitui a costumeira quebra no final de cada linha escrita com um espaço, assim todos os códigos de país aparecem progressivamente na mesma linha.
-O argumento `flush=True` é necessário porque, por default, a saída de Python usa um buffer de linha, o que significa que Python só mostraria os caracteres enviados após uma quebra de linha.
-<13> `main` precisa ser chamada com a função que fará os downloads; dessa forma podemos usar `main` como uma função de biblioteca com outras implementações de `download_many` nos exemplos de `threadpool` e `ascyncio`.
+
+<5> Salva os bytes de `img` em `filename` no `DEST_DIR`.
+
+<6> Dado um código de país, constrói a URL e baixa a imagem, retornando o
+conteúdo binário da resposta.
+
+<7> É uma boa prática adicionar um timeout razoável para operações de rede, para
+evitar ficar bloqueado  sem motivo por vários minutos.
+
+<8> Por default, o _HTTPX_ não segue redirecionamentos.footnote:[Definir
+`follow_redirects=True` não é necessário nesse exemplo, mas eu queria destacar
+essa importante diferença entre _HTTPX_ e _requests_. Além disso, definir
+`follow_redirects=True` nesse exemplo me dá a flexibilidade de armazenar os
+arquivos de imagem em outro lugar no futuro. Acho sensata a configuração default
+do _HTTPX_, pass:[<code>follow_redirects&#x200b;=False</code>], pois
+redirecionamentos inesperados podem mascarar requisições desnecessárias e
+complicar o diagnóstico de erro.]
+
+<9> Não há tratamento de erros neste script, mas o método `.raise_for_status` 
+lança uma exceção se o status da resposta HTTP não está na faixa 2XX—recomendado para evitar
+falhas silenciosas.
+
+<10> `download_many` é a função chave para comparar com as implementações
+concorrentes.
+
+<11> Percorre a lista de códigos de país em ordem alfabética, para facilitar a
+confirmação de que a ordem é preservada na saída; retorna o número de códigos de
+país baixados.
+
+<12> Mostra um código de país por vez na mesma linha, para vermos o progresso a
+cada download. O argumento `end=' '` substitui a quebra de linha no final de
+cada `print` por um espaço, assim todos os códigos de país aparecem
+na mesma linha. O argumento `flush=True` é necessário porque,
+por default, o Python usa um buffer de linha na saída padrão, 
+então só após uma quebra de linha o resultado seria visível no terminal.
+A opção `flush=True` força o esvaziamento do buffer,
+então podemos ver as siglas aparecendo progressivamente.
+
+<13> `main` precisa ser invocada passando a função que fará os downloads; assim
+podemos usar `main` como uma função de biblioteca com outras implementações de
+`download_many` nos exemplos de `threadpool` e `ascyncio`.
+
 <14> Cria o `DEST_DIR` se necessário; não acusa erro se o diretório existir.
-<15> Mede e apresenta o tempo decorrido após rodar a função `downloader`.
-<16> Chama `main` com a função `download_many`.
+
+<15> Registra e apresenta o tempo decorrido após rodar a função `downloader`.
+
+<16> Invoca `main` com a função `download_many`.
 
 [TIP]
 ====
 A biblioteca https://fpy.li/httpx[_HTTPX_] é inspirada no pacote pythônico
 https://fpy.li/20-5[_requests_],
 mas foi desenvolvida sobre bases mais modernas.
-Especialmente, _HTTPX_ tem APIs síncronas e assíncronas,
-então podemos usá-la em todos os exemplos de clientes HTTP nesse capítulo e no próximo.
-A biblioteca padrão de Python contém o módulo `urllib.request`,
-mas sua API é exclusivamente síncrona, e não é muito amigável.
+Em particular, _HTTPX_ oferece APIs síncronas e assíncronas,
+então podemos usá-la em todos os exemplos de clientes HTTP neste capítulo e no próximo.
+A biblioteca padrão do Python contém o módulo `urllib.request`,
+mas sua API é somente síncrona, e não é nada amigável.
 ====
 
 Não há mesmo nada de novo em _flags.py_.
@@ -180,7 +269,7 @@ Ele serve de base para comparação com outros scripts, e o usei como uma biblio
 Vamos ver agora uma reimplementação usando `concurrent.futures`.((("", startref="IOsequen20")))
 
 [[downloading_with_futures_sec]]
-==== Download com concurrent.futures
+==== Download com `concurrent.futures`
 
 Os((("network I/O", "downloading with concurrent.futures", id="IOfutures20")))((("concurrent.futures", "downloading with", id="confut20"))) principais recursos do pacote `concurrent.futures` são as classes `ThreadPoolExecutor` e `ProcessPoolExecutor`, que implementam uma API para submissão de _callables_ (_"chamáveis"_) para execução em um banco de threads ou processos.
 As classes gerenciam de forma transparente um banco de threads ou processos de trabalho, e filas para distribuição de tarefas e coleta de resultados.
