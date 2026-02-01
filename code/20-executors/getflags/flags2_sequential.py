@@ -35,7 +35,10 @@ def get_flag(base_url: str, cc: str) -> bytes:
     resp.raise_for_status()  # <3>
     return resp.content
 
-def download_one(cc: str, base_url: str, verbose: bool = False) -> DownloadStatus:
+def download_one(
+        cc: str,
+        base_url: str,
+        verbose: bool = False) -> DownloadStatus:
     try:
         image = get_flag(base_url, cc)
     except httpx.HTTPStatusError as exc:  # <4>
@@ -69,7 +72,8 @@ def download_many(cc_list: list[str],
         try:
             status = download_one(cc, base_url, verbose)  # <4>
         except httpx.HTTPStatusError as exc:  # <5>
-            error_msg = 'HTTP error {resp.status_code} - {resp.reason_phrase}'
+            error_msg = ('HTTP error {resp.status_code}' +
+                         ' - {resp.reason_phrase}')
             error_msg = error_msg.format(resp=exc.response)
         except httpx.RequestError as exc:  # <6>
             error_msg = f'{exc} {type(exc)}'.strip()

@@ -50,7 +50,8 @@ def download_many(cc_list: list[str],
             try:
                 status = future.result()  # <12>
             except httpx.HTTPStatusError as exc:  # <13>
-                error_msg = 'HTTP error {resp.status_code} - {resp.reason_phrase}'
+                error_msg = ('HTTP error {resp.status_code}' +
+                             ' - {resp.reason_phrase}')
                 error_msg = error_msg.format(resp=exc.response)
             except httpx.RequestError as exc:
                 error_msg = f'{exc} {type(exc)}'.strip()

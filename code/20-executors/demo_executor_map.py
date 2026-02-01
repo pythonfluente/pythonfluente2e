@@ -10,12 +10,12 @@ def display(*args):  # <1>
     print(*args)
 
 def loiter(n):  # <2>
-    msg = '{}loiter({}): doing nothing for {}s...'
+    msg = '{}loiter({}): napping for {}s...'
     display(msg.format('\t'*n, n, n))
     sleep(n)
     msg = '{}loiter({}): done.'
     display(msg.format('\t'*n, n))
-    return n * 10  # <3>
+    return n + 10  # <3>
 
 def main():
     display('Script starting.')

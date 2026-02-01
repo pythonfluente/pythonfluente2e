@@ -32,7 +32,8 @@ def main() -> None:
     executor = futures.ProcessPoolExecutor(workers)  # <4>
     actual_workers = executor._max_workers  # type: ignore  # <5>
 
-    print(f'Checking {len(NUMBERS)} numbers with {actual_workers} processes:')
+    print(f'Checking {len(NUMBERS)} numbers',
+          f'with {actual_workers} processes:')
 
     t0 = perf_counter()
 
