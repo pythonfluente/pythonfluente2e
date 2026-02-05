@@ -3,35 +3,41 @@
 :example-number: 0
 :figure-number: 0
 
-++++
-<blockquote>
-    <p>O problema com as abordagens usuais da programação assíncrona é que elas são propostas do tipo "tudo ou nada". Ou você reescreve todo o código, de forma que nada nele bloqueie [o processamento] ou você está só perdendo tempo.</p>
-    <p>Alvaro Videla e Jason J. W. Williams, <em>RabbitMQ in Action (RabbitMQ em Ação)</em><span data-type="footnote">Videla &#38; Williams, <em>RabbitMQ in Action (RabbitMQ em Ação)</em> (Manning), Capítulo 4, "Solving Problems with Rabbit: coding and patterns <em>(Resolvendo Problemas com Rabbit: programação e modelos)</em>," p. 61.</span></p>
-</blockquote>
-++++
+[quote, Alvaro Videla &#38; Jason J. W. Williams, RabbitMQ in Action]
+____
+O problema com as abordagens usuais da programação assíncrona é
+que são propostas do tipo "tudo ou nada".
+Ou você reescreve todo o código, de forma que nada nele bloqueie 
+ou você está só perdendo tempo.footnote:[Videla &#38; Williams,
+_RabbitMQ in Action (Manning, 2012)_,
+_Solving Problems with Rabbit: coding and patterns_, p. 61]
+____
 
-// [quote, Alvaro Videla &#38; Jason J. W. Williams, RabbitMQ in Action]
-// ____
-// The problem with normal approaches to asynchronous programming as that they're all-or-nothing propositions. You rewrite all your code so none of it blocks or you're just wasting your time.footnote:[Videla &#38; Williams, _RabbitMQ in Action (Manning, 2012)_, Chapter 4, _Solving Problems with Rabbit: coding and patterns_, p. 61]
-// ____
 
-Este((("asynchronous programming", "topics covered"))) capítulo trata de três grandes tópicos intimamente interligados:
+Este((("asynchronous programming", "topics covered"))) capítulo trata de três grandes tópicos interligados:
 
-* Os elementos de linguagem `async def`, `await`, `async with`, e `async for` de Python;
-* Objetos que suportam tais elementos através de métodos especiais como  `+__await__+`, `+__aiter__+` etc., como corrotinas nativas e variantes assíncronas de gerenciadores de contexto, iteráveis, geradores e compreensões;
-* _asyncio_ e outras bibliotecas assíncronas.
+* As instruções `async def`, `await`, `async with`, e `async for`;
+* Objetos que suportam tais instruções através de métodos especiais como `+__await__+`, `+__aiter__+` etc.,
+tais como corrotinas nativas e variantes assíncronas de gerenciadores de contexto, iteráveis, geradores e compreensões;
+* `asyncio` e outras bibliotecas assíncronas.
 
 Este capítulo parte das ideias de iteráveis e geradores (<<ch_generators>>,
-em particular da <<classic_coroutines_sec>>), gerenciadores de contexto (no <<ch_with_match>>),
-e conceitos gerais de programação concorrente (no <<ch_concurrency_models>>).
+em particular a <<classic_coroutines_sec>>), gerenciadores de contexto (<<ch_with_match>>),
+e conceitos gerais de programação concorrente (<<ch_concurrency_models>>).
 
-Vamos estudar clientes HTTP concorrentes similares aos vistos no <<ch_executors>>, reescritos com corrotinas nativas e gerenciadores de contexto assíncronos, usando a mesma biblioteca _HTTPX_ de antes, mas agora através de sua API assíncrona.
-Veremos também como evitar o bloqueio do laço de eventos, delegando operações lentas para um executor de threads ou processos.
+Vamos estudar clientes HTTP concorrentes similares aos vistos no
+<<ch_executors>>, reescritos com corrotinas nativas e gerenciadores de contexto
+assíncronos, usando a mesma biblioteca _HTTPX_ de antes, mas agora através de
+sua API assíncrona. Veremos também como evitar o bloqueio do laço de eventos,
+delegando operações lentas para um executor de threads ou processos.
 
 Após os exemplos de clientes HTTP, teremos duas aplicações simples de servidor,
-uma delas usando o framework cada vez mais popular _FastAPI_.
-A seguir tratamos de outros artefatos da linguagem viabilizados pelas palavras-chave `async/await`:
-funções geradoras assíncronas, compreensões assíncronas, e expressões geradoras assíncronas. Para realçar o fato daqueles recursos da linguagem não estarem limitados ao _asyncio_, veremos um exemplo reescrito para usar a _Curio_—o elegante e inovador framework inventado por David Beazley.
+uma delas usando o framework _FastAPI_. A seguir tratamos de outros objetos
+suportados pelas palavras-chave `async/await`: funções geradoras assíncronas,
+compreensões assíncronas, e expressões geradoras assíncronas. Para enfatizar
+que estes recursos não estarão limitados ao `asyncio`, veremos
+um exemplo reescrito para usar o _Curio_—o inovador e influente framework
+inventado por David Beazley.
 
 Finalizando o capítulo, escrevi uma pequena seção sobre vantagens e
 armadilhas da programação assíncrona.
@@ -42,16 +48,16 @@ mas eles vão ilustrar as características mais importantes de cada ideia.
 
 [TIP]
 ====
-A https://fpy.li/21-1[documentação do _asyncio_] melhorou((("asyncio package", "documentation"))) muito após Yury Selivanovfootnote:[Selivanov implementou `async/await` no Python, e escreveu as PEPs relacionadas:
+A https://fpy.li/21-1[documentação do `asyncio`] melhorou((("asyncio package", "documentation"))) muito após Yury Selivanovfootnote:[Selivanov implementou `async/await` no Python, e escreveu as PEPs relacionadas:
 https://fpy.li/pep492[492],
 https://fpy.li/pep525[525], e
 https://fpy.li/pep530[530].
 ] reorganizá-la, dando maior destaque às funções úteis para desenvolvedores de aplicações.
-A maior parte da API de _asyncio_ consiste em funções e classes voltadas para
+A maior parte da API de `asyncio` consiste em funções e classes voltadas para
 criadores de pacotes como frameworks web e drivers de bancos de dados, ou seja,
 são necessários para criar bibliotecas assíncronas, mas não aplicações.
 
-Para mais profundidade sobre _asyncio_, recomendo
+Para mais profundidade sobre `asyncio`, recomendo
 pass:[<a href="https://fpy.li/hattingh" class="orm:hideurl"><em>Using Asyncio in Python ("Usando Asyncio em Python")</em></a>]
 de Caleb Hattingh (O'Reilly).
 Política de transparência: Caleb é um dos revisores técnicos deste livro.
@@ -60,55 +66,78 @@ Política de transparência: Caleb é um dos revisores técnicos deste livro.
 
 === Novidades neste capítulo
 
-Quando((("asynchronous programming", "significant changes to"))) escrevi a primeira edição de _Python Fluente_, a biblioteca _asyncio_ era provisória e as palavras-chave `async/await` não existiam.
-Assim, todos os exemplos desse capítulo precisaram ser atualizados.
-Também criei novos exemplos: scripts de sondagem de domínios, um serviço web com _FastAPI_, e experimentos com o novo modo assíncrono do console de Python.
+Quando((("asynchronous programming", "significant changes to"))) escrevi a
+primeira edição de _Python Fluente_, a biblioteca `asyncio` era provisória e as
+palavras-chave `async/await` não existiam. Por isso atualizei todos os exemplos
+deste capítulo. Também criei novos exemplos: scripts de sondagem de domínios, um
+serviço web com _FastAPI_, e experimentos com o novo modo assíncrono do console
+do Python.
 
-Novas seções tratam de recursos da linguagem inexistentes naquele momento, como corrotinas nativas, `async with`, `async for`, e os objetos que suportam essas instruções.
+Novas seções tratam de recursos da linguagem inexistentes naquele momento, como
+corrotinas nativas, `async with`, `async for`, e os objetos que suportam essas
+instruções.
 
-As ideias na <<how_async_works_and_does_not_sec>> refletem lições importantes tiradas da experiência prática, e a considero uma leitura essencial para qualquer um trabalhando com programação assíncrona. Elas podem ajudar você a evitar muitos problemas—seja no Python, seja no Node.js.
+As ideias na <<how_async_works_and_does_not_sec>> refletem lições importantes
+que aprendi na prática, por isso eu a considero leitura essencial para
+qualquer um trabalhando com programação assíncrona. Elas podem ajudar você a
+evitar muitos problemas—no Python ou memso no Node.js.
 
-Por fim, removi vários parágrafos sobre `asyncio.Futures`, que agora considero parte das APIs de baixo nível do _asyncio_.
+Por fim, removi vários parágrafos sobre `asyncio.Futures`, que agora considero parte das APIs de baixo nível do `asyncio`.
 
 [role="pagebreak-before less_space"]
 === Algumas definições.
 
-No ((("asynchronous programming", "relevant terminology"))) início da <<classic_coroutines_sec>>, vimos que, desde o Python 3.5, a linguagem oferece três tipos de corrotinas:
+Na ((("asynchronous programming", "relevant terminology"))) <<classic_coroutines_sec>>,
+vimos que Python oferece três tipos de corrotinas desde a versão 3.5:
 
 Corrotina nativa::
-    Uma((("native coroutines", "definition of term")))((("coroutines", "types of"))) função corrotina definida com `async def`. Você pode delegar de uma corrotina nativa para outra corrotina nativa, usando a palavra-chave `await`, de forma similar àquela como as corrotinas clássicas usam `yield from`. O comando `async def` sempre define uma corrotina nativa, mesmo se a palavra-chave `await` não seja usada em seu corpo. A palavra-chave `await` não pode ser usada fora de uma corrotina nativa.footnote:[Há uma exceção a essa regra: se você iniciar Python com a opção `-m asyncio`, pode então usar `await` diretamente no prompt `>>>` para controlar uma corrotina nativa. Isso é explicado na <<python_async_console_sec>>.]
+    Uma((("native coroutines", "definition of term")))((("coroutines", "types
+    of"))) função corrotina definida com `async def`. Uma
+    corrotina nativa pode acionar outra corrotina nativa, usando a instrução
+    `await`, semelhante ao funcionamento de `yield from` em corrotinas
+    clássicas. A instrução `async def` sempre define uma corrotina nativa,
+    mesmo se a instrução `await` não apareça em seu corpo. A instrução
+    `await` só pode ser usada dentro de uma corrotina nativa.footnote:[Há uma
+    exceção a essa regra: se você iniciar Python com a opção `-m asyncio`, pode
+    então usar `await` diretamente no prompt `>>>` para controlar uma corrotina
+    nativa. Isto é explicado na <<python_async_console_sec>>.]
 
 Corrotina clássica::
     Uma função geradora que consome dados enviados a ela via chamadas a `my_coro.send(data)`, e que lê aqueles dados usando `yield` em uma expressão.
     Corrotinas clássicas podem delegar para outras corrotinas clássicas usando `yield from`.
-    Corrotinas clássicas não podem ser controladas por `await`, e não são mais suportadas pelo _asyncio_.
+    Corrotinas clássicas não podem ser controladas por `await`, e não são mais suportadas pelo `asyncio`.
 
 Corrotinas baseadas em geradores::
     Uma((("generators", "generator-based coroutines")))((("coroutines", "generator-based"))) função geradora decorada com `@types.coroutine`—introduzido no Python 3.5.
-    Esse decorador torna o gerador compatível com a nova palavra-chave `await`.
+    Esse decorador torna o gerador compatível com a nova instrução `await`.
 
 Nesse capítulo vamos nos concentrar nas corrotinas nativas, bem como nos geradores assíncronos:
 
 Geradora assíncrona::
     Uma((("asynchronous generators"))) função geradora definida com `async def` que usa `yield` em seu corpo.
-    Ela devolve um objeto gerador assíncrono que oferece um `+__anext__+`, um método corrotina para obter o próximo item.
+    Ela devolve um objeto gerador assíncrono que implementa `+__anext__+`, um método corrotina para obter o próximo item.
 
-.@asyncio.coroutine Não Tem Futurofootnote:[Desculpe, não consegui resistir.]
+.`@asyncio.coroutine` não tem futurofootnote:[Perdõe o jogo de palavras.]
 [WARNING]
 ====
-O((("@asyncio.coroutine decorator"))) decorador `@asyncio.coroutine` para corrotinas clássicas e corrotinas baseadas em gerador foi descontinuado no Python 3.8, e está previsto para ser removido no Python 3.11, de acordo com o https://fpy.li/21-2[Issue 43216].
-Por outro lado, `@types.coroutine` deve continuar existindo, como se vê aqui:
-https://fpy.li/21-3[Issue 36921].
-Esse decorador não é mais suportado pelo _asyncio_, mas é usado em código interno nos frameworks assíncronos _Curio_ e _Trio_.
+
+O((("@asyncio.coroutine decorator"))) decorador `@asyncio.coroutine` para
+corrotinas clássicas e corrotinas baseadas em gerador foi descontinuado no
+Python 3.8, e está previsto para ser removido no Python 3.11, de acordo com o
+https://fpy.li/21-2[«Issue 43216»]. Por outro lado, `@types.coroutine` deve
+continuar existindo, como se vê aqui: https://fpy.li/21-3[«Issue 36921»]. Este
+decorador não é mais suportado pelo `asyncio`, mas é usado em código interno nos
+frameworks assíncronos _Curio_ e _Trio_.
+
 ====
 
 
-=== Um exemplo de asyncio: sondando domínios
+=== Sondando domínios com `asyncio`
 
 Imagine((("asyncio package", "example script", id="APexample21")))((("asynchronous programming", "asyncio script example", id="APRscript21")))
 que você esteja prestes a lançar um novo blog sobre Python,
 e planeje registrar um domínio usando uma palavra-chave de Python e o sufixo _.DEV_—por exemplo, _AWAIT.DEV._
-O <<blogdom_ex>> é um script usando _asyncio_ que verifica vários domínios de forma concorrente.
+O <<blogdom_ex>> é um script usando `asyncio` que verifica vários domínios de forma concorrente.
 Essa é saída produzida pelo script:
 
 [source, text]
@@ -176,7 +205,7 @@ Desde o Python 3.10, `asyncio.get_event_loop` foi https://fpy.li/as[descontinuad
 
 ==== O truque de Guido para ler código assíncrono
 
-Há muitos conceitos novos para entender no _asyncio_, mas a lógica básica do <<blogdom_ex>> é fácil de compreender se você usar o truque sugerido pelo próprio Guido van Rossum:
+Há muitos conceitos novos para entender no `asyncio`, mas a lógica básica do <<blogdom_ex>> é fácil de compreender se você usar o truque sugerido pelo próprio Guido van Rossum:
 cerre os olhos e finja que as palavras-chave `async` e `await` não estão ali.
 Fazendo isso, você vai perceber que as corrotinas podem ser lidas como as boas e velhas funções sequenciais.
 
@@ -223,7 +252,7 @@ Mas eles podem lidar com qualquer objeto "esperável". Esse conceito será expli
 A((("asynchronous programming", "awaitables")))((("await keyword")))((("keywords", "await keyword"))) palavra-chave `for` funciona com _iteráveis_.
 A palavra-chave `await` funciona com _esperáveis_ (_awaitable_).
 
-Como um usuário final do _asyncio_, esses são os esperáveis que você verá diariamente:
+Como um usuário final do `asyncio`, esses são os esperáveis que você verá diariamente:
 
 * Um _objeto corrotina nativa_, que você obtém chamando uma _função corrotina nativa_
 * Uma `asyncio.Task`, que você normalmente obtém passando um objeto corrotina para `asyncio.create_task()`
@@ -253,7 +282,7 @@ e esperar que ela termine, porque precisamos do resultado para prosseguir.
 Em _spinner_async.py_, a corrotina `supervisor` usava `res = await slow()`
 para executar `slow` e aguardar seu resultado..
 
-Ao implementar bibliotecas assíncronas ou contribuir para o próprio _asyncio_,
+Ao implementar bibliotecas assíncronas ou contribuir para o próprio `asyncio`,
 você pode também encontrar esse esperáveis de baixo nível:
 
 * Um objeto com um método `+__await__+` que devolve um iterador; por exemplo, uma instância de `asyncio.Future` (`asyncio.Task` é uma subclasse de `asyncio.Future`)
@@ -271,7 +300,7 @@ Eu postei uma explicação detalhada no texto https://fpy.li/21-8["The Meaning o
 do pass:[<a href="http://fluentpython.com" class="orm:hideurl"><em>fluentpython.com</em></a>].
 ====
 
-Agora vamos estudar a versão _asyncio_ de um script que baixa um conjunto fixo de imagens de bandeiras.
+Agora vamos estudar a versão `asyncio` de um script que baixa um conjunto fixo de imagens de bandeiras.
 
 [[flags_asyncio_sec]]
 === Downloads com asyncio e HTTPX
@@ -280,7 +309,7 @@ O((("asyncio package", "downloading with", id="APdown21")))((("network I/O", "do
 Já mencionamos esse script na <<ex_web_downloads_sec>>,
 mas agora vamos examiná-lo em detalhes, aplicando os conceitos que acabamos de ver.
 
-A partir de Python 3.10, o _asyncio_ só suporta TCP e UDP diretamente,
+A partir de Python 3.10, o `asyncio` só suporta TCP e UDP diretamente,
 e não há pacotes de cliente ou servidor HTTP assíncronos na bilbioteca padrão.
 Estou usando o https://fpy.li/httpx[_HTTPX_] em todos os exemplos de cliente HTTP.
 
@@ -333,7 +362,7 @@ include::../code/20-executors/getflags/flags_asyncio.py[tags=FLAGS_ASYNCIO_TOP]
 [NOTE]
 ====
 Seria melhor, em termos de desempenho, que a chamada a `save_flag` dentro de `get_flag` fosse assíncrona, evitando bloquear o laço de eventos.
-Entretanto, atualmente _asyncio_ não oferece uma API assíncrona de acesso ao sistema de arquivos—como faz o Node.js.
+Entretanto, atualmente `asyncio` não oferece uma API assíncrona de acesso ao sistema de arquivos—como faz o Node.js.
 
 A <<using_as_completed_sec>> vai mostrar como delegar `save_flag` para uma thread.
 ====
@@ -344,7 +373,7 @@ O seu código delega para as corrotinas do `httpx` explicitamente, usando `await
 ==== O segredo das corrotinas nativas: humildes geradores
 
 A((("native coroutines", "humble generators and")))((("humble generators")))((("generators", "humble generators"))) diferença fundamental entre os exemplos de corrotinas clássicas vistas nas <<classic_coroutines_sec>> e _flags_asyncio.py_ é que não há chamadas a `.send()` ou expressões `yield` visíveis nesse último.
-O seu código fica entre a biblioteca _asyncio_ e as bibliotecas assíncronas que você estiver usando, como por exemplo a _HTTPX_. Isso está ilustrado na <<await_channel_fig>>.
+O seu código fica entre a biblioteca `asyncio` e as bibliotecas assíncronas que você estiver usando, como por exemplo a _HTTPX_. Isso está ilustrado na <<await_channel_fig>>.
 
 [[await_channel_fig]]
 .Em um programa assíncrono, uma função do usuário inicia o laço de eventos, agendando uma corrotina inicial com `asyncio.run`. Cada corrotina do usuário aciona a seguinte com uma expressão `await`, formando um canal que permite a comunicação entre uma biblioteca como a _HTTPX_ e o laço de eventos.
@@ -364,7 +393,7 @@ Usando funções como `asyncio.gather` e `asyncio.create_task`,
 Observe que, no <<flags_asyncio_ex>>, não pude reutilizar a função `get_flag` de
 _flags.py_ (<<flags_module_ex>>).
 Tive que reescrevê-la como uma corrotina para usar a API assíncrona do _HTTPX_.
-Para((("asyncio package", "achieving peak performance with"))) obter o melhor desempenho do _asyncio_, precisamos substituir todas as funções que fazem E/S por uma versão assíncrona, que seja ativada com `await` ou `asyncio.create_task`. Dessa forma o controle é devolvido ao laço de eventos  enquanto a função aguarda pela operação de entrada ou saída. Se você não puder reescrever a função bloqueante como uma  corrotina, deveria executá-la em uma thread ou um processo separados, como veremos na <<delegating_to_executors_sec>>.
+Para((("asyncio package", "achieving peak performance with"))) obter o melhor desempenho do `asyncio`, precisamos substituir todas as funções que fazem E/S por uma versão assíncrona, que seja ativada com `await` ou `asyncio.create_task`. Dessa forma o controle é devolvido ao laço de eventos  enquanto a função aguarda pela operação de entrada ou saída. Se você não puder reescrever a função bloqueante como uma  corrotina, deveria executá-la em uma thread ou um processo separados, como veremos na <<delegating_to_executors_sec>>.
 
 Essa é a razão da escolha da epígrafe desse capítulo, que incluí o seguinte conselho:
  "[Ou] você reescreve todo o código, de forma que nada nele bloqueie [o processamento] ou você está só perdendo tempo.""
@@ -383,7 +412,7 @@ Vamos agora estudar o comando `async with`, que apareceu em `supervisor` (<<flag
 
 Na((("context managers", "asynchronous", id="CMasync21")))((("asynchronous programming", "asynchronous context managers", id="APRaconman21"))) <<context_managers_sec>>, vimos como um objeto pode ser usado para executar código antes e depois do corpo de um bloco `with`, se sua classe oferecer os métodos `+__enter__+` e `+__exit__+`.
 
-Agora, considere o <<asyncpg_transaction_no_context_ex>>, que usa o driver PostgreSQL https://fpy.li/21-10[_asyncpg_] compatível com o _asyncio_ (https://fpy.li/21-11[documentação do _asyncpg_ sobre transações]).
+Agora, considere o <<asyncpg_transaction_no_context_ex>>, que usa o driver PostgreSQL https://fpy.li/21-10[_asyncpg_] compatível com o `asyncio` (https://fpy.li/21-11[documentação do _asyncpg_ sobre transações]).
 
 [[asyncpg_transaction_no_context_ex]]
 .Código exemplo da documentação do driver PostgreSQL _asyncpg_
@@ -446,7 +475,7 @@ Voltando ao _flags_asyncio.py_, a classe `AsyncClient` do `httpx` é um gerencia
 A <<async_gen_context_mngr_sec>> mostra como usar a `contextlib` de Python para criar um gerenciador de contexto assíncrono sem precisar escrever uma classe. Essa explicação aparece mais tarde nesse capítulo por causa de um pré-requsito: a <<async_gen_func_sec>>.
 ====
 
-Agora vamos melhorar o exemplo _asyncio_ de download de bandeiras com uma barra de progresso, que nos levará a explorar um pouco mais da API do _asyncio_.((("", startref="APRaconman21")))((("", startref="CMasync21")))
+Agora vamos melhorar o exemplo `asyncio` de download de bandeiras com uma barra de progresso, que nos levará a explorar um pouco mais da API do `asyncio`.((("", startref="APRaconman21")))((("", startref="CMasync21")))
 
 
 [[flags2_asyncio_sec]]
@@ -490,7 +519,7 @@ Elapsed time: 3.31s
 [WARNING]
 .Aja de forma responsável ao testar clientes concorrentes
 ====
-Mesmo que o tempo total de download não seja muito diferente entre os clientes HTTP na versão com threads e na versão _asyncio_ HTTP , o
+Mesmo que o tempo total de download não seja muito diferente entre os clientes HTTP na versão com threads e na versão `asyncio` HTTP , o
 _asyncio_ é capaz de enviar requisições mais rápido, então aumenta a probabilidade do servidor suspeitar de um ataque DoS.
 Para exercitar esses clientes concorrentes em sua capacidade máxima, por favor use servidores HTTP locais em seus testes, como explicado no <<setting_up_servers_box>>.
 ====
@@ -525,11 +554,11 @@ Primeira diferença: ele exige o parâmetro `client`.
 <4> A lógica de tratamento de erro é idêntica à de `download_one`, do <<flags2_basic_http_ex>>.
 <5> Salvar a imagem é uma operação de E/S. Para não bloquear o laço de eventos, roda `save_flag` em uma thread.
 
-No _asyncio_, toda a comunicação de rede é feita com corrotinas, mas não E/S de arquivos.
+No `asyncio`, toda a comunicação de rede é feita com corrotinas, mas não E/S de arquivos.
 Entretanto, E/S de arquivos também é "bloqueante"—no sentido que ler/escrever arquivos é https://fpy.li/21-15[milhares de vezes mais demorado] que ler/escrever na RAM.
 Se você estiver usando https://fpy.li/av[armazenamento conectado à rede], isso pode até envolver E/S de rede internamente.
 
-Desde o Python 3.9, a corrotina `asyncio.to_thread` facilitou delegar operações de arquivo para um pool de threads fornecido pelo _asyncio_.
+Desde o Python 3.9, a corrotina `asyncio.to_thread` facilitou delegar operações de arquivo para um pool de threads fornecido pelo `asyncio`.
 Se você precisa suportar Python 3.7 ou 3.8,
 a <<delegating_to_executors_sec>> mostra como fazer isso, adicionando algumas linhas ao seu programa.
 Mas primeiro, vamos terminar nosso estudo do código do cliente HTTP.
@@ -620,7 +649,7 @@ include::../code/20-executors/getflags/flags2_asyncio.py[tags=FLAGS2_ASYNCIO_STA
 <13> ...e extrai o nome do arquivo para mostrar o código do país em seguida.
 <14> `download_many` instancia o objeto corrotina `supervisor` e o passa para o laço de eventos com `asyncio.run`, coletando o contador que `supervisor` devolve quando o laço de eventos termina.
 
-No <<flags2_asyncio_rest>>, não podíamos usar o mapeamento de `futures` para os códigos de país que vimos em <<flags2_threadpool_full>>, porque os esperáveis devolvidos por `asyncio.as_completed` são os mesmos esperáveis que passamos na chamada a `as_completed`. Internamente, o mecanismo do _asyncio_ pode substituir os esperáveis que fornecemos por outros que irão, no fim, produzir os mesmos resultados.footnote:[Um discussão detalhada sobre esse tópico pode era encontrada em uma thread de discussão que iniciei no grupo python-tulip, intitulada https://fpy.li/21-19["Which other futures may come out of asyncio.as_completed?" (_Que outros futures podem sair de asyncio.as_completed?_ )]. Guido responde e fornece detalhes sobre a implementação de `as_completed`, bem como sobre a relação próxima entre _futures_ e corrotinas no _asyncio_.]
+No <<flags2_asyncio_rest>>, não podíamos usar o mapeamento de `futures` para os códigos de país que vimos em <<flags2_threadpool_full>>, porque os esperáveis devolvidos por `asyncio.as_completed` são os mesmos esperáveis que passamos na chamada a `as_completed`. Internamente, o mecanismo do `asyncio` pode substituir os esperáveis que fornecemos por outros que irão, no fim, produzir os mesmos resultados.footnote:[Um discussão detalhada sobre esse tópico pode era encontrada em uma thread de discussão que iniciei no grupo python-tulip, intitulada https://fpy.li/21-19["Which other futures may come out of asyncio.as_completed?" (_Que outros futures podem sair de asyncio.as_completed?_ )]. Guido responde e fornece detalhes sobre a implementação de `as_completed`, bem como sobre a relação próxima entre _futures_ e corrotinas no `asyncio`.]
 
 [TIP]
 ====
@@ -629,7 +658,7 @@ Para fazer isso, mantive a exceção na variável `error`, permitindo sua recupe
 Mas se uma cláusula `except` vincula uma exceção a uma variável, como as variáveis `exc` que acabamos de ver—aquele vínculo só existe no bloco dentro daquela cláusula `except` específica.
 ====
 
-Isso encerra nossa discussão da funcionalidade de um exemplo usando _asyncio_ similar ao  _flags2_threadpool.py_ que vimos antes.
+Isso encerra nossa discussão da funcionalidade de um exemplo usando `asyncio` similar ao  _flags2_threadpool.py_ que vimos antes.
 
 O próximo exemplo demonstra um modelo simples de execução de uma tarefa assíncrona após outra usando corrotinas.
 Isso merece nossa atenção porque qualquer um com experiência prévia em JavaScript sabe que rodar um função assíncrona após outra foi a razão para o padrão de codificação aninhado conhecido como
@@ -748,14 +777,14 @@ A principal razão para passar um `Executor` explícito para `loop.run_in_execut
 
 Caleb Hattingh—O autor de
 pass:[<a href="https://fpy.li/hattingh" class="orm:hideurl"><em>Using Asyncio in Python</em></a>]
-(O' Reilly)—é um dos revisores técnicos desse livro, e sugeriu que eu acrescentasse o seguinte aviso sobre executores e o _asyncio_.
+(O' Reilly)—é um dos revisores técnicos desse livro, e sugeriu que eu acrescentasse o seguinte aviso sobre executores e o `asyncio`.
 
 .O aviso de Caleb sobre run_in_executors
 [WARNING]
 ====
 Usar `run_in_executor` pode produzir problemas difíceis de depurar, já que o cancelamento não funciona da forma que se esperaria.
 Corrotinas que usam executores apenas fingem terminar: a thread subjacente (se for um `ThreadPoolExecutor`) não tem um mecanismo de cancelamento.
-Por exemplo, uma thread de longa duração criada dentro de uma chamada a `run_in_executor` pode impedir que seu programa _asyncio_ encerre de forma limpa:
+Por exemplo, uma thread de longa duração criada dentro de uma chamada a `run_in_executor` pode impedir que seu programa `asyncio` encerre de forma limpa:
 `asyncio.run` vai esperar para retornar até o executor terminar inteiramente, e vai esperar para sempre se os serviços iniciados pelo executor não pararem sozinhos de alguma forma.
 Minha barba branca me inclina a desejar que aquela função se chamasse `run_in_executor_uncancellable`.
 ====
@@ -1407,7 +1436,7 @@ Precisei colocar parênteses extras ao redor da expressão `await` devido à pre
 Repetindo, todas essas compreensões só podem aparecer no corpo de uma `async def` ou no console assíncrono encantado.
 
 Agora vamos discutir um recurso muito importante dos comandos `async`, das expressões `async`, e dos objetos que eles criam.
-Esses artefatos são muitas vezes usados com o _asyncio_ mas, na verdade, eles são independentes da biblioteca.((("", startref="LCasync21")))((("", startref="genexp21")))((("", startref="ITERasync21")))((("", startref="ITasync21")))((("", startref="APRiteration21")))
+Esses artefatos são muitas vezes usados com o `asyncio` mas, na verdade, eles são independentes da biblioteca.((("", startref="LCasync21")))((("", startref="genexp21")))((("", startref="ITERasync21")))((("", startref="ITasync21")))((("", startref="APRiteration21")))
 
 
 === Programação assíncrona além do asyncio: Curio
@@ -1469,14 +1498,14 @@ Quando usado como um gerenciador de contexto assíncrono, um `TaskGroup` garante
 ====
 A concorrência estruturada vai provavelmente ser adotada pelo `asyncio` em versões futuras de Python. Uma indicação forte disso aparece na https://fpy.li/pep654[PEP 654–Exception Groups and except*] (EN), que foi https://fpy.li/21-52[aprovada para Python 3.11] (EN).
 A https://fpy.li/21-53[seção "Motivation"](EN) menciona as "creches" (_nurseries) do _Trio_, o nome que els dão para grupos de tarefas:
-"Implementar uma API de geração de tarefas melhor no _asyncio_, inspirada pelas _creches_ do Trio, foi  a principal motivação dessa PEP."
+"Implementar uma API de geração de tarefas melhor no `asyncio`, inspirada pelas _creches_ do Trio, foi  a principal motivação dessa PEP."
 ====
 
 Outro recurso importante do _Curio_ é um suporte melhor para programar com corrotinas e threads na mesma base de código—uma necessidade de qualquer programa assíncrono não-trivial.
 Iniciar uma thread com `await spawn_thread(func, …)` devolve um objeto `AsyncThread` com uma interface de `Task`. As threads podem chamar corrotinas, graças à função especial https://fpy.li/21-54[`AWAIT(coro)`]—escrita inteiramente com maiúsculas porque `await` agora é uma palavra-chave.
 
-O _Curio_ também oferece uma `UniversalQueue` que pode ser usada para coordenar o trabalho entre threads, corrotinas _Curio_ e corrotinas _asyncio_.
-Isso mesmo, o _Curio_ tem recursos que permitem que ele rode em uma thread junto com _asyncio_ em outra thread, no mesmo processo, se comunicando através da `UniversalQueue` e de `UniversalEvent`.
+O _Curio_ também oferece uma `UniversalQueue` que pode ser usada para coordenar o trabalho entre threads, corrotinas _Curio_ e corrotinas `asyncio`.
+Isso mesmo, o _Curio_ tem recursos que permitem que ele rode em uma thread junto com `asyncio` em outra thread, no mesmo processo, se comunicando através da `UniversalQueue` e de `UniversalEvent`.
 A API para essas classes "universais" é a mesma dentro e fora de corrotinas, mas em uma corrotina é preciso preceder as chamadas com `await`.
 
 Em outubro de 2021, quando estou escrevendo esse capítulo, a _HTTPX_ é a primeira biblioteca HTTP cliente https://fpy.li/21-55[compatível com o _Curio_],
@@ -1486,8 +1515,8 @@ No repositório do _Curio_ há um conjunto impressionante de https://fpy.li/21-5
 O design do _Curio_ tem tido grande influência.
 o framework https://fpy.li/21-58[_Trio_], iniciada por Nathaniel J. Smith,
 foi muito inspirada pelo _Curio_.
-O _Curio_ pode também ter alertado os contribuidores de Python a melhorarem a usabilidade da API _asyncio_.
-Por exemplo, em suas primeiras versões, os usuários do _asyncio_ muitas vezes eram obrigados a obter e ficar passando um objeto `loop`, porque algumas funções essenciais eram ou métodos de `loop` ou exigiam um argumento `loop`.
+O _Curio_ pode também ter alertado os contribuidores de Python a melhorarem a usabilidade da API `asyncio`.
+Por exemplo, em suas primeiras versões, os usuários do `asyncio` muitas vezes eram obrigados a obter e ficar passando um objeto `loop`, porque algumas funções essenciais eram ou métodos de `loop` ou exigiam um argumento `loop`.
 Em versões mais recentes de Python, acesso direto ao laço não é mais tão necessário e, de fato, várias funções que aceitavam um `loop` opcional estão agora descontinuando aquele argumento.
 
 Anotações de tipo para tipos assíncronos é o nosso próximo tópico.((("", startref="APRcurio21")))((("", startref="curio21")))
@@ -1702,19 +1731,19 @@ A documentação do _Curio's_ contém https://fpy.li/21-64[links] para outras pa
 
 Além criar o _Trio_,
 Nathaniel J. Smith escreveu dois post de blog muito profundos, que gostaria de recomendar:
-https://fpy.li/21-65["Some thoughts on asynchronous API design in a post-async/await world" (_Algumas reflexões sobre o design de APIs assíncronas em um mundo pós-async/await_)] (EN), comparando os designs do _Curio_ e do _asyncio_, e
+https://fpy.li/21-65["Some thoughts on asynchronous API design in a post-async/await world" (_Algumas reflexões sobre o design de APIs assíncronas em um mundo pós-async/await_)] (EN), comparando os designs do _Curio_ e do `asyncio`, e
 https://fpy.li/21-66["Notes on structured concurrency, or: Go statement considered harmful" (_Notas sobre concorrência estruturada, ou: o comando Go considerado nocivo_)] (EN), sobre concorrência estruturada. Smith também deu uma longa e informativa resposta à questão:
 https://fpy.li/21-67["What is the core difference between asyncio and trio?" (_Qual é a principal diferença entre o asyncio e o trio?_)] (EN)
 no StackOverflow.
 
-Para aprender mais sobre o pacote _asyncio_, já mencionei os melhores recursos escritos que conheço no início do capítulo:
+Para aprender mais sobre o pacote `asyncio`, já mencionei os melhores recursos escritos que conheço no início do capítulo:
 a https://fpy.li/b9[documentação oficial], após a fantástica https://fpy.li/21-69[reorganização] (EN) iniciada por Yury Selivanov em 2018, e o livro de Caleb Hattingh,
 pass:[<a href="https://fpy.li/hattingh" class="orm:hideurl"><em>Using Asyncio in Python</em></a>]
 (O'Reilly).
 
-Na documentação oficial, não deixe de ler https://fpy.li/ba["Desenvolvendo com asyncio"], que documenta o modo de depuração do _asyncio_ e também discute erros e armadilhas comuns, e como evitá-los.
+Na documentação oficial, não deixe de ler https://fpy.li/ba["Desenvolvendo com asyncio"], que documenta o modo de depuração do `asyncio` e também discute erros e armadilhas comuns, e como evitá-los.
 
-Para uma introdução muito acessível, de 30 minutos, à programação assíncrona em geral e também ao _asyncio_,
+Para uma introdução muito acessível, de 30 minutos, à programação assíncrona em geral e também ao `asyncio`,
 assista a palestra
 https://fpy.li/21-71["Asynchronous Python for the Complete Beginner" (_Python Assíncrono para o Iniciante Completo_)] (EN), de  Miguel Grinberg,
 apresentada na PyCon 2017.
@@ -1727,17 +1756,17 @@ Na EuroPython 2019, Lynn Root—uma líder global da https://fpy.li/21-74[_PyLad
 https://fpy.li/21-75["Advanced asyncio: Solving Real-world Production Problems" (_Asyncio Avançado: Resolvendo Problemas de Produção do Mundo Real_)] (EN),
 baseada na sua experiência usando Python como um engenheira do Spotify.
 
-Em 2020, Łukasz Langa gravou um grande série de vídeos sobre o _asyncio_, começando com
+Em 2020, Łukasz Langa gravou um grande série de vídeos sobre o `asyncio`, começando com
 https://fpy.li/21-76["Learn Python's AsyncIO #1--The Async Ecosystem" (_Aprenda o AsyncIO de Python—O Ecossistema Async_)] (EN).
 Langa também fez um vídeo muito bacana,
 https://fpy.li/21-77["AsyncIO + Music"] (EN),
-para a PyCon 2020, que não apenas mostra o _asyncio_ aplicado a um domínio orientado a eventos muito concreto, como também explica essa aplicação do início ao fim.
+para a PyCon 2020, que não apenas mostra o `asyncio` aplicado a um domínio orientado a eventos muito concreto, como também explica essa aplicação do início ao fim.
 
 Outra área dominada por programaçao orientada a eventos são os sistemas embarcados.
 Por isso Damien George adicionou o suporte a `async/await` em seu interpretador https://fpy.li/21-78[_MicroPython_] (EN) para microcontroladores
 Na PyCon Australia 2018, Matt Trentini demonstrou a biblioteca
 https://fpy.li/21-79[_uasyncio_] (EN),
-um subconjunto do _asyncio_ que é parte da biblioteca padrão do MicroPython.
+um subconjunto do `asyncio` que é parte da biblioteca padrão do MicroPython.
 
 Para uma visão de mais alto nível sobre a programação assíncrona em Python, leia o post de blog
 https://fpy.li/21-80["Python async frameworks—Beyond developer tribalism" (_Frameworks assíncronos de Python—Para além do tribalismo dos desenvolvedores_)] (EN), de Tom Christie.
@@ -1757,14 +1786,14 @@ Nada é perfeito, e programação concorrente é sempre difícil.
 [role="soapbox-title"]
 Como uma função lerda quase estragou as benchmarks do uvloop
 
-Em((("asynchronous programming", "Soapbox discussion")))((("Soapbox sidebars", "uvloop")))((("uvloop"))) 2016, Yury Selivanov lançou o https://fpy.li/21-83[_uvloop_], "um substituto rápido e direto para o laço de eventos embutido do _asyncio_." Os números de referência (_benchmarks_) apresentados no https://fpy.li/21-84[post de blog] de Selivanov anunciando a biblioteca, em 2016, eram muito impressionantes. Ele escreveu: "ela é pelo menos 2x mais rápida que o nodejs e gevent, bem como qualquer outro framework assíncrona de Python. O desempenho do _asyncio_ com o _uvloop_ é próximo àquele de programas em Go."
+Em((("asynchronous programming", "Soapbox discussion")))((("Soapbox sidebars", "uvloop")))((("uvloop"))) 2016, Yury Selivanov lançou o https://fpy.li/21-83[_uvloop_], "um substituto rápido e direto para o laço de eventos embutido do `asyncio`." Os números de referência (_benchmarks_) apresentados no https://fpy.li/21-84[post de blog] de Selivanov anunciando a biblioteca, em 2016, eram muito impressionantes. Ele escreveu: "ela é pelo menos 2x mais rápida que o nodejs e gevent, bem como qualquer outro framework assíncrona de Python. O desempenho do `asyncio` com o _uvloop_ é próximo àquele de programas em Go."
 
 Entretanto, o post revela que a _uvloop_ é capaz de competir com o desempenho do Go sob duas condições:
 
- . Que o Go seja configurado para usar uma única thread. Isso faz o runtime do Go se comportar de forma similar ao _asyncio_: a concorrência é alcançada através de múltiplas corrotinas acionadas por um laço de eventos, todos na mesma thread.footnote:[Usar uma única thread era o default até o lançamento do Go 1.5. Anos antes, o Go já tinha ganho uma merecida reputação por permitir a criação de sistemas em rede de alta concorrência. Mais uma evidência que a concorrência não exige múltiplas threads ou múltiplos núcleos de CPU.]
+ . Que o Go seja configurado para usar uma única thread. Isso faz o runtime do Go se comportar de forma similar ao `asyncio`: a concorrência é alcançada através de múltiplas corrotinas acionadas por um laço de eventos, todos na mesma thread.footnote:[Usar uma única thread era o default até o lançamento do Go 1.5. Anos antes, o Go já tinha ganho uma merecida reputação por permitir a criação de sistemas em rede de alta concorrência. Mais uma evidência que a concorrência não exige múltiplas threads ou múltiplos núcleos de CPU.]
 . Que o código Python 3.5 use a biblioteca https://fpy.li/21-85[_httptools_] além do próprio _uvloop_.
 
-Selivanov explica que escreveu _httptools_ após testar o desempenho da _uvloop_ com a https://fpy.li/21-86[_aiohttp_]—uma das primeiras bibliotecas HTTP completas construídas sobre o _asyncio_:
+Selivanov explica que escreveu _httptools_ após testar o desempenho da _uvloop_ com a https://fpy.li/21-86[_aiohttp_]—uma das primeiras bibliotecas HTTP completas construídas sobre o `asyncio`:
 
 [quote]
 ____
@@ -1785,7 +1814,7 @@ Em((("Soapbox sidebars", "Twisted library")))((("Twisted library"))) vez de um s
 imagine um sistema Python complexo e em evolução, com milhares de linhas de código assíncrono,
 e conectado a muitas bibliotexas externas.
 Anos atrás me pediram para ajudar a diagnosticar problemas de desempenho em um sistema assim.
-Ele era escrito em Python 2.7, com o framework https://fpy.li/21-88[_Twisted_]—uma biblioteca sólida e, de muitas maneiras, uma precursora do próprio _asyncio_.
+Ele era escrito em Python 2.7, com o framework https://fpy.li/21-88[_Twisted_]—uma biblioteca sólida e, de muitas maneiras, uma precursora do próprio `asyncio`.
 
 Python era usado para construir uma fachada para a interface Web,
 integrando funcionalidades fornecidas por biliotecas pré-existentes e
