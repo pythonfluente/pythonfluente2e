@@ -1052,8 +1052,10 @@ startref="exedel21")))((("", startref="APRdelegat21")))
 O((("asynchronous programming", "writing asyncio servers", id="APRwrit21")))((("asyncio package", "writing asyncio servers", id="APwrite21")))((("servers", "writing asyncio servers", id="Sasyncio21"))) exemplo clássico de um servidor TCP de brinquedo é um
 https://fpy.li/7g[servidor eco]. Vamos escrever brinquedos um pouco mais interessantes: utilitários de servidor para busca de caracteres Unicode, primeiro usando HTTP com a _FastAPI_, depois usando TCP puro apenas com `asyncio`.
 
-Esse servidores permitem que os usuários façam consultas sobre caracteres Unicode baseadas em palavras em seus nomes padrão no módulo `unicodedata` que discutimos na <<unicodedata_sec>>.
-A <<web_mojifinder_result>> mostra uma sessão com o _web_mojifinder.py_, o primeiro servidor que escreveremos.
+Estes servidores permitem que os usuários pesquisem caracteres Unicode baseadas
+em palavras em seus nomes padrão fornecidos pelo módulo `unicodedata` que discutimos na
+<<unicodedata_sec>>. A <<web_mojifinder_result>> mostra uma sessão com o
+_web_mojifinder.py_, o primeiro servidor que escreveremos.
 
 [[web_mojifinder_result]]
 .Janela de navegador mostrando os resultados da busca por "mountain" no serviço web_mojifinder.py.
@@ -1071,12 +1073,12 @@ A classe `charindex.InvertedIndex` indexa cada palavra que aparece no nome de
 cada caractere no banco de dados Unicode, e cria um índice invertido em um `defaultdict`.
 Por exemplo, para indexar o caractere U+0037—DIGIT SEVEN—o construtor
 de `InvertedIndex` anexa o caractere `'7'` aos registros sob as chaves `'DIGIT'` e `'SEVEN'`.
-Após indexar os dados do Unicode 13.0.0 incluídos no Python 3.10, `'DIGIT'` será mapeado para
+Após indexar os dados do Unicode 13 incluídos no Python 3.10, `'DIGIT'` será mapeado para
 868 caracteres que tem essa palavra em seus nomes;
 e `'SEVEN'` para  143, incluindo U+1F556—CLOCK FACE SEVEN OCLOCK e
 U+2790—DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT SEVEN.
 
-Veja a <<inverted_index_fig>> para uma demonstração usando os registro para `'CAT'` e `'FACE'`.footnote:[O ponto de interrogação encaixotado na captura de tela não é um defeito do livro ou do ebook que você está lendo. É o caractere U+101EC—PHAISTOS DISC SIGN CAT, que não existe na fonte do terminal que usei. O https://fpy.li/ay[Disco de Festo] é um artefato antigo inscrito com pictogramas, descoberto na ilha de Creta.]
+Veja na <<inverted_index_fig>> uma demonstração usando os caracteres indexados para as palavras `'CAT'` e `'FACE'`.footnote:[O ponto de interrogação encaixotado na captura de tela não é um defeito do livro ou do ebook que você está lendo. É o caractere U+101EC—PHAISTOS DISC SIGN CAT, que não existe na fonte do terminal que usei. Ele vem do https://fpy.li/ay[Disco de Festo], um artefato antigo inscrito com pictogramas, descoberto na ilha de Creta.]
 
 [[inverted_index_fig]]
 .Explorando o atributo `entries` e o método `search` de `InvertedIndex` no console de Python
@@ -1085,30 +1087,47 @@ image::../images/flpy_2103.png[Captura de tela do console de Python]
 O método `InvertedIndex.search` quebra a consulta em palavras separadas, e devolve a interseção dos registros para cada palavra.
 É por isso que buscar por "face" encontra 171 resultados, "cat" encontra 14, mas "cat face" apenas 10.
 
-Essa é a bela ideia por trás dos índices invertidos: uma pedra fundamental da recuperação de informação—a teoria por trás dos mecanismos de busca.
-Veja o artigo https://fpy.li/az["Listas Invertidas"] na Wikipedia para saber mais.
+Esta é a bela ideia por trás dos índices invertidos: uma pedra fundamental da recuperação de informação—a teoria por trás dos mecanismos de busca.
+Veja o artigo https://fpy.li/az[«Listas Invertidas»] na Wikipedia para saber mais.
 ****
 
 [[fastapi_web_service_sec]]
-==== Um serviço Web com FastAPI
+==== Um serviço Web com _FastAPI_
 
-Escrevi((("FastAPI framework", id="fastapi21"))) o próximo exemplo—_web_mojifinder.py_—usando a https://fpy.li/21-28[_FastAPI_]:
-um dosframeworks ASGI de desenvolvimento Web de Python, mencionada na <<asgi_note>>.
-A <<web_mojifinder_result>> é uma captura de tela da interface de usuário.
-É uma aplicação muito simples, de uma página só (SPA, Single Page Application): após o download inicial do HTML, a interface é atualizada via JavaScript no cliente, em comunicação com o servidor.
+Escrevi((("FastAPI framework", id="fastapi21"))) o próximo
+exemplo—_web_mojifinder.py_—usando o https://fpy.li/21-28[_FastAPI_]: um dos
+frameworks ASGI para desenvolvimento Web em Python, mencionado na
+<<wsgi_app_server_sec>>. A <<web_mojifinder_result>> é uma captura de tela da
+interface de usuário. É uma aplicação simples, de uma página só (_SPA_,
+_Single Page Application_): após o download inicial do HTML, a interface é
+atualizada via JavaScript no cliente, em comunicação com o servidor.
 
-A _FastAPI_ foi projetada para implementar o lado servidor de SPAs and apps móveis,
-que consistem principalmente de pontos de acesso de APIs Web, devolvendo respostas JSON em vez de HTML renderizado no servidor. A _FastAPI_ se vale de decoradores, dicas de tipo e introspecção de código para eliminar muito do código repetitivo das APIs Web, e também publica automaticamente uma documentação no padrão OpenAPI—a.k.a. https://fpy.li/21-29[Swagger]—para a API que criamos.
-A <<web_mojifinder_schema>> mostra a página `/docs` para o _web_mojifinder.py_, gerada automaticamente.
+O _FastAPI_ foi projetado para implementar o lado servidor de SPAs e aplicativos
+de celular, que consistem principalmente de pontos de acesso de APIs Web, devolvendo
+respostas JSON em vez de HTML renderizado no servidor. O _FastAPI_ se vale de
+decoradores, dicas de tipo e introspecção de código para eliminar muito
+código repetitivo das APIs Web, e também gera uma
+documentação no padrão OpenAPI do https://fpy.li/21-29[_Swagger_].
+A <<web_mojifinder_schema>> mostra a página `/docs` do
+_web_mojifinder.py_, gerada automaticamente.
 
 [[web_mojifinder_schema]]
-.Schema OpenAPI gerado automaticamente para o ponto de acesso `/search`.
+.Documentação OpenAPI do ponto de acesso `/search`, gerada automaticamente.
 image::../images/flpy_2104.png[Captura de tela do Firefox mostrando o schema OpenAPI para o ponto de acesso `/search`]
 
-O <<web_mojifinder_ex>> é o código do _web_mojifinder.py_, mas aquele é apenas o código do lado servidor. Quando você acessa a URL raiz `/`, o servidor envia o arquivo _form.html_, que contém 81 linhas de código, incluindo 54 linhas de JavaScript para comunicação com o servidor e preenchimento de uma tabela com os resultados. Se tiver interesse em ler JavaScript puro sem uso de frameworks, vá olhar o _21-async/mojifinder/static/form.html_ no
-https://fpy.li/code[repositório de código do _Python Fluente_].
+O <<web_mojifinder_ex>> é o código de _web_mojifinder.py_, mas é so
+código do lado servidor. Quando você acessa a URL raiz `/`, o servidor envia o
+arquivo _form.html_, que contém 81 linhas de código, incluindo 54 linhas de
+JavaScript para comunicação com o servidor e preenchimento da tabela com os
+resultados. Se tiver interesse em ler JavaScript puro sem uso de frameworks,
+confira o _21-async/mojifinder/static/form.html_ no
+https://fpy.li/code[«repositório de código»] do _Python Fluente_.
 
-Para rodar o _web_mojifinder.py_, você precisa instalar dois pacotes e suas dependências: _FastAPI_ e _uvicorn_.footnote:[Você pode usar outro servidor ASGI no lugar do _uvicorn_, como o _hypercorn_ ou o _Daphne_. Veja na documentação oficial do ASGI a https://fpy.li/21-30[página sobre implementações] (EN) para mais informações.]
+Para rodar o _web_mojifinder.py_, você precisa instalar dois pacotes e suas
+dependências: _FastAPI_ e _uvicorn_.footnote:[Você pode usar outro servidor ASGI
+no lugar do _uvicorn_, como o _hypercorn_ ou o _Daphne_. Veja na documentação
+oficial do ASGI a https://fpy.li/21-30[«página sobre implementações»] para
+mais informações.]
 
 Este é o comando para executar o <<web_mojifinder_ex>> com _uvicorn_ em modo de desenvolvimento:
 
@@ -1121,7 +1140,7 @@ os parâmetros são:
 
 `web_mojifinder:app`::
   O nome do pacote, dois pontos, e o nome da aplicação ASGI definida nele—`app` é o nome usado por convenção.
-
+   
 `--reload`::
   Faz o _uvicorn_ monitorar mudanças no código-fonte da aplicação, e recarregá-la automaticamente. Útil apenas durante o desenvolvimento.
 
@@ -1136,62 +1155,120 @@ Vamos agora olhar o código-fonte do _web_mojifinder.py_.
 include::../code/21-async/mojifinder/web_mojifinder.py[]
 ----
 ====
-<1> Não relacionado ao tema desse capítulo, mas digno de nota: o uso elegante do operador `/` sobrecarregado por `pathlib`.footnote:[Agradeço o revisor técnico Miroslav Šedivý por apontar bons lugares para usar `pathlib` nos exemplo de código.]
-<2> Essa linha define a app ASGI. Ela poderia ser tão simples como `app = FastAPI()`. Os parâmetros mostrados são metadata para a documentação auto-gerada.
-<3> Um schema _pydantic_ para uma resposta JSON, com campos `char` e `name`.footnote:[Como mencionado no <<ch_type_hints_def>>, o https://fpy.li/21-31[_pydantic_] aplica dicas de tipo durante a execução, para validação de dados.]
-<4> Cria o `index` e carrega o formulário HTML estático, anexando ambos ao `app.state` para uso posterior.
-<5> Roda `init` quando esse módulo é carregado pelo servidor ASGI.
-<6> Rota para o ponto de acesso `/search`; `response_model` usa aquele modelo `CharName` do _pydantic_ para descrever o formato da resposta.
-<7> A _FastAPI_ assume que qualquer parâmetro que apareça na assinatura da função ou da corrotina e que não esteja no caminho da rota será passado na string de consulta HTTP, isto é, `/search?q=cat`. Como `q` não tem default, a _FastAPI_ devolverá um status 422 (Unprocessable Entity, _Entidade Não-Processável_) se `q` não estiver presente na string da consulta.
-<8> Devolver um iterável de `dicts` compatível com o schema `response_model` permite ao _FastAPI_ criar uma resposta JSON de acordo com o `response_model` no decorador `@app.get`,
-<9> Funções regulares (isto é, não-assíncronas) também podem ser usadas para produzir respostas.
-<10> Este módulo não tem uma função principal. É carregado e acionado pelo servidor ASGI—neste exemplo, o _uvicorn_.
 
-O <<web_mojifinder_ex>> não tem qualquer chamada direta ao `asyncio`.
-O _FastAPI_ é construído sobre o tollkit ASGI _Starlette_, que por sua vez usa o `asyncio`.
+<1> Não relacionado ao tema desse capítulo, mas digno de nota: o uso elegante do
+operador `/` sobrecarregado por `pathlib`.footnote:[Agradeço o revisor técnico
+Miroslav Šedivý por apontar bons lugares para usar `pathlib` nos exemplo de
+código.]
+
+<2> Essa linha define a app ASGI. Ela poderia ser tão simples como `app =
+FastAPI()`. Os parâmetros mostrados são metadata para a documentação
+auto-gerada.
+
+<3> Um schema _pydantic_ para uma resposta JSON, com campos `char` e
+`name`.footnote:[Como mencionado no <<ch_type_hints_def>>, o
+https://fpy.li/21-31[_pydantic_] aplica dicas de tipo durante a execução, para
+validação de dados.]
+
+<4> Cria o `index` e carrega o formulário HTML estático, anexando ambos ao
+`app.state` para uso posterior.
+
+<5> Roda `init` quando esse módulo é carregado pelo servidor ASGI.
+
+<6> Rota para o ponto de acesso `/search`; `response_model` usa aquele modelo
+`CharName` do _pydantic_ para descrever o formato da resposta.
+
+<7> O _FastAPI_ assume que qualquer parâmetro que apareça na assinatura da
+função ou da corrotina e que não esteja no caminho da rota será passado na
+string de consulta HTTP, isto é, `/search?q=cat`. Como `q` não tem default, a
+_FastAPI_ devolverá um status 422 (Unprocessable Entity, _Entidade
+Não-Processável_) se `q` não estiver presente na string da consulta.
+
+<8> Devolver um iterável de `dicts` compatível com o schema `response_model`
+permite ao _FastAPI_ criar uma resposta JSON de acordo com o `response_model` no
+decorador `@app.get`,
+
+<9> Funções regulares (isto é, não-assíncronas) também podem ser usadas para
+produzir respostas.
+
+<10> Este módulo não tem uma função principal. É carregado e acionado pelo
+servidor ASGI—neste exemplo, o _uvicorn_.
+
+O <<web_mojifinder_ex>> não faz chamada direta ao `asyncio`.
+O _FastAPI_ é construído sobre o toolkit ASGI _Starlette_, que por sua vez usa o `asyncio`.
 
 Observe também que o corpo de `search` não usa `await`, `async with`, ou `async for`,
 e assim poderia ser uma função normal.
 Defini `search` como um corrotina apenas para mostrar que o _FastAPI_ sabe como lidar com elas.
-Em uma aplicação real, a maioria dos pontos de acesso serão consultas a bancos de dados ou acessos a outros servidores remotos, então é uma vantagem crítica do _FastAPI_—e de frameworks ASGI em geral—
+Em uma aplicação real, a maioria dos pontos de acesso serão consultas
+a bancos de dados ou acessos a outros servidores remotos,
+então é uma vantagem importante do _FastAPI_—e frameworks ASGI em geral—
 suportarem corrotinas que podem se valer de bibliotecas assíncronas para E/S de rede.
 
 [TIP]
 ====
 
-As funções `init` e `form`, escritas para carregar e entregar o formulário em HTML estático é uma improvisação que escrevi para manter esse exemplo curto e fácil de executar.
-A melhor prática recomendada é ter um proxy/balanceador de carga na frente do ASGI, para gerenciar todos os recursos estáticos, e também usar uma CDN (Content Delivery Network, _Rede de Entrega de Conteúdo_) quando possível.
-Um proxy/balanceador de carga desse tipo é o https://fpy.li/21-32[_Traefik_] (EN), que se auto-descreve como um "roteador de ponta (_edge router)", que "recebe requisições em nome de seu sistema e descobre quais componentes são responsáveis por lidar com elas." O _FastAPI_ tem scripts de https://fastapi.tiangolo.com/pt/project-generation/[geração de projeto] que preparam seu código para fazer isso.
+As funções `init` e `form` para carregar e entregar o HTML estático do
+formulário são gambiarras para manter esse exemplo curto e fácil de rodar
+sem mais configurações.
+
+A melhor prática é ter um proxy/balanceador de carga na frente do
+ASGI, servindo todos os recursos estáticos, e também usar uma _CDN_ 
+(Rede de Entrega de Conteúdo) quando possível.
+
+Um proxy/balanceador de carga deste tipo é o https://fpy.li/21-32[_Traefik_],
+descrito como um _edge router_ (roteador de ponta), que "recebe requisições em
+nome de seu sistema e descobre quais componentes são responsáveis por lidar com
+elas." O site do _FastAPI_ apresenta 
+https://fpy.li/c5/[«ferramentas de geração de projeto»]
+que organizam o código para usar o _Trafik_ e outros sofwares auxiliares.
 
 ====
 
-Os entusiastas pela tipagem podem ter notado que não há dicas de tipo para os resultados devolvidos por `search` e `form`.
-Em vez disto, o _FastAPI_ aceita o argumento nomeado `response_model=` nos decoradores de rota.
-A página https://fpy.li/21-34["Modelo de Resposta"] (EN) na documentação do _FastAPI_ explica:
+Os entusiastas da tipagem estática podem ter notado que não coloquei dicas de
+tipo para os resultados devolvidos por `search` e `form`. Em vez disto, o
+_FastAPI_ aceita o argumento nomeado `response_model=` nos decoradores de rota.
+A página https://fpy.li/21-34[_Response Model - Return Type_] da documentação do _FastAPI_
+explica:
 
 [quote]
 ____
-O modelo de resposta é declarado neste parâmetro em vez de como uma anotação de tipo de resultado devolvido por uma função, porque a função de rota pode não devolver aquele modelo de resposta mas sim um `dict`, um objeto banco de dados ou algum outro modelo, e então usar o `response_model` para realizar a limitação de campo e a serialização.
+
+O modelo de resposta é declarado neste parâmetro em vez de como uma anotação de
+tipo de resultado devolvido por uma função, porque a função de rota pode não
+devolver aquele modelo de resposta mas sim um `dict`, um objeto do banco de dados
+ou algum outro modelo, e então usar o `response_model` para realizar a validação
+de campos e a serialização.
 ____
 
-Por exemplo, em `search`, eu devolvi um gerador de itens `dict` e não uma lista de objetos `CharName`,
-mas isso é o suficiente para o _FastAPI_ e o _pydantic_ validarem meus dados e construírem a resposta JSON apropriada, compatível com `response_model=list[CharName]`.
+Por exemplo, em `search`, devolvi um gerador de itens `dict` e não uma lista
+de objetos `CharName`, mas isso basta para o _FastAPI_ e o _pydantic_
+validarem meus dados e construírem a resposta JSON apropriada, compatível com
+`response_model=list[CharName]`.
 
-Agora vamos nos concentrar no script _tcp_mojifinder.py_, que responde às consultas, na <<tcp_mojifinder_demo>>.((("", startref="fastapi21")))
+Agora vamos analisar outro servidor que 
+usa _sockets_ TCP e a biblioteca padrão do Python para responder consultas via
+Telnet no terminal.((("", startref="fastapi21")))
 
 
 ==== Um servidor TCP com `asyncio`
 
-O((("TCP servers", id="tcp21")))((("servers", "TCP servers", id="Stcp22"))) programa _tcp_mojifinder.py_ usa TCP puro para se comunicar com um cliente como o Telnet ou o Netcat, então pude escrevê-lo usando `asyncio` sem dependências externas—e sem reinventar o HTTP. O <<tcp_mojifinder_demo>> mostra a interface de texto do usuário.
+O((("TCP servers", id="tcp21")))((("servers", "TCP servers", id="Stcp22")))
+programa _tcp_mojifinder.py_ usa TCP puro para se comunicar com um cliente como
+o Telnet ou o Netcat, então pude escrevê-lo usando `asyncio` sem dependências
+externas, e sem reinventar o HTTP. O <<tcp_mojifinder_demo>> mostra a interface
+de usuário em modo texto.
 
 
 [[tcp_mojifinder_demo]]
 .Sessão de telnet com o servidor tcp_mojifinder.py: consultando "fire."
 image::../images/flpy_2105.png[Captura de tela de conexão via telnet com tcp_mojifinder.py]
 
-Este programa é duas vezes mais longo que o _web_mojifinder.py_, então dividi sua apresentação em três partes:
+Este programa é duas vezes mais longo que o _web_mojifinder.py_ (descontando o HTML e o JavaScript daquele exemplo).
+Por isso dividi a apresentação em três partes:
 <<ex_tcp_mojifinder_main>>, <<tcp_mojifinder_top>>, e <<tcp_mojifinder_search>>.
-O início de _tcp_mojifinder.py_—incluindo as instruções `import`—está no <<tcp_mojifinder_top>>,mas vou começar descrevendo a corrotina `supervisor` e a função `main` que controla o programa.
+O topo do arquivo _tcp_mojifinder.py_, com as instruções `import`, está no <<tcp_mojifinder_top>>.
+Mas vou começar descrevendo a corrotina `supervisor` e a função `main` que controlam o programa.
 
 [[ex_tcp_mojifinder_main]]
 .tcp_mojifinder.py: um servidor TCP simples; continua em <<tcp_mojifinder_top>>
@@ -1201,19 +1278,54 @@ O início de _tcp_mojifinder.py_—incluindo as instruções `import`—está no
 include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_MAIN]
 ----
 ====
-<1> Este `await` rapidamente recebe um instância de `asyncio.Server`, um servidor TCP baseado em _sockets_. Por default, `start_server` cria e inicia o servidor, então ele está pronto para receber conexões.
-<2> O primeiro argumento para `start_server` é `client_connected_cb`, um callback para ser executado quando a conexão com um novo cliente se inicia. O callback pode ser uma função ou uma corrotina, mas precisa aceitar exatamente dois argumentos: um `asyncio.StreamReader` e um `asyncio.StreamWriter`. Entretanto, minha corrotina `finder` também precisa receber um `index`, então usei `functools.partial` para vincular aquele parâmetro e obter um invocável que receber o leitor (`asyncio.StreamReader`) e o escritor (`asyncio.StreamWriter`). Adaptar funções do usuário a APIs de callback é o caso de uso mais comum de `functools.partial`.
-<3> `host` e `port` são o segundo e o terceiro argumentos de `start_server`. Veja a assinatura completa na https://fpy.li/b2[documentação do `asyncio`].
-<4> Este `cast` é necessário porque o _typeshed_ tem uma dica de tipo desatualizada para a propriedade `sockets` da classe `Server`—isso em maio de 2021. Veja https://fpy.li/21-36[Issue #5535 no _typeshed_].footnote:[O issue #5535 está fechado desde outubro de 2021, mas o Mypy não lançou uma nova versão desde então, daí o erro permanece.]
-<5> Mostra o endereço e a porta do primeiro _socket_ do servidor.
-<6> Apesar de `start_server` já ter iniciado o servidor como uma tarefa concorrente, preciso usar o `await` no método `serve_forever`, para que meu `supervisor` seja suspenso aqui.
-Sem essa linha, o `supervisor` retornaria imediatamente, encerrando o laço iniciado com `asyncio.run(supervisor(…))`, e fechando o programa. A
-https://fpy.li/b3[documentação de `Server.serve_forever`] diz: "Este método pode ser chamado se o servidor já estiver aceitando conexões."
-<7> Constrói o índice invertido.footnote:[O revisor técnico Leonardo Rochael apontou que a construção do índice poderia ser delegada a outra thread, usando `loop.run_with_executor()` na corrotina `supervisor`. Dessa forma o servidor estaria pronto para receber requisições imediatamente, enquanto o índice é construído. Isso é verdade, mas como consultar o índice é a única coisa que esse servidor faz, isso não seria uma grande vantagem nesse exemplo.]
-<8> Inicia o laço de eventos rodando `supervisor`.
-<9> Captura `KeyboardInterrupt` para evitar o traceback dispersivo quando encerro o servidor com Ctrl-C, no terminal onde ele está rodando.
 
-Pode ser mais fácil entender como o controle flui em _tcp_mojifinder.py_ estudando a saída que ele gera no console do servidor, listada em <<tcp_mojifinder_server_demo>>.
+<1> Este `await` devolve uma instância de `asyncio.Server`, um servidor TCP baseado
+em _sockets_. Por padrão, `start_server` cria e inicia o servidor, então ele
+está pronto para receber conexões.
+
+<2> O primeiro argumento para `start_server` é `client_connected_cb`, uma
+função de _callback_ para ser executada quando a conexão com um novo cliente se inicia.
+Ela pode ser uma função ou uma corrotina, mas precisa aceitar exatamente
+dois argumentos: um `asyncio.StreamReader` e um `asyncio.StreamWriter`.
+Porém, minha corrotina `finder` também precisa receber um `index`, então
+usei `functools.partial` para vincular aquele parâmetro e obter um invocável que
+recebe o leitor (`StreamReader`) e o escritor (`StreamWriter`).
+Adaptar funções do usuário a APIs de callback é o caso de uso mais comum de
+`functools.partial`.
+
+<3> `host` e `port` são o segundo e o terceiro argumentos de `start_server`.
+Veja a assinatura completa na https://fpy.li/b2[«documentação do `asyncio`»].
+
+<4> Este `cast` é necessário porque o _typeshed_ tem uma dica de tipo
+desatualizada para a propriedade `sockets` da classe `Server` em maio de
+2021. Veja https://fpy.li/21-36[«Issue #5535 no _typeshed_»].footnote:[O bug
+#5535 está resolvido desde outubro de 2021, mas o Mypy não lançou uma nova versão
+até o fechamento desta edição, então o erro permanece.]
+
+<5> Exibe o endereço e a porta do primeiro _socket_ do servidor.
+
+<6> Apesar de `start_server` já ter iniciado o servidor como uma tarefa
+concorrente, preciso usar o `await` no método `serve_forever`, para que meu
+`supervisor` seja suspenso aqui. Sem essa linha, o `supervisor` retornaria
+imediatamente, encerrando o laço iniciado com `asyncio.run(supervisor(…))`, e
+fechando o programa. A https://fpy.li/b3[documentação de `Server.serve_forever`]
+diz: "Este método pode ser chamado se o servidor já estiver aceitando conexões."
+
+<7> Constrói o índice invertido.footnote:[O revisor técnico Leonardo Rochael
+apontou que a construção do índice poderia ser delegada a outra thread, usando
+`loop.run_with_executor()` na corrotina `supervisor`. Dessa forma o servidor
+estaria pronto para receber requisições imediatamente, enquanto o índice é
+construído. Isso é verdade, mas como consultar o índice é a única coisa que esse
+servidor faz, isso não seria uma grande vantagem nesse exemplo.]
+
+<8> Inicia o laço de eventos rodando `supervisor`.
+
+<9> Captura `KeyboardInterrupt` para evitar um traceback ruidoso quando
+encerramos o servidor teclando CTRL-C no terminal onde ele está rodando.
+
+Pode ser mais fácil entender como o controle flui em _tcp_mojifinder.py_
+estudando a saída que ele gera no console do servidor, listada no
+<<tcp_mojifinder_server_demo>>.
 
 [[tcp_mojifinder_server_demo]]
 .tcp_mojifinder.py: isso é o lado servidor da sessão mostrada na <<tcp_mojifinder_demo>>
@@ -1222,7 +1334,7 @@ Pode ser mais fácil entender como o controle flui em _tcp_mojifinder.py_ estuda
 ----
 $ python3 tcp_mojifinder.py
 Building index.  # <1>
-Serving on ('127.0.0.1', 2323). Hit Ctrl-C to stop.  # <2>
+Serving on ('127.0.0.1', 2323). Hit CTRL-C to stop.  # <2>
  From ('127.0.0.1', 58192): 'cat face'   # <3>
    To ('127.0.0.1', 58192): 10 results.
  From ('127.0.0.1', 58192): 'fire'       # <4>
@@ -1234,18 +1346,34 @@ Server shut down.  # <8>
 $
 ----
 ====
-<1> Saída de `main`. Antes da próxima linha surgir, vi um intervalo de 0,6s na minha máquina, enquanto o índice era construído.
+<1> Saída de `main`. Antes da próxima linha aparecer, notei um intervalo de 0,6s na minha máquina, enquanto o índice era construído.
 <2> Saída de `supervisor`.
-<3> Primeira iteração de um laço `while` em `finder`. A pilha TCP/IP atribuiu a porta 58192 a meu cliente Telnet. Se você conectar diversos clientes ao servidor, verá suas várias portas aparecerem na saída.
+<3> Primeira volta do laço `while` na função `finder` do <<tcp_mojifinder_top>>. A pilha TCP/IP atribuiu a porta 58192 a meu cliente Telnet. Se você conectar diversos clientes ao servidor, verá suas diferentes portas aparecerem na saída.
 <4> Segunda iteração do laço `while` em `finder`.
-<5> Eu apertei Ctrl-C no terminal cliente; o laço `while` em `finder` termina.
-<6> A corrotina `finder` mostra essa mensagem e então encerra. Enquanto isso o servidor continua rodando, pronto para receber outro cliente.
-<7> Aperto Ctrl-C no terminal do servidor; `server.serve_forever` é cancelado, encerrando `supervisor` e o laço de eventos.
+<5> Teclei CTRL-C no terminal do cliente; o laço `while` em `finder` termina.
+<6> A corrotina `finder` exibe essa mensagem e então encerra. Enquanto isso o servidor continua rodando, pronto para receber outros clientes.
+<7> Teclei CTRL-C no terminal do servidor; `server.serve_forever` é cancelado, encerrando `supervisor` e o laço de eventos.
 <8> Saída de `main`.
 
-Após `main` construir o índice e iniciar o laço de eventos, `supervisor` rapidamente mostra a mensagem `Serving on…`, e é suspenso na linha `await server.serve_forever()`. Nesse ponto o controle flui para dentro do laço de eventos e lá permanece, voltando ocasionalmente para a corrotina `finder`, que devolve o controle de volta para o laço de eventos sempre  que precisa esperar que a rede envie ou receba dados.
+Após `main` construir o índice e iniciar o laço de eventos, a corrotina
+`supervisor` rapidamente exibe a mensagem `Serving on...`,
+e fica suspensa na última linha:
 
-Enquanto o laço de eventos estiver ativo, uma nova instância da corrotina `finder` será iniciada para cada cliente que se conecte ao servidor. Dessa forma, múltiplos clientes podem ser atendidos de forma concorrente por esse servidor simples. Isso segue até que ocorra um `KeyboardInterrupt` no servidor ou que seu processo seja eliminado pelo SO.
+[source, python]
+----
+    await server.serve_forever()
+----
+
+Neste ponto o controle flui para o laço de eventos do `asyncio` e lá permanece,
+voltando ocasionalmente para a corrotina `finder`, que devolve o controle de
+volta para o laço de eventos sempre que precisa esperar a rede enviar ou
+receber dados.
+
+Enquanto o laço de eventos estiver ativo, uma nova instância da corrotina
+`finder` será iniciada para cada cliente que se conecte ao servidor. Desta
+forma, múltiplos clientes podem ser atendidos de forma concorrente por esse
+servidor simples. Isso segue até que ocorra um `KeyboardInterrupt` no servidor
+ou que seu processo seja encerrado pelo SO.
 
 Agora vamos ver o início de _tcp_mojifinder.py_, com a corrotina `finder`.
 
@@ -1257,26 +1385,52 @@ Agora vamos ver o início de _tcp_mojifinder.py_, com a corrotina `finder`.
 include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_TOP]
 ----
 ====
-[role="pagebreak-before less_space"]
-<1> `format_results` é útil para mostrar os resultado de `InvertedIndex.search` em uma interface de usuário baseada em texto, como a linha de comando ou uma sessão Telnet.
-<2> Para passar `finder` para `asyncio.start_server`, a envolvi com `functools.partial`, porque o servidor espera uma corrotina ou função que receba apenas os argumentos `reader` e `writer`.
+
+<1> `format_results` é útil para mostrar os resultado de `InvertedIndex.search`
+em uma interface de usuário baseada em texto, como a linha de comando ou uma
+sessão Telnet.
+
+<2> Para passar `finder` para `asyncio.start_server`, a envolvi com
+`functools.partial`, porque o servidor espera uma corrotina ou função que receba
+apenas os argumentos `reader` e `writer`.
+
 <3> Obtém o endereço do cliente remoto ao qual o socket está conectado.
-<4> Este laço controla um diálogo que persiste até um caractere de controle ser recebido do cliente.
-<5> O método `StreamWriter.write` não é uma corrotina, é apenas um função normal; essa linha envia o prompt `?>`.
-<6> O `StreamWriter.drain` esvazia o buffer de `writer`; ela é uma corrotina, então precisa ser acionada com `await`.
+
+<4> Este laço controla um diálogo que persiste até um caractere de controle ser
+recebido do cliente.
+
+<5> O método `StreamWriter.write` não é uma corrotina, é apenas um função
+normal; essa linha envia o prompt `?>`.
+
+<6> O `StreamWriter.drain` esvazia o buffer de `writer`; ela é uma corrotina,
+então precisa ser acionada com `await`.
+
 <7> `StreamWriter.readline` é um corrotina que devolve `bytes`.
+
 <8> Se nenhum byte foi recebido, o cliente fechou a conexão, então sai do loop.
+
 <9> Decodifica os `bytes` para `str`, usando a codificação UTF-8 como default.
-<10> Pode ocorrer um `UnicodeDecodeError` quando o usuário digita Ctrl-C e o cliente Telnet envia caracteres de controle; se isso acontecer, substitui a consulta pelo caractere null, para simplificar.
+
+<10> Pode ocorrer um `UnicodeDecodeError` quando o usuário digita CTRL-C e o
+cliente Telnet envia caracteres de controle; se isso acontecer, substitui a
+consulta pelo caractere null, para simplificar.
+
 <11> Registra a consulta no console do servidor.
+
 <12> Sai do laço se um caractere de controle ou null foi recebido.
+
 <13> `search` realiza a busca efetiva; o código será apresentado a seguir.
+
 <14> Registra a resposta no console do servidor.
+
 <15> Fecha o `StreamWriter`.
-<16> Espera até `StreamWriter` fechar. Isso é recomendado na https://fpy.li/b4[documentação do método `.close()`].
+
+<16> Espera até `StreamWriter` fechar. Isso é recomendado na
+https://fpy.li/b4[documentação do método `.close()`].
+
 <17> Registra o final dessa sessão do cliente no console do servidor.
 
-O último pedaço desse exemplo é a corrotina `search`, listada no <<tcp_mojifinder_search>>.
+O último trecho desse exemplo é a corrotina `search`, listada no <<tcp_mojifinder_search>>.
 
 [[tcp_mojifinder_search]]
 .tcp_mojifinder.py: corrotina `search`
@@ -1318,7 +1472,7 @@ Se forma similar, `async for` funciona com _iteráveis assíncronos_: objetos qu
 
 Um iterador assíncrono fornece um método corrotina `+__anext__+` que devolve um esperável—muitas vezes um objeto corrotina. Também se espera que eles implementem `+__aiter__+`, que normalmente devolve `self`. Isso espelha a importante distinção entre iteráveis e iteradores que discutimos na <<iterable_not_self_iterator_sec>>.
 
-A https://fpy.li/21-43[documentação] (EN) do driver assíncrono de PostgreSQL _aiopg_ traz um exemplo que ilustra o uso de `async for` para iterar sobre as linhas de cursor de banco de dados.
+A https://fpy.li/21-43[documentação] do driver assíncrono de PostgreSQL _aiopg_ traz um exemplo que ilustra o uso de `async for` para iterar sobre as linhas de cursor de banco de dados.
 
 [source, python]
 ----
@@ -1526,7 +1680,7 @@ Geradores têm um uso adicional, não relacionado à iteração: ele podem ser u
 [[async_gen_context_mngr_sec]]
 ===== Geradores assíncronos como gerenciadores de contexto
 
-Escrever((("context managers", "asynchronous generators as"))) nossos próprios gerenciadores de contexto assíncronos não é uma tarefa de programação frequente, mas se você precisar escrever um, considere usar o decorador https://fpy.li/b6[`@asynccontextmanager`] (EN), incluído no módulo `contextlib` no Python 3.7.
+Escrever((("context managers", "asynchronous generators as"))) nossos próprios gerenciadores de contexto assíncronos não é uma tarefa de programação frequente, mas se você precisar escrever um, considere usar o decorador https://fpy.li/b6[`@asynccontextmanager`], incluído no módulo `contextlib` no Python 3.7.
 Ele é muito similar ao decorador `@contextmanager` que estudamos na <<using_cm_decorator_sec>>.
 
 Um exemplo interessante da combinação de `@asynccontextmanager` com `loop.run_in_executor` aparece no livro de Caleb Hattingh,
@@ -1579,7 +1733,7 @@ Aqui((("native coroutines", "versus asynchronous generators", secondary-sortas="
 
 ==== Compreensões assíncronas e expressões geradoras assíncronas
 
-A https://fpy.li/pep530[PEP 530—Asynchronous Comprehensions] (EN) introduziu((("generator expressions (genexps)", id="genexp21")))((("list comprehensions (listcomps)", "asynchronous", id="LCasync21"))) o uso de `async for` e `await` na sintaxe de compreensões e expressões geradoras, a partir de Python 3.6.
+A https://fpy.li/pep530[PEP 530—Asynchronous Comprehensions] introduziu((("generator expressions (genexps)", id="genexp21")))((("list comprehensions (listcomps)", "asynchronous", id="LCasync21"))) o uso de `async for` e `await` na sintaxe de compreensões e expressões geradoras, a partir de Python 3.6.
 
 A única sintaxe definida na PEP 530 que pode aparecer fora do corpo
 de uma `async def` é uma expressão geradora assíncrona.
@@ -1736,7 +1890,7 @@ Um `TaskGroup` do _Curio_ é um gerenciador de contexto assíncrono que substitu
 Acabamos de ver como iterar sobre um `TaskGroup` torna a função `asyncio.as_completed(…)` desnecessária.
 
 Outro exemplo: em vez da função especial `gather`, este trecho da
-https://fpy.li/21-50[documentação de "Task Groups"] (EN)
+https://fpy.li/21-50[documentação de "Task Groups"]
 coleta os resultados de todas as tarefas no grupo:
 
 [source, python]
@@ -1755,7 +1909,7 @@ Quando usado como um gerenciador de contexto assíncrono, um `TaskGroup` garante
 
 [NOTE]
 ====
-A concorrência estruturada vai provavelmente ser adotada pelo `asyncio` em versões futuras de Python. Uma indicação forte disso aparece na https://fpy.li/pep654[PEP 654–Exception Groups and except*] (EN), que foi https://fpy.li/21-52[aprovada para Python 3.11] (EN).
+A concorrência estruturada vai provavelmente ser adotada pelo `asyncio` em versões futuras de Python. Uma indicação forte disso aparece na https://fpy.li/pep654[PEP 654–Exception Groups and except*], que foi https://fpy.li/21-52[aprovada para Python 3.11].
 A https://fpy.li/21-53[seção "Motivation"](EN) menciona as "creches" (_nurseries) do _Trio_, o nome que els dão para grupos de tarefas:
 "Implementar uma API de geração de tarefas melhor no `asyncio`, inspirada pelas _creches_ do Trio, foi  a principal motivação dessa PEP."
 ====
@@ -1860,7 +2014,7 @@ Vamos começar explicando a razão número 1 pela qual a programação assíncro
 [[around_blocking_calls_sec]]
 ==== Correndo em círculos em torno de chamadas bloqueantes
 
-Ryan Dahl, o((("asynchronous programming", "benefits of"))) inventor do Node.js, introduz a filosofia por trás de seu projeto dizendo "Estamos fazendo E/S de forma totalmente errada."footnote:[Vídeo: https://fpy.li/21-59["Introduction to Node.js" (_Introdução ao Node.js_)], em 4:55.] (EN). Ele define uma _função bloqueante_ como uma função que faz E/S de arquivo ou rede, e argumenta que elas não podem ser tratadas da mesma forma que tratamos funções não-bloqueantes. Para explicar a razão disso, ele apresenta os números na segunda coluna da <<latency_tbl>>.
+Ryan Dahl, o((("asynchronous programming", "benefits of"))) inventor do Node.js, introduz a filosofia por trás de seu projeto dizendo "Estamos fazendo E/S de forma totalmente errada."footnote:[Vídeo: https://fpy.li/21-59["Introduction to Node.js" (_Introdução ao Node.js_)], em 4:55.]. Ele define uma _função bloqueante_ como uma função que faz E/S de arquivo ou rede, e argumenta que elas não podem ser tratadas da mesma forma que tratamos funções não-bloqueantes. Para explicar a razão disso, ele apresenta os números na segunda coluna da <<latency_tbl>>.
 
 [role="pagebreak-before less_space"]
 [[latency_tbl]]
@@ -1980,8 +2134,8 @@ e como lidar com as inevitáveis partes de uso intensivo de CPU em seu programa.
 === Para saber mais
 
 A((("asynchronous programming", "further reading on"))) palestra de abertura da PyOhio 2016, de David Beazley,
-https://fpy.li/21-61["Fear and Awaiting in Async"] (EN) é uma fantástica introdução, com "código ao vivo", ao potencial dos recursos da linguagem tornados possíveis pela contribuição de Yury Selivanov ao Python 3.5, as palavras-chave `async/await`.
-Em certo momento, Beazley reclama que `await` não pode ser usada em compreensões de lista, mas isso foi resolvido por Selivanov na https://fpy.li/pep530[PEP 530—Asynchronous Comprehensions] (EN), implementada mais tarde naquele mesmo ano, no Python 3.6.
+https://fpy.li/21-61["Fear and Awaiting in Async"] é uma fantástica introdução, com "código ao vivo", ao potencial dos recursos da linguagem tornados possíveis pela contribuição de Yury Selivanov ao Python 3.5, as palavras-chave `async/await`.
+Em certo momento, Beazley reclama que `await` não pode ser usada em compreensões de lista, mas isso foi resolvido por Selivanov na https://fpy.li/pep530[PEP 530—Asynchronous Comprehensions], implementada mais tarde naquele mesmo ano, no Python 3.6.
 
 Fora isso, todo o resto da palestra de Beazley é atemporal, pois ele demonstra como os objetos assíncronos vistos nesse capítulo funcionam, sem ajuda de qualquer framework—com uma simples função `run` usando `.send(None)` para acionar corrotinas.
 Apenas no final Beazley mostra o https://fpy.li/21-62[_Curio_], que ele havia começado a programar naquele ano, como um experimento, para ver o quão longe era possível levar a programação assíncrona sem se basear em callbacks ou _futures_, usando apenas corrotinas.
@@ -1990,14 +2144,14 @@ A documentação do _Curio's_ contém https://fpy.li/21-64[links] para outras pa
 
 Além criar o _Trio_,
 Nathaniel J. Smith escreveu dois post de blog muito profundos, que gostaria de recomendar:
-https://fpy.li/21-65["Some thoughts on asynchronous API design in a post-async/await world" (_Algumas reflexões sobre o design de APIs assíncronas em um mundo pós-async/await_)] (EN), comparando os designs do _Curio_ e do `asyncio`, e
-https://fpy.li/21-66["Notes on structured concurrency, or: Go statement considered harmful" (_Notas sobre concorrência estruturada, ou: o comando Go considerado nocivo_)] (EN), sobre concorrência estruturada. Smith também deu uma longa e informativa resposta à questão:
-https://fpy.li/21-67["What is the core difference between asyncio and trio?" (_Qual é a principal diferença entre o asyncio e o trio?_)] (EN)
+https://fpy.li/21-65["Some thoughts on asynchronous API design in a post-async/await world" (_Algumas reflexões sobre o design de APIs assíncronas em um mundo pós-async/await_)], comparando os designs do _Curio_ e do `asyncio`, e
+https://fpy.li/21-66["Notes on structured concurrency, or: Go statement considered harmful" (_Notas sobre concorrência estruturada, ou: o comando Go considerado nocivo_)], sobre concorrência estruturada. Smith também deu uma longa e informativa resposta à questão:
+https://fpy.li/21-67["What is the core difference between asyncio and trio?" (_Qual é a principal diferença entre o asyncio e o trio?_)]
 no StackOverflow.
 
 Para aprender mais sobre o pacote `asyncio`, já mencionei os melhores recursos
 escritos que conheço no início do capítulo: a https://fpy.li/b9[documentação
-oficial], após a fantástica https://fpy.li/21-69[reorganização] (EN) iniciada
+oficial], após a fantástica https://fpy.li/21-69[reorganização] iniciada
 por Yury Selivanov em 2018, e o livro de Caleb Hattingh,
 https://fpy.li/hattingh[_Using Asyncio in Python_] (O'Reilly).
 
@@ -2005,37 +2159,37 @@ Na documentação oficial, não deixe de ler https://fpy.li/ba["Desenvolvendo co
 
 Para uma introdução muito acessível, de 30 minutos, à programação assíncrona em geral e também ao `asyncio`,
 assista a palestra
-https://fpy.li/21-71["Asynchronous Python for the Complete Beginner" (_Python Assíncrono para o Iniciante Completo_)] (EN), de  Miguel Grinberg,
+https://fpy.li/21-71["Asynchronous Python for the Complete Beginner" (_Python Assíncrono para o Iniciante Completo_)], de  Miguel Grinberg,
 apresentada na PyCon 2017.
 Outra ótima introdução é
-https://fpy.li/21-72["Demystifying Python's Async and Await Keywords" (_Desmistificando as Palavras-Chave Async e Await de Python_)] (EN),
+https://fpy.li/21-72["Demystifying Python's Async and Await Keywords" (_Desmistificando as Palavras-Chave Async e Await de Python_)],
 apresentada por Michael Kennedy, onde entre outras coisas aprendi sobre a bilblioteca
 https://fpy.li/21-73[_unsync_], que oferece um decorador para delegar a execução de corrotinas, funções dedicadas a E/S e funções de uso intensivo de CPU para `asyncio`, `threading`, ou `multiprocessing`, conforme a necessidade.
 
 Na EuroPython 2019, Lynn Root—uma líder global da https://fpy.li/21-74[_PyLadies_]—apresentou a excelente
-https://fpy.li/21-75["Advanced asyncio: Solving Real-world Production Problems" (_Asyncio Avançado: Resolvendo Problemas de Produção do Mundo Real_)] (EN),
+https://fpy.li/21-75["Advanced asyncio: Solving Real-world Production Problems" (_Asyncio Avançado: Resolvendo Problemas de Produção do Mundo Real_)],
 baseada na sua experiência usando Python como um engenheira do Spotify.
 
 Em 2020, Łukasz Langa gravou um grande série de vídeos sobre o `asyncio`, começando com
-https://fpy.li/21-76["Learn Python's AsyncIO #1--The Async Ecosystem" (_Aprenda o AsyncIO de Python—O Ecossistema Async_)] (EN).
+https://fpy.li/21-76["Learn Python's AsyncIO #1--The Async Ecosystem" (_Aprenda o AsyncIO de Python—O Ecossistema Async_)].
 Langa também fez um vídeo muito bacana,
-https://fpy.li/21-77["AsyncIO + Music"] (EN),
+https://fpy.li/21-77["AsyncIO + Music"],
 para a PyCon 2020, que não apenas mostra o `asyncio` aplicado a um domínio orientado a eventos muito concreto, como também explica essa aplicação do início ao fim.
 
 Outra área dominada por programaçao orientada a eventos são os sistemas embarcados.
-Por isso Damien George adicionou o suporte a `async/await` em seu interpretador https://fpy.li/21-78[_MicroPython_] (EN) para microcontroladores
+Por isso Damien George adicionou o suporte a `async/await` em seu interpretador https://fpy.li/21-78[_MicroPython_] para microcontroladores
 Na PyCon Australia 2018, Matt Trentini demonstrou a biblioteca
-https://fpy.li/21-79[_uasyncio_] (EN),
+https://fpy.li/21-79[_uasyncio_],
 um subconjunto do `asyncio` que é parte da biblioteca padrão do MicroPython.
 
 Para uma visão de mais alto nível sobre a programação assíncrona em Python, leia o post de blog
-https://fpy.li/21-80["Python async frameworks—Beyond developer tribalism" (_Frameworks assíncronos de Python—Para além do tribalismo dos desenvolvedores_)] (EN), de Tom Christie.
+https://fpy.li/21-80["Python async frameworks—Beyond developer tribalism" (_Frameworks assíncronos de Python—Para além do tribalismo dos desenvolvedores_)], de Tom Christie.
 
 Por fim, recomendo https://fpy.li/21-81["What Color Is Your Function?" (_Qual a Cor da Sua Função?_)] de Bob Nystrom,
 discutindo os modelos de execução incompatíveis de funções normais versus funções assíncronas—também conhecidas como corrotinas—em JavaScript, Python, C# e outras linguagens.
 Alerta de spoiler: A conclusão de Nystrom é que a linguagem que acertou nessa área foi Go,
 onde todas as funções têm a mesma cor. Eu gosto disso no Go. Mas também acho que Nathaniel J. Smith tem razão quando escreveu
-https://fpy.li/21-66["Go statement considered harmful" (_Comando Go considerado nocivo_)] (EN).
+https://fpy.li/21-66["Go statement considered harmful" (_Comando Go considerado nocivo_)].
 Nada é perfeito, e programação concorrente é sempre difícil.
 
 
