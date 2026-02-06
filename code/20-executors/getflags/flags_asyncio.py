@@ -43,5 +43,5 @@ async def supervisor(cc_list: list[str]) -> int:
     return len(res)                              # <6>
 
 if __name__ == '__main__':
-    main(download_many)
+    main(download_many)                          # <7>
 # end::FLAGS_ASYNCIO_START[]

@@ -66,7 +66,8 @@ A especificação para este atributo está na
 https://fpy.li/24-3[PEP 3155--Qualified name for classes and functions (_PEP 3155—Nome qualificado para classes e funções_)] (EN).
 
 `+cls.__subclasses__()+`:: Este((("cls.&#x005F;&#x005F;subclasses&#x005F;&#x005F;()"))) método devolve uma lista das subclasses imediatas da classe.
-A implementação usa referências fracas, para evitar referências circulares entre a superclasse e suas subclasses—que mantêm uma referência forte para a superclasse em seus atributos `+__bases__+`.
+A implementação usa referências fracas, para evitar referências circulares entre a superclasse e suas subclasses.
+Cada subclasse tem referências fortes para suas superclasses em seu atributo `+__bases__+`.
 O método lista as subclasses na memória naquele momento. Subclasses em módulos ainda não importados não aparecerão no resultado.
 
 `cls.mro()`:: O((("cls.mro()"))) interpretador invoca este método quando está criando uma classe, para obter a tupla de superclasses armazenada no atributo `+__mro__+` da classe.
@@ -849,7 +850,7 @@ include::../code/24-class-metaprog/metabunch/from3.6/bunch.py[tags=METABUNCH]
 ====
 <1> Para criar uma nova metaclasse, herdamos de `type`.
 <2> `+__new__+` funciona como um método de classe, mas a classe é uma metaclasse, então gosto de nomear o primeiro argumento `meta_cls` (`mcs` é uma alternativa comum). Os três argumentos restantes são os mesmos da assinatura de três argumentos de `type()`, quando chamada diretamente para criar uma classe.
-<3> `defaults` vai manter um mapeamento de nomes de atributos e seus valores default.
+<3> `defaults` vai preservar um mapeamento de nomes de atributos e seus valores default.
 <4> Isso irá ser injetado na nova classe.
 <5> Lê `defaults` e define o atributo de instância correspondente, com o valor extraído de `kwargs`, ou um valor default.
 <6> Se ainda houver itens em `kwargs`, isso significa que não há posição restante onde possamos colocá-los.
@@ -908,7 +909,7 @@ include::../code/24-class-metaprog/evaltime/metalib.py[tags=METALIB_TOP]
 ====
 
 Escrevi a classe `NosyDict` para  sobrescrever `+__setitem__+` e exibir cada `key` e cada `value` conforme eles são definidos.
-A metaclasse vai usar uma instância de `NosyDict` para manter o espaço de nomes da classe em construção, revelando um pouco mais sobre o funcionamento interno de Python.
+A metaclasse vai usar uma instância de `NosyDict` para guardar o espaço de nomes da classe em construção, revelando um pouco mais sobre o funcionamento interno de Python.
 
 A principal atração de _metalib.py_ é a metaclasse no <<metalib_bottom_ex>>.
 Ela implementa o método especial `+__prepare__+`, um método de classe que Python só invoca em metaclasses.
@@ -933,7 +934,7 @@ include::../code/24-class-metaprog/evaltime/metalib.py[tags=METALIB_BOTTOM]
 ====
 <1> `+__prepare__+` deve ser declarado como um método de classe.
 Ele não é um método de instância, pois a classe em construção ainda não existe quando Python invoca `+__prepare__+`.
-<2> Python invoca `+__prepare__+` em uma metaclasse para obter um mapeamento, onde vai manter o espaço de nomes da classe em construção.
+<2> Python invoca `+__prepare__+` em uma metaclasse para obter um mapeamento para guardar o espaço de nomes da classe em construção.
 <3> Devolve uma instância de `NosyDict` para ser usado como o espaço de nomes.
 <4> `cls_dict` é uma instância de `NosyDict` devolvida por `+__prepare__+`.
 <5> `+type.__new__+` exige um `dict` real como último argumento, então passamos a ele o atributo `data` de `NosyDict`, herdado de `UserDict`.
@@ -942,7 +943,7 @@ Ele não é um método de instância, pois a classe em construção ainda não e
 <8> Definir `+__repr__+` em uma metaclasse permite customizar o `repr()` de objetos classe.
 
 O principal caso de uso para `+__prepare__+` antes de Python 3.6 era oferecer um
-`OrderedDict` para manter os atributos de uma classe em construção, para que o `+__new__+` da metaclasse pudesse processar aqueles atributos na ordem em que aparecem no código-fonte da definição de classe do usuário.
+`OrderedDict` para guardar os atributos de uma classe em construção, para que o `+__new__+` da metaclasse pudesse processar aqueles atributos na ordem em que aparecem no código-fonte da definição de classe do usuário.
 Agora que `dict` preserva a ordem de inserção, `+__prepare__+` raramente é necessário.
 Veremos um uso criativo para ele no <<metahack_sec>>.
 
@@ -1040,7 +1041,7 @@ Nosso _checkedlib.py_ usando `+__init_subclass__+` é um sucesso na empresa, e e
 
 Analisando o perfil de uma prova de conceito, descobrimos que usar `+__slots__+` pode reduzi os custos de hospedagem, por duas razões:
 
-* Menos uso de memória, já que as instâncias de `Checked` não precisarão manter seus próprios
+* Menos uso de memória, já que as instâncias de `Checked` não precisarão ter seus próprios
 `+__dict__+`
 * Melhor desempenho, pela remoção de `+__setattr__+`, que foi criado só para bloquear atributos inesperados, mas é acionado na instanciação e para todas as definições de atributos antes de
 `+Field.__set__+` ser chamado para realizar seu trabalho
@@ -1218,7 +1219,7 @@ E mesmo na ausência de bugs conhecidos, essa abordagem deveria ser considerada 
 
 ==== Metaclasses devem ser detalhes de implementação
 
-Além de `type`, existem apenas outras seis metaclasses em toda a bilbioteca padrão de Python 3.9.
+Além de `type`, existem apenas outras seis metaclasses em toda a biblioteca padrão de Python 3.9.
 As metaclasses mais conhecidas provavelmnete são `abc.ABCMeta`, `typing.NamedTupleMeta` e
 `enum.EnumMeta`.
 Nenhuma delas foi projetada com a intenção de aparecer explicitamente no código do usuário.
@@ -1387,7 +1388,7 @@ https://fpy.li/bt["4.13. Atributos especiais"] do capítulo "Tipos embutidos" na
 Na _Biblioteca Padrão de Python_, a https://fpy.li/bz[documentação do módulo `types`] trata de duas funções introduzidas no Python 3.3, que simplificam a metaprogramação de classes: `types.new_class` and `types.prepare_class`.
 
 Decoradores de classes foram formalizados na https://fpy.li/24-25[PEP 3129—Class Decorators (_Decoradores de Classes_)] (EN), escrita por Collin Winter, com a implementação de referência desenvolvida por Jack Diederich. A palestra "Class Decorators: Radically Simple"  (_Decoradores de Classes: Radicalmente Simples_. Aqui o https://fpy.li/24-26[video] (EN)), na PyCon 2009, também de Jack Diederich, é uma rápida introdução a esse recurso.
-Além de `@dataclass`, um exemplo interessante—e mais simples—de decorador de classes na bilbioteca padrão de Python é https://fpy.li/7q[`functools.total_ordering`] (EN), que gera métodos especiais para comparação de objetos.
+Além de `@dataclass`, um exemplo interessante—e mais simples—de decorador de classes na biblioteca padrão de Python é https://fpy.li/7q[`functools.total_ordering`] (EN), que gera métodos especiais para comparação de objetos.
 
 Para metaclasses, a principal referência na documentação de Python é a
 https://fpy.li/pep3115[PEP 3115—Metaclasses in Python 3000 (_Metaclasses no Python 3000_)],

@@ -242,7 +242,7 @@ include::../code/22-dyn-attr-prop/oscon/explore2.py[tags=EXPLORE2]
 O método `+__new__+` recebe uma classe como primeiro argumento porque, normalmente, o objeto criado será uma instância daquela classe.
 Então, em `+FrozenJSON.__new__+`, quando a expressão `+super().__new__(cls)+` efetivamente chama
 `+object.__new__(FrozenJSON)+`, a instância criada pela classe `object` é, na verdade, uma instância de `FrozenJSON`.
-O atributo `+__class__+` da nova instância vai manter uma referência para ++FrozenJSON++, apesar da construção concreta ser realizada por `+object.__new__+`, implementado em C, nas entranhas do interpretador.
+O atributo `+__class__+` da nova instância vai preservar uma referência para ++FrozenJSON++, apesar da construção concreta ser realizada por `+object.__new__+`, implementado em C, nas entranhas do interpretador.
 
 O conjunto de dados da OSCON está estruturado de uma forma pouco amigável à exploração interativa.
 Por exemplo, o evento no índice `40`, chamado `'There *Will* Be Bugs'` (_Haverá Bugs_) tem dois palestrantes, `3471` e `5199`.
@@ -322,7 +322,7 @@ https://fpy.li/pep616[PEP 616—String methods to remove prefixes and suffixes (
 <8> Cria uma instância de `Record` e a armazena em `records` com a chave `key`.
 
 
-O método `+Record.__init__+` ilustra um antigo truque de Python. Lembre-se que o `+__dict__+` de um objeto é onde são mantidos seus atributos--a menos que `+__slots__+` seja declarado na classe, como vimos na <<slots_sec>>.
+O método `+Record.__init__+` ilustra um antigo truque de Python. Lembre-se que o `+__dict__+` de um objeto é onde são guardados seus atributos--a menos que `+__slots__+` seja declarado na classe, como vimos na <<slots_sec>>.
 Daí, atualizar o `+__dict__+` de uma instância é uma maneira fácil de criar um punhado de atributos naquela instância.footnote:[`Bunch` ou "punhado" é o nome da classe usada por Alex Martelli para compartilhar essa dica em uma receita de 2001 intitulada https://fpy.li/22-4["The simple but handy ‘collector of a bunch of named stuff’ class" (_Uma classe simples mas prática 'coletora de um punhado de coisas nomeadas'_)].]
 
 [NOTE]
@@ -383,7 +383,7 @@ include::../code/22-dyn-attr-prop/oscon/schedule_v2.py[tags=SCHEDULE2_RECORD]
 ----
 ====
 <1> `inspect` será usado em `load`, lista do no <<ex_schedule_v2_load>>.
-<2> No final, o atributo de classe privado `+__index+` manterá a referência ao `dict` devolvido por `load`.
+<2> No final, o atributo de classe privado `+__index+` preservará a referência ao `dict` devolvido por `load`.
 <3> `fetch` é um `staticmethod`, para deixar explícito que seu efeito não é influenciado pela classe ou pela instância de onde ele é invocado.
 <4> Preenche o `+Record.__index+`, se necessário.
 <5> E o utiliza para obter um registro com uma dada `key`.
@@ -412,7 +412,7 @@ Caso contrário, delega para o `+__repr__+` de `Record`.
 <3> A propriedade `venue` cria uma `key` a partir do atributo `venue_serial`, e a passa para o método de classe `fetch`, herdado de `Record` (a razão para usar `+self.__class__+` logo ficará clara).
 
 A segunda linha do método `venue` no <<ex_schedule_v2_event>> devolve
-pass:[<code>self&#x200b;.__class__.fetch(key)</code>].
+`self.__class__.fetch(key)`.
 Por que não podemos simplesmente invocar `self.fetch(key)`?
 A forma simples funciona com esse conjunto específico de dados da OSCON porque não há registro de evento com uma chave `'fetch'`.
 Mas, se um registro de evento tivesse uma chave chamada `'fetch'`, então dentro daquela instância específica de `Event`, a referência `self.fetch` apontaria para o valor daquele campo, em vez do método de classe `fetch` que `Event` herda de `Record`.
@@ -522,7 +522,7 @@ Dependendo do tamanho da massa de dados, a diferença de uso de memória pode se
 Uma solução manual similar, que funciona bem com a otimização de compartilhamento de chaves, exige escrever um `+__init__+` para a classe `Event`, para criar o necessário `+__speaker_objs+` inicializado para `None`, e então usá-lo no método `speakers`. Veja o <<ex_schedule_v4>>.
 
 [[ex_schedule_v4]]
-.Armazenamento definido em `+__init__+` para manter a otimização de compartilhamento de chaves
+.Armazenamento definido em `+__init__+` para viabilizar a otimização de compartilhamento de chaves
 ====
 [source, python]
 ----
@@ -642,7 +642,10 @@ Além((("attributes", "using properties for attribute validation", id="Aval22"))
 
 ==== LineItem Versão #1: Um classe para um item em um pedido
 
-Imagine uma aplicação para uma loja que vende comida orgânica a granel, onde os fregueses podem encomendar nozes, frutas secas e cereais por peso. Nesse sistema, cada pedido mantém uma sequência de produtos, e cada produto pode ser representado por uma instância de uma classe, como no <<lineitem_class_v1>>.
+Imagine uma aplicação para uma loja que vende comida orgânica a granel, onde os
+fregueses podem encomendar nozes, frutas secas e cereais por peso. Nesse
+sistema, cada pedido contém uma sequência de produtos, e cada produto pode ser
+representado por uma instância de uma classe, como no <<lineitem_class_v1>>.
 
 
 [[lineitem_class_v1]]
@@ -1104,8 +1107,11 @@ Se `attr` for uma propriedade, seu método de exclusão nunca será invocado se 
 
 `+__getattribute__(self, name)+`:: Sempre((("&#x005F;&#x005F;getattribute&#x005F;&#x005F;"))) chamado quando há uma tentativa de obter o atributo nomeado diretamente a partir de código Python (o interpretador pode ignorar isso em alguns casos, por exemplo para obter o método `+__repr__+`). A notação de ponto e as funções embutidas `getattr` e `hasattr` disparam esse método. `+__getattr__+` só é invocado após `+__getattribute__+`, e apenas quando `+__getattribute__+` gera uma `AttributeError`. Para acessar atributos da instância `obj` sem entrar em uma recursão infinita, implementações de `+__getattribute__+` devem usar `+super().__getattribute__(obj, name)+`.
 
-`+__setattr__(self, name, value)+`:: Sempre((("&#x005F;&#x005F;setattr&#x005F;&#x005F;"))) chamado quando há uma tentativa de atribuir um valor ao atributo nomeado. A notação de ponto e a função embutida `setattr` disparam esse método; por exemplo, tanto `obj.attr = 42` quanto pass:[<code class="keep-together">setattr(obj, 'attr', 42)</code>] disparam
-`+Class.__setattr__(obj, 'attr', 42)+`.
+`+__setattr__(self, name, value)+`::
+Sempre((("&#x005F;&#x005F;setattr&#x005F;&#x005F;"))) chamado quando há uma
+tentativa de atribuir um valor ao atributo nomeado. A notação de ponto e a
+função embutida `setattr` disparam esse método; por exemplo, tanto `obj.attr =
+42` quanto `setattr(obj, 'attr', 42)` disparam `+Class.__setattr__(obj, 'attr', 42)+`.
 
 [WARNING]
 ====
