@@ -1297,8 +1297,8 @@ Adaptar funções do usuário a APIs de callback é o caso de uso mais comum de
 Veja a assinatura completa na https://fpy.li/b2[«documentação do `asyncio`»].
 
 <4> Este `cast` é necessário porque o _typeshed_ tem uma dica de tipo
-desatualizada para a propriedade `sockets` da classe `Server` em maio de
-2021. Veja https://fpy.li/21-36[«Issue #5535 no _typeshed_»].footnote:[O bug
+desatualizada para a propriedade `sockets` da classe `Server` em maio de 2021.
+Veja https://fpy.li/21-36[«Issue #5535 no _typeshed_»].footnote:[O bug
 #5535 está resolvido desde outubro de 2021, mas o Mypy não lançou uma nova versão
 até o fechamento desta edição, então o erro permanece.]
 
@@ -1351,7 +1351,7 @@ $
 <3> Primeira volta do laço `while` na função `finder` do <<tcp_mojifinder_top>>. A pilha TCP/IP atribuiu a porta 58192 a meu cliente Telnet. Se você conectar diversos clientes ao servidor, verá suas diferentes portas aparecerem na saída.
 <4> Segunda iteração do laço `while` em `finder`.
 <5> Teclei CTRL-C no terminal do cliente; o laço `while` em `finder` termina.
-<6> A corrotina `finder` exibe essa mensagem e então encerra. Enquanto isso o servidor continua rodando, pronto para receber outros clientes.
+<6> A corrotina `finder` exibe esta mensagem e encerra. Enquanto isso o servidor continua rodando, pronto para receber outros clientes.
 <7> Teclei CTRL-C no terminal do servidor; `server.serve_forever` é cancelado, encerrando `supervisor` e o laço de eventos.
 <8> Saída de `main`.
 
@@ -1366,13 +1366,13 @@ e fica suspensa na última linha:
 
 Neste ponto o controle flui para o laço de eventos do `asyncio` e lá permanece,
 voltando ocasionalmente para a corrotina `finder`, que devolve o controle de
-volta para o laço de eventos sempre que precisa esperar a rede enviar ou
+volta para o laço de eventos sempre que precisa esperar a rede para enviar ou
 receber dados.
 
 Enquanto o laço de eventos estiver ativo, uma nova instância da corrotina
 `finder` será iniciada para cada cliente que se conecte ao servidor. Desta
-forma, múltiplos clientes podem ser atendidos de forma concorrente por esse
-servidor simples. Isso segue até que ocorra um `KeyboardInterrupt` no servidor
+forma, milhares de clientes podem ser atendidos de concorrentemente por esse
+servidor simples. Isto segue até que ocorra um `KeyboardInterrupt` no servidor
 ou que seu processo seja encerrado pelo SO.
 
 Agora vamos ver o início de _tcp_mojifinder.py_, com a corrotina `finder`.
@@ -1399,13 +1399,13 @@ apenas os argumentos `reader` e `writer`.
 <4> Este laço controla um diálogo que persiste até um caractere de controle ser
 recebido do cliente.
 
-<5> O método `StreamWriter.write` não é uma corrotina, é apenas um função
-normal; essa linha envia o prompt `?>`.
+<5> O método `StreamWriter.write` não é uma corrotina, é um função
+comum. Esta linha envia o prompt `?>`.
 
-<6> O `StreamWriter.drain` esvazia o buffer de `writer`; ela é uma corrotina,
+<6> `StreamWriter.drain` esvazia o buffer de `writer`; ela é uma corrotina,
 então precisa ser acionada com `await`.
 
-<7> `StreamWriter.readline` é um corrotina que devolve `bytes`.
+<7> `StreamWriter.readline` é uma corrotina que devolve `bytes`.
 
 <8> Se nenhum byte foi recebido, o cliente fechou a conexão, então sai do loop.
 
@@ -1419,7 +1419,7 @@ consulta pelo caractere null, para simplificar.
 
 <12> Sai do laço se um caractere de controle ou null foi recebido.
 
-<13> `search` realiza a busca efetiva; o código será apresentado a seguir.
+<13> `search` realiza a busca; o código será apresentado a seguir.
 
 <14> Registra a resposta no console do servidor.
 
@@ -1430,7 +1430,7 @@ https://fpy.li/b4[documentação do método `.close()`].
 
 <17> Registra o final dessa sessão do cliente no console do servidor.
 
-O último trecho desse exemplo é a corrotina `search`, listada no <<tcp_mojifinder_search>>.
+O último trecho deste código é a corrotina `search`, <<tcp_mojifinder_search>>.
 
 [[tcp_mojifinder_search]]
 .tcp_mojifinder.py: corrotina `search`
@@ -1440,39 +1440,68 @@ O último trecho desse exemplo é a corrotina `search`, listada no <<tcp_mojifin
 include::../code/21-async/mojifinder/tcp_mojifinder.py[tags=TCP_MOJIFINDER_SEARCH]
 ----
 ====
-<1> `search` precisa ser uma corrotina, pois escreve em um `StreamWriter` e precisa usar seu método corrotina `.drain()`.
+<1> `search` precisa ser uma corrotina, pois escreve em um `StreamWriter` e precisa acionar o método corrotina `.drain()`.
 <2> Consulta o índice invertido.
-<3> Essa expressão geradora vai produzir strings de bytes codificadas em UTF-8 com o ponto de código Unicode, o caractere efetivo, seu nome e uma sequência `CRLF` (_Return+Line Feed_), isto é, `b'U+0039\t9\tDIGIT NINE\r\n'`.
-<4> Envia a `lines`. Surpreendentemente, `writer.writelines` não é uma corrotina.
+<3> Esta expressão geradora vai produzir strings de bytes codificadas em UTF-8 com o ponto de código Unicode, o caractere, seu nome e uma sequência `CRLF` (_Return+Line Feed_), isto é, `b'U+0039\t9\tDIGIT NINE\r\n'`.
+<4> Envia `lines`. Surpreendentemente, `writer.writelines` não é uma corrotina.
 <5> Mas `writer.drain()` é uma corrotina. Não esqueça do `await`!
-<6> Cria depois envia uma linha de status.
+<6> Constrói e envia uma linha de status.
 
 Observe que toda a E/S de rede em _tcp_mojifinder.py_ é feita em `bytes`; precisamos decodificar os `bytes` recebidos da rede, e codificar strings antes de enviá-las. No Python 3, a codificação default é UTF-8, e foi o que usei implicitamente em todas as chamadas a `encode` e `decode` nesse exemplo.
 
 [WARNING]
 ====
-Veja que alguns dos métodos de E/S são corrotinas, e precisam ser acionados com `await`, enquanto outros são funções simples, Por exemplo, `StreamWriter.write` é uma função normal, porque escreve em um buffer.
-Por outro lado, `StreamWriter.drain`—que esvazia o buffer e executa o E/S de rede—é uma corrotina, assim como `StreamReader.readline`—mas não `StreamWriter.writelines`! Enquanto estava escrevendo a primeira edição desse livro, a documentação da API `asyncio` API docs foi melhorada pela https://fpy.li/b5[indicação clara das corrotinas como tal].
+
+Note que alguns dos métodos de E/S são corrotinas, e precisam ser acionados com
+`await`, enquanto outros são funções comuns. Por exemplo, `StreamWriter.write`
+é uma função, porque escreve em um buffer. Por outro lado,
+`StreamWriter.drain`—que esvazia o buffer e executa o E/S de rede—é uma
+corrotina, assim como `StreamReader.readline`—mas não `StreamWriter.writelines`!
+Enquanto escrevi a primeira edição desse livro, sugeri uma melhoria na
+https://fpy.li/b5[«documentação da API»] do `asyncio` para indicar com mais
+clareza as corrotinas (antes era preciso ler todo o texto sobre uma corrotina
+para encontrar a informação, porque elas eram formatadas como as funções).
+
 ====
 
-O código de _tcp_mojifinder.py_ se vale da https://fpy.li/21-40[API Streams] de alto nível do `asyncio`, que fornece um servidor pronto para ser usado, de forma que basta implemetar uma função de processamento, que pode ser um callback simples ou uma corrotina. Há também uma
-https://fpy.li/bb[API de Transportes e Protocolos]
-de baixo nível, inspirada pelas abstrações transporte e protocolo do framework _Twisted_.
+O código de _tcp_mojifinder.py_ se vale da 
+https://fpy.li/21-40[«API de streams»] de alto nível do `asyncio`,
+que fornece um servidor pronto para usar,
+então só precisamos codar uma função de processamento,
+que pode ser um callback simples ou uma corrotina. Há também uma
+https://fpy.li/bb[«API de Transportes e Protocolos»]
+de baixo nível, inspirada nas abstrações de transporte e protocolo do framework _Twisted_.
 Veja a documentação do `asyncio` para mais informações, incluindo os
-https://fpy.li/bc[servidores echo e clientes TCP e UDP ] implementados com aquela API de nível mais baixo.
+https://fpy.li/bc[«servidores echo e clientes TCP e UDP»]
+implementados com a API de baixo nível.
 
-Nosso próximo tópico é `async for` e os objetos que a fazem funcionar.((("", startref="tcp21")))((("", startref="APRwrit21")))((("", startref="APwrite21")))((("", startref="Stcp22")))((("", startref="Sasyncio21")))
+Nosso próximo tópico é a instrução `async for` e os objetos que a fazem
+funcionar.((("", startref="tcp21")))((("", startref="APRwrit21")))((("",
+startref="APwrite21")))((("", startref="Stcp22")))((("", startref="Sasyncio21")))
 
 
-=== Iteração assíncrona e iteráveis assíncronos
+=== Iteráveis assíncronos
 
-Na((("asynchronous programming", "iteration and iterables", id="APRiteration21")))((("iterables", "asynchronous", id="ITasync21")))((("iterators", "asynchronous", id="ITERasync21"))) <<async_context_manager_sec>> vimos como `async with` funciona com objetos que implementam os métodos `+__aenter__+` and `+__aexit__+`, devolvendo esperáveis—normalmente na forma de objetos corrotina.
+Na((("asynchronous programming", "iteration and iterables",
+id="APRiteration21")))((("iterables", "asynchronous",
+id="ITasync21")))((("iterators", "asynchronous", id="ITERasync21")))
+<<async_context_manager_sec>> vimos como `async with` funciona com objetos que
+implementam os métodos `+__aenter__+` e `+__aexit__+`, devolvendo
+esperáveis—normalmente na forma de objetos corrotina.
 
-Se forma similar, `async for` funciona com _iteráveis assíncronos_: objetos que implementam `+__aiter__+`. Entretanto, `+__aiter__+` precisa ser um método regular—não um método corrotina—e precisa devolver um _iterador assíncrono_.
+De forma análoga, `async for` funciona com _iteráveis assíncronos_: objetos que
+implementam `+__aiter__+`. Entretanto, `+__aiter__+` precisa ser um método
+normal—não um método corrotina—e precisa devolver um _iterador assíncrono_.
 
-Um iterador assíncrono fornece um método corrotina `+__anext__+` que devolve um esperável—muitas vezes um objeto corrotina. Também se espera que eles implementem `+__aiter__+`, que normalmente devolve `self`. Isso espelha a importante distinção entre iteráveis e iteradores que discutimos na <<iterable_not_self_iterator_sec>>.
+Um iterador assíncrono fornece um método corrotina `+__anext__+` que devolve um
+esperável—muitas vezes um objeto corrotina. Também se espera que eles
+implementem `+__aiter__+`, que normalmente devolve `self`. Isso espelha a
+importante distinção entre iteráveis e iteradores que vimos na
+<<iterable_not_self_iterator_sec>>.
 
-A https://fpy.li/21-43[documentação] do driver assíncrono de PostgreSQL _aiopg_ traz um exemplo que ilustra o uso de `async for` para iterar sobre as linhas de cursor de banco de dados.
+A https://fpy.li/21-43[«documentação»] do driver assíncrono de PostgreSQL _aiopg_
+traz um exemplo que ilustra o uso de `async for` para iterar sobre as linhas de
+resultados devolvidas pelo objeto cursor, definido no driver do banco de dados.
 
 [source, python]
 ----
@@ -1487,38 +1516,58 @@ async def go():
             assert ret == [(1,)]
 ----
 
-Nesse exemplo, a consulta vai devolver uma única linha, mas em um cenário realista é possível receber milhares de linhas na resposta a um `SELECT`.
-Para respostas grandes, o cursor não será carregado com todas as linhas de uma vez só.
-Assim é importante que `async for row in cur:` não bloqueie o laço de eventos enquanto o cursor pode estar esperando por linhas adicionais.
-Ao implementar o cursor como um iterador assíncrono, _aiopg_ pode devolver o controle para o laço de eventos a cada chamada a `+__anext__+`, e continuar mais tarde, quando mais linhas cheguem do PostgreSQL.
+Neste exemplo, a consulta vai devolver só uma linha, mas em um cenário realista
+é possível receber milhares de linhas na resposta a um `SELECT`. Para respostas
+grandes, o cursor não será carregado com todas as linhas de uma vez só. Por isso
+é importante que `async for row in cur:` não bloqueie o laço de eventos enquanto
+o cursor pode estar esperando por linhas adicionais. Ao implementar o cursor
+como um iterador assíncrono, _aiopg_ pode devolver o controle para o laço de
+eventos a cada chamada a `+__anext__+`, e continuar mais tarde, quando mais
+linhas chegarem do PostgreSQL.
 
 
 [[async_gen_func_sec]]
 ==== Funções geradoras assíncronas
 
-Você((("generators", "asynchronous generator functions", id="Gasync21"))) pode implementar um iterador assíncrono escrevendo uma classe com `+__anext__+` e `+__aiter__+`, mas há um jeito mais simples: escreve uma função declarada com `async def` que use `yield` em seu corpo.
-Isso é paralelo à forma como funções geradoras simplificam o modelo clássico do Iterador.
+Você((("generators", "asynchronous generator functions", id="Gasync21"))) pode
+implementar um iterador assíncrono escrevendo uma classe com `+__anext__+` e
+`+__aiter__+`, mas há um jeito mais fácil: escreva uma função declarada com
+`async def` que use `yield` em seu corpo. Isto é semelhante à forma como funções
+geradoras simplificam o implementar o padrão do Iterador clássico.
 
-Vamos estudar um exemplo simples usando `async for` e implementando um gerador assíncrono.
-No <<blogdom_ex>> vimos _blogdom.py_, um script que sondava nomes de domínio.
-Suponha agora que encontramos outros usos para a corrotina `probe` definida ali, e decidimos colocá-la em um novo módulo—_domainlib.py_—junto com um novo gerador assíncrono `multi_probe`, que recebe uma lista de nomes de domínio e produz resultados conforme eles são sondados.
+Vamos estudar um exemplo simples usando `async for` e implementando um gerador
+assíncrono. No <<blogdom_ex>> vimos _blogdom.py_, um script que sondava nomes de
+domínio. Suponha agora que encontramos outros usos para a corrotina `probe`
+definida ali, e decidimos colocá-la em um novo módulo (_domainlib.py_) com
+um novo gerador assíncrono `multi_probe`, que recebe uma lista de nomes de
+domínio e produz resultados conforme eles são sondados.
 
-Vamos ver a implementação de _domainlib.py_ logo, mas primeiro examinaremos como ele é usado com o novo console assíncrono de Python.
+Vamos ver a implementação de _domainlib.py_ logo, mas primeiro examinaremos como
+ele é usado com o novo console assíncrono de Python.
 
 [[python_async_console_sec]]
 ===== Experimentando com o console assíncrono de Python
 
-https://fpy.li/21-44[Desde o Python 3.8], é possível rodar o interpretador com a opção de linha de comando `-m asyncio`, para obter um "async REPL": um console de Python que importa `asyncio`, fornece um laço de eventos ativo, e aceita `await`, `async for`, e `async with` no prompt principal—que em qualquer outro contexto são erros de sintaxe quando usados fora de corrotinas nativas.footnote:[Isso é ótimo para experimentação, como o console do Node.js. Agradeço a Yury Selivanov por mais essa excelente contribuição para Python assíncrono.]
+https://fpy.li/21-44[Desde o Python 3.8], é possível rodar o interpretador com a
+opção de linha de comando `-m asyncio`, para obter um "async REPL": um console
+de Python que importa `asyncio`, fornece um laço de eventos ativo, e aceita
+`await`, `async for`, e `async with` no prompt principal—que em qualquer outro
+contexto são erros de sintaxe quando usados fora de corrotinas
+nativas.footnote:[Isso é ótimo para experimentação, como o console do Node.js.
+Agradeço a Yury Selivanov por mais essa excelente contribuição para Python
+assíncrono.]
 
-Para experimentar com o _domainlib.py_, vá ao diretório _21-async/domains/asyncio/_ na sua cópia local do https://fpy.li/code[repositório de código do _Python Fluente_].
-Aí rode::
+Para experimentar com o _domainlib.py_, vá ao diretório
+_21-async/domains/asyncio/_ na sua cópia local do
+https://fpy.li/code[«repositório de código»] do _Python Fluente_.
+Então execute:
 
 [source, shell]
 ----
 $ python -m asyncio
 ----
 
-Você verá o console iniciar, de forma similar a isso:
+Você verá o console iniciar, mais ou menos assim:
 
 [source, shell]
 ----
@@ -1530,9 +1579,11 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>>
 ----
 
-Veja como o cabeçalho diz que você pode usar `await` em vez de `asyncio.run()`—para acionar corrotinas e outros esperáveis.
+Note como o cabeçalho diz que você pode usar `await` em vez de
+`asyncio.run()` para acionar corrotinas e outros esperáveis.
 E mais: eu não digitei `import asyncio`.
-O módulo `asyncio` é automaticamente importado e aquela linha torna esse fato claro para o usuário.
+O módulo `asyncio` é automaticamente importado e a instrução
+`import asyncio` é exibida para deixar isso evidente.
 
 [role="pagebreak-before less_space"]
 Vamos agora importar _domainlib.py_ e brincar com suas duas corrotinas: `probe` and `multi_probe` (<<domainlib_demo_repl>>).
@@ -1542,25 +1593,25 @@ Vamos agora importar _domainlib.py_ e brincar com suas duas corrotinas: `probe` 
 ====
 [source, python]
 ----
->>> await asyncio.sleep(3, 'Rise and shine!')  # <1>
-'Rise and shine!'
+>>> await asyncio.sleep(3, 'Bom dia!')  # <1>
+'Bom dia!'
 >>> from domainlib import *
 >>> await probe('python.org')  # <2>
 Result(domain='python.org', found=True)  # <3>
->>> names = 'python.org rust-lang.org golang.org no-lang.invalid'.split()  # <4>
+>>> names = 'python.org rust-lang.org golang.org xyz.invalid'.split()  # <4>
 >>> async for result in multi_probe(names):  # <5>
 ...      print(*result, sep='\t')
 ...
 golang.org      True    # <6>
-no-lang.invalid False
+xyz.invalid     False
 python.org      True
 rust-lang.org   True
 >>>
 ----
 ====
-<1> Tente um simples `await` para ver o console assíncrono em ação. Dica: `asyncio.sleep()` pode receber um segundo argumento opcional que é devolvido quando você usa `await` com ele.
+<1> Experimente um simples `await` para ver o console assíncrono em ação. Dica: `asyncio.sleep()` pode receber um segundo argumento opcional que é devolvido através do `await`.
 <2> Acione a corrotina `probe`.
-<3> A versão `domainlib` de `probe` devolve uma tupla nomeada `Result`.
+<3> A versão de `probe` em `domainlib` devolve uma `NamedTuple` chamada `Result`.
 <4> Faça um lista de domínios. O domínio de nível superior `.invalid` é reservado para testes. Consultas ao DNS por tais domínios sempre recebem uma resposta NXDOMAIN dos servidores DNS, que quer dizer "aquele domínio não existe."footnote:[Veja https://fpy.li/21-45[RFC 6761—Special-Use Domain Names].]
 <5> Itera com `async for` sobre o gerador assíncrono `multi_probe` para mostrar os resultados.
 <6> Note que os resultados não estão na ordem em que os domínios foram enviados a `multiprobe`. Eles aparecem quando cada resposta do DNS chega.
@@ -1747,7 +1798,7 @@ Aqui está uma forma de fazer isso—novamente usando o console assíncrono inic
 [source, python]
 ----
 >>> from domainlib import multi_probe
->>> names = 'python.org rust-lang.org golang.org no-lang.invalid'.split()
+>>> names = 'python.org rust-lang.org golang.org xyz.invalid'.split()
 >>> gen_found = (name async for name, found in multi_probe(names) if found)  # <1>
 >>> gen_found
 <async_generator object <genexpr> at 0x10a8f9700>  # <2>
@@ -1808,17 +1859,17 @@ Voltemos ao console assíncrono mágico:
 
 [source, python]
 ----
->>> names = 'python.org rust-lang.org golang.org no-lang.invalid'.split()
+>>> names = 'python.org rust-lang.org golang.org xyz.invalid'.split()
 >>> names = sorted(names)
 >>> coros = [probe(name) for name in names]
 >>> await asyncio.gather(*coros)
 [Result(domain='golang.org', found=True),
-Result(domain='no-lang.invalid', found=False),
+Result(domain='xyz.invalid', found=False),
 Result(domain='python.org', found=True),
 Result(domain='rust-lang.org', found=True)]
 >>> [await probe(name) for name in names]
 [Result(domain='golang.org', found=True),
-Result(domain='no-lang.invalid', found=False),
+Result(domain='xyz.invalid', found=False),
 Result(domain='python.org', found=True),
 Result(domain='rust-lang.org', found=True)]
 >>>
@@ -1831,7 +1882,7 @@ A PEP 530 permite o uso de `async for` e `await` em compreensões de lista, bem 
 [source, python]
 ----
 >>> {name: found async for name, found in multi_probe(names)}
-{'golang.org': True, 'python.org': True, 'no-lang.invalid': False,
+{'golang.org': True, 'python.org': True, 'xyz.invalid': False,
 'rust-lang.org': True}
 ----
 
