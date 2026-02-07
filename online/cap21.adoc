@@ -262,6 +262,13 @@ A((("asynchronous programming", "awaitables")))((("await keyword")))((("keywords
 "await keyword"))) palavra-chave `for` funciona com
 "iteráveis" (_iterable_). A palavra-chave `await` funciona com "esperáveis" (_awaitable_).
 
+[NOTE]
+====
+Os tradutores da documentação do Python em português traduziram _awaitable_ como
+"aguardável". Adotei "esperável" por ser mais simples.
+E também porque nem todo esperável é agradável ;-)
+====
+
 Como usuário do `asyncio`, estes são os esperáveis que você verá diariamente:
 
 * Um _objeto corrotina nativo_, que você obtém invocando uma _função corrotina nativa_
@@ -1612,14 +1619,14 @@ rust-lang.org   True
 <1> Experimente um simples `await` para ver o console assíncrono em ação. Dica: `asyncio.sleep()` pode receber um segundo argumento opcional que é devolvido através do `await`.
 <2> Acione a corrotina `probe`.
 <3> A versão de `probe` em `domainlib` devolve uma `NamedTuple` chamada `Result`.
-<4> Faça um lista de domínios. O domínio de nível superior `.invalid` é reservado para testes. Consultas ao DNS por tais domínios sempre recebem uma resposta NXDOMAIN dos servidores DNS, que quer dizer "aquele domínio não existe."footnote:[Veja https://fpy.li/21-45[RFC 6761—Special-Use Domain Names].]
-<5> Itera com `async for` sobre o gerador assíncrono `multi_probe` para mostrar os resultados.
+<4> Faça um lista de domínios. O domínio de nível superior `.invalid` é reservado para testes. Consultas ao DNS por tais domínios sempre recebem uma resposta NXDOMAIN dos servidores DNS, que significa "este domínio não existe."footnote:[Veja https://fpy.li/21-45[_RFC 6761—Special-Use Domain Names_].]
+<5> Itera com `async for` sobre o gerador assíncrono `multi_probe` para exibir os resultados.
 <6> Note que os resultados não estão na ordem em que os domínios foram enviados a `multiprobe`. Eles aparecem quando cada resposta do DNS chega.
 
-O <<domainlib_demo_repl>> mostra que `multi_probe` é um gerador assíncrono, pois ele é compatível com `async for`. Vamos executar mais alguns experimentos, continuando com o <<domainlib_more_exp_repl>>.
+O <<domainlib_demo_repl>> mostra que `multi_probe` é um gerador assíncrono, pois é compatível com `async for`. Vamos executar mais alguns experimentos, continuando com o <<domainlib_more_exp_repl>>.
 
 [[domainlib_more_exp_repl]]
-.mais experimentos, continuando de <<domainlib_demo_repl>>
+.Mais experimentos, continuação do <<domainlib_demo_repl>>
 ====
 [source, python]
 ----
@@ -1635,9 +1642,10 @@ Traceback (most recent call last):
 TypeError: 'async_generator' object is not iterable
 ----
 ====
-<1> Chamar uma corrotina nativa devolve um objeto corrotina.
-<2> Chamar um gerador assíncrono devolve um objeto `async_generator`.
-<3> Não podemos usar um laço `for` comum com geradores assíncronos, porque eles implementam `+__aiter__+` em vez de `+__iter__+`.
+<1> Invocar uma corrotina nativa devolve um objeto corrotina.
+<2> Invocar um gerador assíncrono devolve um objeto `async_generator`.
+<3> Não podemos usar um laço `for` comum para percorrer geradores assíncronos,
+porque eles implementam `+__aiter__+` em vez de `+__iter__+`.
 
 Geradores assíncronos são acionados pelas palavras-chave `async for`,
 que pode ser uma instrução de laço (como visto em <<domainlib_demo_repl>>), 
@@ -1646,7 +1654,7 @@ mas também podem aparecer em compreensões assíncronas, que veremos mais tarde
 
 ===== Implementando um gerador assíncrono
 
-Agora veremos o código do _domainlib.py_, com o gerador assíncrono `multi_probe`  (<<domainlib_ex>>).
+Aqui está o módulo _domainlib.py_, com o gerador assíncrono `multi_probe`:
 
 [[domainlib_ex]]
 .domainlib.py: funções para sondar domínios
@@ -1656,18 +1664,18 @@ Agora veremos o código do _domainlib.py_, com o gerador assíncrono `multi_prob
 include::../code/21-async/domains/asyncio/domainlib.py[]
 ----
 ====
-<1> A `NamedTuple` torna o resultado de `probe` mais fácil de ler e depurar.
+<1> `NamedTuple` torna o resultado de `probe` mais fácil de ler e depurar.
 <2> Este apelido de tipo serve para evitar que a linha seguinte fique grande demais em uma listagem impressa em um livro.
-<3> `probe` agora recebe um argumento opcional `loop`, para evitar chamadas repetidas a `get_running_loop` quando essa corrotina é acionada por `multi_probe`.
-<4> Uma função geradora assíncrona produz um objeto gerador assíncrono, que pode ser anotado como  `AsyncIterator[SomeType]`.
+<3> `probe` agora recebe um argumento opcional `loop`, para evitar chamadas repetidas a `get_running_loop` toda vez que esta corrotina é acionada no laço em `multi_probe`.
+<4> Uma função geradora assíncrona produz um objeto gerador assíncrono, que pode ser anotado como `AsyncIterator[TipoDoItem]`.
 <5> Constrói uma lista de objetos corrotina `probe`, cada um com um `domain` diferente.
-<6> Isso não é `async for` porque `asyncio.as_completed` é um gerador clássico.
-<7> Espera pelo objeto corrotina para obter o resultado.
-<8> Produz `result`. Esta linha faz com que `multi_probe` seja um gerador assíncrono.
+<6> Isto não é `async for` porque `asyncio.as_completed` é um gerador clássico.
+<7> Aciona o objeto corrotina para obter o resultado.
+<8> Produz um `result`. Esta linha faz com que `multi_probe` seja um gerador assíncrono.
 
 [NOTE]
 ====
-O laço `for` no <<domainlib_ex>> poderia ser mais conciso:
+O corpo do laço `for` no <<domainlib_ex>> poderia ser mais conciso:
 
 [source, python]
 ----
@@ -1677,10 +1685,14 @@ O laço `for` no <<domainlib_ex>> poderia ser mais conciso:
 
 Python interpreta isso como `yield (await coro)`, então funciona.
 
-Achei que poderia ser confuso usar esse atalho no primeiro exemplo de gerador assíncrono no livro, então dividi em duas linhas.
+Achei que poderia ser confuso usar esse atalho no primeiro exemplo
+de gerador assíncrono no livro, então dividi em duas linhas.
 ====
 
-Dado _domainlib.py_, podemos demonstrar o uso do gerador assíncrono `multi_probe` em _domaincheck.py_: um script que recebe um sufixo de domínio e busca por domínios criados a partir de palavras-chave curtas de Python.
+Uma vez que temos o _domainlib.py_, podemos demonstrar o uso do
+gerador assíncrono `multi_probe` em _domaincheck.py_:
+um script que recebe um sufixo de domínio e busca por domínios
+criados a partir de palavras-chave curtas de Python.
 
 Aqui está uma amostra da saída de _domaincheck.py_:
 
@@ -1709,7 +1721,7 @@ as.net
                 def.net
 ----
 
-Graças à _domainlib_, o código de _domaincheck.py_ é bastante direto, como se vê no <<domaincheck_ex>>.
+Graças à _domainlib_, o códido de _domaincheck.py_ é bem direto:
 
 [[domaincheck_ex]]
 .domaincheck.py: utilitário para sondar domínios usando domainlib
@@ -1720,10 +1732,10 @@ include::../code/21-async/domains/asyncio/domaincheck.py[]
 ----
 ====
 <1> Gera palavras-chave de tamanho até `4`.
-<2> Gera nomes de domínio com o sufixo recebido como TLD (_Top Level Domain_, "Domínio de Topo").
+<2> Gera nomes de domínio com o sufixo recebido como TLD (_Top Level Domain_).
 <3> Formata um cabeçalho para a saída tabular.
 <4> Itera de forma assíncrona sobre `multi_probe(domains)`.
-<5> Define `indent` como zero ou dois tabs, para colocar o resultado na coluna correta.
+<5> Define `indent` como zero ou dois tabs, para colocar o resultado na coluna apropriada.
 <6> Roda a corrotina `main` com o argumento de linha de comando passado.
 
 Geradores têm um uso adicional, não relacionado à iteração: ele podem ser usados como gerenciadores de contexto. Isso também se aplica aos geradores assíncronos.
@@ -1731,8 +1743,12 @@ Geradores têm um uso adicional, não relacionado à iteração: ele podem ser u
 [[async_gen_context_mngr_sec]]
 ===== Geradores assíncronos como gerenciadores de contexto
 
-Escrever((("context managers", "asynchronous generators as"))) nossos próprios gerenciadores de contexto assíncronos não é uma tarefa de programação frequente, mas se você precisar escrever um, considere usar o decorador https://fpy.li/b6[`@asynccontextmanager`], incluído no módulo `contextlib` no Python 3.7.
-Ele é muito similar ao decorador `@contextmanager` que estudamos na <<using_cm_decorator_sec>>.
+Escrever((("context managers", "asynchronous generators as"))) nossos próprios
+gerenciadores de contexto assíncronos não é uma tarefa de programação frequente,
+mas se precisar, considere usar o decorador
+https://fpy.li/b6[`@asynccontextmanager`], incluído no módulo `contextlib` no
+Python 3.7. É análogo ao decorador `@contextmanager` que estudamos na
+<<using_cm_decorator_sec>>.
 
 Um exemplo interessante da combinação de `@asynccontextmanager` com `loop.run_in_executor` aparece no livro de Caleb Hattingh,
 https://fpy.li/hattingh[_Using Asyncio in Python_]. O <<asynccontextmanager_ex>> é o código de Caleb—com uma única mudança e o acréscimo das explicações.
@@ -1757,7 +1773,7 @@ async with web_page('google.com') as data:  # <6>
 ----
 ====
 <1> A função decorada precisa ser um gerador assíncrono.
-<2> Uma pequena atualização no código de Caleb: usar o `get_running_loop`, mais leve, no lugar de `get_event_loop`.
+<2> Pequena atualização no código de Caleb: usar o `get_running_loop`, mais leve, no lugar de `get_event_loop`.
 <3> Suponha que `download_webpage` é uma função bloqueante que usa a biblioteca _requests_; vamos rodá-la em uma thread separada, para evitar o bloqueio do laço de eventos.
 <4> Todas as linhas antes dessa expressão `yield` vão se tornar o método corrotina `+__aenter__+` do gerenciador de contexto assíncrono criado pelo decorador. O valor de `data` será vinculado à variável `data` após a cláusula `as` no comando `async with` abaixo.
 <5> As linhas após o `yield` se tornarão o método corrotina `+__aexit__+`. Aqui outra chamada bloqueante é delegada para um executor de threads.
@@ -1776,15 +1792,17 @@ Aqui((("native coroutines", "versus asynchronous generators", secondary-sortas="
 
 * Ambas são declaradas com `async def`.
 * Um gerador assíncrono sempre tem uma expressão `yield` em seu corpo—é isso que o torna um gerador. Uma corrotina nativa nunca contém um `yield`.
-* Uma corrotina nativa pode `return` (_devolver_) algum valor diferente de `None`. Um gerador assíncrono só pode usar comandos `return` vazios.
-* Corrotinas nativas são esperáveis: elas podem ser acionadas por expressões `await` ou passadas para alguma das muitas funções do `asyncio` que aceitam argumentos esperáveis, tal como `create_task`. Geradores assíncronos não são esperáveis. Eles são iteráveis assíncronos, acionados por `async for` ou por compreensões assíncronas.
+* Uma corrotina nativa pode devolver (`return`) algum valor diferente de `None`, mas um gerador assíncrono só pode usar instruções `return` vazias.
+* Corrotinas nativas são esperáveis: elas podem ser acionadas por expressões `await` ou passadas para uma das muitas funções do `asyncio` que aceitam argumentos esperáveis, como `create_task` ou `gather`. Em contrapartida, geradores assíncronos não são esperáveis. Eles são iteráveis assíncronos, acionados por `async for` ou por compreensões assíncronas.
 
-
-É hora então de falar sobre as compreensões assíncronas.((("", startref="Gasync21")))
+Hora de falar sobre as tais compreensões assíncronas.((("", startref="Gasync21")))
 
 ==== Compreensões assíncronas e expressões geradoras assíncronas
 
-A https://fpy.li/pep530[PEP 530—Asynchronous Comprehensions] introduziu((("generator expressions (genexps)", id="genexp21")))((("list comprehensions (listcomps)", "asynchronous", id="LCasync21"))) o uso de `async for` e `await` na sintaxe de compreensões e expressões geradoras, a partir de Python 3.6.
+A https://fpy.li/pep530[_PEP 530—Asynchronous Comprehensions_]
+introduziu((("generator expressions (genexps)",
+id="genexp21")))((("list comprehensions (listcomps)", "asynchronous", id="LCasync21")))
+o uso de `async for` e `await` na sintaxe de compreensões e expressões geradoras, a partir de Python 3.6.
 
 A única sintaxe definida na PEP 530 que pode aparecer fora do corpo
 de uma `async def` é uma expressão geradora assíncrona.
@@ -1799,7 +1817,8 @@ Aqui está uma forma de fazer isso—novamente usando o console assíncrono inic
 ----
 >>> from domainlib import multi_probe
 >>> names = 'python.org rust-lang.org golang.org xyz.invalid'.split()
->>> gen_found = (name async for name, found in multi_probe(names) if found)  # <1>
+>>> gen_found = (name async for name, found
+...              in multi_probe(names) if found)  # <1>
 >>> gen_found
 <async_generator object <genexpr> at 0x10a8f9700>  # <2>
 >>> async for name in gen_found:  # <3>
@@ -1809,19 +1828,33 @@ golang.org
 python.org
 rust-lang.org
 ----
-<1> O uso de `async for` torna isso uma expressão geradora assíncrona. Ela pode ser definida em qualquer lugar de um módulo Python.
+<1> O uso de `async for` define uma expressão geradora assíncrona. Ela pode ser definida em qualquer lugar de um módulo Python.
 <2> A expressão geradora assíncrona cria um objeto `async_generator`—exatamente o mesmo tipo de objeto devolvido por uma função geradora assíncrona como `multi_probe`.
-<3> O objeto gerador assíncrono é acionado pelo comando `async for`, que por sua vez só pode aparecer dentro do corpo de uma `async def` ou no console assíncrono mágico que usei nesse exemplo.
+<3> O objeto gerador assíncrono é acionado pela instrução `async for`,
+que por sua vez só pode aparecer dentro do corpo de uma `async def`
+ou no console assíncrono mágico que usei nesse exemplo.
 
-Resumindo: uma expressão geradora assíncrona pode ser definida em qualquer ponto do seu programa, mas só pode ser consumida dentro de uma corrotina nativa ou de uma função geradora assíncrona.
+Resumindo: uma expressão geradora assíncrona pode ser definida
+em qualquer ponto do seu programa, mas só pode ser acionada
+dentro de uma corrotina nativa ou de uma função geradora assíncrona.
 
-As demais construções sintáticas introduzidos pela PEP 530 só podem ser definidos e usados dentro de corrotinas nativas ou de funções geradoras assíncronas.
+Agora veremos as demais construções sintáticas introduzidos pela PEP 530.
 
 ===== Compreeensões assíncronas
 
-Yury Selivanov—autor da PEP 530—justifica a necessidade de compreensões assíncronas com três trechos curtos de código, reproduzidos a seguir.
+Diferente das expressões geradoras assíncronas,
+as compreensões assíncronas só podem ser definidas e
+usadas dentro de corrotinas nativas ou de funções geradoras assíncronas.
+Isso faz sentido porque as compreensões são ávidas (_eager_): elas
+são executadas imediatamente para construir uma lista.
+Em contraste, as expressões geradoras (assíncronas ou não), são
+preguiçosas (_lazy_). Elas criam um objeto gerador
+que só será executado quando um laço percorrer o gerador.
 
-Podemos todos concordar que deveria ser possível reescrever esse código:
+Yury Selivanov—autor da PEP 530—justificou a necessidade de compreensões
+assíncronas com três trechos curtos de código, reproduzidos a seguir.
+
+Podemos concordar que deveria ser possível reescrever esse código:
 
 [source, python]
 ----
@@ -1847,11 +1880,12 @@ result = [await fun() for fun in funcs]
 
 [TIP]
 ====
-Usar `await` em uma compreensão de lista é similar a usar  `asyncio.gather`.
-Mas `gather` dá a você um maior controle sobre o tratamento de exceções, graças ao seu argumento opcional `return_exceptions`.
+Usar `await` em uma compreensão de lista é similar a usar `asyncio.gather`.
+Mas `gather` nos dá um maior controle sobre o tratamento de exceções,
+graças ao seu argumento opcional `return_exceptions`.
 Caleb Hattingh recomenda sempre definir `return_exceptions=True` (o default é `False`).
 Veja a
-https://fpy.li/b7[documentação de `asyncio.gather`]
+https://fpy.li/b7[«documentação de `asyncio.gather`»]
 para mais informações.
 ====
 
@@ -1875,9 +1909,13 @@ Result(domain='rust-lang.org', found=True)]
 >>>
 ----
 
-Observe que ordenei a lista de nomes, para mostrar que os resultados chegam na ordem em que foram enviados, nos dois casos.
+Usei `sorted` para ordenar a lista de nomes e mostrar que os resultados chegam
+na ordem em que foram submetidos, nos dois casos.
 
-A PEP 530 permite o uso de `async for` e `await` em compreensões de lista, bem como em compreensões de `dict` e de `set`. Por exemplo, aqui está uma compreensão de `dict` para armazenar os resultados de `multi_probe` no console assíncrono:
+A PEP 530 também permite o uso de `async for` e `await` 
+compreensões de `dict` e de `set`. Por exemplo, aqui está uma
+compreensão de `dict` para armazenar os resultados de `multi_probe` no console
+assíncrono:
 
 [source, python]
 ----
@@ -1886,8 +1924,10 @@ A PEP 530 permite o uso de `async for` e `await` em compreensões de lista, bem 
 'rust-lang.org': True}
 ----
 
-Podemos usar a palavra-chave `await` na expressão antes de cláusulas `for` ou de `async for`, e também na expressão após a cláusula `if`.
-Aqui está uma compreensão de `set` no console assíncrono, coletando apenas os domínios encontrados.
+Podemos usar a palavra-chave `await` na expressão antes das cláusulas `for` ou
+`async for`, e também na expressão após a cláusula `if`. Aqui está uma
+compreensão de `set` no console assíncrono, coletando apenas os domínios
+encontrados.
 
 [source, python]
 ----
@@ -1895,23 +1935,50 @@ Aqui está uma compreensão de `set` no console assíncrono, coletando apenas os
 {'rust-lang.org', 'python.org', 'golang.org'}
 ----
 
-Precisei colocar parênteses extras ao redor da expressão `await` devido à precedência mais alta do operador `.` (ponto) de `+__getattr__+`.
+Precisei colocar parênteses adicionais ao redor da expressão `await` devido à
+precedência mais alta do operador `.` (ponto) de `+__getattr__+`.
 
-Repetindo, todas essas compreensões só podem aparecer no corpo de uma `async def` ou no console assíncrono encantado.
+Relembrando, todas essas compreensões só podem aparecer no corpo de uma `async def` ou no console assíncrono encantado.
 
-Agora vamos discutir um recurso muito importante dos comandos `async`, das expressões `async`, e dos objetos que eles criam.
-Esses artefatos são muitas vezes usados com o `asyncio` mas, na verdade, eles são independentes da biblioteca.((("", startref="LCasync21")))((("", startref="genexp21")))((("", startref="ITERasync21")))((("", startref="ITasync21")))((("", startref="APRiteration21")))
+Agora vamos discutir uma característica muito importante das instruções e expressões `async` e dos objetos que eles criam:
+Estas construções são muitas vezes usados com o `asyncio` mas, na verdade, 
+são independentes da biblioteca.((("", startref="LCasync21")))((("", startref="genexp21")))((("", startref="ITERasync21")))((("", startref="ITasync21")))((("", startref="APRiteration21")))
 
 
 === Sondando domínios com _Curio_
 
-Os elementos da linguagem((("asynchronous programming", "Curio project", id="APRcurio21")))((("Curio project", id="curio21"))) `async/await` de Python não estão presos a nenhum laço de eventos ou biblioteca específicos.footnote:[Em contraste com o JavaScript, onde `async/await` são atrelados ao laço de eventos que é inseparável do ambiente de runtime, isto é, um navegador, o Node.js ou o Deno.]
-Graças à API extensível fornecida por métodos especiais, qualquer um suficientemente motivado pode escrever seu ambiente de runtime e suo framework assíncronos para acionar corrotinas nativas, geradores assíncronos, etc.
+Os elementos da linguagem((("asynchronous programming", "Curio project",
+id="APRcurio21")))((("Curio project", id="curio21"))) `async/await` de Python
+não estão presos a nenhum laço de eventos ou biblioteca específicos.footnote:[Em
+contraste com o JavaScript, onde `async/await` são atrelados ao laço de eventos
+que é inseparável do ambiente de runtime, isto é, um navegador, o Node.js ou o
+Deno.] Graças à API extensível fornecida por métodos especiais, qualquer pessoa
+suficientemente motivada pode escrever seu ambiente de runtime e um framework
+assíncronos para acionar corrotinas nativas, geradores assíncronos, etc.
 
-Foi isso que David Beazley fez em seu projeto https://fpy.li/21-49[_Curio_].
-Ele estava interessado em repensar como esses recursos da linguagem poderiam ser usados em um framework desenvolvido do zero. Lembre-se que o `asyncio` foi lançado no Python 3.4, e usava `yield from` em vez de `await`, então sua API não conseguia aproveitar gerenciadores de contexto assíncronos, iteradores assíncronos e tudo o mais que as palavras-chave `async/await` tornaram possível. O resultado é que o _Curio_ tem uma API mais elegante e uma implementação mais simples quando comparado ao `asyncio`.
+Foi o que fez David Beazley em seu projeto https://fpy.li/21-49[_Curio_].
+Beazley estava interessado em repensar como estes recursos da linguagem poderiam
+ser usados em um framework desenvolvido do zero, sem carregar uma bagagem do
+passado. Lembre-se que o `asyncio` foi lançado no Python 3.4, quando não existiam
+as instruções `async`, e em vez de `await` usávamos `yield from`.
+Então a API original do `asyncio` não podia oferecer gerenciadores de
+contexto assíncronos, iteradores assíncronos e tudo o mais que as palavras-chave
+`async/await` tornaram possível. O resultado é que o _Curio_ tem uma API mais
+elegante e uma implementação mais simples quando comparado ao `asyncio`.
 
-O <<blogdom_curio_ex>> mostra o script _blogdom.py_ (<<blogdom_ex>>) reescrito para usar o _Curio_.
+WARNING
+====
+O _Curio_ é uma prova de conceito, e David Beazley não está mais evoluindo
+o projeto. Sua influência mais marcante está no framework
+https://fpy.li/21-58[_Trio_], que continua evoluindo e tem mais suporte
+de bibliotecas.
+
+Se você estiver usando Python 3.12 ou superior, precisará instalar
+um _fork_ atualizado publicado no PyPI como https://fpy.li/c6[_curio-compat_].
+====
+
+O <<blogdom_curio_ex>> mostra o script _blogdom.py_ (<<blogdom_ex>>) reescrito
+para usar o _Curio_.
 
 [[blogdom_curio_ex]]
 .blogdom.py: <<blogdom_ex>>, agora usando o _Curio_
@@ -1921,14 +1988,29 @@ O <<blogdom_curio_ex>> mostra o script _blogdom.py_ (<<blogdom_ex>>) reescrito p
 include::../code/21-async/domains/curio/blogdom.py[]
 ----
 ====
-<1> `probe` não precisa obter o laço de eventos, porque...
-<2> ...`getaddrinfo` é uma função nível superior de `curio.socket`, não um método de um objeto `loop`—como ele é no `asyncio`.
-<3> Um `TaskGroup` é um conceito central no _Curio_, para monitorar e controlar várias corrotinas, e para garantir que elas todas sejam executadas e terminadas corretamente.
-<4> `TaskGroup.spawn` é como você inicia uma corrotina, gerenciada por uma instância específica de `TaskGroup`. A corrotina é envolvida em uma `Task`.
-<5> Iterar com `async for` sobre um `TaskGroup` produz instâncias de `Task` a medida que cada uma termina. Isso corresponde à linha em <<blogdom_ex>> que usa `for … as_completed(…):`.
-<6> O _Curio_ foi pioneiro no uso dessa maneira sensata de iniciar um programa assíncrono em Python.
 
-Para expandir esse último ponto: se você olhar nos exemplo de código de `asyncio` na primeira edição do _Python Fluente_, verá linhas como as seguintes, repetidas várias vezes:
+<1> `probe` não precisa obter o laço de eventos, porque...
+
+<2> ...`getaddrinfo` é uma função nível superior de `curio.socket`, não um
+método de um objeto `loop`—como no `asyncio`.
+
+<3> Um `TaskGroup` é um conceito central no _Curio_, para monitorar e controlar
+várias corrotinas, garantindo que elas todas sejam acionadas e encerradas, sem
+deixar alguma para trás.
+
+<4> `TaskGroup.spawn` é como você inicia uma corrotina, gerenciada por uma
+instância específica de `TaskGroup`. A corrotina é embrulhada em uma `Task`.
+
+<5> Iterar com `async for` sobre um `TaskGroup` produz instâncias de `Task` a
+medida que cada uma termina. Isto corresponde à linha em <<blogdom_ex>> que usa +
+`for … in as_completed(…):`
+
+<6> O _Curio_ foi pioneiro no uso dessa maneira simples de iniciar um programa
+assíncrono em Python.
+
+Para ilustrar este último ponto: lendo os exemplos de código de `asyncio` na
+primeira edição do _Python Fluente_, verá linhas como estas repetidas várias
+vezes:
 
 [source, python]
 ----
@@ -1937,8 +2019,12 @@ Para expandir esse último ponto: se você olhar nos exemplo de código de `asyn
     loop.close()
 ----
 
-Um `TaskGroup` do _Curio_ é um gerenciador de contexto assíncrono que substitui várias APIs e padrões de codificação ad hoc do `asyncio`.
-Acabamos de ver como iterar sobre um `TaskGroup` torna a função `asyncio.as_completed(…)` desnecessária.
+==== Concorrência estruturada
+
+Um `TaskGroup` do _Curio_ é um gerenciador de contexto assíncrono que substitui
+várias APIs e padrões de codificação repetitivos do `asyncio`. Acabamos de ver como
+iterar sobre um `TaskGroup` torna a função `asyncio.as_completed(…)`
+desnecessária.
 
 Outro exemplo: em vez da função especial `gather`, este trecho da
 https://fpy.li/21-50[documentação de "Task Groups"]
@@ -1953,43 +2039,86 @@ async with TaskGroup(wait=all) as g:
 print('Results:', g.results)
 ----
 
-Grupos((("structured concurrency")))((("concurrency models", "structured concurrency"))) de tarefas (_task groups_) suportam https://fpy.li/21-51[_concorrência estruturada_]:
-uma forma de programação concorrente que restringe todas a atividade de um grupo de tarefas assíncronas a um único ponto de entrada e saída.
-Isso é análogo à programaçào estruturada, que eliminou o comando `GOTO` e introduziu os comandos de bloco para limitar os pontos de entrada e saída de laços e sub-rotinas.
-Quando usado como um gerenciador de contexto assíncrono, um `TaskGroup` garante que na saída do bloco, todas as tarefas criadas dentro dele estão ou finalizadas ou canceladas e qualquer exceção foi levantada.
+Objetos `TaskGroup` ((("structured concurrency")))((("concurrency models",
+"structured concurrency"))) suportam
+https://fpy.li/21-51[«concorrência estruturada»]:
+uma disciplina de programação concorrente que organiza todas a atividades de um
+grupo de tarefas assíncronas em um bloco de código com apenas um ponto de
+entrada e uma saída. Isto é análogo à programaçào estruturada, 
+que introduziu instruções de bloco para limitar os pontos de
+entrada e saída de condicionais, laços e sub-rotinas, e eliminou
+a instrução `GOTO` que permitia desviar a execução de qualquer linha
+para qualquer outra linha do código.
+Quando usado como um gerenciador de contexto assíncrono,
+um `TaskGroup` garante que na saída do bloco,
+todas as tarefas criadas dentro dele estão finalizadas ou canceladas e
+qualquer exceção foi levantada.
 
 [NOTE]
 ====
-A concorrência estruturada vai provavelmente ser adotada pelo `asyncio` em versões futuras de Python. Uma indicação forte disso aparece na https://fpy.li/pep654[PEP 654–Exception Groups and except*], que foi https://fpy.li/21-52[aprovada para Python 3.11].
-A https://fpy.li/21-53[seção "Motivation"](EN) menciona as "creches" (_nurseries) do _Trio_, o nome que els dão para grupos de tarefas:
-"Implementar uma API de geração de tarefas melhor no `asyncio`, inspirada pelas _creches_ do Trio, foi  a principal motivação dessa PEP."
+
+A concorrência estruturada está sendo adotada pelo `asyncio`.
+Uma evidência é a
+https://fpy.li/pep654[_PEP 654–Exception Groups and except*_], que foi
+aprovada para o Python 3.11. A seção
+https://fpy.li/21-53[_Motivation_] menciona as _nurseries_ (creches)
+do _Trio_, que correspondem aos `TaskGroup` do _Curio_:
+"Implementar uma API de acionamento de tarefas melhor no `asyncio`,
+inspirada pelas _nurseries_ do Trio, foi a principal motivação desta
+PEP."
+
 ====
 
-Outro recurso importante do _Curio_ é um suporte melhor para programar com corrotinas e threads na mesma base de código—uma necessidade de qualquer programa assíncrono não-trivial.
-Iniciar uma thread com `await spawn_thread(func, …)` devolve um objeto `AsyncThread` com uma interface de `Task`. As threads podem chamar corrotinas, graças à função especial https://fpy.li/21-54[`AWAIT(coro)`]—escrita inteiramente com maiúsculas porque `await` agora é uma palavra-chave.
+Outra inovação importante do _Curio_ é um suporte melhor para programar com
+corrotinas e threads na mesma base de código—uma necessidade de qualquer
+programa assíncrono não-trivial. Iniciar uma thread com `await
+spawn_thread(func, …)` devolve um objeto `AsyncThread` com uma interface de
+`Task`. As threads podem chamar corrotinas, graças à função especial
+https://fpy.li/21-54[`AWAIT(coro)`]—escrita inteiramente com maiúsculas porque
+`await` agora é uma palavra-chave.
 
-O _Curio_ também oferece uma `UniversalQueue` que pode ser usada para coordenar o trabalho entre threads, corrotinas _Curio_ e corrotinas `asyncio`.
-Isso mesmo, o _Curio_ tem recursos que permitem que ele rode em uma thread junto com `asyncio` em outra thread, no mesmo processo, se comunicando através da `UniversalQueue` e de `UniversalEvent`.
-A API para essas classes "universais" é a mesma dentro e fora de corrotinas, mas em uma corrotina é preciso preceder as chamadas com `await`.
+O _Curio_ também oferece uma `UniversalQueue` que pode ser usada para coordenar
+o trabalho entre threads, corrotinas _Curio_ e corrotinas `asyncio`. Sim,
+o _Curio_ pode ser executado em uma thread ao lado do
+`asyncio` em outra thread, no mesmo processo, comunicando-se através da
+`UniversalQueue` e de `UniversalEvent`. A API destas classes "universais" é
+a mesma dentro e fora de corrotinas, mas em uma corrotina é preciso 
+acionar os métodos com `await`.
 
-Em outubro de 2021, quando estou escrevendo esse capítulo, a _HTTPX_ é a primeira biblioteca HTTP cliente https://fpy.li/21-55[compatível com o _Curio_],
-mas não sei de nenhuma biblioteca assíncrona de banco de dados que o suporte nesse momento.
-No repositório do _Curio_ há um conjunto impressionante de https://fpy.li/21-56[exemplos de programação para rede], incluindo um que utiliza _WebSocket_, e outro implementando o algoritmo concorrente https://fpy.li/21-57[RFC 8305—Happy Eyeballs], para conexão com pontos de acesso IPv6 com rápido recuo para IPv4 se necessário.
+Em outubro de 2021, quando estou escrevendo esse capítulo, a _HTTPX_ é a
+primeira biblioteca HTTP cliente https://fpy.li/21-55[compatível com o _Curio_],
+mas não sei de nenhuma biblioteca assíncrona de banco de dados que o suporte
+nesse momento. No repositório do _Curio_ há um conjunto impressionante de
+https://fpy.li/21-56[«exemplos de programação para rede»], incluindo um que
+utiliza _WebSocket_, e outro implementando o algoritmo concorrente
+https://fpy.li/21-57[_RFC 8305—Happy Eyeballs_], para conexão com pontos de acesso
+IPv6 revertendo rapidamente para IPv4 quando necessário.
 
-O design do _Curio_ tem tido grande influência.
-o framework https://fpy.li/21-58[_Trio_], iniciada por Nathaniel J. Smith,
-foi muito inspirada pelo _Curio_.
-O _Curio_ pode também ter alertado os contribuidores de Python a melhorarem a usabilidade da API `asyncio`.
-Por exemplo, em suas primeiras versões, os usuários do `asyncio` muitas vezes eram obrigados a obter e ficar passando um objeto `loop`, porque algumas funções essenciais eram ou métodos de `loop` ou exigiam um argumento `loop`.
-Em versões mais recentes de Python, acesso direto ao laço não é mais tão necessário e, de fato, várias funções que aceitavam um `loop` opcional estão agora descontinuando aquele argumento.
+O design do _Curio_ foi muito influente.
+o framework https://fpy.li/21-58[_Trio_], iniciado por Nathaniel J. Smith,
+foi muito inspirado nele.
+O _Curio_ pode também ter estimulado os contribuidores de Python a melhorar a usabilidade da API do `asyncio`.
+Por exemplo, em suas primeiras versões, os usuários do `asyncio` muitas vezes
+eram obrigados a obter e ficar passando um objeto `loop`,
+porque algumas funções essenciais eram métodos de `loop`,
+ou precisavam do laço de eventos como um argumento.
+Em versões mais recentes de Python, acesso direto ao laço não é mais tão necessário e,
+várias funções que aceitavam um `loop` opcional estão agora descontinuando aquele argumento.
 
-Anotações de tipo para tipos assíncronos é o nosso próximo tópico.((("", startref="APRcurio21")))((("", startref="curio21")))
+Anotações de tipo para tipos assíncronos é o nosso próximo tópico.((("",
+startref="APRcurio21")))((("", startref="curio21")))
 
 === Dicas de tipo para objetos assíncronos
 
-O((("asynchronous programming", "type hinting asynchronous objects")))((("type hints (type annotations)", "for asynchronous objects", secondary-sortas="asynchronous objects"))) tipo devolvido por uma corrotina nativa é o tipo do objeto que você obtém quando usa `await` naquela corrotina, que é o tipo do objeto que aparece nos comandos `return` no corpo da função corrotina nativa.footnote:[Isso difere das anotações de corrotinas clássicas, discutidas na <<generic_classic_coroutine_types_sec>>.]
+O((("asynchronous programming", "type hinting asynchronous objects")))((("type hints (type annotations)",
+"for asynchronous objects", secondary-sortas="asynchronous objects")))
+tipo devolvido por uma corrotina nativa é o tipo do objeto que você obtém quando
+usa `await` naquela corrotina, que é o tipo do objeto devolvido pela instrução
+`return` no corpo da corrotina nativa. Isto é mais simples que as anotações
+de corrotinas clássicas, discutidas na <<generic_classic_coroutine_types_sec>>.
 
-Nesse capítulo mostro muitos exemplos de corrotinas nativas anotadas, incluindo a `probe` do <<blogdom_curio_ex>>:
+Nesse capítulo vimos vários exemplos de corrotinas nativas anotadas,
+incluindo a `probe` do <<blogdom_curio_ex>>:
 
 [source, python]
 ----
@@ -2001,7 +2130,8 @@ async def probe(domain: str) -> tuple[str, bool]:
     return (domain, True)
 ----
 
-Se você precisar anotar um parâmetro que recebe um objeto corrotina, então o tipo genérico é:
+Se você precisar anotar um parâmetro que recebe um objeto corrotina como argumento,
+então o tipo genérico é:
 
 [source, python]
 ----
@@ -2009,7 +2139,8 @@ class typing.Coroutine(Awaitable[V_co], Generic[T_co, T_contra, V_co]):
     ...
 ----
 
-Aquele tipo e os tipos seguintes foram introduzidos no Python 3.5 e 3.6 para anotar objetos assíncronos:
+Aquele tipo e os tipos seguintes foram introduzidos no Python 3.5 e 3.6 para
+anotar objetos assíncronos:
 
 [source, python]
 ----
@@ -2019,37 +2150,47 @@ class typing.AsyncIterable(Generic[T_co]):
     ...
 class typing.AsyncIterator(AsyncIterable[T_co]):
     ...
-class typing.AsyncGenerator(AsyncIterator[T_co], Generic[T_co, T_contra]):
+class typing.AsyncGenerator(AsyncIterator[T_co],
+                            Generic[T_co, T_contra]):
     ...
 class typing.Awaitable(Generic[T_co]):
     ...
 ----
 
-Com Python ≥ 3.9, use os equivalentes deles em `collections.abc`.
+Com Python ≥ 3.9, use os equivalentes definidos em `collections.abc`.
 
-Quero destacar três aspectos desses tipos genéricos.
+Quero destacar três aspectos destes tipos genéricos.
 
-Primeiro: eles são todos covariantes do primeiro parâmetro de tipo, que é o tipo dos itens produzidos a partir desses objetos.
-Lembre-se da regra #1 da <<variance_rules_sec>>:
+Primeiro: eles são todos covariantes do primeiro parâmetro de tipo, que é o tipo
+dos itens produzidos a partir desses objetos. Lembre-se da regra #1 da
+<<variance_rules_sec>>:
 
 [quote]
 ____
 Se um parâmetro de tipo formal define um tipo para um dado que sai do objeto, ele pode ser covariante.
 ____
 
-Segundo: `AsyncGenerator` e `Coroutine` são contra-variantes do segundo ao último parâmetros. Aquele é o tipo do argumento do método de baixo nível `.send()`, que o laço de eventos chama para acionar geradores assíncronos e corrotinas. Dessa forma, é um tipo de "entrada".
-Assim, pode ser contra-variante, pelo Regra de Variância #2
+Segundo: `AsyncGenerator` e `Coroutine` são contra-variantes no penúltimo parâmetro.
+Aquele é o tipo do argumento passado ao método de baixo nível
+`.send()`, que o laço de eventos invoca para acionar geradores assíncronos e
+corrotinas. Desta forma, é um tipo de "entrada", então
+vale a regra #2 da variância:
 
 [quote]
 ____
-Se um parâmetro de tipo formal define um tipo para um dado que entra no objeto após sua construção inicial, ele pode ser contra-variante.
+Se um parâmetro de tipo formal define um tipo para um dado que entra
+no objeto após sua construção inicial, ele pode ser contra-variante.
 ____
 
-Terceiro: `AsyncGenerator` não tem tipo de devolução, ao contrário de `typing.Generator`,
-que vimos na <<generic_classic_coroutine_types_sec>>.
-Devolver um valor levantando `StopIteration(value)` era uma das gambiarras que permitia a geradores operarem como corrotinas e suportar `yield from`, como vimos na <<classic_coroutines_sec>>.
-Não há tal sobreposição entre os objetos assíncronos:
-objetos `AsyncGenerator` não devolvem valores e são completamente separados de objetos corrotina, que são anotados com `typing.Coroutine`.
+Terceiro: `AsyncGenerator` não tem tipo de retorno, ao contrário de `typing.Generator`,
+usado para anotar corrotinas clássicas, apesar do nome que sugere outra coisa,
+como vimos na <<generic_classic_coroutine_types_sec>>.
+Devolver um valor levantando `StopIteration(value)` foi a gambiarra que permitiu
+a geradores funcionarem como corrotinas clássicas suportando `yield from`, como
+vimos na <<classic_coroutines_sec>>. Não há tal sobreposição entre os objetos
+assíncronos: objetos `AsyncGenerator` produzem itens mas não devolvem
+um resultado final, e são completamente
+separados de objetos corrotina que devolvem um resultado mas não usam `yield`.
 
 Por fim, vamos discutir rapidamente as vantagens e desafios da programaçào assíncrona.
 

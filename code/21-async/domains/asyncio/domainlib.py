@@ -22,7 +22,8 @@ async def probe(domain: str, loop: OptionalLoop = None) -> Result:  # <3>
     return Result(domain, True)
 
 
-async def multi_probe(domains: Iterable[str]) -> AsyncIterator[Result]:  # <4>
+async def multi_probe(
+        domains: Iterable[str]) -> AsyncIterator[Result]:  # <4>
     loop = asyncio.get_running_loop()
     coros = [probe(domain, loop) for domain in domains]  # <5>
     for coro in asyncio.as_completed(coros):  # <6>
