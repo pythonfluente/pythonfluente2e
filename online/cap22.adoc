@@ -5,10 +5,10 @@
 
 [quote, Martelli&#x2c; Ravenscroft &#x26; Holden, Why properties are important (Porque propriedades são importantes)]
 ____
-A importância crucial das propriedades é que sua existência torna perfeitamente seguro, e de fato aconselhável, expor atributos públicos de dados como parte da interface pública de sua classe.footnote:[Alex Martelli, Anna Ravenscroft &#x26; Steve Holden, https://fpy.li/pynut3[Python in a Nutshell, Third Edition] (EN) (O'Reilly), p. 123.]
+A importância crucial das propriedades é que sua existência torna perfeitamente seguro, e de fato aconselhável, expor atributos de dados públicos como parte da interface pública de sua classe.footnote:[Alex Martelli, Anna Ravenscroft &#x26; Steve Holden, https://fpy.li/pynut3[Python in a Nutshell, Third Edition] (EN) (O'Reilly), p. 123.]
 ____
 
-No Python((("dynamic attributes and properties", "dynamic versus virtual attributes"))), atributos de dados e métodos são conhecidos conjuntamente como _atributos_ .
+No Python((("dynamic attributes and properties", "dynamic versus virtual attributes"))), métodos e atributos de dados (ou campos) são conhecidos conjuntamente como _atributos_ .
 Um método é um atributo _invocável_.
 _Atributos dinâmicos_ apresentam a mesma interface que os atributos de dados—isto é, `obj.attr`—mas são computados sob demanda.
 Isso atende ao _Princípio de Acesso Uniforme_ de Bertrand Meyer:
@@ -213,15 +213,32 @@ No Python, `+__init__+` recebe `self` como primeiro argumentos, portanto o objet
 Além disso, `+__init__+` não pode devolver nada.
 Então, na verdade, esse método é um inicializador, não um construtor.
 
-Quando uma classe é chamada para criar uma instância, o método especial chamado pelo Python naquela classe para construir a instância é `+__new__+`. É um método de classe, mas recebe tratamento especial, então o decorador `@classmethod` não é aplicado a ele.
-Python recebe a instância devolvida por `+__new__+`, e daí a passa como o primeiro argumento (`self`) para `+__init__+`. Raramente precisamos escrever um `+__new__+`, pois a implementação herdada de `object` é suficiente na vasta maioria dos casos.
+Quando uma classe é invocada para criar uma instância, Python invoca o método especial 
+`+__new__+` da classe para construir a instância.
 
-Se necessário, o método `+__new__+` pode também devolver uma instância de uma classe diferente. Quando isso acontece, o interpretador não invoca `+__init__+`.
+É um método de classe, mas recebe tratamento especial,
+então o decorador `@classmethod` não é aplicado a ele.
+Python recebe a instância devolvida por `+__new__+`,
+e daí a passa como o primeiro argumento (`self`) para `+__init__+`. 
+Raramente precisamos escrever um `+__new__+`,
+pois a implementação herdada de `object` atende todos os casos comuns.
+
+Se necessário, o método `+__new__+` pode devolver uma instância de uma classe diferente.
+Quando isso acontece, o interpretador não invoca `+__init__+`.
 Em outras palavras, a lógica de Python para criar um objeto é similar a esse pseudo-código:
 
 [source, python]
 ----
-include::../code/22-dyn-attr-prop/pseudo_construction.py[]
+# pseudocódigo
+def criar(a_classe, algum_arg):
+    novo_objeto = a_classe.__new__(algum_arg)
+    if isinstance(novo_objeto, a_classe):
+        novo_objeto.__init__(algum_arg)
+    return novo_objeto
+
+# as instruções abaixo são praticamente equivalentes
+p = Quitute('pão de queijo')
+p = criar(Quitute, 'pão de queijo')
 ----
 
 O <<ex_explore2>> mostra uma variante de `FrozenJSON` onde a lógica da antiga classe `build` foi transferida para o método `+__new__+`.
@@ -282,11 +299,15 @@ include::../code/22-dyn-attr-prop/oscon/schedule_v4.py[tags=SCHEDULE4_DEMO]
 <3> Agora é fácil obter o nome do `venue`.
 <4> A propriedade `event.speakers` devolve uma lista de instâncias de `Record`.
 
-Como sempre, vamos criar o código passo a passo, começando com a classe `Record` e uma função para ler dados JSON e devolver um `dict` com instâncias de `Record`.
+Como sempre, vamos criar o código passo a passo,
+começando com a classe `Record` e uma função para
+ler dados JSON e devolver um `dict` com instâncias de `Record`.
 
 ==== Passo 1: criação de atributos baseados em dados
 
-O <<ex_schedule_v1_demo>> mostra((("computed properties", "data-driven attribute creation", id="CPdatadriven22"))) o doctest para orientar esse primeiro passo.
+O <<ex_schedule_v1_demo>> mostra((("computed properties",
+"data-driven attribute creation", id="CPdatadriven22")))
+o doctest para orientar esse primeiro passo.
 
 [[ex_schedule_v1_demo]]
 .Testando schedule_v1.py (do <<ex_schedule_v1>>)
@@ -311,18 +332,26 @@ O código de _schedule_v1.py_ está no <<ex_schedule_v1>>.
 include::../code/22-dyn-attr-prop/oscon/schedule_v1.py[tags=SCHEDULE1]
 ----
 ====
+
 <1> Isso é um atalho comum para construir uma instância com atributos criados a partir de argumentos nomeados (a explicação detalhada está abaixo) .
+
 <2> Usa o campo `serial` para criar a representação customizada de `Record` exibida no <<ex_schedule_v1_demo>>.
+
 <3> `load` vai por fim devolver um `dict` de instâncias de `Record`.
+
 <4> Analisa o JSON, devolvendo objetos Python nativos: listas, dicts, strings, números, etc.
+
 <5> Itera sobre as quatro listas principais, chamadas `'conferences'`, `'events'`, `'speakers'`, e `'venues'`.
+
 <6> `record_type` é o nome da lista sem o último caractere, então `speakers` se torna `speaker`. No Python ≥ 3.9, podemos fazer isso de forma mais explícita com `collection.removesuffix('s')`—veja a
 https://fpy.li/pep616[PEP 616—String methods to remove prefixes and suffixes (Métodos de string para remover prefixos e sufixos_)].
+
 <7> Cria a `key` no formato `'speaker.3471'`.
+
 <8> Cria uma instância de `Record` e a armazena em `records` com a chave `key`.
 
 
-O método `+Record.__init__+` ilustra um antigo truque de Python. Lembre-se que o `+__dict__+` de um objeto é onde são guardados seus atributos--a menos que `+__slots__+` seja declarado na classe, como vimos na <<slots_sec>>.
+O método `+Record.__init__+` ilustra um velho truque. Lembre-se que o `+__dict__+` de um objeto é onde são guardados seus atributos--a menos que `+__slots__+` seja declarado na classe, como vimos na <<slots_sec>>.
 Daí, atualizar o `+__dict__+` de uma instância é uma maneira fácil de criar um punhado de atributos naquela instância.footnote:[`Bunch` ou "punhado" é o nome da classe usada por Alex Martelli para compartilhar essa dica em uma receita de 2001 intitulada https://fpy.li/22-4["The simple but handy ‘collector of a bunch of named stuff’ class" (_Uma classe simples mas prática 'coletora de um punhado de coisas nomeadas'_)].]
 
 [NOTE]
@@ -475,7 +504,7 @@ do `+__dict__+` da instância, para evitar uma chamada recursiva à propriedade 
 Dentro do método `speakers`, uma tentativa de ler `self.speakers` invocará a
 mesma propriedade, gerando rapidamente um `RecursionError`. Entretanto,
 acessando via `+self.__dict__['speakers']+`, evitamos o algoritmo de Python para
-busca de atributos, a propriedade não é chamada e evitamos a recursão. Por esta
+busca de atributos, a propriedade não é invocada e evitamos a recursão. Por esta
 razão, ler ou escrever dados diretamente no `+__dict__+` de um objeto é um
 truque comum em metaprogramação no Python.
 
@@ -943,7 +972,7 @@ As partes do <<lineitem_class_v2prop>> que merecem um estudo mais cuidadoso gira
 
 Quando programamos um propriedade da maneira tradicional, o nome do atributo onde um valor será armazenado está definido explicitamente nos métodos _getter_ e _setter_.
 Mas aqui as funções `qty_getter` e `qty_setter` são genéricas, e dependem da variável `storage_name` para saber onde ler/escrever o atributo gerenciado no `+__dict__+` da instância.
-Cada vez que a fábrica `quantity` é chamada para criar uma propriedade, `storage_name` precisa ser definida com um valor único.
+Cada vez que a fábrica `quantity` é invocada para criar uma propriedade, `storage_name` precisa ser definida com um valor único.
 
 As funções `qty_getter` e `qty_setter` serão encapsuladas pelo objeto `property`, criado na última linha da função fábrica. Mais tarde, quando forem chamadas para cumprir seus papéis, essas funções lerão a `storage_name` de suas clausuras para determinar de onde ler ou onde escrever os valores dos atributos gerenciados.
 
@@ -1100,10 +1129,10 @@ Para cada um destes métodos especiais, não importa se o acesso ao atributo é 
 Se `attr` for uma propriedade, seu método de exclusão nunca será invocado se a classe implementar
 `+__delattr__+`.
 
-`+__dir__(self)+`:: Chamado((("&#x005F;&#x005F;dir&#x005F;&#x005F;"))) quando `dir` é invocado sobre um objeto, para fornecer uma lista de atributos; por exemplo, `dir(obj)` dispara
+`+__dir__(self)+`:: Invocado((("&#x005F;&#x005F;dir&#x005F;&#x005F;"))) quando `dir` é invocado sobre um objeto, para fornecer uma lista de atributos; por exemplo, `dir(obj)` dispara
 `+Class.__dir__(obj)+`. Também usado pelo recurso de auto-completar em todos os consoles modernos de Python.
 
-`+__getattr__(self, name)+`:: Chamado((("&#x005F;&#x005F;getattr&#x005F;&#x005F;"))) apenas quando uma tentativa de obter o atributo nomeado falha, após `obj`, `Class` e suas superclasses serem pesquisadas. As expressões `+obj.no_such_attr+`, `getattr(obj, 'no_such_attr')` e `hasattr(obj, 'no_such_attr')` podem disparar `+Class.__getattr__(obj, 'no_such_attr')+`, mas apenas se um atributo com aquele nome não for encontrado em `obj` ou em `Class` e suas superclasses.
+`+__getattr__(self, name)+`:: Invocado((("&#x005F;&#x005F;getattr&#x005F;&#x005F;"))) apenas quando uma tentativa de obter o atributo nomeado falha, após `obj`, `Class` e suas superclasses serem pesquisadas. As expressões `+obj.no_such_attr+`, `getattr(obj, 'no_such_attr')` e `hasattr(obj, 'no_such_attr')` podem disparar `+Class.__getattr__(obj, 'no_such_attr')+`, mas apenas se um atributo com aquele nome não for encontrado em `obj` ou em `Class` e suas superclasses.
 
 `+__getattribute__(self, name)+`:: Sempre((("&#x005F;&#x005F;getattribute&#x005F;&#x005F;"))) chamado quando há uma tentativa de obter o atributo nomeado diretamente a partir de código Python (o interpretador pode ignorar isso em alguns casos, por exemplo para obter o método `+__repr__+`). A notação de ponto e as funções embutidas `getattr` e `hasattr` disparam esse método. `+__getattr__+` só é invocado após `+__getattribute__+`, e apenas quando `+__getattribute__+` gera uma `AttributeError`. Para acessar atributos da instância `obj` sem entrar em uma recursão infinita, implementações de `+__getattribute__+` devem usar `+super().__getattribute__(obj, name)+`.
 
