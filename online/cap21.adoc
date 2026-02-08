@@ -2198,72 +2198,70 @@ Por fim, vamos discutir rapidamente as vantagens e desafios da programaçào ass
 [[how_async_works_and_does_not_sec]]
 === Como a programação assíncrona funciona e como não funciona
 
-As seções finais deste capítulo discutem as ideias de alto nível em torno da programação assíncrona, independente da linguagem ou da biblioteca usadas.
+As seções finais deste capítulo discutem ideias de alto nível sobre
+programação assíncrona, independente da linguagem ou da biblioteca usadas.
 
-Vamos começar explicando a razão número 1 pela qual a programação assíncrona é atrativa, seguido por um mito popular e como lidar com ele.
+Vamos começar explicando porque a programação assíncrona é útil,
+seguido por um mito popular e como lidar com ele.
 
 
 [[around_blocking_calls_sec]]
 ==== Correndo em círculos em torno de chamadas bloqueantes
 
-Ryan Dahl, o((("asynchronous programming", "benefits of"))) inventor do Node.js, introduz a filosofia por trás de seu projeto dizendo "Estamos fazendo E/S de forma totalmente errada."footnote:[Vídeo: https://fpy.li/21-59["Introduction to Node.js" (_Introdução ao Node.js_)], em 4:55.]. Ele define uma _função bloqueante_ como uma função que faz E/S de arquivo ou rede, e argumenta que elas não podem ser tratadas da mesma forma que tratamos funções não-bloqueantes. Para explicar a razão disso, ele apresenta os números na segunda coluna da <<latency_tbl>>.
+Ryan Dahl, o((("asynchronous programming", "benefits of"))) inventor do Node.js,
+introduz a filosofia por trás de seu projeto dizendo "Estamos fazendo E/S de
+forma totalmente errada."footnote:[Vídeo: https://fpy.li/21-59[_Introduction to
+Node.js_], em 4:55.] Ele define uma "função
+bloqueante" como uma função que faz E/S de arquivo ou rede, e argumenta que elas
+não podem ser tratadas da mesma forma que tratamos funções não-bloqueantes.
+Para explicar a razão disso, ele apresenta os números na segunda coluna da
+<<latency_tbl>>.
 
-[role="pagebreak-before less_space"]
 [[latency_tbl]]
-.Latência de computadores modernos para ler dados em diferentes dispositivos. A terceira coluna mostra os tempos proporcionais em uma escala fácil de entender para nós, humanos vagarosos.
-[options="header"]
+.Latência em computadores modernos para ler dados em diferentes dispositivos. A terceira coluna mostra os tempos proporcionais em uma escala fácil de entender para nós, humanos vagarosos.
+[options="header", cols="1,>1,^2"]
 |=======================================================
 |Dispositivo  |Ciclos de CPU |Escala proporcional "humana"
-|L1 cache     |3             |3 segundos
-|L2 cache     |14            |14 segundos
+|cache L1     |3             |3 segundos
+|cache L2     |14            |14 segundos
 |RAM          |250           |250 segundos
-|disk         |41.000.000    |1,3 anos
-|network      |240.000.000   |7,6 anos
+|HD local     |41.000.000    |1,3 anos
+|rede         |240.000.000   |7,6 anos
 |=======================================================
 
-////
 
-[options="header", cols="<,>,<"]
-
-PROD: the column widths in the rendered PDF don't reflect the actual contents or headers.
-For example, the first column is the widest, for no apparent reason.
-
-Also, it would be nice to align the numbers in the "CPU cycles" column to the right,
-but I don't know how to do that.
-
-Thanks!
-
-////
-
-
-Para a <<latency_tbl>> fazer sentido, tenha em mente que as CPUs modernas, com relógios funcionando em frequências na casa dos GHz, rodam bilhões de ciclos por segundo.
-Vamos dizer que uma CPU rode exatamente 1 bilhão de ciclos por segundo.
-Aquela CPU pode realizar mais de 333 milhões de leituras do cache L1 em 1 segundo, ou 4 (quatro!) leituras da rede no mesmo tempo.
+Para entender a <<latency_tbl>>,
+tenha em mente que as CPUs modernas, com seus _clocks_ em frequências na casa dos GHz, rodam bilhões de ciclos por segundo.
+Suponha que uma CPU rode exatamente 1 bilhão de ciclos por segundo.
+Tal CPU pode realizar mais de 333 milhões de leituras do cache L1 em 1 segundo,
+ou 4 (quatro!) leituras da rede no mesmo segundo.
 A terceira coluna da <<latency_tbl>> coloca os números em perspectiva, multiplicando a segunda coluna por um fator constante.
-Então, em um universo alternativo, se uma leitura do cache L1 demorasse 3 segundos, uma leitura da rede demoraria 7,6 anos!
+Então, em um universo alternativo, se uma leitura da RAM demorasse 250 segundos, uma leitura da rede demoraria 7,6 anos!
+A diferença quantitativa é tão grande que se torna uma diferença qualitativa importante:
+esperar 250 segundos é muito diferente de esperar 7,6 anos!
 
-A <<latency_tbl>> explica porque uma abordagem disciplinada da programação assíncrona pode levar a servidores de alto desempenho.
-O desafio é conseguir essa disciplina.
-O primeiro passo é reconhecer que um sistema limitado apenas por E/S é uma fantasia.
+A <<latency_tbl>> explica porque uma abordagem disciplinada da programação
+assíncrona pode levar a servidores de alto desempenho. O desafio é alcançar
+esta disciplina. O primeiro passo é reconhecer que um sistema limitado apenas
+por E/S é uma fantasia.
 
 [[myth_iobound_sec]]
 ==== O mito dos sistemas limitados por E/S
 
-Um((("asynchronous programming", "myth of I/O-bound systems")))((("network I/O", "myth of I/O-bound systems")))
-meme exaustivamente repetido é que programação assíncrona é boa para
-"sistemas limitados por E/S"—_I/O bound systems_, ou seja,
-sistemas onde o gargalo é E/S, e não processamento de dados na CPU.
-Aprendi da forma mais difícil que não existem "sistemas limitados por E/S."
-Você pode ter _funções_ limitadas por E/S.
-Talvez a maioria das funções no seu sistema sejam limitadas por E/S;
-isto é, elas passam mais tempo esperando por E/S do que realizando operações na memória.
-Enquanto esperam, cedem o controle para o laço de eventos,
-que pode então acionar outras tarefas pendentes.
-Mas, inevitavelmente, qualquer sistema não-trivial terá partes limitadas pela CPU.
-Mesmo sistemas triviais revelam isso, sob stress.
-No <<async_soapbox>>, conto a história de dois programas assíncronos sofrendo com
-funções limitadas pela CPU freando laço de eventos,
-com severos impactos no desempenho do sistema como um todo.
+Um((("asynchronous programming", "myth of I/O-bound systems")))((("network I/O",
+"myth of I/O-bound systems"))) meme exaustivamente repetido é que programação
+assíncrona é boa para _I/O bound systems_ (sistemas limitados por E/S), ou seja,
+sistemas onde o gargalo é a entrada e saída de dados, e não o processamento de
+dados na CPU. Aprendi da forma mais difícil que não existem "sistemas limitados
+por E/S." Você pode ter _funções_ limitadas por E/S. Talvez a maioria das
+funções no seu sistema sejam limitadas por E/S; isto é, elas passam mais tempo
+esperando por E/S do que realizando operações na CPU e na memória. Enquanto esperam,
+cedem o controle para o laço de eventos, que pode então acionar outras tarefas
+pendentes. Mas, inevitavelmente, qualquer sistema não-trivial terá partes
+limitadas pela CPU. Até mesmo sistemas triviais revelam isso, sob stress. Na
+caixa _<<async_soapbox>>_ ao final deste capítulo escrevi sobre dois programas assíncronos sofrendo com
+funções limitadas pela CPU que atrasavam o laço de eventos, com severos impactos no
+desempenho do sistema como um todo.
 
 Dado que qualquer sistema não-trivial terá funções limitadas pela CPU,
 lidar com elas é a chave do sucesso na programação assíncrona.
@@ -2271,23 +2269,29 @@ lidar com elas é a chave do sucesso na programação assíncrona.
 [[avoid_cpu_trap_sec]]
 ==== Evitando as armadilhas do uso da CPU
 
-Se((("asynchronous programming", "avoiding CPU-bound traps")))((("CPU-bound systems"))) você está usando Python em larga escala, deve ter testes automatizados projetados especificamente para detectar regressões de desempenho assim que elas acontecem.
-Isso é de importância crítica com código assíncrono, mas é relevante também para código Python baseado em threads—por causa da GIL. Se você esperar até a lentidão começar a incomodar a equipe de desenvolvimento, será tarde demais. O conserto provavelmente vai exigir algumas mudanças drásticas.
+Se((("asynchronous programming", "avoiding CPU-bound traps")))((("CPU-bound
+systems"))) você está usando Python em larga escala, precisa ter testes
+automatizados especificamente para detectar regressões de desempenho
+assim que elas acontecem. Isso é de importância crítica com código assíncrono,
+mas é relevante também para código Python baseado em threads—por causa da GIL.
+Se você esperar até a lentidão começar a incomodar a equipe de desenvolvimento,
+será tarde demais. A solução poderá exigir mudanças drásticas.
 
 Aqui estão algumas opções para quando você identifica gargalos de uso da CPU:
 
 * Delegar a tarefa para um banco de processos Python.
 * Delegar a tarefa para um fila de tarefas externa.
 * Reescrever o código relevante em Cython, C, Rust ou alguma outra linguagem que compile para código de máquina e faça interface com a API Python/C, de preferência liberando a GIL.
-* Decidir que você pode tolerar a perda de desempenho e deixar como está—mas registre essa decisão, para torná-la mais fácil de reverter no futuro.
+* Decidir que pode tolerar a perda de desempenho e deixar como está—mas registre essa decisão, para ficar mais fácil revertê-la no futuro.
 
 A fila de tarefas externa deveria ser escolhida e integrada o mais rápido possível,
 no início do projeto, para que ninguém na equipe hesite em usá-la quando necessário.
 
-A opção deixar como está entra na categoria de https://fpy.li/b8[dívida tecnológica].
+A opção deixar como está entra na conta de https://fpy.li/b8[«dívida tecnológica»].
 
-Programação concorrente é um tópico fascinante, e eu gostaria de escrever mais sobre isso.
-Mas não é o foco principal deste livro, e este já é um dos capítulos mais longos, então vamos encerrar por aqui.
+Programação concorrente é um tópico fascinante, e eu gostaria de escrever mais.
+Mas não é o foco principal deste livro,
+e este já é um dos capítulos mais longos, então vamos encerrar por aqui.
 
 
 === Resumo do capítulo
@@ -2298,90 +2302,140 @@ O problema com as abordagens usuais da programação assíncrona é que elas sã
 Ou você reescreve todo o código, de forma que nada nele bloqueie [o processamento] ou você está só perdendo tempo.
 ____
 
-Escolhi((("asynchronous programming", "overview of"))) essa epígrafe para esse capítulo por duas razões.
-Em um nível mais alto, ela nos lembra de evitar o bloqueio do laço de eventos, delegando tarefas lentas para uma unidade de processamento diferente, desde uma simples thread indo até uma fila de tarefas distribuída.
-Em um nível mais baixo, ela também é um aviso: no momento em que você escreve seu primeiro `async def`, seu programa vai inevitavelmente ver surgir mais e mais `async def`, `await`, `async with`, e `async for`.
-E o uso de bibliotecas não-assíncronas subitamente se tornará um desafio.
+Escolhi((("asynchronous programming", "overview of"))) esta epígrafe para este
+capítulo por duas razões. Em um nível mais alto, ela nos lembra de evitar o
+bloqueio do laço de eventos, delegando tarefas lentas para outra unidade de
+processamento, desde uma thread ou processo local, até uma fila de tarefas
+distribuída. Em um nível mais baixo, ela também é um aviso: no momento em que
+você escreve seu primeiro `async def`, seu programa vai inevitavelmente ver
+surgir mais e mais `async def`, `await`, `async with`, e `async for`. E o uso de
+bibliotecas não-assíncronas de repente pode complicar o seu trabalho.
 
-Após os exemplos simples com o _spinner_ no <<ch_concurrency_models>>,
-aqui nosso maior foco foi a programação assíncrona com corrotinas nativas, começando com o exemplo de sondagem de DNS _blogdom.py_, seguido pelo conceito de _esperáveis_.
-Lendo o código-fonte de _flags_asyncio.py_, descobrimos o primeiro exemplo de um _gerenciador de contexto assíncrono_.
+Após os exemplos simples com o _spinner_ no <<ch_concurrency_models>>, aqui
+nosso maior foco foi a programação assíncrona com corrotinas nativas, começando
+com o exemplo de sondagem de DNS _blogdom.py_, seguido pelo conceito de
+esperável. No código-fonte de _flags_asyncio.py_ encontramos o primeiro
+exemplo de um gerenciador de contexto assíncrono: `httpx.AsyncClient`.
 
-As variantes mais avançadas do programa de download de bandeiras introduziram duas funções poderosas: o gerador `asyncio.as_completed` generator e a corrotina `loop.run_in_executor`. Também vimos o conceito e a aplicação de um semáforo, para limitar o número de downloads concorrentes—como esperado de clientes HTTP bem comportados.
+As variantes mais avançadas do programa de download de bandeiras apresentaram
+duas funções poderosas: o gerador `asyncio.as_completed` e a corrotina
+`loop.run_in_executor` para delegar tarefas para threads ou processos.
+Também vimos o conceito e a aplicação de um semáforo,
+para limitar o número de downloads concorrentes—como se espera de um
+cliente HTTP bem comportado.
 
-A programaçãp assíncrona para servidores foi apresentada com os exemplos _mojifinder_:
-um serviço Web usando a _FastAPI_ e o _tcp_mojifinder.py_—este último utilizando apenas o `asyncio` e o protocolo TCP..
+A programação assíncrona para servidores foi apresentada com os exemplos
+_mojifinder_: um serviço Web usando a _FastAPI_ e o _tcp_mojifinder.py_—este
+último utilizando apenas o protocolo TCP e o `asyncio`.
 
-A seguir, iteração assíncrona e iteráveis assíncronos foram o principal tópico, com seções sobre `async for`, o console assíncrono de Python, geradores assíncronos expressões geradoras assíncronas e compreensões assíncronas.
+A seguir, iteração assíncrona e iteráveis assíncronos foram o principal tópico,
+com seções sobre `async for`, o console assíncrono de Python, geradores
+assíncronos expressões geradoras assíncronas e compreensões assíncronas.
 
-O último exemplo do capítulo foi o _blogdom.py_ reescrito com o framework _Curio_, demonstrando como os recursos de programação assíncrona de Python não estão presos ao pacote `asyncio`.
-O _Curio_ também demonstra o conceito de _concorrência estruturada_, que pode vir a ter um grande impacto em toda a indústria de tecnologia, trazendo mais clareza para o código concorrente.
+O último exemplo do capítulo foi o _blogdom.py_ reescrito com o framework
+_Curio_, demonstrando como os recursos de programação assíncrona de Python não
+estão presos ao pacote `asyncio`. O _Curio_ também demonstra o conceito de
+_concorrência estruturada_, que pode vir a ter um grande impacto em toda a
+indústria de tecnologia, trazendo mais clareza para o código concorrente.
 
-Por fim, as seções sob o título <<how_async_works_and_does_not_sec>>
-discutiram o principal atrativo da programação assíncrona,
-a falácia dos "sistemas limitados por E/S"
-e como lidar com as inevitáveis partes de uso intensivo de CPU em seu programa.
+Por fim, a <<how_async_works_and_does_not_sec>> apresentou
+o principal atrativo da programação assíncrona: não perder tempo
+esperando por E/S.
+Também vimos que não existem sistema limitados só por E/S,
+e como lidar com as inevitáveis partes do seu programa assíncrono
+que utilizam intensivamente a CPU.
 
 
 === Para saber mais
 
-A((("asynchronous programming", "further reading on"))) palestra de abertura da PyOhio 2016, de David Beazley,
-https://fpy.li/21-61["Fear and Awaiting in Async"] é uma fantástica introdução, com "código ao vivo", ao potencial dos recursos da linguagem tornados possíveis pela contribuição de Yury Selivanov ao Python 3.5, as palavras-chave `async/await`.
-Em certo momento, Beazley reclama que `await` não pode ser usada em compreensões de lista, mas isso foi resolvido por Selivanov na https://fpy.li/pep530[PEP 530—Asynchronous Comprehensions], implementada mais tarde naquele mesmo ano, no Python 3.6.
+A((("asynchronous programming", "further reading on"))) palestra 
+de David Beazley na abertura da PyOhio 2016,
+https://fpy.li/21-61[_Fear and Awaiting in Async_]
+(Medo e espera em [programação] assíncrona) é uma introdução incrível
+com "código ao vivo" demonstrando os
+recursos da linguagem viabilizados pela contribuição de Yury Selivanov ao
+Python 3.5: as palavras-chave `async/await`. Em certo momento, Beazley reclama
+que `await` não pode ser usada em compreensões de lista, mas isso foi resolvido
+por Selivanov na
+https://fpy.li/pep530[_PEP 530—Asynchronous Comprehensions_],
+implementada mais tarde naquele mesmo ano, no Python 3.6.
 
-Fora isso, todo o resto da palestra de Beazley é atemporal, pois ele demonstra como os objetos assíncronos vistos nesse capítulo funcionam, sem ajuda de qualquer framework—com uma simples função `run` usando `.send(None)` para acionar corrotinas.
-Apenas no final Beazley mostra o https://fpy.li/21-62[_Curio_], que ele havia começado a programar naquele ano, como um experimento, para ver o quão longe era possível levar a programação assíncrona sem se basear em callbacks ou _futures_, usando apenas corrotinas.
-Como se viu, dá para ir muito longe—como demonstra a evolução do _Curio_ e a criação posterior do https://fpy.li/21-58[_Trio_] por Nathaniel J. Smith.
-A documentação do _Curio's_ contém https://fpy.li/21-64[links] para outras palestras de Beazley sobre o assunto.
+Fora isso, todo o resto da palestra de Beazley é atemporal, pois ele revela
+como os objetos assíncronos vistos neste capítulo funcionam, sem ajuda de
+qualquer framework—com uma simples função `run` que invoca `.send(None)` para
+acionar corrotinas. Apenas no final Beazley mostra o
+https://fpy.li/21-62[_Curio_], que ele havia começado a desenvolver naquele ano,
+como uma prova de conceito, para ver o quão longe seria possível levar a programação
+assíncrona usando apenas corrotinas, sem callbacks ou _futures_. 
+Como vimos, dá para ir muito longe—como demonstra o _Curio_ e o desenvolvimento
+posterior do https://fpy.li/21-58[_Trio_] por Nathaniel J. Smith. A
+documentação do _Curio_ contém https://fpy.li/21-64[«links»] para outras
+palestras de Beazley sobre o assunto.
 
 Além criar o _Trio_,
-Nathaniel J. Smith escreveu dois post de blog muito profundos, que gostaria de recomendar:
-https://fpy.li/21-65["Some thoughts on asynchronous API design in a post-async/await world" (_Algumas reflexões sobre o design de APIs assíncronas em um mundo pós-async/await_)], comparando os designs do _Curio_ e do `asyncio`, e
-https://fpy.li/21-66["Notes on structured concurrency, or: Go statement considered harmful" (_Notas sobre concorrência estruturada, ou: o comando Go considerado nocivo_)], sobre concorrência estruturada. Smith também deu uma longa e informativa resposta à questão:
-https://fpy.li/21-67["What is the core difference between asyncio and trio?" (_Qual é a principal diferença entre o asyncio e o trio?_)]
-no StackOverflow.
+Nathaniel J. Smith escreveu dois artigos muito profundos, que eu recomendo:
+https://fpy.li/21-65[_Some thoughts on asynchronous API design in a post-async/await world_]
+(Algumas reflexões sobre o design de APIs assíncronas em um mundo pós-async/await),
+comparando os designs do _Curio_ e do `asyncio`, e
+https://fpy.li/21-66[_Notes on structured concurrency, or: `go` statement considered harmful_]
+(Notas sobre concorrência estruturada, ou: a instrução `go` considerada nociva),
+sobre concorrência estruturada. Smith também deu uma longa e informativa resposta à questão:
+https://fpy.li/21-67[_What is the core difference between `asyncio` and Trio?]
+(Qual é a principal diferença entre `asyncio` e _Trio_?) no StackOverflow.
 
 Para aprender mais sobre o pacote `asyncio`, já mencionei os melhores recursos
-escritos que conheço no início do capítulo: a https://fpy.li/b9[documentação
-oficial], após a fantástica https://fpy.li/21-69[reorganização] iniciada
+que conheço no início do capítulo: a https://fpy.li/b9[documentação
+oficial], após a https://fpy.li/21-69[«profunda reorganização»] iniciada
 por Yury Selivanov em 2018, e o livro de Caleb Hattingh,
 https://fpy.li/hattingh[_Using Asyncio in Python_] (O'Reilly).
 
-Na documentação oficial, não deixe de ler https://fpy.li/ba["Desenvolvendo com asyncio"], que documenta o modo de depuração do `asyncio` e também discute erros e armadilhas comuns, e como evitá-los.
+Na documentação oficial, não deixe de ler https://fpy.li/ba[«Desenvolvendo com asyncio»],
+que documenta o modo de depuração do `asyncio` e também discute erros e armadilhas comuns, e como evitá-los.
 
-Para uma introdução muito acessível, de 30 minutos, à programação assíncrona em geral e também ao `asyncio`,
+Para uma introdução de 30 minutos, muito acessível, à programação assíncrona em geral e também ao `asyncio`,
 assista a palestra
-https://fpy.li/21-71["Asynchronous Python for the Complete Beginner" (_Python Assíncrono para o Iniciante Completo_)], de  Miguel Grinberg,
-apresentada na PyCon 2017.
-Outra ótima introdução é
-https://fpy.li/21-72["Demystifying Python's Async and Await Keywords" (_Desmistificando as Palavras-Chave Async e Await de Python_)],
-apresentada por Michael Kennedy, onde entre outras coisas aprendi sobre a bilblioteca
-https://fpy.li/21-73[_unsync_], que oferece um decorador para delegar a execução de corrotinas, funções dedicadas a E/S e funções de uso intensivo de CPU para `asyncio`, `threading`, ou `multiprocessing`, conforme a necessidade.
+https://fpy.li/21-71[_Asynchronous Python for the Complete Beginner_] (Python Assíncrono para o Iniciante Total),
+de Miguel Grinberg, apresentada na PyCon 2017. Outra ótima introdução é
+https://fpy.li/21-72[_Demystifying Python's Async and Await Keywords_] (Desmistificando as Palavras-Chave Async e Await de Python),
+apresentada por Michael Kennedy, onde entre outras coisas aprendi sobre a biblioteca
+https://fpy.li/21-73[_unsync_],
+que fornece um decorador para delegar a execução de corrotinas,
+funções dedicadas a E/S e funções de uso intensivo de CPU para `asyncio`,
+`threading`, ou `multiprocessing`, conforme a necessidade.
 
-Na EuroPython 2019, Lynn Root—uma líder global da https://fpy.li/21-74[_PyLadies_]—apresentou a excelente
-https://fpy.li/21-75["Advanced asyncio: Solving Real-world Production Problems" (_Asyncio Avançado: Resolvendo Problemas de Produção do Mundo Real_)],
-baseada na sua experiência usando Python como um engenheira do Spotify.
+Na EuroPython 2019, Lynn Root—uma das líderes mundiais das https://fpy.li/21-74[_PyLadies_]—apresentou a excelente
+https://fpy.li/21-75[_Advanced asyncio: Solving Real-world Production Problems_]
+(Asyncio Avançado: Resolvendo Problemas de Produção do Mundo Real),
+a partir de sua experiência usando Python como engenheira no Spotify.
 
 Em 2020, Łukasz Langa gravou um grande série de vídeos sobre o `asyncio`, começando com
-https://fpy.li/21-76["Learn Python's AsyncIO #1--The Async Ecosystem" (_Aprenda o AsyncIO de Python—O Ecossistema Async_)].
+https://fpy.li/21-76[_Learn Python's AsyncIO #1—The Async Ecosystem_]
+(Aprenda o AsyncIO de Python—O Ecossistema Async).
 Langa também fez um vídeo muito bacana,
-https://fpy.li/21-77["AsyncIO + Music"],
-para a PyCon 2020, que não apenas mostra o `asyncio` aplicado a um domínio orientado a eventos muito concreto, como também explica essa aplicação do início ao fim.
+https://fpy.li/21-77[_AsyncIO + Music_],
+para a PyCon 2020, que mostra o `asyncio` aplicado a um domínio orientado a eventos muito concreto,
+é também explica esta aplicação do início ao fim.
 
-Outra área dominada por programaçao orientada a eventos são os sistemas embarcados.
+Outra área dominada por programação orientada a eventos são os sistemas embarcados.
 Por isso Damien George adicionou o suporte a `async/await` em seu interpretador https://fpy.li/21-78[_MicroPython_] para microcontroladores
 Na PyCon Australia 2018, Matt Trentini demonstrou a biblioteca
 https://fpy.li/21-79[_uasyncio_],
-um subconjunto do `asyncio` que é parte da biblioteca padrão do MicroPython.
+um subconjunto de `asyncio` que é parte da biblioteca padrão do MicroPython.
 
-Para uma visão de mais alto nível sobre a programação assíncrona em Python, leia o post de blog
-https://fpy.li/21-80["Python async frameworks—Beyond developer tribalism" (_Frameworks assíncronos de Python—Para além do tribalismo dos desenvolvedores_)], de Tom Christie.
+Para uma visão de mais alto nível sobre a programação assíncrona em Python, leia o post
+https://fpy.li/21-80[_Python async frameworks—Beyond developer tribalism_]
+(Frameworks assíncronos de Python—para além do tribalismo dos desenvolvedores), de Tom Christie.
 
-Por fim, recomendo https://fpy.li/21-81["What Color Is Your Function?" (_Qual a Cor da Sua Função?_)] de Bob Nystrom,
-discutindo os modelos de execução incompatíveis de funções normais versus funções assíncronas—também conhecidas como corrotinas—em JavaScript, Python, C# e outras linguagens.
-Alerta de spoiler: A conclusão de Nystrom é que a linguagem que acertou nessa área foi Go,
-onde todas as funções têm a mesma cor. Eu gosto disso no Go. Mas também acho que Nathaniel J. Smith tem razão quando escreveu
-https://fpy.li/21-66["Go statement considered harmful" (_Comando Go considerado nocivo_)].
+Por fim, recomendo
+https://fpy.li/21-81[_What Color Is Your Function?_]
+(Qual a Cor da Sua Função?) de Bob Nystrom,
+discutindo os modelos de execução incompatíveis de funções comuns versus
+funções assíncronas—que chamamos de corrotinas—em JavaScript, Python, C# e outras linguagens.
+Alerta de spoiler: a conclusão de Nystrom é que a linguagem que acertou nessa área foi Go,
+onde todas as funções têm a mesma cor. Gosto disso no Go.
+Mas também acho que Nathaniel J. Smith tem razão quando escreveu
+https://fpy.li/21-66[_Go statement considered harmful_]
+(Instrução `go` considerada nociva).
 Nada é perfeito, e programação concorrente é sempre difícil.
 
 
@@ -2389,62 +2443,105 @@ Nada é perfeito, e programação concorrente é sempre difícil.
 .Ponto de vista
 ****
 
-[role="soapbox-title"]
-Como uma função lerda quase estragou as benchmarks do uvloop
 
-Em((("asynchronous programming", "Soapbox discussion")))((("Soapbox sidebars", "uvloop")))((("uvloop"))) 2016, Yury Selivanov lançou o https://fpy.li/21-83[_uvloop_], "um substituto rápido e direto para o laço de eventos embutido do `asyncio`." Os números de referência (_benchmarks_) apresentados no https://fpy.li/21-84[post de blog] de Selivanov anunciando a biblioteca, em 2016, eram muito impressionantes. Ele escreveu: "ela é pelo menos 2x mais rápida que o nodejs e gevent, bem como qualquer outro framework assíncrona de Python. O desempenho do `asyncio` com o _uvloop_ é próximo àquele de programas em Go."
+*Como uma função lerda quase estragou as benchmarks do _uvloop_*
 
-Entretanto, o post revela que a _uvloop_ é capaz de competir com o desempenho do Go sob duas condições:
+Em((("asynchronous programming", "Soapbox discussion")))((("Soapbox sidebars",
+"uvloop")))((("uvloop"))) 2016, Yury Selivanov lançou o
+https://fpy.li/21-83[_uvloop_], "um substituto rápido e direto para o laço de
+eventos embutido do `asyncio`." Os _benchmarks_ (números de desempenho)
+apresentados no https://fpy.li/21-84[«post»] de Selivanov anunciando a
+biblioteca, em 2016, eram muito impressionantes: "ela é pelo menos
+2x mais rápida que o nodejs e gevent, bem como qualquer outro framework
+assíncrono de Python. O desempenho do `asyncio` com o _uvloop_ é próximo ao
+de programas em Go."
 
- . Que o Go seja configurado para usar uma única thread. Isso faz o runtime do Go se comportar de forma similar ao `asyncio`: a concorrência é alcançada através de múltiplas corrotinas acionadas por um laço de eventos, todos na mesma thread.footnote:[Usar uma única thread era o default até o lançamento do Go 1.5. Anos antes, o Go já tinha ganho uma merecida reputação por permitir a criação de sistemas em rede de alta concorrência. Mais uma evidência que a concorrência não exige múltiplas threads ou múltiplos núcleos de CPU.]
-. Que o código Python 3.5 use a biblioteca https://fpy.li/21-85[_httptools_] além do próprio _uvloop_.
+Entretanto, o post revela que a _uvloop_ é capaz de competir com o desempenho do
+Go sob duas condições:
 
-Selivanov explica que escreveu _httptools_ após testar o desempenho da _uvloop_ com a https://fpy.li/21-86[_aiohttp_]—uma das primeiras bibliotecas HTTP completas construídas sobre o `asyncio`:
+ . Que o Go seja configurado para usar uma única thread. Isso faz o runtime do
+ Go se comportar de forma similar ao `asyncio`: a concorrência é alcançada
+ através de múltiplas corrotinas acionadas por um laço de eventos, todos na
+ mesma thread.footnote:[Usar uma única thread era o default até o lançamento do
+ Go 1.5. Anos antes, o Go já tinha ganho uma merecida reputação por permitir a
+ criação de sistemas em rede de alta concorrência. Mais uma evidência que a
+ concorrência não exige múltiplas threads ou múltiplos núcleos de CPU.]
+ 
+ . Que o código Python use a biblioteca https://fpy.li/21-85[_httptools_] além do próprio _uvloop_.
+
+Selivanov explica que escreveu _httptools_ após testar o desempenho do _uvloop_
+com a https://fpy.li/21-86[_aiohttp_]—uma das primeiras bibliotecas HTTP
+completas construídas sobre o `asyncio`:
 
 [quote]
 ____
-Entretanto, o gargalo de desempenho no _aiohttp_ estava em seu parser de HTTP, que era tão lento que pouco importava a velocidade da biblioteca de E/S subjacente. Para tornar as coisas mais interessantes, criamos uma biblioteca para Python usar a _http-parser_ (a biblioteca em C do parser do Node.js, originalmente desenvolvida para o _NGINX_). A biblioteca é chamada _httptools_, e está disponível no Github e no PyPI.
+
+Entretanto, o gargalo de desempenho no _aiohttp_ estava em seu parser de HTTP,
+que era tão lento que pouco importava a velocidade da biblioteca de E/S
+subjacente. Para tornar as coisas mais interessantes, criamos uma biblioteca
+para Python usar a _http-parser_ (a biblioteca em C do parser do Node.js,
+originalmente desenvolvida para o _NGINX_). A biblioteca é chamada _httptools_,
+e está disponível no Github e no PyPI.
+
 ____
 
-Agora reflita sobre isso: os testes de desempenho HTTP de Selivanov consistiam de um simples servidor eco escrito em diferentes linguagens e usando diferentes bibliotecas, testados pela ferramenta de benchmarking https://fpy.li/21-87[_wrk_].
-A maioria dos desenvolvedores consideraria um simples servidor eco um "sistema limitado por E/S", certo?
-Mas no fim, a análise de cabeçalhos HTTP é vinculada à CPU, e tinha uma implementação Python lenta na _aiohttp_ quando Selivanov realizou os testes, em 2016.
-Sempre que uma função escrita em Python estava processando os cabeçalhos, o laço de eventos era bloqueado. O impacto foi tão significativo que Selivanov se deu ao trabalho extra de escrever o _httptools_.
-Sem a otimização do código de uso intensivo de CPU, os ganhos de desempenho de um laço de eventos mais rápido eram perdidos.
+Agora reflita sobre isso: os testes de desempenho HTTP de Selivanov consistiam
+de um simples servidor eco escrito em diferentes linguagens e usando diferentes
+bibliotecas, testados pela ferramenta de benchmarking
+https://fpy.li/21-87[_wrk_]. A maioria dos desenvolvedores consideraria um
+simples servidor eco um "sistema limitado por E/S", certo?
 
+Mas no caso, a análise de cabeçalhos HTTP é intensiva em CPU, e tinha uma
+implementação lenta, em Python, na biblioteca _aiohttp_ quando Selivanov
+realizou os testes em 2016. Sempre que uma função escrita em Python estava
+processando os cabeçalhos, o laço de eventos era bloqueado. O impacto foi tão
+significativo que Selivanov se deu ao trabalho extra de escrever o _httptools_.
+Sem a otimização do código que usa intensivamente a CPU, os ganhos de desempenho
+de um laço de eventos mais rápido eram perdidos.
 
-[role="soapbox-title"]
-Morte por mil cortes
+*Morte lenta*
 
-Em((("Soapbox sidebars", "Twisted library")))((("Twisted library"))) vez de um simples servidor eco,
-imagine um sistema Python complexo e em evolução, com milhares de linhas de código assíncrono,
-e conectado a muitas bibliotexas externas.
-Anos atrás me pediram para ajudar a diagnosticar problemas de desempenho em um sistema assim.
-Ele era escrito em Python 2.7, com o framework https://fpy.li/21-88[_Twisted_]—uma biblioteca sólida e, de muitas maneiras, uma precursora do próprio `asyncio`.
+Em((("Soapbox sidebars", "Twisted library")))((("Twisted library"))) vez de um
+simples servidor eco, imagine um sistema Python complexo e em evolução, com
+milhares de linhas de código assíncrono, e conectado a muitas bibliotexas
+externas.
+
+Anos atrás me pediram para ajudar a diagnosticar problemas de desempenho em um
+sistema assim. Ele era escrito em Python 2.7, com o framework
+https://fpy.li/21-88[_Twisted_]—uma biblioteca sólida, de alto desempenho,
+precursora do próprio `asyncio`.
 
 Python era usado para construir uma fachada para a interface Web,
 integrando funcionalidades fornecidas por biliotecas pré-existentes e
 ferramentas de linha de comando escritas em outras
 linguagens—mas não projetadas para execução concorrente.
 
-O projeto era ambicioso: já estava em desenvolvimento há mais de um ano,
-mas ainda não estava em produção.footnote:[Independente de escolhas técnicas, esse foi talvez o maior erro daquela projeto: as partes interessadas não forçaram uma abordagem MVP—entregar o "Mínimo Produto Viável" o mais rápido possível e acrescentar novos recursos em um ritmo estável.] Com o tempo, os desenvolvedores notaram que o desempenho do sistema como um todo estava diminuindo, e estavam tendo muita dificuldade em localizar os gargalos.
+O projeto era ambicioso: já estava em desenvolvimento há mais de um ano, mas
+ainda não estava em produção.footnote:[Independente de escolhas técnicas, esse
+foi talvez o maior erro daquela projeto: as partes interessadas não forçaram uma
+abordagem MVP—entregar o "Mínimo Produto Viável" o mais rápido possível e
+acrescentar novos recursos em um ritmo estável.] Com o tempo, os desenvolvedores
+notaram que o desempenho do sistema como um todo estava diminuindo, e estavam
+tendo muita dificuldade em localizar os gargalos.
 
-O que estava acontecendo: a cada nova funcionalidade,
-mais código intensivo em CPU desacelerava o laço de eventos do _Twisted_.
-O papel de Python como um linguagem de "cola" significava que havia muita interpretação
-de dados, serialização, desserialização, e muitas conversões entre formatos.
-Não havia um gargalo único:
-o problema estava espalhado por incontáveis pequenas funções criadas ao longo de
-meses de desenvolvimento.
-O conserto exigiria repensar a arquitetura do sistema, reescrever muito código,
-provavelmente usar um fila de tarefas, e talvez usar microsserviços ou bibliotecas customizadas,
-escritas em linguagens mais adequadas a processamento concorrente intensivo em CPU.
-Os apoiadores internos não estavam preparados para fazer aquele investimento adicional,
-e o projeto foi cancelado semanas depois deste diagnóstico.
+O que estava acontecendo: cada nova funcionalidade introduzia mais código
+intensivo em CPU desacelando o laço de eventos do _Twisted_. O papel de Python
+como um linguagem de integração entre processos externos implicava em
+muita interpretação de dados, serialização, desserialização, e conversões
+entre formatos. Não havia um gargalo único: o problema estava espalhado por
+incontáveis pequenas funções criadas ao longo de meses de desenvolvimento.
 
-Quando contei essa história para Glyph Lefkowitz—fundador do projeto _Twisted_—ele me disse que uma de suas prioridades, no início de qualquer projeto envolvendo programação assíncrona,
-é decidir que ferramentas serão usadas para executar tarefas intensivas em CPU
-sem atrapalhar o laço de eventos.
-Essa conversa com Glyph foi a inspiração para a <<avoid_cpu_trap_sec>>.
+A solução seria repensar a arquitetura do sistema, reescrever muito código, usar
+um fila de tarefas, e talvez usar microsserviços ou bibliotecas customizadas,
+escritas em linguagens mais eficientes no processamento concorrente intensivo em
+CPU (eu sugeri Go para esta finalidade). Os gestores não quiseram
+fazer aquele investimento adicional, e o projeto foi cancelado semanas depois
+deste diagnóstico.
+
+Quando contei essa história para Glyph Lefkowitz—fundador do projeto
+_Twisted_—ele falou que é prioritário decidir quais ferramentas serão usadas para
+executar tarefas intensivas em CPU sem atrapalhar o laço de eventos, logo no
+início de qualquer projeto envolvendo programação assíncrona. Esta conversa com
+Glyph foi a inspiração para a <<avoid_cpu_trap_sec>>.
+
 ****
