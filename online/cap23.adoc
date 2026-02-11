@@ -8,18 +8,24 @@ ____
 Aprender sobre descritores não apenas dá acesso a um conjunto maior de ferramentas, cria também uma maior compreensão sobre o funcionamento de Python e uma apreciação pela elegância de seu design.footnote:[Raymond Hettinger, https://fpy.li/bv["HowTo - Guia de descritores"].]
 ____
 
-Descritores((("descriptors")))((("attribute descriptors", "purpose of"))) são uma forma de reutilizar a mesma lógica de acesso em múltiplos atributos. Por exemplo, tipos de campos em ORMs ("Object Relational Mapping" - _Mapeamento Objeto-Relacional_), como o ORM do Django e o SQLAlchemy, são descritores, gerenciando o fluxo de dados dos campos em um registro de banco de dados para atributos de objetos de Python, e vice-versa.
+Descritores((("descriptors")))((("attribute descriptors", "purpose of"))) são
+uma forma de reutilizar a mesma lógica de acesso em múltiplos atributos. Por
+exemplo, são descritores os campos de registros em um ORM (_Object Relational Mapping_-Mapeamento
+Objeto-Relacional) como o _SQLAlchemy_ ou ORM do _Django_.
+Nestes sistemas, são descritores que controlam a conversão
+e validação de dados dos atributos de objetos em Python
+para campos nas tabelas do banco de dados.
 
 Um((("&#x005F;&#x005F;get&#x005F;&#x005F;")))((("&#x005F;&#x005F;set&#x005F;&#x005F;")))((("&#x005F;&#x005F;delete&#x005F;&#x005F;"))) descritor é uma classe que implementa um protocolo dinâmico, composto pelos métodos `+__get__+`, `+__set__+`, e `+__delete__+`. A classe `property` implementa o protocolo descritor completo. Como habitual em protocolos dinâmicos, implementações parciais são aceitáveis. E, na verdade, a maioria dos descritores que vemos em código real implementam apenas
 `+__get__+` e `+__set__+`, e muitos implementam apenas um destes métodos.
 
 Descritores são um recurso característico de Python, presentes não apenas no nível das aplicações mas também na infraestrutura da linguagem.
-Funções definidas pelo usuário são descritores. Veremos como o protocolo descritor permite que métodos operem como métodos vinculados ou desvinculados, dependendo de como são invocados.
+Funções definidas pelo usuário são descritores. Veremos como o protocolo do descritor permite que métodos operem como métodos vinculados ou funções, dependendo de como são acessados.
 
-Entender os descritores é crucial para dominar Python. Esse capítulo é sobre isso.
+Entender os descritores é crucial para dominar Python. Este capítulo é sobre isso.
 
-Nas próximas páginas((("attribute descriptors", "topics covered"))) vamos refatorar o exemplo da loja de comida orgânica a granel, visto na <<prop_validation_sec>>, substituindo propriedades por descritores.
-Isso tornará mais fácil reutilizar a lógica de validação de atributos em diferentes classes.
+Nas próximas páginas((("attribute descriptors", "topics covered"))) vamos refatorar o exemplo da loja de alimentos orgânicos a granel, visto na <<prop_validation_sec>>, substituindo propriedades por descritores.
+Isto tornará mais fácil reutilizar a lógica de validação de atributos em diferentes classes.
 
 Vamos estudar os conceitos de descritores dominantes e não dominantes, e entender que as funções de Python são descritores.
 Para finalizar, veremos algumas dicas para a implementação de descritores.
@@ -28,14 +34,18 @@ Para finalizar, veremos algumas dicas para a implementação de descritores.
 [[whats_new_descriptor_sec]]
 === Novidades neste capítulo
 
-O((("attribute descriptors", "significant changes to"))) exemplo do descritor `Quantity`, na <<auto_storage_sec>>, foi dramaticamente simplificado, graças ao método especial `+__set_name__+`, adicionado ao protocolo descritor no Python 3.6. Nessa mesma seção, removi o exemplo da fábrica de propriedades, pois ele se tornou irrelevante: o ponto ali era mostrar uma solução alternativa para o problema de `Quantity`, mas com `+__set_name__+` a solução com o descritor se tornou mais simples.
-
-A classe `AutoStorage`, que aparecia na <<new_descr_type_sec>>, também foi removida, pois o mesmo `+__set_name__+` a tornou obsoleta.
+O((("attribute descriptors", "significant changes to"))) exemplo do descritor
+`Quantity`, na <<auto_storage_sec>>, ficou muito mais simples graças ao
+método especial `+__set_name__+`, adicionado ao protocolo descritor no Python
+3.6. Naquela mesma seção, removi o exemplo da fábrica de propriedades, pois ele se
+tornou irrelevante: o ponto ali era mostrar uma solução alternativa para o
+problema de `Quantity`, mas com `+__set_name__+` o exemplo ficou redundante.
+Removi a classe `AutoStorage`, que aparecia na <<new_descr_type_sec>> pelo mesmo motivo.
 
 [[validating_descriptor_sec]]
-=== Exemplo de descritor: validação de atributos
+=== Descritor para validação de atributos
 
-Como((("attribute descriptors", "attribute validation", id="ADvalidation23")))((("attributes", "using attribute descriptors for validation", id="ATvalidation23"))) vimos na <<coding_prop_factory_sec>>, uma fábrica de propriedades é uma maneira de evitar código repetitivo de _getters_ e _setters_, aplicando padrões de programação funcional.
+Como((("attribute descriptors", "attribute validation", id="ADvalidation23")))((("attributes", "using attribute descriptors for validation", id="ATvalidation23"))) vimos na <<coding_prop_factory_sec>>, uma fábrica de propriedades é uma forma de evitar código repetitivo de _getters_ e _setters_, aplicando padrões de programação funcional.
 Um fábrica de propriedades é uma função de ordem superior que cria um conjunto de funções de acesso parametrizadas e constrói uma instância de propriedade customizada, com clausuras para preservar configurações como `storage_name`.
 A forma orientada a objetos de resolver o mesmo problema é uma classe descritora.
 
@@ -45,14 +55,14 @@ Isso vai torná-la mais fácil de usar.
 ==== LineItem versão #3: Um descritor simples
 
 Como dito na introdução, uma classe que implemente um método `+__get__+`, um `+__set__+` ou um
-`+__delete__+` é um descritor. Podemos usar um descritor declarando instâncias dele como atributos de classe em outra classe.
+`+__delete__+` é um descritor. Podemos usar um descritor declarando instâncias dele como atributos em uma outra classe.
 
 
 Vamos criar um descritor `Quantity`, e a classe `LineItem` vai usar duas instâncias de `Quantity`: uma para gerenciar o atributo `weight`, a outra para `price`. Um((("UML class diagrams", "managed and descriptor classes"))) diagrama ajuda: dê uma olhada na <<lineitem3_uml>>.
 
 [[lineitem3_uml]]
-.Diagrama de classe UML para `LineItem` usando uma classe descritora chamada `Quantity`. Atributos sublinhados no UML são atributos de classe. Observe que `weight` e `price` são instâncias de `Quantity` na classe `LineItem`, mas instâncias de `LineItem` também têm seus próprios atributos `weight` e `price`, onde esses valores são armazenados.
-image::../images/flpy_2301.png[Diagrama de classes UML para `Quantity` e `LineItem`]
+.Diagrama de classe UML para `LineItem` usando uma classe descritora chamada `Quantity`. Atributos sublinhados no UML são atributos de classe. Observe que [.underline]#weight# e [.underline]#price# são instâncias de `Quantity` vinculadas à classe `LineItem` (são atributos da classe), mas cada instância de `LineItem` também tem atributos `weight` e `price`, onde estes valores são armazenados na própria instância.
+image::../images/flpy_2301.png[align="center", pdfwidth=10cm]
 
 Note que a palavra `weight` aparece duas vezes na <<lineitem3_uml>>, pois na verdade há dois atributos diferentes chamados `weight`: um é um atributo de classe de `LineItem`, o outro é um atributo de instância que existirá em cada objeto `LineItem`. O mesmo se aplica a `price`.
 
@@ -62,40 +72,40 @@ Implementar((("attribute descriptors", "relevant terminology"))) e usar descrito
 Vou utilizar termos e definições abaixo nas descrições dos exemplos desse capítulo.
 Será mais fácil entendê-los após ver o código, mas quis colocar todas as definições no início, para você poder voltar a elas quando necessário.
 
-Classe descritora:: Uma((("descriptor classes"))) classe que implementa o protocolo descritor. Por exemplo, `Quantity` na <<lineitem3_uml>>.
+Classe descritora (_descriptor class_):: Uma((("descriptor classes"))) classe que implementa o protocolo descritor. Por exemplo, `Quantity` na <<lineitem3_uml>>.
 
-Classe gerenciada:: A((("managed classes"))) classe onde as instâncias do descritor são declaradas, como atributos de classe. Na <<lineitem3_uml>>, `LineItem` é a classe gerenciada.
+Classe gerenciada (_managed class_):: A((("managed classes"))) classe onde as instâncias do descritor são declaradas, como atributos de classe. Na <<lineitem3_uml>>, `LineItem` é a classe gerenciada.
 
-Instância do descritor:: Cada((("descriptor instances"))) instância de uma classe descritora, declarada como um atributo de classe da classe gerenciada. Na <<lineitem3_uml>>, cada instância do descritor está representada pela seta de composição com um nome sublinhado (na UML, o sublinhado indica um atributo de classe). Os diamantes pretos tocam a classe `LineItem`, que contém as instâncias do descritor.
+Instância do descritor (_descriptor instance_):: Cada((("descriptor instances"))) instância de uma classe descritora, declarada como um atributo de classe da classe gerenciada. Na <<lineitem3_uml>>, cada instância do descritor está representada pela seta de composição com um nome sublinhado (na UML, o sublinhado indica um atributo de classe). Os diamantes pretos tocam a classe `LineItem`, que contém as instâncias do descritor.
 
-Instância gerenciada:: Uma((("managed instances"))) instância da classe gerenciada. Nesse exemplo, instâncias de `LineItem` são as instâncias gerenciadas (elas não aparecem no diagrama de classe).
+Instância gerenciada (_managed instance_):: Uma((("managed instances"))) instância da classe gerenciada. Neste exemplo, instâncias de `LineItem` são as instâncias gerenciadas (elas não aparecem no diagrama de classe).
 
-Atributo de armazenamento:: Um((("storage attributes"))) atributo da instância gerenciada que guarda o valor de um atributo gerenciado para aquela instância específica. Na <<lineitem3_uml>>, os atributos de instância `weight` e `price` de `LineItem` são atributos de armazenamento. Eles são diferentes das instâncias do descritor, que são sempre atributos de classe.
+Atributo de armazenamento (_storage attribute_):: Um((("storage attributes"))) atributo da instância gerenciada que guarda o valor de um atributo gerenciado para aquela instância específica. Na <<lineitem3_uml>>, os atributos de instância `weight` e `price` de `LineItem` são atributos de armazenamento. Eles são diferentes das instâncias do descritor, que são sempre atributos de classe.
 
-Atributos gerenciados:: Um((("managed attributes"))) atributo público na classe gerenciada que é controlado por uma instância do descritor, com os valores preservados em atributos de armazenamento. Em outras palavras, uma instância do descritor e um atributo de armazenamento fornecem a infraestrutura para um atributo gerenciado.
+Atributo gerenciado (_managed attribute_):: Um((("managed attributes"))) atributo público na classe gerenciada que é controlado por uma instância de um descritor, com os valores preservados em atributos de armazenamento. Uma instância do descritor e um atributo de armazenamento fornecem a infraestrutura para um atributo gerenciado.
 
-É importante entender que instâncias de `Quantity` são atributos de classe de `LineItem`. Este((("UML class diagrams", "annotated with MGN"))) ponto fundamental é realçado pelas "engenhocas" (_mills_) e bugigangas (_gizmos_) na <<lineitem3_uml_mgn>>.
+É importante entender que instâncias de `Quantity` são atributos de classe de `LineItem`. Este((("UML class diagrams", "annotated with MGN"))) ponto fundamental é realçado pelas engenhocas (_mills_) e bugigangas (_gizmos_) na <<lineitem3_uml_mgn>>.
 
 [[lineitem3_uml_mgn]]
-.Diagrama de classe UML anotado com MGN (Mills & Gizmos Notation - Notação de Engenhocas e Bugigangas): classes são engenhocas que produzem bugigangas—as instâncias. A engenhoca `Quantity` produz duas bugigangas de cabeça redonda, que são anexadas à engenhoca `LineItem`: `weight` e `price`. A engenhoca `LineItem` produz bugigangas retangulares que tem seus próprios atributos `weight` e `price`, onde aqueles valores são armazenados.
-image::../images/flpy_2302.png[Diagrama de classe UML+MGN para `Quantity` e `LineItem`]
+.Diagrama de classe UML anotado com MGN (Mills & Gizmos Notation—Notação de Engenhocas e Bugigangas): classes são engenhocas que produzem bugigangas—as instâncias. A engenhoca `Quantity` produz duas bugigangas de cabeça redonda, que são anexadas à engenhoca `LineItem`: [.underline]#weight# e [.underline]#price#. A engenhoca `LineItem` produz bugigangas retangulares que tem seus próprios atributos `weight` e `price`, onde aqueles valores são armazenados.
+image::../images/flpy_2302.png[align="center", pdfwidth=11cm]
 
 [role="pagebreak-before less_space"]
 [[mgn_box1]]
-.Introduzindo a notação Engenhocas & Bugigangas (_Mills & Gizmos_)
+.Apresentando a notação Engenhocas & Bugigangas (_Mills & Gizmos_)
 ****
 Após((("Mills &amp; Gizmos Notation (MGN)"))) explicar descritores várias vezes, percebi que a UML não é muito boa para mostrar as relações entre classes e instâncias, tal como a relação entre uma classe gerenciada e as instâncias do descritor.footnote:[Classes e instâncias são representadas por retângulos em diagramas de classe UML. Há diferenças visuais, mas instâncias raramente aparecem em diagramas de classe, entao desenvolvedores podem não reconhecê-las como tal.] Daí inventei minha própria "linguagem", a Notação Engenhocas e Bugigangas (MGN), que uso para anotar diagramas UML.
 
-A MGN é projetada para tornar bastante clara a diferença entre classes e instâncias.  Veja a <<mgn_diagram_demo>>. Na MGN, uma classe aparece como uma "engenhoca", uma máquina complexa que produz bugigangas. Classes/engenhocas são sempre máquina com alavancas e mostradores. As bugigangas são as instâncias, e elas têm uma aparência bem mais simples. Quando este livro é gerado em cores, as bugigangas têm a mesma cor da engenhoca que as produziu.
+Desenhei a MGN é para tornar mais evidente a diferença entre classes e instâncias. Veja a <<mgn_diagram_demo>>. Na MGN, uma classe aparece como uma "engenhoca", (_mill_) uma máquina complicada que produz bugigangas (_gizmos_). Classes/engenhocas são máquinas com alavancas e mostradores. As bugigangas são as instâncias, e elas têm uma aparência mais simples. Quando este livro é produzido em cores, as bugigangas têm a mesma cor da engenhoca que as produziu.
 
 [[mgn_diagram_demo]]
 .Esboço MGN mostrando a classe `LineItem` produzindo três instâncias, e `Quantity` produzindo duas. Uma instância de `Quantity` está recuperando um valor armazenado em uma instância de `LineItem`.
 image::../images/flpy_2303.png[Esboço MGN para `LineItem` e `Quantity`]
 
-Para este exemplo, desenhei instâncias de `LineItem` como linhas em uma fatura tabular, com três células representando os três atributos (`description`, `weight` e `price`). Como as instâncias de `Quantity` são descritores, eles têm uma lente de aumento para `+__get__+` (_obter_) os valores, e uma garra para `+__set__+` (_definir_) os valores. Quando chegarmos às metaclasses, você me agradecerá por esses desenhos.
+Para este exemplo, desenhei instâncias de `LineItem` como linhas em uma fatura tabular, com três células representando os três atributos (`description`, `weight` e `price`). Como as instâncias de `Quantity` são descritores, eles têm uma lente de aumento para ler (_get_) os valores, e uma garra para escrever (_set_) os valores. Quando chegarmos às metaclasses, você me agradecerá por esses desenhos.
 ****
 
-Mas chega de rabiscos por enquanto. Aqui está o código: o <<quantity_v3>> mostra a classe descritora `Quantity`, e o <<lineitem_class_v3>> lista a nova classe `LineItem` usando duas instâncias de `Quantity`.
+Chega de rabiscos por enquanto. Aqui está o código: o <<quantity_v3>> mostra a classe descritora `Quantity`, e o <<lineitem_class_v3>> lista a nova classe `LineItem` usando duas instâncias de `Quantity`.
 
 [[quantity_v3]]
 .bulkfood_v3.py: o descritor `Quantity` não aceita valores negativos
@@ -105,28 +115,32 @@ Mas chega de rabiscos por enquanto. Aqui está o código: o <<quantity_v3>> most
 include::../code/23-descriptor/bulkfood/bulkfood_v3.py[tags=LINEITEM_QUANTITY_V3]
 ----
 ====
-<1> O descritor é um recurso baseado em protocolo: não é necessário criar uma subclasse para implementá-lo.
+
+<1> O descritor é um recurso baseado em protocolo: não é necessário herdar de uma classe específica, basta implementar `+__get__+` ou `+__set__+`.
+
 <2> Cada instância de `Quantity` terá um atributo `storage_name`: é o nome do atributo de armazenamento que vai preservar o valor nas instâncias gerenciadas.
-<3> O `+__set__+` é chamado quando ocorre uma tentativa de atribuir um valor a um atributo gerenciado. Aqui, `self` é a instância do descritor (isto é, `LineItem.weight` ou `LineItem.price`), `instance` é a instância gerenciada (uma instância de `LineItem`) e `value` é o valor que está sendo atribuído.
-<4> Precisamos armazenar o valor do atributo diretamente no `+__dict__+`; chamar `setattr(instance, self.storage_name)` dispararia novamente o método `+__set__+`, levando a uma recursão infinita.
+
+<3> O `+__set__+` é invocado quando ocorre uma tentativa de atribuir um valor a um atributo gerenciado. Aqui, `self` é a instância do descritor `Quantity`, (isto é, `LineItem.weight` ou `LineItem.price`), `instance` é a instância gerenciada (uma instância de `LineItem`) e `value` é o valor que está sendo atribuído.
+
+<4> Precisamos armazenar o valor do atributo diretamente no `+__dict__+`; invocar `setattr(instance, self.storage_name, value)` dispararia novamente o método `+__set__+`, levando a uma recursão infinita.
+
 <5> Precisamos implementar `+__get__+`, pois o nome do atributo gerenciado pode não ser igual ao `storage_name`. O argumento `owner` será explicado a seguir.
 
 Implementar `+__get__+` é necessário porque um usuário poderia escrever algo assim:
 
 [source, python]
 ----
-class House:
-    rooms = Quantity('number_of_rooms')
+class Casa:
+    quartos = Quantity('cômodos')
 ----
 
-Na classe `House`, o atributo gerenciado é `rooms`, mas o atributo de armazenamento é `number_of_rooms`.
-Dada uma instância de `House` chamada `chaos_manor`, acessar e modificar `chaos_manor.rooms` passa pela instância do descritor `Quantity` ligada a `rooms`, mas acessar e modificar
-`chaos_manor.number_of_rooms` escapa ao descritor.
+Na classe `Casa`, o atributo gerenciado é `quartos`, mas o atributo de armazenamento é `cômodos`.
+Dada uma instância de `Casa` chamada `meu_lar`, acessar e modificar `meu_lar.quartos` passa pela instância do descritor `Quantity` vinculado a `quartos`, mas acessar e modificar `meu_lar.cômodos` não passa pelo descritor.
 
 Observe que `+__get__+` recebe três argumentos: `self`, `instance` e `owner`. O argumento `owner` é uma referência à classe gerenciada (por exemplo, `LineItem`), e é útil se você quiser que o descritor suporte o acesso a um atributo de classe—talvez para emular o comportamento default de Python, de procurar um atributo de classe quando o nome não é encontrado na instância.
 
-Se um atributo gerenciado, tal como `weight`, é acessado através da classe como
-`LineItem.weight`, o método `+__get__+` do descritor recebe `None` como valor do argumento `instance`.
+Se um atributo gerenciado como `weight`, é acessado através da classe como
+`LineItem.weight`, o método `+__get__+` do descritor recebe `None` no argumento `instance`.
 
 Para suportar introspecção e outras técnicas de metaprogramação pelo usuário, é uma boa prática fazer `+__get__+` devolver a instância do descritor quando o atributo gerenciado é acessado através da classe. Para fazer isso, escreveríamos `+__get__+` assim:
 
@@ -172,17 +186,27 @@ Pode ser tentador, mas é um erro, armazenar o valor de cada atributo gerenciado
 
 [source, python]
 ----
-    instance.__dict__[self.storage_name] = value
+    instance.__dict__[self.storage_name] = value  # certo
 ----
 
-escrever a alternativa tentadora mas ruim, assim:
+seria um erro escrever assim:
 
 [source, python]
 ----
-    self.__dict__[self.storage_name] = value
+    self.__dict__[self.storage_name] = value  # errado
 ----
 
-Para entender porque isso está errado, pense no significado dos dois primeiros argumentos passados a `+__set__+`: `self` e `instance`. Aqui, `self` é a instância do descritor, que na verdade é um atributo de classe da classe gerenciada. Você pode ter milhares de instâncias de `LineItem` na memória em um dado momento, mas terá apenas duas instâncias dos descritores: os atributos de classe `LineItem.weight` e `LineItem.price`. Então, qualquer coisa armazenada nas próprias instâncias do descritor é na verdade parte de um atributo de classe de `LineItem`, e portanto é compartilhada por todas as instâncias de `LineItem`.
+Para entender porque isso está errado, pense no significado dos dois primeiros
+argumentos passados a `+__set__+`: `self` e `instance`. Aqui, `self` é a
+instância do descritor, que na verdade é um atributo de classe da classe
+gerenciada. Você pode ter milhares de instâncias de `LineItem` na memória em um
+dado momento, mas terá apenas duas instâncias dos descritores: os atributos de
+classe `LineItem.weight` e `LineItem.price`. Então, qualquer coisa armazenada
+nas próprias instâncias do descritor é na verdade parte de um atributo de classe
+de `LineItem`, e portanto é compartilhada por todas as instâncias de `LineItem`.
+
+
+==== Evitando repetir o nome do atributo gerenciado
 
 Um inconveniente do <<lineitem_class_v3>> é a necessidade de repetir os nomes dos atributos quando os descritores são instanciados no corpo da classe gerenciada. Seria bom se a classe `LineItem` pudesse ser declarada assim:
 
@@ -199,7 +223,7 @@ Da forma como está escrito, o <<lineitem_class_v3>> exige nomear explicitamente
 
 O problema é que—como vimos no <<ch_refs_mut_mem>>—o lado direito de uma atribuição é executado antes da variável existir. A expressão `Quantity()` é avaliada para criar uma instância do descritor, e não há como o código na classe `Quantity` adivinhar o nome da variável à qual o descritor será vinculado (por exemplo, `weight` ou `price`).
 
-Felizmente, o protocolo descritor agora suporta o muito bem batizado método `+__set_name__+`. Veremos a seguir como usá-lo.
+Felizmente, o protocolo descritor agora suporta método `+__set_name__+`. Veremos a seguir como usá-lo.
 
 [NOTE]
 ====
@@ -210,7 +234,7 @@ Tudo isso ficou mais simples no Python 3.6.
 [[auto_storage_sec]]
 ==== LineItem versão #4: Nomeando atributos de armazenamento automaticamente
 
-Para evitar a redigitação do nome do atributo em instâncias do descritor, vamos implementar
+Para não ter que repetir o nome do atributo ao criar uma instância de descritor, vamos implementar
 `+__set_name__+`, para definir o `storage_name` de cada instância de `Quantity`. O método especial
 `+__set_name__+` foi acrescentado ao protocolo descritor no Python 3.6.
 
@@ -233,10 +257,11 @@ include::../code/23-descriptor/bulkfood/bulkfood_v4.py[tags=LINEITEM_V4]
 <4> Não é necessário implementar `+__get__+`, porque o nome do atributo de armazenamento é igual ao nome do atributo gerenciado. A expressão `product.price` obtém o atributo `price` diretamente da instância de `LineItem`.
 <5> Não é necessário passar o nome do atributo gerenciado para o construtor de `Quantity`. Esse era o objetivo dessa versão.
 
-Olhando para o <<lineitem_class_v4>>, pode parecer muito código apenas para gerenciar um par de atributos, mas é importante perceber que a lógica do descritor foi agora abstraida em uma unidade de código diferente: a classe `Quantity`.
+Olhando para o <<lineitem_class_v4>>, pode parecer muito código só para gerenciar um par de atributos,
+mas é importante perceber que agora abstraímos a lógica do descritor em uma unidade de código separada e reutilizável: a classe `Quantity`.
 Normalmente não definimos um descritor no mesmo módulo em que ele é usado,
 mas em um módulo utilitário separado,
-projetado para ser usado por toda a aplicação—ou mesmo por muitas aplicações,
+para ser usado por toda a aplicação—ou mesmo por muitas aplicações,
 se estivermos desenvolvendo uma bliblioteca ou um framework.
 
 Tendo isso em mente, o <<lineitem_class_v4c>> representa melhor o uso típico de um descritor.
@@ -259,9 +284,13 @@ Já que descritores são implementado como classes, podemos aproveitar a heranç
 [[new_descr_type_sec]]
 ==== LineItem versão #5: um novo tipo descritor
 
-A loja imaginária de comida orgânica encontra um obstáculo: de alguma forma, uma instância de um produto foi criada com uma descrição vazia, e o pedido não pode ser processado. Para prevenir isso, criaremos um novo descritor: `NonBlank`. Ao projetar `NonBlank`, percebemos que ele será muito parecido com o descritor `Quantity`, exceto pela lógica de validação.
+A loja imaginária de comida orgânica encontra um problema: de alguma forma, uma
+instância de um produto foi criada com uma descrição vazia, e o pedido não pode
+ser processado. Para prevenir isso, criaremos um novo descritor: `NonBlank`. Ao
+projetar `NonBlank`, percebemos que ele será muito parecido com o descritor
+`Quantity`, exceto pela lógica de validação.
 
-Isso leva a uma refatoração, resultando em `Validated`, uma classe abstrata que sobrescreve um método
+Isto sugere uma refatoração, resultando em `Validated`, uma classe abstrata que sobrescreve um método
 `+__set__+`, invocando o método `validate`, que precisa ser implementado por subclasses.
 
 Vamos então reescrever `Quantity` e implementar `NonBlank`, herdando de `Validated` e programando apenas os métodos `validate`.
@@ -271,7 +300,7 @@ como descrito no clássico _Design Patterns_:
 
 [quote]
 ____
-O Método Gabarito define um algoritimo em termos de operações abstratas que subclasses sobrescrevem para fornecer o comportamento concreto.footnote:[Gamma et al., _Design Patterns: Elements of Reusable Object-Oriented Software_, p. 326. (_Padrões de Projetos: Soluções Reutilizáveis de Software Orientados a Objetos_)]
+O Método Gabarito define um algoritimo em termos de operações abstratas que subclasses sobrescrevem para fornecer o comportamento concreto.footnote:[Gamma et al., _Design Patterns: Elements of Reusable Object-Oriented Software_, p. 326.]
 ____
 
 No <<model_v5_abc>>, `+Validated.__set__+` é um método gabarito e `self.validate` é a operação abstrata.
@@ -286,11 +315,11 @@ include::../code/23-descriptor/bulkfood/model_v5.py[tags=MODEL_V5_VALIDATED_ABC]
 ====
 <1> `+__set__+` delega a validação para o método `validate`...
 <2> ...e então usa o `value` devolvido para atualizar o valor armazenado.
-<3> `validate` é um método abstrato; este é o método gabarito.
+<3> `validate` é um método abstrato; este é o método que "preenche" gabarito `+__set__+, definindo parte do seu comporamento.
 
-Alex Martelli prefere chamar este padrão de projeto _Auto-Delegação_ ("_Self-Delegation_"),
+Alex Martelli prefere chamar este padrão de projeto _Self-Delegation_ (Auto-Delegação),
 e concordo que é um nome mais descritivo: a primeira linha de `+__set__+` auto-delega para
-`validate`.footnote:[Slide #50 da palestra https://fpy.li/23-1["Python Design Patterns" (_Padrões de Projeto de Python_)] (EN), de Alex Martelli. Altamente recomendada.]
+`validate`, ou seja, invoca outro método na mesma instância de uma subclasse concreta de `Validated`.footnote:[Slide #50 da palestra https://fpy.li/23-1[_Python Design Patterns_], de Alex Martelli. Altamente recomendada.]
 
 As subclasses concretas de `Validated` neste exemplo são `Quantity` e `NonBlank`, apresentadas no <<model_v5_sub>>.
 
@@ -302,7 +331,7 @@ As subclasses concretas de `Validated` neste exemplo são `Quantity` e `NonBlank
 include::../code/23-descriptor/bulkfood/model_v5.py[tags=MODEL_V5_VALIDATED_SUB]
 ----
 ====
-<1> Implementação do método gabarito exigida pelo método abstrado `Validated.validate`.
+<1> Implementação exigida pelo método abstrato `Validated.validate`.
 <2> Se não sobrar nada após a remoção os espaços em branco antes e depois do valor, este é rejeitado.
 <3> Exigir que os métodos `validate` concretos devolvam o valor validado dá a eles a oportunidade de limpar, converter ou normalizar os dados recebidos. Neste caso, `value` é devolvido sem espaços iniciais ou finais.
 
@@ -319,24 +348,45 @@ include::../code/23-descriptor/bulkfood/bulkfood_v5.py[tags=LINEITEM_V5]
 <1> Importa o módulo `model_v5`, dando a ele um nome amigável.
 <2> Usa `model.NonBlank`. O restante do código não foi modificado.
 
-Os exemplos de `LineItem` que vimos neste capítulo demonstram um uso típico de descritores, para gerenciar atributos de dados.
-Descritores como `Quantity` são chamado descritores dominantes, pois seu método `+__set__+` sobrescreve (isto é, intercepta e anula) a definição de um atributo de instância com o mesmo nome na instância gerenciada. Entretanto, há também descritores não dominantes. Vamos explorar essa diferença detalhadamente na próxima seção.((("", startref="ADvalidation23")))((("", startref="ATvalidation23")))
+Os exemplos de `LineItem` que vimos neste capítulo demonstram um uso típico de
+descritores para gerenciar atributos de dados. Descritores como `Quantity` são
+chamado descritores dominantes, pois seu método `+__set__+` sobrescreve (isto é,
+intercepta e impede) a atribuição de um atributo de instância com o mesmo nome na
+instância gerenciada. Entretanto, há também descritores não dominantes. Vamos
+explorar essa diferença detalhadamente na próxima seção.((("",
+startref="ADvalidation23")))((("", startref="ATvalidation23")))
 
 
-=== Descritores dominantes versus descritores não dominantes
+=== Descritores dominantes ou não dominantes
 
-Recordando((("attribute descriptors", "overriding versus nonoverriding", id="ADovervnon23")))((("nonoverriding descriptors", id="nonover23")))((("overriding descriptors", id="overrid23"))), há uma importante assimetria na forma como Python lida com atributos. Ler um atributo através de uma instância normalmente devolve o atributo definido na instância. Mas se tal atributo não existir na instância, um atributo de classe será obtido. Por outro lado, uma atribuição a um atributo em uma instância normalmente cria o atributo na instância, sem afetar a classe de forma alguma.
+Recordando((("attribute descriptors", "overriding versus nonoverriding",
+id="ADovervnon23")))((("nonoverriding descriptors",
+id="nonover23")))((("overriding descriptors", id="overrid23"))), há uma
+importante assimetria na forma como Python lida com atributos.
+Em uma classe sem descritores, ler um atributo
+através de uma instância devolve o atributo definido na instância.
+Mas se tal atributo não existir na instância, um atributo de classe será obtido.
+Por outro lado, uma atribuição a um atributo em uma instância cria o
+atributo na instância, sem afetar a classe de forma alguma.
 
-Essa assimetria também afeta descritores, criando efetivamente duas grandes categorias de descritores, dependendo do método `+__set__+` estar ou não implementado.
-Se `+__set__+` estiver presente, a classe é um descritor dominante; caso contrário, ela é um descritor não dominante.
+Esta assimetria também afeta descritores, criando duas grandes categorias de descritores, dependendo do método `+__set__+` estar ou não implementado.
+Se `+__set__+` estiver presente, a classe é um descritor dominante (_overriding descriptor_); caso contrário, ela é um descritor não dominante
+(_non-overriding descriptor_).
 Esses termos farão sentido quando examinarmos os comportamentos de descritores, nos próximos exemplos.
 
-Observar as categorias diferentes de descritores exige algumas classes, então vamos usar o código no <<descriptorkinds_ex>> como nossa bancada de testes para as próximas seções.
+Para observar as categorias diferentes de descritores usei algumas funções auxiliares definidas no <<descriptorkinds_aux_ex>>.
+Sua lógica não é importante, mas elas são usadas nas invocações a `print_args` no <<descriptorkinds_ex>>.
 
-[TIP]
+[[descriptorkinds_aux_ex]]
+.descriptorkinds.py: funções auxiliares para formatar e exibir objetos
 ====
-Todos os métodos `+__get__+` e `+__set__+` no <<descriptorkinds_ex>> chamam `print_args`. Assim, suas invocações são apresentadas de uma forma legível. Entender `print_args` e suas funções auxiliares, `cls_name` e `display`, não é importante, então não se deixe distrair por elas.
+[source, python]
+----
+include::../code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS_AUX]
+----
 ====
+
+Agora vamos criar três classes de descritores, e uma classe `Managed` onde os descritores são instalados.
 
 [[descriptorkinds_ex]]
 .descriptorkinds.py: classes simples para estudar os comportamentos dominantes de descritores
@@ -356,7 +406,7 @@ include::../code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS]
 Nas próximas seções, examinaremos o comportamento de leitura e escrita de atributos na classe `Managed` e em uma de suas instâncias, passando por cada um dos diferentes descritores definidos.
 
 [[overriding_descriptor_sec]]
-==== Descritores dominantes
+==== Descritor dominante
 
 Um descritor que implementa o método `+__set__+` é um _descritor dominante_ pois, apesar de ser um atributo de classe, um descritor que implementa `+__set__+` irá  sobrescrever tentativas de atribuição a atributos de instância. É assim que o <<lineitem_class_v4>> foi implementado. Propriedades também são descritores dominantes: se você não fornecer uma função _setter_, o `+__set__+` default da classe `property` vai gerar um `AttributeError`, para sinalizar que o atributo é somente para leitura.
 
@@ -387,10 +437,10 @@ include::../code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS_DEMO1]
 <7> Verifica se aquele valor está no `+obj.__dict__+`, sob a chave `over`.
 <8> Entretanto, mesmo com um atributo de instância chamado `over`, o descritor `Managed.over` continua interceptando tentativas de ler `obj.over`.
 
-==== Descritor dominante sem &#x5f;&#x5f;get&#x5f;&#x5f;
+==== Descritor dominante sem `+__get__+`
 
 Propriedades e outros descritores dominantes, tal como os campos de modelo do Django, implementam tanto `+__set__+` quanto `+__get__+`. Mas também é possível implementar apenas `+__set__+`, como vimos no <<lineitem_class_v3>>. Neste caso, apenas a escrita é controlada pelo descritor. Ler o descritor através de uma instância irá devolver o próprio objeto descritor, pois não há um
-`+__get__+` para tratar daquele acesso. Se um atributo de instância de mesmo nome for criado com um novo valor, através de acesso direto ao `+__dict__+` da instância, o método `+__set__+` continuará interceptando tentativas posteriores de definir aquele atributo, mas a leitura do atributo vai simplesmente devolver o novo valor na instância, em vez de devolver o objeto descritor. Em outras palavras, o atributo de instância vai ocultar o descritor, mas apenas para leitura. Veja o <<descriptorkinds_demo2>>.
+`+__get__+` para tratar daquele acesso. Se um atributo de instância de mesmo nome for criado com um novo valor, através de acesso direto ao `+__dict__+` da instância, o método `+__set__+` continuará interceptando tentativas posteriores de definir aquele atributo, mas a leitura do atributo vai simplesmente devolver o novo valor na instância, em vez de devolver o objeto descritor. Em outras palavras, o atributo de instância vai ocultar o descritor, mas apenas na leitura. Veja o <<descriptorkinds_demo2>>.
 
 [[descriptorkinds_demo2]]
 .Descritor dominante sem `+__get__+`
@@ -404,15 +454,15 @@ include::../code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS_DEMO2]
 <2> A mesma coisa acontece se obtivermos a instância do descritor diretamente da classe gerenciada.
 <3> Tentar definir um valor para `obj.over_no_get` invoca o método `+__set__+` do descritor.
 <4> Como nosso `+__set__+` não faz modificações, ler `obj.over_no_get` novamente obtém a instância do descritor na classe gerenciada.
-<5> Percorrendo o `+__dict__+` da instância para definir um atributo de instância chamado `over_no_get`.
-<6> Agora aquele atributo de instância `over_no_get` oculta o descritor, mas apenas para leitura.
-<7> Tentar atribuir um valor a `obj.over_no_get` continua passando pelo _set_ do descritor.
-<8> Mas, para leitura, aquele descritor é ocultado enquanto existir um atributo de instância de mesmo nome.
+<5> Definindo um atributo de instância chamado `over_no_get` direto no `+__dict__+` da instância.
+<6> Agora aquele atributo de instância `over_no_get` oculta o descritor, mas só na leitura.
+<7> Tentar atribuir um valor a `obj.over_no_get` continua passando pelo `+__set__+` do descritor.
+<8> Mas na leitura, aquele descritor é ocultado enquanto existir um atributo de instância de mesmo nome.
 
 
 ==== Descritor não dominante
 
-Um descritor que não implementa `+__set__+` é um descritor não dominante. Definir um atributo de instância com o mesmo nome vai ocultar o descritor, tornando-o incapaz de tratar aquele atributo naquela instância específica. Métodos e a `@functools.cached_property` são implementados como descritores não dominantes. O <<descriptorkinds_demo3>> mostra a operação de um descritor não dominante.
+Um descritor que não implementa `+__set__+` é um descritor não dominante. Definir um atributo de instância com o mesmo nome vai ocultar o descritor, tornando-o incapaz de tratar aquele atributo naquela instância específica. Métodos e a `@functools.cached_property` são implementados como descritores não dominantes. O <<descriptorkinds_demo3>> mostra o comportamento de um descritor não dominante.
 
 [[descriptorkinds_demo3]]
 .Comportamento de um descritor não dominante
@@ -464,7 +514,7 @@ Vamos ver agora como descritores são usados para implementar métodos no Python
 === Métodos são descritores
 
 Uma((("attribute descriptors", "methods as descriptors", id="ADmethodsas23")))
-função dentro de uma classe se torna um método vinculado quando invocada em uma
+função dentro de uma classe se torna um método vinculado (_bound method_) quando invocada em uma
 instância, porque todas as funções definidas pelo usuário têm um método
 `+__get__+`, e portanto operam como descritores quando associados a uma classe.
 O <<descriptorkinds_demo5>> demonstra a leitura do método `spam`, da classe
@@ -483,10 +533,10 @@ include::../code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS_DEMO5]
 <2> Mas ler de `Managed.spam` obtém uma função.
 <3> Atribuir um valor a `obj.spam` oculta o atributo de classe, tornando o método `spam` inacessível a partir da instância `obj`.
 
-Funções não implementam `+__set__+`, portanto são descritores não dominantes, como mostra a última linha do <<descriptorkinds_demo5>>.
+Funções não implementam `+__set__+`, portanto não são descritores dominantes, como mostra a última linha do <<descriptorkinds_demo5>>.
 
-A outra lição fundamental do <<descriptorkinds_demo5>> é que `obj.spam` e `Managed.spam` devolvem objetos diferentes. Como de hábito com descritores, o `+__get__+` de uma função devolve uma referência para a própria função quando o acesso ocorre através da classe gerenciada. Mas quando o acesso vem através da instância, o `+__get__+` da função devolve um objeto método vinculado: um invocável que envolve a função e vincula a instância gerenciada (no exemplo, `obj`) ao primeiro argumento da função (isto é, `self`), como faz a função `functools.partial` (que vimos na <<functools_partial_sec>>).
-Para um entendimento mais profundo desse mecanismo, dê uma olhada no <<func_descriptor_ex>>.
+A outra lição fundamental do <<descriptorkinds_demo5>> é que `obj.spam` e `Managed.spam` devolvem objetos diferentes. Como de hábito com descritores, o `+__get__+` de uma função devolve uma referência para a própria função quando o acesso ocorre através da classe gerenciada. Mas quando o acesso vem através da instância, o `+__get__+` da função devolve um método vinculado: um invocável que embrulha a função e vincula a instância gerenciada (no exemplo, `obj`) ao primeiro argumento da função (isto é, `self`), como faz a função `functools.partial` (que vimos na <<functools_partial_sec>>).
+Para um entendimento mais profundo deste mecanismo, dê uma olhada no <<func_descriptor_ex>>.
 
 [[func_descriptor_ex]]
 .method_is_descriptor.py: uma classe `Text`, derivada de `UserString`
@@ -507,48 +557,64 @@ Vamos então investigar o método `Text.reverse`. Veja o <<func_descriptor_demo>
 include::../code/23-descriptor/method_is_descriptor.py[tags=FUNC_DESCRIPTOR_DEMO]
 ----
 ====
-<1> O `repr` de uma instância de `Text` se parece com uma chamada ao construtor de `Text` que criaria uma instância idêntica.
+
+<1> Seguindo a convenção, o `repr` de uma instância de `Text` parece uma chamada ao construtor
+de `Text` que criaria uma instância igual.
+
 <2> O método `reverse` devolve o texto escrito de trás para frente.
+
 <3> Um método invocado na classe funciona como uma função.
-<4> Observe os tipos diferentes: uma `function` e um `method`.
-<5> `Text.reverse` opera como uma função, mesmo ao trabalhar com objetos que não são instâncias de `Text`.
-<6> Toda função é um descritor não dominante. Invocar seu `+__get__+` com uma instância obtém um método vinculado a aquela instância.
-<7> Invocar o `+__get__+` da função com `None` como argumento `instance` obtém a própria função.
-<8> A expressão `word.reverse` na verdade invoca `+Text.reverse.__get__(word)+`, devolvendo o método vinculado.
-<9> O objeto método vinculado tem um atributo `+__self__+`, contendo uma referência à instância na qual o método foi invocado.
-<10> O atributo `+__func__+` do método vinculado é uma referência à função original, ligada à classe gerenciada.
 
-O objeto método vinculado contém um método `+__call__+`, que trata a invocação em si. Este método chama a função original, referenciada em `+__func__+`, passando o atributo `+__self__+` do método como primeiro argumento. É assim que funciona a vinculação implícita do argumento `self` convencional.
+<4> Observe os tipos diferentes: `function` e `method`.
 
-O modo como funções são transformadas em métodos vinculados é um exemplo perfeito de como descritores são usados como infraestrutura da linguagem.
+<5> `Text.reverse` opera como uma função, mesmo ao trabalhar com objetos que não
+são instâncias de `Text`.
+
+<6> Toda função é um descritor não dominante. Invocar seu `+__get__+` com uma
+instância obtém um método vinculado a aquela instância.
+
+<7> Invocar o `+__get__+` da função com `None` como argumento `instance` obtém a
+própria função.
+
+<8> A expressão `word.reverse` invoca `+Text.reverse.__get__(word)+`,
+devolvendo o método vinculado, mas sem invocá-lo.
+
+<9> O objeto método vinculado tem um atributo `+__self__+`, contendo uma
+referência à instância na qual o método foi invocado.
+
+<10> O atributo `+__func__+` do método vinculado é uma referência à função
+original, implementada na classe gerenciada.
+
+O método vinculado contém um método `+__call__+`, que trata a invocação em si. Este método chama a função original, referenciada em `+__func__+`, passando o atributo `+__self__+` do método como primeiro argumento. É assim que funciona a vinculação implícita do argumento `self` convencional.
+
+A conversão de funções em métodos vinculados é um exemplo perfeito de como descritores são usados na infraestrutura da linguagem.
 
 Após este mergulho profundo no funcionamento de descritores e métodos, vamos repassar alguns conselhos práticos sobre seu uso.((("", startref="ADmethodsas23")))
 
 [[descriptor_usage_sec]]
-=== Dicas para o uso de descritores
+=== Dicas para usar descritores
 
 A((("attribute descriptors", "descriptor usage tips", id="ADtips23"))) lista a seguir trata de algumas consequências práticas das características dos descritores descritas acima:
 
 Use `property` para não complicar demais:: A classe embutida `property` cria descritores dominantes, implementando `+__set__+` e `+__get__+`, mesmo se um método _setter_ não for definido.footnote:[Um método `+__delete__+` também é fornecido pelo decorador `property`, mesmo se você não definir um método _deleter_ (de exclusão).]
-O `+__set__+` default de uma propriedade gera um `AttributeError: can't set attribute` (_AttributeError: não é permitido definir o atributo_), então uma propriedade é a forma mais fácil de criar um atributo somente para leitura, evitando o problema descrito a seguir.
+O `+__set__+` default de uma propriedade gera um `AttributeError: can't set attribute` (não é permitido setar o atributo), então uma propriedade é a forma mais fácil de criar um atributo somente para leitura, evitando o problema descrito a seguir.
 
 Descritores somente para leitura exigem um `+__set__+`:: Se você usar uma classe descritora para implementar um atributo somente para leitura, precisa lembrar de programar tanto `+__get__+` quanto
-`+__set__+`. Caso contrário, definir um atributo com o mesmo nome em uma instância vai ocultar o descritor. O método `+__set__+` de um atributo somente para leitura deve apenas gerar um `AttributeError` com uma mensagem adequada.footnote:[Python não é consistente nessas mensagens. Tentar modificar o atributo `c.real` de um número `complex` resulta em um `AttributeError: readonly attribute` (_AttributeError: atributo somente para leitura_), mas uma tentativa de mudar
-`c.conjugate` (um método de `complex`) gera um `AttributeError: 'complex' object attribute 'conjugate' is read-only` (_AttributeError: o atributo 'conjugate' do objeto 'complex' é somente para leitura_). Até "read-only" está escrito de maneira diferente (na mensagem original em inglês).]
+`+__set__+`. Caso contrário, você terá um descritor não-dominante, e setar um atributo com o mesmo nome em uma instância vai ocultar o descritor. O método `+__set__+` de um atributo somente para leitura deve apenas levantar `AttributeError` com uma mensagem adequada.footnote:[Python não é consistente nestas mensagens. Tentar modificar o atributo `c.real` de um número `complex` resulta em um `AttributeError: readonly attribute` (atributo somente para leitura), mas uma tentativa de mudar
+`c.conjugate` (um método de `complex`) levanta um `AttributeError: 'complex' object attribute 'conjugate' is read-only` (o atributo 'conjugate' do objeto 'complex' é somente para leitura). Até "read-only" está escrito de maneira diferente nas mensagens em inglês).]
 
 Descritores de validação podem funcionar apenas com `+__set__+`:: Em um descritor projetado apenas para validação, o método `+__set__+` deve verificar o argumento `value` recebido e, se ele for válido, atualizar o `+__dict__+` da instância diretamente, usando o nome da instância do descritor como chave. Dessa forma, ler o atributo de mesmo nome a partir da instância será tão rápido quanto possível, pois não vai precisar de um `+__get__+`. Veja o código no <<lineitem_class_v4>>.
 
-_Caching_ pode ser feito de forma eficiente apenas com `+__get__+`:: Se você escrever apenas o método `+__get__+`, cria um descritor não dominante.
+_Caching_ pode ser feito eficientemente apenas com `+__get__+`:: Se você escrever apenas o método `+__get__+`, cria um descritor não dominante.
 Eles são úteis para executar alguma computação custosa e então armazenar o resultado, definindo um atributo com o mesmo nome na instânciafootnote:[Entretanto, lembre-se que criar atributos de instância após o método `+__init__+` frustra a otimização de memória através de compartilhamento de chaves, como discutido na <<conseq_dict_internal_sec>>.].
 O atributo de mesmo nome na instância vai ocultar o descritor, daí acessos subsequentes a aquele atributo vão buscá-lo diretamente no `+__dict__+` da instância, sem acionar mais o `+__get__+` do descritor.
-O decorador `@functools.cached_property` na verdade produz um descritor não dominante.
+O decorador `@functools.cached_property` constrói um descritor não dominante.
 
-Métodos não especiais pode ser ocultados por atributos de instância:: Como funções e métodos implementam apenas `+__get__+`, eles são descritores não dominantes. Uma atribuição simples, como `my_obj.the_method = 7`, significa que acessos posteriores a `the_method` através daquela instância irão obter o número ++7++—sem afetar a classe ou outras instâncias. Essa questão, entretanto, não interfere com os métodos especiais. O interpretador só procura métodos especiais na própria classe. Em outras palavras, `repr(x)` é executado como `+x.__class__.__repr__(x)+`, então um atributo
-`+__repr__+`, definido em `x`, não tem qualquer efeito em `repr(x)`. Pela mesma razão, a existência de um atributo chamado `+__getattr__+` em uma instância não vai subverter o algoritmo normal de acesso a atributos.
+Métodos não especiais pode ser ocultados por atributos de instância:: Como funções e métodos implementam apenas `+__get__+`, eles são descritores não dominantes. Uma atribuição simples, como `meu_obj.o_método = 7`, significa que acessos posteriores a `o_método` através daquela instância irão obter o número ++7++—sem afetar a classe ou outras instâncias. Isto se aplica aos métodos especiais. O interpretador só acessa métodos especiais na própria classe. Em outras palavras, `repr(x)` é executado como `+x.__class__.__repr__(x)+`, então um atributo
+`+__repr__+`, definido em `x`, não tem efeito em `repr(x)`. Pela mesma razão, a existência de um atributo chamado `+__getattr__+` em uma instância não vai subverter o algoritmo normal de acesso a atributos.
 
-O fato de métodos não especiais poderem ser sobrescritos tão facilmente pode soar frágil e propenso a erros. Mas eu, pessoalmente, em mais de 20 anos programando em Python, nunca tive problemas com isso. Por outro lado, se você estiver criando muitos atributos dinâmicos, onde os nomes dos atributos vêm de dados que você não controla (como fizemos na parte inicial desse capítulo), então você precisa estar atenta para isso, e talvez implementar alguma filtragem ou reescrita (_escaping_) dos nomes dos atributos dinâmicos, para preservar sua sanidade.
+O fato de métodos poderem ser sobrescritos tão facilmente pode soar frágil e propenso a erros. Mas eu, pessoalmente, em mais de 20 anos programando em Python, nunca tive problemas com isso. Por outro lado, se você estiver criando muitos atributos dinâmicos, onde os nomes dos atributos vêm de dados que você não controla (como fizemos na parte inicial desse capítulo), então você precisa estar atenta para isso, e talvez implementar alguma filtragem ou reescrita (_escaping_) dos nomes dos atributos dinâmicos, para preservar sua sanidade.
 
-[role="man-height"]
 [NOTE]
 ====
 A classe `FrozenJSON` no <<ex_explore1>> está a salvo de atributos de instância ocultando métodos, pois seus únicos métodos são métodos especiais e o método de classe `build`. Métodos de classe são seguros desde que sejam sempre acessados através da classe, como fiz com `FrozenJSON.build` no <<ex_explore1>>—mais tarde substituído por `+__new__+` no <<ex_explore2>>. As classes `Record` e `Event`, apresentadas na <<computed_props_sec>>, também estão a salvo: elas implementam apenas métodos especiais, métodos estáticos e propriedades. Propriedades são descritores dominantes, então não são ocultados por atributos de instância.
@@ -557,7 +623,7 @@ A classe `FrozenJSON` no <<ex_explore1>> está a salvo de atributos de instânci
 Para encerrar esse capítulo, vamos falar de dois recursos que vimos com as propriedades, mas não no contexto dos descritores: documentação e o tratamento de tentativas de excluir um atributo gerenciado.((("", startref="ADtips23")))
 
 [[descriptor_doc_del_sec]]
-=== Docstrings de descritores e a sobreposição de exclusão
+=== Docstrings e exclusão de descritores
 
 A((("attribute descriptors", "descriptor docstring and overriding deletion"))) docstring de uma classe descritora é usada para documentar todas as instâncias do descritor na classe gerenciada.
 O <<descriptor_help_screens>> mostra as telas de ajuda para a classe `LineItem` com os descritores `Quantity` e `NonBlank`, do
@@ -565,11 +631,14 @@ O <<descriptor_help_screens>> mostra as telas de ajuda para a classe `LineItem` 
 
 Isso é um tanto insatisfatório. No caso de `LineItem`, seria bom acrescentar, por exemplo, a informação de que `weight` deve ser expresso em quilogramas. Isso seria trivial com propriedades, pois cada propriedade controla um atributo gerenciado específico. Mas com descritores, a mesma classe descritora `Quantity` é usada para `weight` e `price`.footnote:[customizar o texto de ajuda para cada instância do descritor é supreendentemente difícil. Uma solução exige criar dinamicamente uma classe invólucro (_wrapper_) para cada instância do descritor.]
 
-O segundo detalhe que discutimos com propriedades, mas não com descritores, é o tratamento de tentativas de apagar um atributo gerenciado.
-Isso pode ser feito pela implementação de um método `+__delete__+` juntamente com (ou em vez de) os habituais `+__get__+` e/ou `+__set__+` na classe descritora.
-Omiti deliberadamente falar de `+__delete__+`, porque acredito que seu uso no mundo real é raro.
-Se você precisar disso, por favor consulte a seção https://fpy.li/23-2["Implementando descritores"] na documentação do https://fpy.li/dtmodel[Modelo de dados de Python].
-Escrever um classe descritora boba com `+__delete__+` fica como exercício para a leitora ociosa.
+O segundo detalhe que discutimos com propriedades, mas não com descritores, é o
+tratamento de tentativas de apagar um atributo gerenciado. Isso pode ser feito
+implementando um método `+__delete__+` na classe descritora. Omiti
+deliberadamente falar de `+__delete__+`, porque que seu uso no mundo
+real é raro. Se você precisar disso, por favor consulte a seção
+https://fpy.li/c7[«Implementando descritores»] na documentação do
+_Modelo de dados de Python_. Escrever um exemplo com uma classe descritora
+boba com `+__delete__+` fica como exercício para o leitor com excesso de tempo livre.
 
 [[descriptor_help_screens]]
 .Capturas de tela do console de Python após os comandos `help(LineItem.weight)` e `help(LineItem)`.
@@ -579,15 +648,17 @@ image::../images/flpy_2304.png[Capturas de tela do console de Python com a ajuda
 
 O((("attribute descriptors", "overview of"))) primeiro exemplo deste capítulo foi uma continuação dos exemplos `LineItem` do <<ch_dynamic_attrs>>. No <<lineitem_class_v3>>, substituímos propriedades por descritores. Vimos que um descritor é uma classe que fornece instâncias, que são instaladas como atributos na classe gerenciada. Discutir esse mecanismo exigiu uma terminologia especial, apresentando termos como _instância gerenciada_ e _atributo de armazenamento_.
 
-Na <<auto_storage_sec>>, removemos a exigência de descritores `Quantity` serem declarados com um `storage_name` explícito, um requisito redundante e propenso a erros. A solução foi implementar o método especial `+__set_name__+` em `Quantity`, para armazenar o nome da propriedade gerenciada como `self.storage_name`.
+Na <<auto_storage_sec>>, removemos a exigência de descritores `Quantity` serem
+instanciados com um `storage_name` explícito. A solução foi implementar o método especial `+__set_name__+` em
+`Quantity`, para preservar o nome da propriedade gerenciada como
+`self.storage_name`.
 
 A <<new_descr_type_sec>> mostrou como criar uma subclasse de uma classe descritora abstrata, para compartilhar código ao programar descritores especializados com alguma funcionalidade em comum.
 
-[role="pagebreak-before less_space"]
 Examinamos então os comportamentos diferentes de descritores, fornecendo ou omitindo o método
-`+__set__+`, criando uma distinção fundamental entre descritores dominantes e não dominantes, também conhecidos como descritores de dados e sem dados. Por meio de testes detalhados, revelamos quando os descritores estão no controle, e quando são ocultados, contornados ou sobrescritos.
+`+__set__+`, criando uma distinção fundamental entre descritores dominantes e não dominantes. Por meio de testes detalhados, revelamos quando os descritores estão no controle, e quando são ocultados, contornados ou sobrescritos.
 
-Em seguida, estudamos uma categoria específica de descritores não dominantes: métodos. Experimentos no console revelaram como uma função associada ao uma classe se torna um método ao ser acessada através de uma instância, se valendo do protocolo descritor.
+Em seguida, estudamos uma categoria específica de descritores não dominantes: métodos. Experimentos no console revelaram como uma função associada ao uma classe se torna um método ao ser acessada através de uma instância, graças ao protocolo de descritores.
 
 Para concluir o capítulo, a <<descriptor_usage_sec>> trouxe dicas práticas, e a <<descriptor_doc_del_sec>> forneceu um rápido olhar sobre como documentar descritores.
 
@@ -599,49 +670,71 @@ Como observado na <<whats_new_descriptor_sec>>, vários exemplos deste capítulo
 === Para saber mais
 
 Além((("attribute descriptors", "further reading on"))) da referência obrigatória ao capítulo
-https://fpy.li/2j["Modelo de dados"], o https://fpy.li/bv[«Guia de descritores»],
-de  Raymond Hettinger, é um recurso valioso-e parte da excelente
-https://fpy.li/bw[coleção de HOWTOS] na documentação oficial de Python.
+https://fpy.li/2j[«Modelo de dados»], o https://fpy.li/bv[«Guia de descritores»],
+de Raymond Hettinger, é um recurso valioso-e parte da excelente
+https://fpy.li/bw[«coleção de HOWTOS»] na documentação oficial de Python.
 
-Como sempre, em se tratando de assuntos relativos ao modelo de objetos de Python, o _Python in a Nutshell_, 3ª ed. (O'Reilly), de Martelli, Ravenscroft, e Holden é competente e objetivo. Martelli também tem uma apresentação chamada "Python's Object Model" (_O Modelo de Objetos de Python_), tratando com profundidade de propriedades e descritores (veja os https://fpy.li/23-5[slides] (EN) e o https://fpy.li/23-6[video] (EN)).
+Como sempre, em se tratando de assuntos relativos ao modelo de objetos de Python, o _Python in a Nutshell_, 3ª ed. (O'Reilly), de Martelli, Ravenscroft, e Holden é competente e objetivo. Martelli também tem uma apresentação chamada _Python's Object Model_ (O Modelo de Objetos do Python), tratando com profundidade de propriedades e descritores: https://fpy.li/23-5[«slides»] e https://fpy.li/23-6[«video»].
 
 [WARNING]
 ====
 Cuidado, qualquer tratamento de descritores escrito ou gravado antes da PEP 487 ser adotada, em 2016, corre o risco de conter exemplos desnecessariamente complicados hoje, pois `+__set_name__+` não era suportado nas versões de Python anteriores a 3.6.
 ====
 
-Para mais exemplos práticos, o _Python Cookbook_, 3ª ed., de David Beazley e Brian K. Jones (O’Reilly), traz muitas receitas ilustrando descritores, dentre as quais quero destacar "6.12. Reading Nested and Variable-Sized Binary Structures" (_Lendo Estruturas Binárias Aninhadas e de Tamanho Variável_), "8.10. Using Lazily Computed Properties" (_Usando Propriedades Computadas de Forma Preguiçosa_), "8.13. Implementing a Data Model or Type System" (_Implementando um Modelo de Dados ou um Sistema de Tipos_) e "9.9. Defining Decorators As Classes" (_Definindo Decoradores como Classes_). Essa última receita trata das questões profundas envolvidas na interação entre decoradores de função, descritores e métodos, e de como um decorador de função implementado como uma classe, com `+__call__+`, também precisa implementar `+__get__+` se quiser funcionar com métodos de decoração e também com funções.
+Para mais exemplos práticos, o _Python Cookbook_, 3ª ed., de David Beazley e
+Brian K. Jones (O’Reilly), traz muitas receitas ilustrando descritores, entre
+as quais destaco
+_6.12. Reading Nested and Variable-Sized Binary Structures_
+(Lendo Estruturas Binárias Aninhadas e de Tamanho Variável),
+_8.10. Using Lazily Computed Properties_
+(Usando Propriedades Computadas de Forma Preguiçosa_),
+_8.13. Implementing a Data Model or Type System_
+(Implementando um Modelo de Dados ou um Sistema de Tipos) e
+_9.9. Defining Decorators As Classes_ 
+(Definindo Decoradores como Classes).
+Essa última receita trata das questões profundas envolvidas na interação entre
+decoradores de função, descritores e métodos, e de como um decorador de função
+implementado como uma classe, com `+__call__+`, também precisa implementar
+`+__get__+` se quiser funcionar com métodos.
 
-A https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma customização mais simples da criação de classes_)] (EN)
-introduziu o método especial `+__set_name__+` e  inclui um exemplo de um
-https://fpy.li/23-7[validating descriptor (_descritor de validação_)] (EN).
+A https://fpy.li/pep487[_PEP 487—Simpler customization of class creation_]
+(Customização mais simples da criação de classes)
+introduziu o método especial `+__set_name__+` e inclui um exemplo de um
+https://fpy.li/23-7[«descritor de validação»].
 
 //[role="pagebreak-before"]
 .Ponto de vista
 ****
 
-[role="soapbox-title"]
-O projeto de self
 
-A((("attribute descriptors", "Soapbox discussion")))((("Soapbox sidebars", "explicit self argument")))((("explicit self argument"))) exigência de declarar `self` explicitamente como o primeiro argumento em métodos foi uma decisão de projeto controversa no Python.
-Após 23 anos usando a linguagem, já estou acostumado com isso.
-Acho que essa decisão é um exemplo de "pior é melhor" (_worse is better_):
-a filosofia de projeto descrita pelo cientista da computação Richard P. Gabriel em
-https://fpy.li/23-8["The Rise of Worse is Better" (_A Ascenção do Pior é Melhor_)] (EN).
-A primeira prioridade dessa filosofia é "simplicidade", que Gabriel apresenta assim:
+*O design de do parâmetro `self`*
+
+A((("attribute descriptors", "Soapbox discussion")))((("Soapbox sidebars",
+"explicit self argument")))((("explicit self argument"))) exigência de declarar
+`self` explicitamente como o primeiro parâmetro em métodos foi uma decisão de
+design controversa no Python. Eu me acostumei em menos de 20 anos!
+Acho que essa decisão é um exemplo de "pior é melhor"
+(_worse is better_): a filosofia de design descrita pelo cientista da
+computação Richard P. Gabriel em
+https://fpy.li/23-8[_The Rise of Worse is Better_]
+(A Ascenção do Pior é Melhor). A primeira prioridade dessa filosofia
+é "simplicidade", que Gabriel apresenta assim:
 
 [quote]
 ____
-O projeto deve ser simples, tanto na implementação quanto na interface.
+O design deve ser simples, tanto na implementação quanto na interface.
 É mais importante que a implementação seja simples, do que a interface.
-A simplicidade é a consideração mais importante em um projeto.
+A simplicidade é a consideração mais importante em um design.
 ____
 
-O `self` explícito de Python incorpora essa filosofia de projeto.
-A implementação é simples—até mesmo elegante—à custas da interface do usuário: uma assinatura de método como `def zfill(self, width):` não corresponde, visualmente, à invocação `label.zfill(8)`.
+O `self` explícito de Python incorpora esta filosofia de design.
+A implementação é simples—até mesmo elegante—em prejuízo da usabilidade:
+uma assinatura de método como `def zfill(self, width):` não corresponde, visualmente, à invocação `label.zfill(8)`.
 
-O Modula-3 introduziu essa convenção com o mesmo identificador, `self`.
-Mas há uma diferença crucial: no Modula-3, interfaces são declaradas separadamente de sua implementação, e na declaração da interface o argumento `self` é omitido. Então, da perspectiva do usuário, um método aparece em uma declaração de interface com os mesmos parâmetros explícitos usados para invocá-lo.
+A linguagem Modula-3, que Guido estudou antes de inventar o Python, introduziu esta convenção com o mesmo identificador, `self`.
+Mas há uma diferença crucial: em Modula-3, interfaces são declaradas separadamente de sua implementação,
+e na declaração da interface o argumento `self` é omitido.
+Então, da perspectiva do usuário, um método aparece em uma declaração de interface com a mesma quantidade de parâmetros necessários para invocá-lo.
 
 Ao longo do tempo, as mensagens de erro de Python relacionadas a argumentos de métodos se tornaram mais claras.
 Em um método definido pelo usuário com um argumento além de `self`, se o usuário invocasse
@@ -650,22 +743,32 @@ Em um método definido pelo usuário com um argumento além de `self`, se o usu�
 [source]
 ----
 TypeError: meth() takes exactly 2 arguments (1 given)
-("TypeError: meth() recebe exatamente 2 argumentos (1 passado)"")
+(meth() recebe exatamente 2 argumentos (1 passado))
 ----
 
-No Python 3, a confusa contagem de argumentos não é mencionada, e o argumento ausente é nomeado:
+No Python 3, a confusa contagem de argumentos não é mencionada, mas o argumento ausente é nomeado:
 
 [source]
 ----
 TypeError: meth() missing 1 required positional argument: 'x'
-("TypeError: 1 argumento posicional obrigatório faltando em meth(): 'x'")
+(1 argumento posicional obrigatório faltando em meth(): 'x')
 ----
 
-Além do uso de `self` como um argumento explícito, a exigência de qualificar cada acesso a atributos de instância com `self` também é criticada. Veja, por exemplo, o famoso post "Python Warts" (_As verrugas de Python_) de A. M. Kuchling (em https://fpy.li/23-9[archived] (EN)); o próprio Kuchling não se incomoda muito com o qualificador `self`, mas ele o menciona—provavelmente ecoando opiniões do grupo comp.lang.python.
-Pessoalmente não me importo em digitar o qualificador `self`: é bom para distinguir variáveis locais de atributos. Minha questão é com o uso de `self` em comandos `def`.
+Além do uso de `self` como um argumento explícito, a exigência de qualificar
+cada acesso a atributos de instância com `self` também é criticada. Veja, por
+exemplo, o famoso post _Python Warts_ (Verrugas de Python) de A. M.
+Kuchling (https://fpy.li/23-9[«cópia arquivada»] no _Internet Archive_);
+o próprio Kuchling não se incomoda
+muito com o qualificador `self`, mas ele o menciona—provavelmente ecoando
+opiniões do grupo _comp.lang.python_. Pessoalmente não me importo em digitar o
+qualificador `self`: é bom para distinguir variáveis locais de atributos. Minha
+questão é com o uso de `self` na instrução `def`.
 
 Quem estiver triste com o `self` explícito de Python pode se sentir bem melhor após considerar a
-https://fpy.li/23-10[semântica desconcertante] (EN) do `this` implícito em JavaScript. Guido tinha algumas boas razões para fazer `self` funcionar como funciona, e ele escreveu sobre elas em
-https://fpy.li/23-11["Adding Support for User-Defined Classes" (_Adicionando Suporte a Classes Definidas pelo Usuário_)], um post em seu blog, _The History of Python_ ("A História de Python").
+https://fpy.li/23-10[«semântica desconcertante»] do `this` implícito em JavaScript.
+Guido teve boas razões para fazer `self` funcionar como funciona, e ele escreveu sobre elas em
+https://fpy.li/23-11[_Adding Support for User-Defined Classes_]
+(Adicionando Suporte a Classes Definidas pelo Usuário), 
+em seu blog, _The History of Python_ (A História de Python).
 ****
 

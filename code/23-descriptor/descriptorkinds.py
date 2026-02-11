@@ -138,9 +138,7 @@ Methods are non-overriding descriptors:
 
 """
 
-# tag::DESCR_KINDS[]
-
-### auxiliary functions for display only ###
+# tag::DESCR_KINDS_AUX[]
 
 def cls_name(obj_or_cls):
     cls = type(obj_or_cls)
@@ -161,8 +159,9 @@ def print_args(name, *args):
     pseudo_args = ', '.join(display(x) for x in args)
     print(f'-> {cls_name(args[0])}.__{name}__({pseudo_args})')
 
+# end::DESCR_KINDS_AUX[]
 
-### essential classes for this example ###
+# tag::DESCR_KINDS[]
 
 class Overriding:  # <1>
     """a.k.a. data descriptor or enforced descriptor"""
