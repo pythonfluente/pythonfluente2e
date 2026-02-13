@@ -36,7 +36,7 @@ Here are a few tests. ``bunch_test.py`` has a few more.
     >>> p.flavor = 'banana'
     Traceback (most recent call last):
       ...
-    AttributeError: 'Point' object has no attribute 'flavor'
+    AttributeError: 'Point' object has no attribute 'flavor' and no __dict__ for setting new attributes
 
 # end::BUNCH_POINT_DEMO_2[]
 """
@@ -60,12 +60,15 @@ class MetaBunch(type):  # <1>
                             if (value := getattr(self, name)) != default)
             return f'{cls_name}({rep})'
 
-        new_dict = dict(__slots__=[], __init__=__init__, __repr__=__repr__)  # <8>
+        new_dict = dict(__slots__=[],
+                        __init__=__init__,
+                        __repr__=__repr__)  # <8>
 
         for name, value in cls_dict.items():  # <9>
             if name.startswith('__') and name.endswith('__'):  # <10>
                 if name in new_dict:
-                    raise AttributeError(f"Can't set {name!r} in {cls_name!r}")
+                    msg = f"Can't set {name!r} in {cls_name!r}"
+                    raise AttributeError(msg)
                 new_dict[name] = value
             else:  # <11>
                 new_dict['__slots__'].append(name)

@@ -29,7 +29,8 @@ class MetaKlass(type):
         def inner_2(self):
             print(f'% MetaKlass.__new__:inner_2({self!r})')
 
-        cls = super().__new__(meta_cls, cls_name, bases, cls_dict.data)  # <5>
+        cls = super().__new__(
+            meta_cls, cls_name, bases, cls_dict.data)  # <5>
 
         cls.method_c = inner_2  # <6>
 

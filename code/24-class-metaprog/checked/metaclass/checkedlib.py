@@ -91,7 +91,8 @@ class Field:
                 value = self.constructor(value)
             except (TypeError, ValueError) as e:
                 type_name = self.constructor.__name__
-                msg = f'{value!r} is not compatible with {self.name}:{type_name}'
+                msg = (f'{value!r} is not compatible ' +
+                       f'with {self.name}:{type_name}')
                 raise TypeError(msg) from e
         setattr(instance, self.storage_name, value)  # <4>
 # end::CHECKED_FIELD[]
