@@ -22,7 +22,8 @@ and when an attribute is set::
 
 # tag::MOVIE_TYPE_VALIDATION[]
 
-    >>> blockbuster = Movie(title='Avatar', year=2009, box_office='billions')
+    >>> megahit = Movie(title='Avatar', year=2009,
+    ...                     box_office='billions')
     Traceback (most recent call last):
       ...
     TypeError: 'billions' is not compatible with box_office:float
@@ -45,7 +46,7 @@ default values::
 
 Providing extra arguments to the constructor is not allowed::
 
-    >>> blockbuster = Movie(title='Avatar', year=2009, box_office=2000,
+    >>> megahit = Movie(title='Avatar', year=2009, box_office=2000,
     ...                     director='James Cameron')
     Traceback (most recent call last):
       ...
@@ -86,7 +87,8 @@ class Field:
                 value = self.constructor(value)  # <5>
             except (TypeError, ValueError) as e:  # <6>
                 type_name = self.constructor.__name__
-                msg = f'{value!r} is not compatible with {self.name}:{type_name}'
+                msg = (f'{value!r} is not compatible with ' +
+                       f'{self.name}:{type_name}')
                 raise TypeError(msg) from e
         instance.__dict__[self.name] = value  # <7>
 # end::CHECKED_FIELD[]
@@ -124,7 +126,8 @@ class Checked:
         plural = 's' if len(names) > 1 else ''
         extra = ', '.join(f'{name!r}' for name in names)
         cls_name = repr(self.__class__.__name__)
-        raise AttributeError(f'{cls_name} object has no attribute{plural} {extra}')
+        raise AttributeError(f'{cls_name} object has ' +
+                             f'no attribute{plural} {extra}')
 
     def _asdict(self) -> dict[str, Any]:  # <6>
         return {

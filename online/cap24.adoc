@@ -10,13 +10,15 @@ Mas daí, se você der tudo de si ao escrever o programa, como vai conseguir dep
 ____
 
 Metaprogramação((("class metaprogramming", "benefits and drawbacks of"))) de classes é a arte de criar ou customizar classes durante a execução do programa.
-Em Python, classes são objetos de primeira classe, então uma função pode ser usada para criar uma nova classe a qualquer momento, sem usar a palavra-chave `class`.
+Em Python, classes são objetos de primeira classe, então uma função criar uma nova classe a qualquer momento, sem usar a palavra-chave `class`,
+e sem manipular código-fonte ou bytecodes.
 
-Decoradores de classes também são funções, mas são projetados para inspecionar, modificar ou mesmo substituir a classe decorada por outra classe.
+Decoradores de classes também são funções, mas são servem para inspecionar, modificar ou até substituir a classe decorada por outra classe.
 Por fim, metaclasses são a ferramenta mais avançada para metaprogramação de classes: elas permitem a criação de categorias de classes inteiramente novas, com características especiais, como as classes base abstratas, que já vimos anteriormente.
 
-Metaclasses são poderosas, mas difíceis de justificar na prática, e ainda mais difíceis de entender direito. Decoradores de classe resolvem muitos dos mesmos problemas, e são mais fáceis de compreender.
-Mais ainda, Python 3.6 implementou a https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma customização mais simples da criação de classes_)], fornecendo métodos especiais para tarefas que antes exigiam metaclasses ou decoradores de classe.footnote:[Isso não quer dizer que a PEP 487 quebrou código que usava aqueles recursos, mas apenas que parte do código que utilizava decoradores de classe ou metaclasses antes de Python 3.6 pode agora ser refatorado para usar classes comuns, resultando em um código mais simples e possivelmente mais eficiente.]
+Metaclasses são poderosas, mas difíceis de justificar na prática, e ainda mais difíceis de entender direito. Decoradores de classe resolvem muitos dos mesmos problemas, e são mais fáceis de compreender. Além disso, Python 3.6 implementou a
+https://fpy.li/pep487[_PEP 487—Simpler customization of class creation_]
+(Customização simplificada da criação de classes), fornecendo métodos especiais para tarefas que antes exigiam metaclasses ou decoradores de classe.footnote:[Isso não quer dizer que a PEP 487 quebrou código que usava aqueles recursos, mas apenas que parte do código que utilizava decoradores de classe ou metaclasses antes de Python 3.6 pode agora ser refatorado para usar classes comuns, resultando em um código mais simples e possivelmente mais eficiente.]
 
 Este capítulo apresenta as técnicas de metaprogramação de classes em ordem ascendente de complexidade.
 
@@ -28,16 +30,16 @@ Então preciso deixar aqui esse conselho.
 
 Em nome da legibilidade e facilidade de manutenção, você provavelmente deveria evitar as técnicas descritas neste capítulo em aplicações.
 
-Por outro lado, caso você queira escrever o próximo framework formidável de Python, essas são suas ferramentas de trabalho.
+Por outro lado, caso queira escrever o próximo grande framework de Python, estas são suas ferramentas de trabalho.
 ====
 
 === Novidades neste capítulo
 
-Todo((("class metaprogramming", "significant changes to"))) o código do capítulo "Metaprogramação de Classes" da primeira edição do _Python Fluente_ ainda funciona corretamente.
-Entretanto, alguns dos exemplos antigos não representam mais as soluções mais simples, tendo em vista os novos recursos surgidos desde o Python 3.6.
+Todo((("class metaprogramming", "significant changes to"))) o código do capítulo _Metaprogramação de Classes_ da primeira edição do _Python Fluente_ ainda funciona corretamente.
+Entretanto, alguns dos exemplos antigos podem ser bastante simplificados com recursos surgidos desde o Python 3.6.
 
 Substituí aqueles exemplos por outros, enfatizando os novos recursos de metaprogramação ou acrescentando novos requisitos para justificar o uso de técnicas mais avançadas.
-Alguns destes novos exemplos se valem de dicas de tipo para fornecer fábricas de classes similares ao decorador `@dataclass` e a `typing.NamedTuple`.
+Alguns destes exemplos novos se valem de dicas de tipo para fornecer fábricas de classes similares ao decorador `@dataclass` e a `typing.NamedTuple`.
 
 A <<metaclases_real_world_sec>> é nova, trazendo algumas considerações de alto nível sobre a aplicabilidade das metaclasses.
 
@@ -47,23 +49,26 @@ Algumas das melhores refatorações envolvem a remoção de código tornado redu
 Isso se aplica tanto a código em produção quando a livros.
 ====
 
-Vamos começar revisando os atributos e métodos definidos no Modelo de Dados de Python para todas as classes.
+Vamos começar revisando os atributos e métodos definidos no _Modelo de Dados_ de Python para todas as classes.
 
 [[anatomy_of_classes_sec]]
 === Classes como objetos
 
-Como((("class metaprogramming", "classes as objects"))) acontece com a maioria das entidades programáticas de Python, classes também são objetos.
-Toda classe tem alguns atributos definidos no Modelo de Dados de Python, documentados na seção https://fpy.li/bt["4.13. Atributos Especiais"] do capítulo "Tipos Embutidos" da _Biblioteca Padrão de Python_.
-Três((("&#x005F;&#x005F;class&#x005F;&#x005F;")))((("&#x005F;&#x005F;name&#x005F;&#x005F;")))((("&#x005F;&#x005F;mro&#x005F;&#x005F;"))) destes atributos já apareceram várias vezes no livro:
-`+__class__+`, `+__name__+`, and `+__mro__+`.
-Outros atributos de classe padrão são:
+Como((("class metaprogramming", "classes as objects"))) acontece com a maioria
+dos elementos da linguagem Python, classes também são objetos. Toda classe
+tem alguns atributos definidos no _Modelo de Dados_ de Python, documentados na
+seção https://fpy.li/bt[_Atributos Especiais_] do capítulo _Tipos Embutidos_ da
+_Biblioteca Padrão de Python_.
+Três((("&#x005F;&#x005F;class&#x005F;&#x005F;")))((("&#x005F;&#x005F;name&#x005F;&#x005F;")))((("&#x005F;&#x005F;mro&#x005F;&#x005F;")))
+destes atributos já apareceram várias vezes no livro: `+__class__+`,
+`+__name__+`, and `+__mro__+`. Outros atributos de classe padrão são:
 
 `+cls.__bases__+`:: A((("cls.&#x005F;&#x005F;bases&#x005F;&#x005F;"))) tupla de classes base da classe.
 
 `+cls.__qualname__+`:: O((("cls.&#x005F;&#x005F;qualname&#x005F;&#x005F;"))) nome qualificado de uma classe ou função, que é um caminho pontuado, desde o escopo global do módulo até a definição da classe. Isso é relevante quando a classe é definida dentro de outra classe.
-Por exemplo, em um modelo de classe Django, tal como https://fpy.li/24-2[`Ox`] (EN), há uma classe interna chamada `Meta`. O `+__qualname__+` de `Meta` é `Ox.Meta`, mas seu `+__name__+` é apenas `Meta`.
+Por exemplo, na classe https://fpy.li/24-2[`Ox`] que ilustra um modelo na da documentação do Django, há uma classe aninhada chamada `Meta`. O `+__qualname__+` de `Meta` é `Ox.Meta`, mas seu `+__name__+` é apenas `Meta`.
 A especificação para este atributo está na
-https://fpy.li/24-3[PEP 3155--Qualified name for classes and functions (_PEP 3155—Nome qualificado para classes e funções_)] (EN).
+https://fpy.li/24-3[_PEP 3155—Qualified name for classes and functions] (Nome qualificado para classes e funções).
 
 `+cls.__subclasses__()+`:: Este((("cls.&#x005F;&#x005F;subclasses&#x005F;&#x005F;()"))) método devolve uma lista das subclasses imediatas da classe.
 A implementação usa referências fracas, para evitar referências circulares entre a superclasse e suas subclasses.
@@ -81,49 +86,63 @@ Nenhum dos atributos mencionados nesta seção aparecem na lista devolvida pela 
 Agora, se classe é um objeto, o que é a classe de uma classe?
 
 
-=== type: a fábrica de classes embutida
+=== `type`: a fábrica de classes embutida
 
-Nós((("class metaprogramming", "built-in class factory"))) normalmente pensamos em `type` como uma função que devolve a classe de um objeto, porque é isso que `type(my_object)` faz: devolve `my_object.__class__`.
+Normalmente((("class metaprogramming", "built-in class factory")))
+pensamos em `type` como uma função que devolve a classe de um objeto,
+porque é isso que `type(my_object)` faz: devolve `+my_object.__class__+`.
 
-Entretanto, `type` é uma classe que cria uma nova classe quando invocada com três argumentos.
+Entretanto, `type` é uma classe que cria uma nova classe, quando invocada com três argumentos.
 
-Considere essa classe simples:
+Considere esta classe simples:
 
 [source, python]
 ----
-class MyClass(MySuperClass, MyMixin):
+class MyClass(MyMixin, MySuperClass):
     x = 42
 
     def x2(self):
         return self.x * 2
 ----
 
-Usando o construtor `type`, podemos criar `MyClass` durante a execução, com o seguinte código:
+Usando o construtor `type`, podemos criar uma classe idêntica em tempo de execução, com o seguinte código:
 
 [source, python]
 ----
 MyClass = type('MyClass',
-               (MySuperClass, MyMixin),
+               (MyMixin, MySuperClass),
                {'x': 42, 'x2': lambda self: self.x * 2},
           )
 ----
 
-Aquela chamada a `type` é funcionalmente equivalente ao bloco sob a instrução `class MyClass…` anterior.
+Quando Python lê uma instrução `class`, invoca `type` para construir um objeto classe assim:
 
-Quando Python lê uma instrução `class`, invoca `type` para construir um objeto classe com os parâmetros abaixo:
+[source, python]
+----
+new_class = type(name, bases, cls_dict)
+----
+
+Onde os parâmetros são:
 
 `name`::
     O identificador que aparece após a palavra-chave `class`, por exemplo, `MyClass`.
 `bases`::
     A tupla de superclasses passadas entre parênteses após o identificador da classe, ou
     `(object,)`, caso nenhuma superclasse seja mencionada na instrução `class`.
-`dict`::
-    Um mapeamento entre nomes de atributo e valores. Invocáveis se tornam métodos, como vimos na <<methods_are_descriptors_sec>>. Outros valores se tornam atributos de classe.
+`cls_dict`::
+    Um mapeamento entre nomes de atributos e valores.
+    Invocáveis se tornam métodos, como vimos na <<methods_are_descriptors_sec>>.
 
 [NOTE]
 ====
-O construtor `type` aceita argumentos nomeados opcionais, que são ignorados por `type`, mas que são passados como recebidos para `+__init_subclass__+`, que deve consumi-los.
-Vamos estudar esse método especial na <<enhancing_with_init_subclass_sec>>, mas não vou tratar do uso de argumentos nomeados. Para saber mais sobre isso, por favor leia a https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma customização mais simples da criação de classes_)] (EN).
+
+O construtor `type` aceita argumentos nomeados opcionais, que são ignorados por
+`type`, mas são passados para `+__init_subclass__+`, que deve
+consumí-los. Vamos estudar esse método especial na
+<<enhancing_with_init_subclass_sec>>, mas tratarei o uso de argumentos
+nomeados. Para saber mais sobre isso, por favor leia a
+https://fpy.li/pep487[_PEP 487_] sobre formas modernas de customizar a criação de classes.
+
 ====
 
 A classe `type` é uma((("metaclasses", "definition of term"))) _metaclasse_: uma classe que cria classes.
@@ -154,11 +173,13 @@ Agora, vamos usar a classe embutida `type` para criar uma função que constrói
 
 A((("class metaprogramming", "class factory function", id="CMfacfun24"))) biblioteca padrão contém uma função fábrica de classes que já apareceu várias vezes aqui: `collections.namedtuple`.
 No <<ch_dataclass>> também vimos `typing.NamedTuple` e `@dataclass`.
-Todas essas fábricas de classe usam técnicas que veremos neste capítulo.
+Estas fábricas de classe usam técnicas que veremos neste capítulo.
 
 Vamos começar com uma fábrica muito simples, para classes de objetos mutáveis—a substituta mais simples possível de `@dataclass`.
 
-Suponha que eu esteja escrevendo uma aplicação para uma _pet shop_, e queira armazenar dados sobre cães como registros simples. Mas não quero escrever código padronizado como esse:
+Suponha que eu esteja escrevendo uma aplicação para um _pet shop_,
+e queira armazenar dados sobre cães como registros simples.
+Mas não quero escrever código padronizado como esse:
 
 [source, python]
 ----
@@ -169,7 +190,7 @@ class Dog:
         self.owner = owner
 ----
 
-Chato... cada nome de campo aparece três vezes, e essa repetição sequer nos garante um bom `repr`:
+Tédio: `name`, `name`, `name`, `weight`, `weight`, `weight`... E toda essa repetição nem garante um bom `repr`:
 
 [source, python]
 ----
@@ -178,7 +199,8 @@ Chato... cada nome de campo aparece três vezes, e essa repetição sequer nos g
 <__main__.Dog object at 0x2865bac>
 ----
 
-Inspirados por `collections.namedtuple`, vamos criar uma `record_factory`, que cria classes simples como `Dog` em tempo real. O <<record_factory_demo>> mostra como ela deve funcionar.
+Inspirados por `collections.namedtuple`, vamos criar uma `record_factory`,
+que cria classes simples como `Dog` em tempo real. O <<record_factory_demo>> mostra como ela deve funcionar.
 
 [[record_factory_demo]]
 .Testando `record_factory`, uma fábrica de classes simples
@@ -188,11 +210,11 @@ Inspirados por `collections.namedtuple`, vamos criar uma `record_factory`, que c
 include::../code/24-class-metaprog/factories.py[tags=RECORD_FACTORY_DEMO]
 ----
 ====
-<1> A fábrica pode ser chamada como `namedtuple`: nome da classe, seguido dos nomes dos atributos separados por espaços, em um única string.
+<1> A fábrica pode ser invocada como `namedtuple`: nome da classe, seguido dos nomes dos atributos separados por espaços, em um única string.
 <2> Um `repr` agradável.
 <3> Instâncias são iteráveis, então elas podem ser convenientemente desempacotadas em uma atribuição...
 <4> ...ou quando são passadas para funções como `format`.
-<5> Uma instância do registro é mutável.
+<5> As instâncias são mutáveis.
 <6> A classe recém-criada herda de `object`—não tem qualquer relação com nossa fábrica.
 
 O código para `record_factory` está no <<record_factory_ex>>.footnote:[Agradeço a meu amigo J. S. O. Bueno por ter contribuído com esse exemplo.]
@@ -206,21 +228,23 @@ include::../code/24-class-metaprog/factories.py[tags=RECORD_FACTORY]
 ----
 ====
 <1> O usuário pode fornecer os nomes dos campos como uma string única ou como um iterável de strings.
-<2> Aceita argumentos como os dois primeiros de `collections.namedtuple`; devolve `type`—isto é, uma classe que se comporta como uma `tuple`.
+<2> Aceita argumentos como os dois primeiros de `collections.namedtuple`; devolve `type`—isto é, uma classe.
 <3> Cria uma tupla de nomes de atributos; esse será o atributo `+__slots__+` da nova classe.
-<4> Essa função se tornará o método `+__init__+` na nova classe. Ela aceita argumentos posicionais e/ou nomeados.footnote:[Não acrescentei dicas de tipo aos argumentos porque os tipos reais são `Any`. Escrevi a dica to tipo devolvido porque em caso contrário, o Mypy não checaria o código dentro do método.]
+<4> Esta função se tornará o método `+__init__+` na nova classe. Ela aceita argumentos posicionais e/ou nomeados.footnote:[Não acrescentei dicas de tipo aos argumentos porque os tipos reais são `Any`. Escrevi a dica do tipo devolvido (`None`) para que o Mypy não deixe de checar o método.]
 <5> Produz os valores dos campos na ordem dada por `+__slots__+`.
 <6> Produz um `repr` agradável, iterando sobre `+__slots__+` e `self`.
 <7> Monta um dicionário de atributos de classe.
 <8> Cria e devolve a nova classe, invocando o construtor de `type`.
 <9> Converte `names` separados por espaços ou vírgulas em uma lista de `str`.
 
-O <<record_factory_ex>> é a primeira vez que vemos `type` em uma dica de tipo.
-Se a anotação fosse apenas `-> type`, significaria que `record_factory` devolve uma classe—e isso estaria correto.
-Mas a anotação `-> type[tuple]` é mais precisa: indica que a classe devolvida será uma subclasse de `tuple`.
+O <<record_factory_ex>> é a primeira vez que vemos `type` em uma dica de tipo:
+indica que `record_factory` devolve uma classe.
 
-A última linha de `record_factory` no <<record_factory_ex>> cria uma classe cujo nome é o valor de `cls_name`, com `object` como sua única classe base imediata, e um espaço de nomes carregado com
-`+__slots__+`, `+__init__+`, `+__iter__+`, e `+__repr__+`, sendo os útimos três métodos de instância.
+A última linha de `record_factory` no <<record_factory_ex>> cria uma classe cujo
+nome é o valor de `cls_name`, com `object` como sua única classe base imediata,
+e um espaço de nomes (_namespace_) carregado com `+__slots__+` e os
+métodos de instância `+__init__+`, `+__iter__+`, e
+`+__repr__+`.
 
 Poderíamos ter dado qualquer outro nome ao atributo de classe `+__slots__+`, mas então teríamos que implementar `+__setattr__+` para validar os nomes dos atributos em uma atribuição, porque em nossas classes similares a registros queremos que o conjunto de atributos seja sempre o mesmo e na mesma ordem. Entretanto, lembre-se que a principal característica de `+__slots__+` é economizar memória quando estamos lidando com milhões de instâncias, e que usar `+__slots__+` traz algumas desvantagens, discutidas na <<slots_sec>>.
 
@@ -229,27 +253,35 @@ Poderíamos ter dado qualquer outro nome ao atributo de classe `+__slots__+`, ma
 Instâncias de classes criadas por `record_factory` não são serializáveis--isto é, elas não podem ser exportadas com a função `dump` do módulo `pickle`. Resolver este problema está além do escopo deste exemplo, que tem por objetivo mostrar a classe `type` funcionando em um caso de uso simples. Para uma solução completa, estude o código-fonte de `collections.namedtuple`; procure pela palavra "pickling".
 ====
 
-Vamos ver agora como emular fábricas de classes mais modernas, como `typing.NamedTuple`, que recebe uma classe definida pelo usuário, escrita com a instrução `class`, e a melhora automaticamente, acrescentando funcionalidade.((("", startref="CMfacfun24")))
+Vamos ver agora como emular fábricas de classes mais modernas, como `typing.NamedTuple`, que recebe uma classe definida pelo usuário, escrita com a instrução `class`, e a enriquece automaticamente com mais funcionalidade.((("", startref="CMfacfun24")))
 
 
 [[enhancing_with_init_subclass_sec]]
 === Apresentando `+__init_subclass__+`
 
 Tanto((("class metaprogramming", "&#x005F;&#x005F;init_subclass&#x005F;&#x005F;", id="CMinitsub24", secondary-sortas="init")))((("&#x005F;&#x005F;init&#x005F;subclass&#x005F;&#x005F;", id="initsub24"))) `+__init_subclass__+` quanto `+__set_name__+` foram propostos na
-https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma customização mais simples da criação de classes_)].
+https://fpy.li/pep487[_PEP 487—Simpler customization of class creation_].
+
+
 Falamos pela primeira vez do método especial para descritores `+__set_name__+` na <<auto_storage_sec>>.
 Agora vamos estudar `+__init_subclass__+`.
 
-No <<ch_dataclass>>, vimos como `typing.NamedTuple` e `@dataclass` permitem a programadores usarem a instrução `class` para especificar atributos para uma nova classe, que então é aperfeiçoada pela fábrica de classes com a adição automática de métodos essenciais, como `+__init__+`, `+__repr__+`, `+__eq__+`, etc.
+No <<ch_dataclass>>, vimos como `typing.NamedTuple` e `@dataclass` usam a sintaxe da instrução `class` para especificar atributos para uma
+nova classe, que então é enriquecida com a criação
+automática de métodos úteis, como `+__init__+`, `+__repr__+`, `+__eq__+`,
+etc.
 
-Ambas as fábricas de classes leem as dicas de tipo na instrução `class` do usuário para aperfeiçoar a classe. Essas dicas de tipo também permitem que checadores de tipos estáticos validem código que define ou lê aqueles atributos.
-Entretanto, `NamedTuple` e `@dataclass` não se valem das dicas de tipo para validação de atributos durante a execução. A classe `Checked`, no próximo exemplo, faz isso.
+Ambas as fábricas de classes leem as dicas de tipo na instrução `class` do usuário para enriquecer a classe. Estas dicas de tipo também permitem que checadores de tipos estáticos validem código que define ou lê aqueles atributos.
+Entretanto, `NamedTuple` e `@dataclass` não usam as dicas de tipo para validação de atributos durante a execução.
+A classe `Checked`, no próximo exemplo, faz isso.
 
 [NOTE]
 ====
-Não é possível suportar toda dica de tipo estática concebível para checagem de tipos durante a execução, e possivelmente essa é a razão para `typing.NamedTuple` e `@dataclass` sequer tentarem.
+
+Não é possível suportar toda dica de tipo estática concebível para checagem de tipos durante a execução.
 Entretanto, algums tipos que são também classes concretas podem ser usados com `Checked`.
-Isso inclui tipos simples, usados com frequência para o conteúdo de campos, como  `str`, `int`, `float`, e `bool`, bem como listas destes tipos.
+Isto inclui tipos simples, usados com frequência para o conteúdo de campos, como  `str`, `int`, `float`, e `bool`, bem como listas destes tipos.
+
 ====
 
 O <<checked_demo1_ex>> mostra como usar `Checked` para criar uma classe `Movie`.
@@ -274,7 +306,7 @@ Para `int`, isso significa qualquer `x` tal que `int(x)` devolva um `int`.
 Para `str`, qualquer coisa serve durante a execução, pois `str(x)` funciona com qualquer `x` no
 Python.footnote:[Isso é verdade para qualquer objeto, exceto quando sua classe sobrescreve os métodos `+__str__+` ou `+__repr__+`, herdados de `object`, por uma implementação que não funcione.]
 
-Quando chamado sem argumentos, o construtor deve devolver um valor default de seu tipo.footnote:[Essa solução evita usar `None` como default. Evitar valores nulos é uma https://fpy.li/24-5[boa ideia]. Em geral, eles são difíceis de evitar, mas em alguns casos isso é fácil. Tanto no Python quanto no SQL, prefiro representar dados ausentes em um campo de texto como um string vazia em vez de `None` ou `NULL`. Aprender Go reforçou essa ideia: em Go, variáveis e campos struct de tipos primitivos são inicializados por default com um "valor zero" (_zero value_). Se você estiver curiosa, veja a página https://fpy.li/24-6["Zero values" ("Valores zero")] (EN) no _Tour of Go_ ("Tour do Go") online]
+Quando chamado sem argumentos, o construtor deve devolver um valor default de seu tipo.footnote:[Essa solução evita usar `None` como default. Evitar valores nulos é uma https://fpy.li/24-5[boa ideia]. Em geral, eles são difíceis de evitar, mas em alguns casos isso é fácil. Tanto no Python quanto no SQL, prefiro representar dados ausentes em um campo de texto como um string vazia em vez de `None` ou `NULL`. Aprender Go reforçou essa ideia: em Go, variáveis e campos struct de tipos primitivos são inicializados por default com um "valor zero" (_zero value_). Se você estiver curiosa, veja a página https://fpy.li/24-6["Zero values" ("Valores zero")] no _Tour of Go_ ("Tour do Go") online]
 
 Esse é o comportamento padrão de construtores embutidos no Python:
 
@@ -308,11 +340,11 @@ Em um arquivo de código-fonte _.py_ contendo uma instância `movie` da classe `
 movie.year = 'MCMLXXII'
 ----
 
-Entretanto, o Mypy não consegue detectar erros de tipo nessa chamada ao construtor:
+Entretanto, o Mypy não consegue detectar erros de tipo nesta chamada ao construtor:
 
 [source, python]
 ----
-blockbuster = Movie(title='Avatar', year='MMIX')
+megahit = Movie(title='Avatar', year='MMIX')
 ----
 
 Isso porque `Movie` herda `+Checked.__init__+`,
@@ -334,18 +366,18 @@ include::../code/24-class-metaprog/checked/initsub/checkedlib.py[tags=CHECKED_FI
 ----
 ====
 <1> Lembre-se, desde o Python 3.9, o tipo `Callable` para anotações é a ABC em
-`collections.abc`, e não o descontinuado `typing.Callable`.
-<2> Essa é a dica de tipo `Callable` mínima; o parâmetro de tipo e o tipo devolvido para `constructor` são ambos implicitamente `Any`.
-<3> Para checagem durante a execução, usamos o embutido `callable`.footnote:[Na minha opinião, `callable` deveria se tornar adequado para dicas de tipo. Em 6 de maio de 2021, quando essa nota foi escrita, essa ainda era uma https://fpy.li/24-7[questão aberta] (EN).] O teste contra `type(None)` é necessário porque Python entende `None` em um tipo como `NoneType`, a classe de `None` (e portanto invocável), mas esse é um construtor inútil, que apenas devolve `None`.
+`collections.abc`, e não `typing.Callable` que foi descontinuado.
+<2> Essa é a dica de tipo mínima para `Callable` mínima; o parâmetro de tipo e o tipo devolvido são implicitamente `Any`.
+<3> Para checagem durante a execução, usamos o embutido `callable`.footnote:[Na minha opinião, `callable` deveria se tornar adequado para dicas de tipo. Em 6 de maio de 2021, quando essa nota foi escrita, essa ainda era uma https://fpy.li/24-7[questão aberta].] O teste contra `type(None)` é necessário porque Python entende `None` em um tipo como `NoneType`, a classe de `None` (e portanto invocável), mas esse é um construtor inútil, que apenas devolve `None`.
 <4> Se `+Checked.__init__+` definir `value` como `\...` (o objeto embutido `Ellipsis`), invocamos o construtor sem argumentos.
-<5> Caso contrário, invocamos o `constructor` com o `value` dado.
+<5> Caso contrário, invocamos o `constructor` com o `value` fornecido.
 <6> Se `constructor` gerar qualquer dessas exceções, geramos um `TypeError` com uma mensagem útil, incluindo os nomes do campo e do construtor; por exemplo, `'MMIX' não é compatível com year:int`.
 <7> Se nenhuma exceção for gerada, o `value` é armazenado no `+instance.__dict__+`.
 
 Em `+__set__+`, precisamos capturar `TypeError` e `ValueError`, pois os construtores embutidos podem gerar qualquer dos dois, dependendo do argumento.
 Por exemplo, `float(None)` gera um `TypeError`, mas `float('A')` gera um `ValueError`.
 Por outro lado, `float('8')` não causa qualquer erro, e devolve `8.0`.
-E assim eu aqui declaro que, nesse exemplo simples, este um recurso, não um bug.
+Vamos combinar que, neste exemplo simples, este é um recurso, não um bug.
 
 [TIP]
 ====
@@ -355,7 +387,7 @@ Em vez disso, as instâncias do descritor `Field` são criadas durante a execuç
 `+Checked.__init_subclass__+`, que veremos no <<ex_checked_class_top>>.
 ====
 
-Vamos agora nos concentrar na classe `Checked`, que dividi em duas listagens. O <<ex_checked_class_top>> mostra a parte inicial da classe, incluindo os métodos mais importantes para esse exemplo.
+Vamos agora nos concentrar na classe `Checked`, que dividi em duas listagens. O <<ex_checked_class_top>> mostra a parte inicial da classe, incluindo os métodos mais importantes para este exemplo.
 O restante dos métodos está no <<checked_class_bottom_ex>>.
 
 [[ex_checked_class_top]]
@@ -366,27 +398,64 @@ O restante dos métodos está no <<checked_class_bottom_ex>>.
 include::../code/24-class-metaprog/checked/initsub/checkedlib.py[tags=CHECKED_TOP]
 ----
 ====
-<1> Escrevi este método de classe para ocultar a chamada a `typing.get_type_hints` do resto da classe. Se precisasse suportar apenas versões de Python ≥ 3.10, invocaria `inspect.get_annotations` em vez disso. Reveja a <<problems_annot_runtime_sec>> para uma discussão dos problemas com essas funções.
-<2> `+__init_subclass__+` é chamado quando uma subclasse da classe atual é definida. Ele recebe aquela nova subclasse como seu primeiro argumento—e por isso nomeei o argumento `subclass` em vez do habitual `cls`. Para mais informações sobre isso, veja <<init_subclass_not_typical_box>>.
-<3> `+super().__init_subclass__()+` não é estritamente necessário, mas deve ser invocado para ajudar outras classes que implementem `+.__init_subclass__()+` na mesma árvore de herança. Veja a <<mult_inherit_mro_sec>>.
+
+<1> Escrevi este método de classe para isolar a chamada a
+`typing.get_type_hints` do resto da classe. Se precisasse suportar apenas
+versões de Python ≥ 3.10, invocaria `inspect.get_annotations` em vez disso.
+Reveja a <<problems_annot_runtime_sec>> para uma discussão dos problemas com
+essas funções.
+
+<2> `+__init_subclass__+` é chamado sempre que uma subclasse da classe atual é
+definida. Ele recebe aquela nova subclasse como seu primeiro argumento—e por
+isso nomeei o argumento `subclass` em vez do habitual `cls`. Para mais
+informações sobre isso, veja a seguir a caixa _<<init_subclass_not_typical_box>>_.
+
+<3> `+super().__init_subclass__()+` não é estritamente necessário, mas é
+serve para suportar superclasses que implementem `+.__init_subclass__()+` na
+mesma árvore de herança. Veja a <<mult_inherit_mro_sec>>.
+
 <4> Itera sobre `name` e `constructor` em cada campo...
-<5> ...criando um atributo em `subclass` com aquele `name` vinculado a um descritor `Field`, parametrizado com `name` e `constructor`.
+
+<5> ...criando um atributo em `subclass` com aquele `name` vinculado a um
+descritor `Field`, parametrizado com `name` e `constructor`.
+
 <6> Para cada `name` nos campos da classe...
-<7> ...obtém o `value` correspondente de `kwargs` e o remove de `kwargs`. Usar `\...` (o objeto `Ellipsis`) como default nos permite distinguir entre argumentos com valor `None` de argumentos ausentes.footnote:[Como mencionado em <<good_poison_pill_tip>>, o objeto `Ellipsis` é um valor sentinela conveniente e seguro. Ele existe no Python há muito tempo, mas recentemente mais usos têm sido encontrados para ele, como vemos nas dicas de tipo e no NumPy.]
-<8> Essa chamada a `setattr` aciona `+Checked.__setattr__+`, apresentado no <<checked_class_bottom_ex>>.
-<9> Se houver itens remanescentes em `kwargs`, seus nomes não correspondem a qualquer dos campos declarados, e `+__init__+` vai falhar.
-<10> Este erro é informado por `+__flag_unknown_attrs+`, listado no <<checked_class_bottom_ex>>. Ele recebe um argumento `*names` com os nomes de atributos desconhecidos. Usei um único asterisco em `*kwargs`, para passar suas chaves como uma sequência de argumentos.
+
+<7> ...obtém o `value` correspondente de `kwargs` e o remove de `kwargs`. Usar
+`\...` (o objeto `Ellipsis`) como default nos permite distinguir entre
+argumentos com valor `None` de argumentos ausentes.footnote:[Como mencionado em
+<<good_poison_pill_tip>>, o objeto `Ellipsis` é um valor sentinela conveniente e
+seguro. Ele existe no Python há muito tempo, mas recentemente mais usos têm sido
+encontrados para ele, como vemos nas dicas de tipo e no NumPy.]
+
+<8> Invocar `setattr` aciona `+Checked.__setattr__+`
+(<<checked_class_bottom_ex>>).
+
+<9> Se houver itens remanescentes em `kwargs`, seus nomes não correspondem a
+qualquer dos campos declarados, e `+__init__+` vai falhar.
+
+<10> Este erro é informado por `+__flag_unknown_attrs+`, listado no
+<<checked_class_bottom_ex>>. Ele recebe um argumento `*names` com os nomes de
+atributos desconhecidos. Usei um único asterisco em `*kwargs`, para passar suas
+chaves como uma sequência de argumentos, sem passar os valores.
 
 
 [[init_subclass_not_typical_box]]
-.pass:[__init_subclass__] não é um método de classe típico
+`+__init_subclass__+` não é um método de classe típico
 ****
-O decorador `@classmethod` nunca é usado com `+__init_subclass__+`, mas isso não quer dizer muita coisa, pois o método especial `+__new__+` se comporta como um método de classe mesmo sem `@classmethod`.
+
 O primeiro argumento que Python passa para `+__init_subclass__+` é uma classe.
-Entretanto, essa nunca é a classe onde `+__init_subclass__+` é implementado, mas sim uma subclasse recém-definida daquela classe.
-Isso é diferente de `+__new__+` e de qualquer outro método de classe que eu conheço.
-Assim, acho que `+__init_subclass__+` não é um método de classe no sentido usual, e é errado nomear seu primeiro argumento `cls`. A
-https://fpy.li/c2[documentação de `__init_suclass__`] chama o argumento de `cls`, mas explica: "...chamado sempre que se cria uma subclasse da classe que o contém. `cls` é então a nova subclasse..."footnote:[NT: Em 17 de setembro de 2023, a primeira frase está traduzida de forma confusa na documentação em português. Optamos por traduzir aqui diretamente da documentação em inglês.].
+Entretanto, esta não é a classe onde `+__init_subclass__+` está definido,
+mas sim uma subclasse que herda daquela classe.
+Este comportamento é diferente de `+__new__+` e de métodos de classe decorados com `@classmethod`,
+onde o primeiro argumento é sempre a própria classe.
+
+Então `+__init_subclass__+` não é um método de classe no sentido usual, e considero enganoso nomear seu primeiro argumento `cls`.
+Prefiro o nome `subcls`. A
+https://fpy.li/c2[«documentação de `+__init_suclass__+`»] chama o argumento de `cls`,
+mas explica: "...chamado sempre que se cria uma subclasse da classe que o contém.
+`cls` é então a nova subclasse..."
+
 ****
 
 Vamos examinar os métodos restantes da classe `Checked`,
@@ -401,7 +470,7 @@ Observe que prefixei os nomes dos métodos `+_fields+` e `+_asdict+` com `+_+`, 
 include::../code/24-class-metaprog/checked/initsub/checkedlib.py[tags=CHECKED_BOTTOM]
 ----
 ====
-<1> Intercepta qualquer tentativa de definir um atributo de instância. Isso é necessário para evitar a definição de um atributo desconhecido.
+<1> Intercepta qualquer tentativa de definir um atributo de instância. Isto é necessário para evitar a definição de um atributo desconhecido.
 <2> Se o `name` do atributo é conhecido, busca o `descriptor` correspondente.
 <3> Normalmente não é preciso invocar o `+__set__+` do descritor explicitamente. Nesse caso isso foi necessário porque `+__setattr__+` intercepta todas as tentativas de definir um atributo em uma instância, mesmo na presença de um descritor dominante, tal como `Field`.footnote:[O sutil conceito de descritor dominante foi explicado na <<overriding_descriptor_sec>>.]
 <4> Caso contrário, o atributo `name` é desconhecido, e uma exceção será gerada por
@@ -420,31 +489,39 @@ Em _record_factory.py_ (no <<record_factory_ex>>), solucionei essa questão usan
 Entretanto, essa solução mais simples não é viável aqui, como explicado a seguir.
 
 [[why_cannot_config_slots_sec]]
-==== Por que pass:[__init_subclass__] não pode configurar pass:[__slots__]?
+==== Por que `+__init_subclass__+` não pode configurar `+__slots__+`?
 
-O((("&#x005F;&#x005F;slots&#x005F;&#x005F;"))) atributo `+__slots__+` só é efetivo se for um dos elementos do espaço de nomes da classe passado para `+type.__new__+`.
-Acrescentar `+__slots__+` a uma classe existente não tem qualquer efeito.
+O((("&#x005F;&#x005F;slots&#x005F;&#x005F;"))) atributo `+__slots__+` só tem efeito quando é um dos itens do espaço de nomes da classe passado para `+type.__new__+`.
+Acrescentar `+__slots__+` a uma classe existente não funciona.
 Python invoca `+__init_subclass__+` apenas após a classe ser criada—neste ponto, é tarde demais para configurar `+__slots__+`.
 Um decorador de classes também não pode configurar `+__slots__+`, pois ele é aplicado ainda mais tarde que `+__init_subclass__+`.
 Vamos explorar essas questões de sincronia na <<import_v_runtime_sec>>.
 
 Para configurar `+__slots__+` durante a execução, nosso próprio código precisa criar o espaço de nomes da classe a ser passado como último argumento de `+type.__new__+`.
-Para fazer isso, podemos escrever uma função fábrica de classes, como _record_factory.py_, ou optar pelo caminho bombástico, e implementar uma metaclasse.
+Para fazer isso, podemos escrever uma função fábrica de classes, como _record_factory.py_, ou optar pelo caminho radical, e implementar uma metaclasse.
 Veremos como configurar `+__slots__+` dinamicamente na <<metclass101_sec>>.
 
-Antes da https://fpy.li/pep487[PEP 487] (EN) simplificar a customização da criação de classes com
+Antes da https://fpy.li/pep487[_PEP 487_] simplificar a customização da criação de classes com
 `+__init_subclass__+`, no Python 3.7, uma funcionalidade similar só poderia ser implementada usando um decorador de classe.
 É o tópico de nossa próxima seção.((("", startref="initsub24")))((("", startref="CMinitsub24")))
 
 
-=== Melhorando classes com um decorador de classes
+=== Um decorador de classes
 
-Um((("class metaprogramming", "enhancing classes with class decorators", id="CMcdecorator24")))((("decorators and closures", "enhancing classes with class decorators", id="DACcdeco24"))) decorador de classes é um invocável que se comporta de forma similar a um decorador de funções:
-recebe uma classe decorada como argumento, e deve devolver um classe para substituir a classe decorada. Decoradores de classe frequentemente devolvem a própria classe decorada, após injetar nela mais métodos pela definição de atributos.
-Provavelmente, a razão mais comum para escolher um decorador de classes, em vez do mais simples
-`+__init_subclass__+`, é evitar interferência com outros recursos da classe, como herança e metaclasses.footnote:[Essa justificativa aparece no resumo da https://fpy.li/24-9[PEP 557–Data Classes (_Classes de Dados_)] (EN), para explicar porque ela foi implementada como um decorador de classes.]
+Um((("class metaprogramming", "enhancing classes with class decorators",
+id="CMcdecorator24")))((("decorators and closures", "enhancing classes with
+class decorators", id="DACcdeco24"))) decorador de classes tem comportamento
+semelhante a um decorador de funções: recebe uma classe decorada
+como argumento, e devolve uma classe para substituir a classe decorada.
+Decoradores de classe frequentemente devolvem a própria classe decorada, após
+injetar novos métodos nela. Talvez, a razão
+mais comum para escolher um decorador de classes, em vez do 
+`+__init_subclass__+`, é evitar interferência com outros mecanismos de classes,
+como herança e metaclasses. Esta justificativa aparece no resumo da
+https://fpy.li/24-9[_PEP 557–Data Classes_] para explicar
+porque ela foi implementada como um decorador de classes.
 
-Nessa seção vamos estudar _checkeddeco.py_, que oferece a mesma funcionalidade de _checkedlib.py_, mas usando um decorador de classe.
+Nesta seção vamos estudar _checkeddeco.py_, que oferece a mesma funcionalidade de _checkedlib.py_, mas usando um decorador de classe.
 Como sempre, começamos examinando um exemplo de uso, extraído dos doctests em _checkeddeco.py_ (no <<checkeddeco_demo1_ex>>).
 
 [[checkeddeco_demo1_ex]]
@@ -474,27 +551,43 @@ A lógica antes implementada em `+__init_subclass__+` agora é parte da função
 include::../code/24-class-metaprog/checked/decorator/checkeddeco.py[tags=CHECKED_DECORATOR]
 ----
 ====
-<1> Lembre-se que classes são instâncias de `type`. Essas dicas de tipo sugerem fortemente que este é um decorador de classes: ele recebe uma classe e devolve uma classe.
-<2> `+_fields+` agora é uma função de alto nível definida mais tarde no módulo (no <<checkeddeco_methods_ex>>).
-<3> Substituir cada atributo devolvido por `+_fields+` por uma instância do descritor `Field` é o que `+__init_subclass__+` fazia no <<ex_checked_class_top>>. Aqui há mais trabalho a ser feito...
-<4> Cria um método de classe a partir de `+_fields+`, e o adiciona à classe decorada. O comentário `type: ignore` é necessário, porque o Mypy reclama que `type` não tem um atributo `_fields`.
-<5> Funções ao nível do módulo, que se tornarão métodos de instância da classe decorada.
-<6> Adiciona cada um dos `instance_methods` a `cls`.
-<7> Devolve a `cls` decorada, cumprindo o contrato básico de um decorador de classes.
 
-[role="pagebreak-before less_space"]
+<1> Lembre-se que classes são instâncias de `type`. Estas dicas de tipo indicam
+que este é um decorador de classes: recebe uma classe e devolve
+uma classe.
+
+<2> `+_fields+` agora é uma função de alto nível definida mais tarde no módulo
+(<<checkeddeco_methods_ex>>).
+
+<3> Troca cada atributo devolvido por `+_fields+` por uma instância do
+descritor `Field` é o que `+__init_subclass__+` fazia no
+<<ex_checked_class_top>>. Aqui há mais trabalho a ser feito...
+
+<4> Cria um método de classe a partir de `+_fields+`, e o adiciona à classe
+decorada. O comentário `type: ignore` é necessário, porque o Mypy reclama que
+`type` não tem um atributo `_fields`.
+
+<5> Funções ao nível do módulo, que se tornarão métodos de instância da classe
+decorada.
+
+<6> Adiciona cada um dos `instance_methods` a `cls`.
+
+<7> Devolve a `cls` decorada, cumprindo o contrato básico de um decorador de
+classes.
+
 Todas as funções no primeiro nível de _checkeddeco.py_ estão prefixadas com um sublinhado, exceto o decorador `checked`.
-Essa convenção para a nomenclatura faz sentido por duas razões:
+Essa convenção de nomenclatura faz sentido por duas razões:
 
 * `checked` é parte da interface pública do módulo _checkeddeco.py_, as outras funções não.
-* As funções no <<checkeddeco_methods_ex>> serão injetadas na classe decorada, e o `+_+` inicial reduz as chances de um conflito de nomes com atributos e métodos definidos pelo usuário na classe decorada.
+* As funções no <<checkeddeco_methods_ex>> serão injetadas na classe decorada,
+e o `+_+` inicial reduz as chances de um conflito de nomes com atributos e métodos definidos pelo usuário na classe decorada.
 
 O restante de _checkeddeco.py_ está listado no <<checkeddeco_methods_ex>>.
 Aquelas funções no nível do módulo contém o mesmo código dos métodos correspondentes na classe `Checked` de _checkedlib.py_.
 Elas foram explicadas no <<ex_checked_class_top>> e no <<checked_class_bottom_ex>>.
 
-Observe que a função `+_fields+` exerce dois papéis em _checkeddeco.py_.
-Ela é usada como uma função regular na primeira linha do decorador `checked` e será também injetada como um método de classe na classe decorada.
+Observe que a função `+_fields+` tem dois papéis em _checkeddeco.py_.
+Ela é usada como uma função normal na primeira linha do decorador `checked` e será também injetada como um método de classe na classe decorada.
 
 [[checkeddeco_methods_ex]]
 .checkeddeco.py: os métodos que serão injetados na classe decorada
@@ -508,7 +601,7 @@ include::../code/24-class-metaprog/checked/decorator/checkeddeco.py[tags=CHECKED
 O módulo _checkeddeco.py_ implementa um decorador de classes simples mas usável.
 O `@dataclass` de Python faz mais.
 Ele suporta várias opções de configuração, acrescenta mais métodos à classe decorada, trata ou avisa sobre conflitos com métodos definidos pelo usuário na classe decorada, e até percorre o `+__mro__+` para coletar atributos definidos pelo usuário declarados em superclasses da classe decorada.
-O https://fpy.li/24-10[código-fonte] do pacote `dataclasses` no Python 3.9 tem mais de 1200 linhas.
+O https://fpy.li/24-10[«código-fonte»] do pacote `dataclasses` no Python 3.9 tem mais de 1200 linhas.
 
 Para fazer metaprogramação de classes, precisamos saber quando o interpretador Python avalia cada bloco de código durante a criação de uma classe.
 É disso que falaremos a seguir.((("", startref="DACcdeco24")))((("", startref="CMcdecorator24")))
@@ -516,7 +609,10 @@ Para fazer metaprogramação de classes, precisamos saber quando o interpretador
 [[import_v_runtime_sec]]
 === O que acontece quando: importação versus execução
 
-Programadores Python((("class metaprogramming", "import time versus runtime", id="CMimport24")))((("import time versus runtime"))) falam de "momento da importação" (_import time_) versus "momento de execução" (_run time_), mas estes termos não têm definições precisas e há uma zona cinzenta entre eles.
+Programadores Python((("class metaprogramming", "import time versus runtime",
+id="CMimport24")))((("import time versus runtime"))) falam de "momento da
+importação" (_import time_) versus "momento de execução" (_run time_), mas estes
+termos não têm definições precisas e há uma zona cinzenta entre eles.
 
 No momento da importação, o interpretador:
 
@@ -529,15 +625,27 @@ a análise e a compilação são omitidas, pois o _bytecode_ está pronto para s
 
 Apesar da análise e a compilação serem definitivamente atividades de "importação",
 outras coisas podem acontecer durante este processo,
-pois quase todos os comandos ou instruções no Python são executáveis,
+pois quase todas as instruções no Python são executáveis,
 no sentido de poderem potencialmente rodar código do usuário
 e modificar o estado do programa do usuário.
 
-Em especial, a instrução `import` não é meramente uma declaraçãofootnote:[Compare com a instrução `import` em Java, que é apenas uma declaração para informar o compilador que determinados pacotes são necessários.], pois na verdade ela executa todo o código no nível superior de um módulo, quando este é importado para o processo pela primeira vez. Importações posteriores do mesmo módulo usarão um _cache_, e então o único efeito será a vinculação dos objetos importados a nomes no módulo cliente. Aquele código no primeiro nível pode fazer qualquer coisa, incluindo ações típicas da "execução", como escrever em um arquivo de log ou conectar-se a um banco de dados.footnote:[Não estou dizendo que é uma boa ideia abrir uma conexão com um banco de dados só porque o módulo foi importado, apenas apontando que isso pode ser feito.]
-Por isso a fronteira entre a "importação" e a "execução" é difusa: `import` pode acionar todo tipo de comportamento de "execução", porque a instrução `import` e a função embutida
-`+__import__()+` podem ser usadas dentro de qualquer função regular.
+Em especial, a instrução `import` não é meramente uma
+declaraçãofootnote:[Compare com a instrução `import` em Java, que é apenas uma
+declaração para informar o compilador que determinados pacotes são
+necessários.], pois na verdade ela executa todo o código no nível superior de um
+módulo, quando este é importado para o processo pela primeira vez. Importações
+posteriores do mesmo módulo usarão um _cache_, e então o único efeito será a
+vinculação dos objetos importados a nomes no módulo cliente. O código
+executado em consequência de um `import` pode fazer qualquer coisa, incluindo ações típicas da "execução",
+como escrever em um arquivo de log ou conectar-se a um banco de
+dados.footnote:[Não estou dizendo que é uma boa ideia abrir uma conexão com um
+banco de dados só porque o módulo foi importado, apenas apontando que isso pode
+ser feito.] Por isso a fronteira entre a "importação" e a "execução" é difusa:
+`import` pode acionar todo tipo de comportamento de "execução", porque a
+instrução `import` e a função embutida `+__import__()+` podem ser usadas dentro
+de qualquer função normal.
 
-Tudo isso é bastante abstrato e sútil, então vamos realizar alguns experimentos para ver o que acontece, e quando.
+Tudo isso é bastante abstrato e sutil, então vamos realizar alguns experimentos para ver o que acontece, e quando.
 
 
 [[evaldemo_sec]]
@@ -548,7 +656,13 @@ Os módulos usados têm várias chamadas a `print`, para revelar o que acontece 
 
 [WARNING]
 ====
-Aplicar um decorador de classes e uma fábrica de classes com `+__init_subclass__+` juntos, em uma única classe, é provavelmente um sinal de excesso de engenharia ou de desespero. Essa combinação incomum é útil nesses experimentos, para mostrar a ordem temporal das mudanças que um decorador de classes e `+__init_subclass__+` podem aplicar a uma classe.
+
+Aplicar um decorador de classes e uma fábrica de classes com
+`+__init_subclass__+` juntos, em uma única classe, é provavelmente um sinal de
+excesso de engenharia ou de desespero. Esta combinação incomum é útil nestes
+experimentos, para comparar em que momento um decorador de
+classes e `+__init_subclass__+` alteram a classe.
+
 ====
 
 Vamos começar examinando _builderlib.py_, dividido em duas partes: o <<builderlib_top_ex>> e o <<builderlib_bottom_ex>>.
@@ -1303,7 +1417,7 @@ Divirta-se!
 
 [NOTE]
 ====
-O método especial `+__class_getitem__+` foi introduzido no Python 3.9 para suportar tipos genéricos, como parte da https://fpy.li/pep585[PEP 585—Type Hinting Generics In Standard Collections (_Dicas de Tipos Genéricas em Coleções Padrão_)] (EN).
+O método especial `+__class_getitem__+` foi introduzido no Python 3.9 para suportar tipos genéricos, como parte da https://fpy.li/pep585[PEP 585—Type Hinting Generics In Standard Collections (_Dicas de Tipos Genéricas em Coleções Padrão_)].
 Graças a `+__class_getitem__+`, os mantenedores de Python não precisaram escrever uma nova metaclasse para que os tipos embutidos implementassem `+__getitem__+`, de modo que fosse possível escrever dicas de tipo genéricas, tal como `list[int]`.
 Esse é um recurso restrito, mas representativo, de um caso de uso mais amplo para metaclasses: implementar operadores e outros métodos especiais para funcionarem a nível de classes, tal como fazer a própria classe iterável, como as subclasses de `Enum`.((("", startref="prepare24")))((("", startref="CMjprepare24")))
 ====
@@ -1387,19 +1501,21 @@ https://fpy.li/bt["4.13. Atributos especiais"] do capítulo "Tipos embutidos" na
 
 Na _Biblioteca Padrão de Python_, a https://fpy.li/bz[documentação do módulo `types`] trata de duas funções introduzidas no Python 3.3, que simplificam a metaprogramação de classes: `types.new_class` and `types.prepare_class`.
 
-Decoradores de classes foram formalizados na https://fpy.li/24-25[PEP 3129—Class Decorators (_Decoradores de Classes_)] (EN), escrita por Collin Winter, com a implementação de referência desenvolvida por Jack Diederich. A palestra "Class Decorators: Radically Simple"  (_Decoradores de Classes: Radicalmente Simples_. Aqui o https://fpy.li/24-26[video] (EN)), na PyCon 2009, também de Jack Diederich, é uma rápida introdução a esse recurso.
-Além de `@dataclass`, um exemplo interessante—e mais simples—de decorador de classes na biblioteca padrão de Python é https://fpy.li/7q[`functools.total_ordering`] (EN), que gera métodos especiais para comparação de objetos.
+Decoradores de classes foram formalizados na https://fpy.li/24-25[PEP 3129—Class Decorators (_Decoradores de Classes_)], escrita por Collin Winter, com a implementação de referência desenvolvida por Jack Diederich. A palestra "Class Decorators: Radically Simple"  (_Decoradores de Classes: Radicalmente Simples_. Aqui o https://fpy.li/24-26[video]), na PyCon 2009, também de Jack Diederich, é uma rápida introdução a esse recurso.
+Além de `@dataclass`, um exemplo interessante—e mais simples—de decorador de classes na biblioteca padrão de Python é https://fpy.li/7q[`functools.total_ordering`], que gera métodos especiais para comparação de objetos.
 
 Para metaclasses, a principal referência na documentação de Python é a
 https://fpy.li/pep3115[PEP 3115—Metaclasses in Python 3000 (_Metaclasses no Python 3000_)],
 onde o método especial `+__prepare__+` foi introduzido.
 
-O pass:[<a href="https://fpy.li/pynut3" class="orm:hideurl"><em>Python in a Nutshell</em></a>], 3ª ed., de Alex Martelli, Anna Ravenscroft, e Steve Holden, é uma referência, mas foi escrito antes da https://fpy.li/pep487[PEP 487—Simpler customization of class creation (_PEP 487—Uma customização mais simples da criação de classes_)] ser publicada. O principal exemplo de metaclasse no livro—`MetaBunch`—ainda é válido, pois não pode ser escrito com mecanismos mais simples.
+O pass:[<a href="https://fpy.li/pynut3" class="orm:hideurl"><em>Python in a Nutshell</em></a>], 3ª ed., de Alex Martelli, Anna Ravenscroft, e Steve Holden, é uma referência, mas foi escrito antes da
+https://fpy.li/pep487[_PEP 487_] simplificar o processo de customizar classes na sua criação.
+O principal exemplo de metaclasse no livro—`MetaBunch`—ainda é válido, pois não pode ser escrito com mecanismos mais simples.
 O pass:[<a href="https://fpy.li/effectpy" class="orm:hideurl"><em>Effective Python</em></a>], 2ª ed. (Addison-Wesley), de Brett Slatkin, traz vários exemplos atualizados de técnicas de criação de classes, incluindo metaclasses.
 
 [role="pagebreak-before less_space"]
 Para aprender sobre as origens da metaprogramação de classes no Python, recomento o artigo de Guido van Rossum de 2003,
-https://fpy.li/24-28["Unifying types and classes in Python 2.2" (_Unificando tipos e classes no Python 2.2_)] (EN).
+https://fpy.li/24-28["Unifying types and classes in Python 2.2" (_Unificando tipos e classes no Python 2.2_)].
 O texto se aplica também ao Python moderno, pois cobre o quê era então chamado de "novo estilo" de  semântica de classes—a semântica default no Python 3—incluindo descritores e metaclasses.
 Uma das referências citadas por Guido é
 _Putting Metaclasses to Work: a New Dimension in Object-Oriented Programming_,
@@ -1421,15 +1537,15 @@ permitindo a desenvolvedores introduzir novas estruturas na linguagem sem modifi
 Como a sobrecarga de operadores, macros sintáticas podem ser mal usadas.
 Mas, desde que a comunidade entenda e gerencie as desvantagens, elas suportam abstrações poderosas e amigáveis, como as DSLs (Domain-Specific Languages—_Linguagens de Domínio Específico_).
 Em setembro de 2020, Marc Shannon, um dos mantenedores de Python, publicou a
-https://fpy.li/pep638[PEP 638—Syntactic Macros (_Macros Sintáticas_)] (EN), defendendo exatamente isso.
+https://fpy.li/pep638[PEP 638—Syntactic Macros (_Macros Sintáticas_)], defendendo exatamente isso.
 Um ano após sua publicação inicial (quando escrevo essas linhas), a PEP 638 ainda era um rascunho e não havia discussões contínuas sobre ela.
 Claramente não é uma prioridade muito alta entre os mantenedores de Python.
 Eu gostaria de ver a PEP 638 sendo melhor discutida e, por fim, aprovada.
 Macros sintáticas permitiriam à comunidade Python experimentar com novos recursos controversos,
-tal como o "operador morsa" (_operador walrus_) (https://fpy.li/pep572[PEP 572] (EN)),
-casamento de padrões (https://fpy.li/pep634[PEP 634] (EN)) e regras alternativas para avaliação de dicas de tipo
-(PEPs https://fpy.li/pep563[563] (EN) e
-https://fpy.li/pep649[649] (EN)),
+tal como o "operador morsa" (_operador walrus_) (https://fpy.li/pep572[PEP 572]),
+casamento de padrões (https://fpy.li/pep634[PEP 634]) e regras alternativas para avaliação de dicas de tipo
+(PEPs https://fpy.li/pep563[563] e
+https://fpy.li/pep649[649]),
 antes que se fizessem modificações permanentes no núcleo da linguagem.
 Nesse meio tempo, podemos sentir o gosto das macros sintáticas com o pacote
 https://fpy.li/24-29[MacroPy].
@@ -1447,7 +1563,7 @@ ____
 Há duas escolas de pensamento sobre o ensino de ciência da computação. Podemos representar as duas visões de uma forma caricatual, assim:
 
 . *A visão conservadora*: Programas de computador se tornaram muito grandes e complexos para serem apreendidos pela mente humana. Portanto, a tarefa da educação na ciência da computação é ensinar os estudantes como se disciplinarem, de tal forma que 500 programadores medíocres possam se juntar e produzir um programa que atende suas especificações.
-. *A visão radical*: Programas de computador se tornaram muito grandes e complexos para serem apreendidos pela mente humana. Portanto, a tarefa da educação na ciência da computação é ensinar os estudantes como expandir suas mentes até que os programas caibam ali, aprendendo a pensar com um vocabulário de ideias maiores, mais poderosas e mais flexíveis que aquelas óbvias. Cada unidade de pensamento programático deve gerar uma grande recompensa para as capacidades do programa.footnote:[Brian Harvey e Matthew Wright, _Simply Scheme_ (MIT Press, 1999), p. xvii. O texto completo está disponível em https://fpy.li/24-30[Berkeley.edu] (EN).]
+. *A visão radical*: Programas de computador se tornaram muito grandes e complexos para serem apreendidos pela mente humana. Portanto, a tarefa da educação na ciência da computação é ensinar os estudantes como expandir suas mentes até que os programas caibam ali, aprendendo a pensar com um vocabulário de ideias maiores, mais poderosas e mais flexíveis que aquelas óbvias. Cada unidade de pensamento programático deve gerar uma grande recompensa para as capacidades do programa.footnote:[Brian Harvey e Matthew Wright, _Simply Scheme_ (MIT Press, 1999), p. xvii. O texto completo está disponível em https://fpy.li/24-30[Berkeley.edu].]
 ____
 
 As descrições exageradas de Harvey e Wright versam sobre o ensino de ciência da computação,

@@ -29,12 +29,11 @@ The factory also accepts a list or tuple of identifiers:
 
 
 # tag::RECORD_FACTORY[]
-from typing import Union, Any
 from collections.abc import Iterable, Iterator
 
-FieldNames = Union[str, Iterable[str]]  # <1>
+FieldNames = str | Iterable[str]  # <1>
 
-def record_factory(cls_name: str, field_names: FieldNames) -> type[tuple]:  # <2>
+def record_factory(cls_name: str, field_names: FieldNames) -> type:  # <2>
 
     slots = parse_identifiers(field_names)  # <3>
 
@@ -44,7 +43,7 @@ def record_factory(cls_name: str, field_names: FieldNames) -> type[tuple]:  # <2
         for name, value in attrs.items():
             setattr(self, name, value)
 
-    def __iter__(self) -> Iterator[Any]:  # <5>
+    def __iter__(self) -> Iterator:  # <5>
         for name in self.__slots__:
             yield getattr(self, name)
 
