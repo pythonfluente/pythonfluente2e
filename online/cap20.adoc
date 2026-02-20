@@ -6,7 +6,7 @@
 [quote, Michele Simionato, profundo pensador de Python.]
 ____
 Quem fala mal de threads são tipicamente programadoras de sistemas,
-que tem em mente casos de uso que a programadora de aplicações típica nunca encontrará na vida.[...]
+que têm em mente casos de uso que a programadora de aplicações típica nunca encontrará na vida.[...]
 Em 99% dos casos de uso que a programadora de aplicações poderá encontrar,
 o modelo simples de disparar um monte de threads independentes
 e coletar os resultados em uma fila é tudo que se precisa
@@ -124,7 +124,7 @@ RU IN ID DE BR VN PK MX US IR ET EG NG BD FR CN JP PH CD TR  <5>
 
 <4> Já _flags_asyncio.py_, obteve um tempo médio de 1,35s.
 
-<5> Observe a ordem do códigos de país: nos scripts concorrentes, as imagens foram baixadas em um ordem diferente a cada vez.
+<5> Note a ordem dos códigos dos países: nos scripts concorrentes, as imagens foram baixadas em ordem diferente a cada vez.
 
 As versões concorrentes são mais de cinco vezes mais rápidas que o script sequencial,
 mas entre as versões concorrentes não há diferença significativa de desempenho. 
@@ -335,8 +335,8 @@ Ele utiliza no máximo 32 núcleos da CPU para tarefas de processamento que
 liberam a GIL. E ele evita usar implicitamente recursos demais em
 máquinas com muitos núcleos.
 
-`ThreadPoolExecutor` agora também reutiliza threads de trabalho inativas antes
-iniciar [novas] threads de trabalho de `max_workers`.
+`ThreadPoolExecutor` agora também reutiliza threads de inativas antes
+de iniciar a quantidade de threads de trabalho definida em `max_workers`.
 
 ____
 
@@ -345,8 +345,9 @@ Concluindo: o valor default calculado de `max_workers` é razoável, e
 Entender a lógica por trás de `max_workers` pode ajudar a decidir quando e como
 definir um valor diferente do default em seu código.
 
-A biblioteca se chama `concurrency.futures`, mas não há qualquer _future_ à vista no <<flags_threadpool_ex>>,
-então você pode estar se perguntando eles estão.
+A biblioteca se chama `concurrency.futures`, mas não há qualquer _future_
+à vista no <<flags_threadpool_ex>>,
+então você pode estar se perguntando onde eles estão.
 A próxima seção explica.((("", startref="confut20")))((("", startref="IOfutures20")))
 
 [[where_futures_sec]]
@@ -363,7 +364,7 @@ mostrando-os em ação.
 Desde o Python 3.4, há duas classes chamadas `Future` na biblioteca padrão:
 `concurrent.futures.Future` e `asyncio.Future`.
 Elas têm o mesmo propósito:
-uma instância de qualquer das classes `Future` representa um processamento adiado,
+uma instância de qualquer uma das classes `Future` representa um processamento adiado,
 que pode ou não ter sido completado.
 Isso é algo similar à classe `Deferred` no Twisted,
 a classe `Future` no Tornado, e objetos `Promise` em JavaScript moderno.
@@ -377,7 +378,7 @@ seja ele `concurrent.futures` ou `asyncio`.
 O motivo é que uma instância de `Future` representa algo que será executado em algum momento,
 portanto precisa ser agendado para rodar, e quem agenda tarefas é o framework.
 
-Especificamente, instâncias `concurrent.futures.Future` são criadas como resultado de submeter um objeto invocável (_callable_)
+Especificamente, instâncias de `concurrent.futures.Future` são criadas como resultado de submeter um objeto invocável (_callable_)
 para execução a uma subclasse de `concurrent.futures.Executor`.
 Por exemplo, o método `Executor.submit()` recebe um invocável, agenda sua execução, e devolve um `Future`.
 
@@ -385,11 +386,11 @@ O código da aplicação não deve mudar o estado de um _future_:
 o framework de concorrência muda o estado de um _future_ quando
 o processamento que ele representa termina, e não controlamos quando isso acontece.
 
-Os dois tipos de `Future` tem um método `.done()` não-bloqueante, que devolve um `bool` informando se o invocável encapsulado por aquele `future` foi ou não executado.
+Os dois tipos de `Future` têm um método `.done()` não-bloqueante, que devolve um `bool` informando se o invocável encapsulado por aquele `future` foi ou não executado.
 Entretanto, em vez de perguntar repetidamente se um _future_ terminou, o código cliente em geral pede para ser notificado.
-Por isso as duas classes `Future` tem um método `.add_done_callback()`:
+Por isso as duas classes `Future` têm um método `.add_done_callback()`:
 você passa a ele uma função que será invocada com o _future_ como único argumento, quando o _future_ tiver terminado.
-Observe que aquela função de callback será invocada na mesma thread ou processo de trabalho que rodou a função encapsulada no _future_.
+Aquela função de callback será invocada na mesma thread ou processo de trabalho que rodou a função encapsulada no _future_.
 
 Há também um método `.result()`, que funciona igual nas duas classes quando a execução do _future_ termina:
 ele devolve o resultado do invocável, ou relança qualquer exceção que possa ter aparecido quando o invocável foi executado.
@@ -416,7 +417,7 @@ Já que estamos aqui, vamos acrescentar algumas chamadas a `print` para mostrar 
 O <<flags_threadpool_futures_ex>> mostra o código da nova função `download_many`.
 O código de `download_many` aumentou de 5 para 17 linhas,
 mas agora podemos inspecionar os misteriosos _futures_.
-As outras funções são idênticas as do <<flags_threadpool_ex>>.
+As outras funções são idênticas às do <<flags_threadpool_ex>>.
 
 [[flags_threadpool_futures_ex]]
 .flags_threadpool_futures.py: substitui `executor.map` por `executor.submit` e `futures.as_completed` na função `download_many`
@@ -437,7 +438,7 @@ include::../code/20-executors/getflags/flags_threadpool_futures.py[tags=FLAGS_TH
 <8> Recupera o resultado deste `future`.
 <9> Exibe o `future` e seu resultado.
 
-Observe que a chamada a `future.result()` nunca bloqueará a thread neste
+A chamada a `future.result()` nunca bloqueará a thread neste
 exemplo, pois `future` está vindo de `as_completed`. O
 <<flags_threadpool_futures_run>> mostra a saída de uma execução do
 <<flags_threadpool_futures_ex>>.
@@ -469,10 +470,10 @@ US <Future at 0x101807128 state=finished returned str> result: 'US'
 
 [TIP]
 ====
-Recomendo experimentar com _flags_threadpool_futures.py_.
-Se você o rodar várias vezes, vai ver a ordem dos resultados variar.
-Aumentar `max_workers` para `5` vai aumentar a variação na ordem dos resultados.
-Diminuindo aquele valor para `1` fará o script rodar de forma sequencial, e a ordem dos resultados será sempre a ordem das chamadas a `submit`.
+Recomendo brincar com _flags_threadpool_futures.py_.
+Se você o rodar várias vezes, verá a ordem dos resultados variar.
+Aumentar `max_workers` para `5` aumentará a variação na ordem dos resultados.
+Diminuir aquele valor para `1` fará o script rodar sequencialmente, e a ordem dos resultados será sempre a ordem das chamadas a `submit`.
 ====
 
 Vimos duas variantes do script de download usando `concurrent.futures`:
@@ -555,7 +556,7 @@ usados se um argumento não for passado na linha de comando, atribuímos `None` 
 <4> Aqui criei o `ProcessPoolExecutor` antes do bloco `with` em `⑦`, para poder
 mostrar o número real de processos na próxima linha.
 
-<5> `_max_workers_` é um atributo de instância não-documentado de um
+<5> `_max_workers_` é um atributo de instância não documentado de um
 `ProcessPoolExecutor`. Decidi usá-lo para mostrar o número de processos de
 trabalho criados quando a variável `workers` é `None`. O _Mypy_
 reclama quando eu acesso esse atributo, então coloquei o comentário `type:
@@ -570,12 +571,12 @@ a explicação após esse exemplo.
 <8> A chamada a `executor.map` devolve as instâncias de `PrimeResult` retornadas
 por `check` na mesma ordem dos argumentos `numbers`.
 
-Se você rodar o <<proc_pool_py>>, verá os resultados aparecente em ordem rigorosamente descendente, como mostrado no <<proc_pool_py_output>>.
+Se você rodar o <<proc_pool_py>>, verá os resultados aparecendo em ordem rigorosamente descendente, como mostrado no <<proc_pool_py_output>>.
 Por outro lado, a ordem da saída de _procs.py_ (da <<proc_based_solution>>) é determinada pela dificuldade em checar se cada número é ou não primo.
 Por exemplo, _procs.py_ mostra o resultado para 7777777777777777 próximo ao topo, pois ele tem 7 como divisor, então `is_prime` rapidamente determina que ele não é primo.
 
-Já 7777777536340681 é 88191709^2^, então `is_prime` vai demorar mais para determinar que é um número composto,
-e ainda mais para descobrir que 7777777777777753 é primo. Por isso esses números aparecem próximo do final da saída do _procs.py_ original.
+O número 7777777536340681 é 88191709^2^. Como estes fatores grandes, `is_prime` vai demorar mais para determinar que é um número composto,
+e ainda mais para descobrir que 7777777777777753 é primo. Por isso esses números aparecem perto do final da saída do _procs.py_ original.
 
 Ao rodar _proc_pool.py_, podemos observar não apenas a ordem descendente dos resultados, mas também que o programa parece emperrar após mostrar o resultado de 9999999999999999.
 
@@ -613,7 +614,7 @@ Total time: 9.65s
 <2> Esta linha demora mais de 9,5s para aparecer.
 <3> As linhas restantes aparecem quase imediatamente.
 
-Agora vamos entender comportamento estranho de _proc_pool.py_:
+Agora vamos entender o comportamento estranho de _proc_pool.py_:
 
 * Como mencionado antes, `executor.map(check, numbers)` devolve o resultado na mesma ordem em que `numbers` é submetido.
 * Por default, _proc_pool.py_ usa um número de processos de trabalho igual ao número de CPUs—isso é o que `ProcessPoolExecutor` faz quando `max_workers` é `None`. Neste laptop foram 12 processos.
@@ -624,10 +625,15 @@ Agora vamos entender comportamento estranho de _proc_pool.py_:
 
 [NOTE]
 ====
-Apesar do progresso de _proc_pool.py_ não ser tão visível quanto o de _procs.py_, o tempo total de execução, para o mesmo número de processo de trabalho e de núcleos de CPU, é praticamente idêntico, como retratado em  <<procs_x_time_fig>>.
+
+Apesar do progresso de _proc_pool.py_ não ser tão visível quanto o de
+_procs.py_ na <<code_for_multicore_prime_sec>>, o tempo total de execução é praticamente igual
+ao retratado na <<procs_x_time_fig>> do <<ch_concurrency_models>>, 
+para as mesmas quantidades de processos de trabalho e núcleos de CPU.
+
 ====
 
-Entender como programas concorrentes se comportam não é um simples,
+Entender como programas concorrentes se comportam não é fácil,
 então aqui está um segundo experimento que pode ajudar a visualizar o
 funcionamento de `Executor.map`.((("", startref="CFlaunch20")))((("",
 startref="CElaunch20")))((("", startref="Plaunch20")))
@@ -654,7 +660,7 @@ include::../code/20-executors/demo_executor_map.py[tags=EXECUTOR_MAP]
 argumentos recebidos.
 
 <2> `loiter` significa "vadiar"; esta função não faz nada além mostrar uma
-mensagem quanto inicia, cochilar por `n` segundos, e mostrar uma mensagem quando
+mensagem quando inicia, cochilar por `n` segundos, e mostrar uma mensagem quando
 termina; usei tabulações para indentar as mensagens de acordo com o valor de `n` 
 
 <3> `loiter` devolve `n + 10`, para que o valor devolvido seja diferente do
@@ -750,9 +756,9 @@ ocorre com `loiter(3)`.
 <10> Há um intervalo de 2s até `loiter(4)` terminar, porque ela começou em
 15:56:51 e cochilou por 4s.
 
-A função `Executor.map` é fácil de usar, mas muitas vezes é preferível obter os
-resultados assim que estejam prontos, independente da ordem em que foram
-submetidos. Para fazer isso, precisamos de uma combinação do método
+A função `Executor.map` é fácil de usar, mas muitas vezes é preferível obter o resultado
+de cada tarefa assim que esteja pronta, e não necessariamente na ordem em que foram submetidas.
+Para isso, precisamos de uma combinação do método
 `Executor.submit` e da função `futures.as_completed` como vimos no
 <<flags_threadpool_futures_ex>>. Vamos voltar a essa técnica na
 <<using_futures_as_completed_sec>>.
@@ -765,7 +771,7 @@ A combinação de `Executor.submit` e `futures.as_completed` é mais flexível q
 diferentes. Já `executor.map` é projetado para rodar o mesmo invocável com
 argumentos diferentes. Além disso, o conjunto de _futures_ que você passa para
 `futures.as_completed` pode vir de mais de um executor—talvez alguns tenham sido
-criados por uma instância de `ThreadPoolExecutor` enquanto outros vem de um
+criados por uma instância de `ThreadPoolExecutor` enquanto outros vêm de um
 `ProcessPoolExecutor`.
 
 ====
@@ -783,8 +789,8 @@ Como((("concurrent executors", "downloads with progress display and error handli
 id="CEdown20")))((("network I/O", "downloads with progress display and error handling",
 id="IOprog20")))((("progress displays",
 id="progdisp20")))((("error handling, in network I/O", secondary-sortas="network I/O",
-id="EHnetwork20"))) mencionado, os scripts em <<ex_web_downloads_sec>> não
-tem tratamento de erros, para torná-los mais fáceis de ler e para comparar a
+id="EHnetwork20"))) mencionado, os scripts na <<ex_web_downloads_sec>> não
+têm tratamento de erros, para torná-los mais fáceis de ler e para comparar a
 estrutura das três abordagens: sequencial, com threads e assíncrona.
 
 Para testar o tratamento de uma variedade de condições de erro, criei os exemplos `flags2`:
@@ -982,7 +988,7 @@ Vimos a interface de usuário dos exemplos _flags2_. Agora veremos como eles est
 
 A estratégia comum nos três exemplos para lidar com erros HTTP é que
 erros 404 (not found) são tratados pela função encarregada de baixar um único
-arquivo (`download_one`). Outra exceções são tratadas pela
+arquivo (`download_one`). Outras exceções são tratadas pela
 função `download_many` ou pela corrotina `supervisor`—no exemplo com `asyncio`.
 
 Vamos novamente começar estudando o código sequencial, que é mais fácil de
@@ -1147,7 +1153,7 @@ Então discutimos o uso de múltiplos processos com a classe
 núcleos de CPU, simplificando o checador de números primos multi-núcleo que
 vimos antes no <<ch_concurrency_models>>.
 
-Na seção seguinte estudamos como funciona a classe `ThreadPoolExecutor`,
+Na seção seguinte, estudamos como funciona a classe `ThreadPoolExecutor`,
 com um exemplo didático, iniciando tarefas que não faziam nada por alguns
 segundos, exceto exibir seu status e a hora naquele instante.
 
@@ -1169,7 +1175,7 @@ PyCon Australia 2010. A palestra de Quinlan não tinha slides; ele mostra o que 
 biblioteca faz digitando código diretamente no console de Python. Como exemplo
 motivador, a apresentação inclui um pequeno vídeo com o cartunista/programador
 do XKCD, Randall Munroe, executando um ataque de negação de serviço (DoS)
-não-intencional contra o Google Maps, para criar um mapa colorido de tempos de
+acidental contra o Google Maps, para criar um mapa colorido de tempos de
 locomoção pela cidade. A introdução formal à biblioteca é a
 https://fpy.li/pep3148[PEP 3148—`futures`: execute computations
 asynchronously] (executar processamentos assíncronos). Na PEP,
@@ -1198,7 +1204,7 @@ Concordo((("concurrent executors", "Soapbox discussion")))((("Soapbox sidebars",
 "thread avoidance")))((("threads", "thread avoidance")))
 com as citações aparentemente contraditórias de David Beazley e Michele Simionato no início desse capítulo.
 
-Assisti um curso de graduação sobre concorrência no IME/USP.
+Assisti a um curso de graduação sobre concorrência no IME/USP.
 Tudo o que vimos foi programação de https://fpy.li/an[«threads POSIX»].
 O que aprendi: não quero gerenciar threads e travas na unha,
 pela mesma razão que não quero gerenciar a alocação e desalocação de memória na unha.
@@ -1211,7 +1217,7 @@ travas, `malloc` e `free`—veja https://fpy.li/ap[_Alocação dinâmica de mem�
 Por isso acho o pacote `concurrent.futures` interessante: ele trata threads,
 processos, e filas como infraestrutura, algo a seu serviço, não algo que você
 precisa controlar diretamente. Claro, ele foi projetado pensando em tarefas
-simples, os assim chamado problemas embaraçosamente paralelos—ao contrário de
+simples, os assim chamados problemas "embaraçosamente paralelos"—ao contrário de
 sistemas operacionais ou servidores de banco de dados, como aponta Simionato
 na epígrafe deste capítulo.
 
@@ -1223,7 +1229,7 @@ livro de Paul Butcher, https://fpy.li/20-24[_Seven Concurrency Models in Seven
 Weeks_] (Sete Modelos de Concorrência em Sete Semanas). Go, Elixir, e
 Clojure estão entre elas. Erlang—a linguagem de implementação do Elixir—é um
 exemplo claro de uma linguagem projetada desde o início pensando em
-concorrência. Erlang não me empolga só por que acho sua sintaxe feia.
+concorrência. Erlang não me empolga só porque acho sua sintaxe deselegante.
 Python me acostumou mal.
 
 José Valim, antigo mantenedor do _Ruby on Rails_, projetou o
@@ -1234,8 +1240,8 @@ permitem criar DSLs—sigla de _Domain-Specific Language_
 Mas a proliferação de sub-linguagens pode levar a
 bases de código incompatíveis e à fragmentação da comunidade. O Lisp se afogou
 em um mar de macros, cada empresa e grupo de desenvolvedores Lisp usando seu
-próprio dialeto arcano. A padronização em torno do Common Lisp resultou em uma
-linguagem inchada quando muitas macros foram incoporadas ao padrão.
+próprio dialeto arcano. A padronização que criou o Common Lisp resultou em uma
+linguagem inchada quando muitas macros foram incorporadas ao padrão.
 Espero que José Valim inspire a comunidade do Elixir a evitar
 um destino semelhante. Até agora, o cenário parece bom. A biblioteca
 de banco de dados https://fpy.li/20-25[_Ecto_] é muito agradável de usar:
