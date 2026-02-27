@@ -141,7 +141,7 @@ include::../code/22-dyn-attr-prop/oscon/explore0.py[tags=EXPLORE0_DEMO]
 <8> Tentar ler um atributo inexistente gera uma exceção `KeyError`, em vez da `AttributeError` usual.
 
 A pedra angular da classe `FrozenJSON` é o método `+__getattr__+`, que já usamos
-no exemplo `Vector` da <<vector_dynamic_attrs_sec>>, para recuperar componentes
+no exemplo `Vector` da https://fpy.li/cp[«Seção 12.6»] (vol.2), para recuperar componentes
 de `Vector` por letra: `v.x`, `v.y`, `v.z`, etc. É importante lembrar que o
 método especial `+__getattr__+` só é invocado pelo interpretador quando o
 processo habitual não consegue recuperar um atributo (isto é, quando o atributo
@@ -190,7 +190,7 @@ demanda, facilitando a exploração interativa dos dados.
 <6> Este é um construtor alternativo, um uso comum do decorador `@classmethod`.
 
 <7> Se `obj` é um mapeamento, cria um `FrozenJSON` com ele. Este é um exemplo de
-tipagem ganso—veja a <<goose_typing_sec>> caso precise rever este conceito.
+tipagem ganso—veja a https://fpy.li/cq[«Seção 13.5»] (vol.2) caso precise rever este conceito.
 
 <8> Se for uma `MutableSequence`, criamos uma `list`, passando recursivamente
 cada item em `obj` para `.build()`.
@@ -199,7 +199,7 @@ cada item em `obj` para `.build()`.
 
 Cada instância de `FrozenJSON` contém um atributo de instância privado
 `+__data+`, armazenado sob o nome `++_FrozenJSON__data++`, como explicado na
-<<private_protected_sec>>.
+https://fpy.li/cr[«Seção 11.10»] (vol.2).
 
 Tentativas de recuperar atributos por outros nomes vão disparar `+__getattr__+`.
 Primeiro, esse método verá se o `dict` vinculado a `+self.__data+` tem um
@@ -496,7 +496,7 @@ e sufixos).
 
 O método `+Record.__init__+` ilustra um velho truque. Lembre-se de que o
 `+__dict__+` de um objeto é onde são guardados seus atributos—a menos que
-`+__slots__+` seja declarado na classe, como vimos na <<slots_sec>>. Daí,
+`+__slots__+` seja declarado na classe, como vimos na https://fpy.li/28[«Seção 11.11»] (vol.2). Daí,
 atualizar o `+__dict__+` de uma instância é uma maneira fácil de criar um
 punhado de atributos naquela instância.footnote:[`Bunch` ou "punhado" é o nome
 da classe usada por Alex Martelli para compartilhar essa dica em uma receita de
@@ -755,7 +755,7 @@ include::../code/22-dyn-attr-prop/oscon/schedule_v4_hasattr.py[tags=SCHEDULE4_HA
 
 O _caching_ caseiro no <<ex_schedule_v4_hasattr>> é bastante direto, mas criar atributos após a inicialização da instância frustra a otimização da
 https://fpy.li/pep412[PEP 412—Key-Sharing Dictionary]
-(Dicionário com chaves compartilhadas), como explicado na <<conseq_dict_internal_sec>>.
+(Dicionário com chaves compartilhadas), como explicado na https://fpy.li/82[«Seção 3.9»] (vol.1).
 Dependendo do tamanho da massa de dados, a diferença de uso de memória pode ser importante.
 
 Uma solução manual similar, compatível com a otimização de
@@ -1060,7 +1060,7 @@ A presença de uma propriedade em uma classe afeta como os atributos nas instân
 Propriedades são sempre atributos de uma classe,
 mas elas controlam o acesso a atributos nas instâncias da classe.
 
-Na <<overriding_class_attributes_sec>>,
+Na https://fpy.li/cs[«Seção 11.12»] (vol.2),
 vimos que quando uma instância e sua classe têm um atributo de dados com o mesmo nome,
 o atributo de instância sobrescreve, ou oculta,
 o atributo da classe—ao menos quando lido através daquela instância.
@@ -1385,7 +1385,7 @@ O comportamento de muitas das funções e dos métodos especiais elencados nas p
 `+__slots__+`:: Um atributo que pode ser definido em uma classe para economizar memória.
 `+__slots__+` é uma `tuple` de strings, nomeando os atributos permitidosfootnote:[Alex Martelli assinala que, apesar de `+__slots__+` poder ser definido como uma `list`, é melhor ser explícito e sempre usar uma `tuple`, pois modificar a lista em `+__slots__+` após o processamento do corpo da classe não tem qualquer efeito. Assim, seria equivocado usar uma sequência mutável ali.]. Se o
 nome `+'__dict__'+` não estiver em `+__slots__+`, as instâncias daquela classe então não terão um `+__dict__+` próprio, e apenas os atributos listados em `+__slots__+` serão permitidos naquelas instâncias.
-Revise a <<slots_sec>> para recordar esse tópico.
+Revise a https://fpy.li/28[«Seção 11.11»] (vol.2) para recordar esse tópico.
 
 [[bif_attribute_handling]]
 ==== Funções embutidas para tratamento de atributos
@@ -1601,11 +1601,34 @@ um_objeto.contagem += 1
 um_objeto.set_contagem(um_objeto.get_contagem() + 1)
 ----
 
-Algumas vezes, ao projetar uma API, me pergunto se todo método que não recebe argumentos (além de `self`) é uma função pura (isto é, devolve um valor mas não tem efeitos colaterais) não deveria ser substituído por uma propriedade somente de leitura. Neste capítulo, o método `LineItem.subtotal` (no <<lineitem_class_v2prop_class>>) seria um bom candidato a se tornar uma propriedade somente para leitura. Claro, isso exclui métodos projetados para modificar o objeto, tal como `my_list.clear()`. Seria uma péssima ideia transformar isso em uma propriedade, de tal forma que o mero acesso a `my_list.clear` apagaria o conteúdo da lista!
+Algumas vezes, ao projetar uma API, me pergunto se todo método que não recebe
+argumentos (além de `self`) é uma função pura (isto é, devolve um valor mas não
+tem efeitos colaterais) não deveria ser substituído por uma propriedade somente
+de leitura. Neste capítulo, o método `LineItem.subtotal` (no
+<<lineitem_class_v2prop_class>>) seria um bom candidato a se tornar uma
+propriedade somente para leitura. Claro, isso exclui métodos projetados para
+modificar o objeto, tal como `my_list.clear()`. Seria uma péssima ideia
+transformar isso em uma propriedade, de tal forma que o mero acesso a
+`my_list.clear` apagaria o conteúdo da lista!
 
-Na biblioteca GPIO https://fpy.li/22-29[_Pingo_] (mencionada na <<missing_method_sec>>), da qual sou co-autor, grande parte da API do usuário está baseada em propriedades. Por exemplo, para ler o valor atual de uma porta analógica, o usuário escreve `pin.value`, e definir o modo de uma porta digital é escrito `pin.mode = OUT`. Por trás da cortina, ler o valor de uma porta analógica ou definir o modo de uma porta digital pode implicar em bastante código, dependendo do driver específico da placa. Decidimos usar propriedades no Pingo porque queríamos que a API fosse confortável de usar até mesmo em ambientes interativos como um Jupyter Notebook, e achamos que `pin.mode = OUT` é mais fácil para os olhos e para os dedos que `pin.set_mode(OUT)`.
+Na biblioteca GPIO https://fpy.li/22-29[_Pingo_]—mencionada na
+https://fpy.li/ct[«Seção 3.5.2»] (vol.1)—grande
+parte da API do usuário está baseada em propriedades. Por exemplo, para ler o
+valor atual de uma porta analógica, o usuário escreve `pin.value`, e definir o
+modo de uma porta digital é escrito `pin.mode = OUT`. Por trás da cortina, ler o
+valor de uma porta analógica ou definir o modo de uma porta digital pode
+implicar em bastante código, dependendo do driver específico da placa. Decidimos
+usar propriedades no Pingo porque queríamos que a API fosse confortável de usar
+até mesmo em ambientes interativos como um Jupyter Notebook, e achamos que
+`pin.mode = OUT` é mais fácil para os olhos e para os dedos que
+`pin.set_mode(OUT)`.
 
-Apesar de achar a solução de Smalltalk e de Ruby mais limpa, acho que a abordagem de Python faz mais sentido que a de Java. Podemos começar simples, programando elementos de dados como atributos públicos, pois sabemos que eles sempre podem ser encapsulados por propriedades (ou descritores, dos quais falaremos no próximo capítulo).((("", startref="meyerua22")))((("", startref="uaccess22")))((("", startref="Suaccess22")))
+Apesar de achar a solução de Smalltalk e de Ruby mais limpa, acho que a
+abordagem de Python faz mais sentido que a de Java. Podemos começar simples,
+programando elementos de dados como atributos públicos, pois sabemos que eles
+sempre podem ser encapsulados por propriedades (ou descritores, dos quais
+falaremos no próximo capítulo).((("", startref="meyerua22")))((("",
+startref="uaccess22")))((("", startref="Suaccess22")))
 
 **`+__new__+` é melhor que `new`**
 

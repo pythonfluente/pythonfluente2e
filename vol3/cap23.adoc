@@ -540,8 +540,16 @@ include::../code/23-descriptor/descriptorkinds.py[tags=DESCR_KINDS_DEMO5]
 
 Funções não implementam `+__set__+`, portanto não são descritores dominantes, como mostra a última linha do <<descriptorkinds_demo5>>.
 
-A outra lição fundamental do <<descriptorkinds_demo5>> é que `obj.spam` e `Managed.spam` devolvem objetos diferentes. Como de hábito com descritores, o `+__get__+` de uma função devolve uma referência para a própria função quando o acesso ocorre através da classe gerenciada. Mas quando o acesso vem através da instância, o `+__get__+` da função devolve um método vinculado: um invocável que embrulha a função e vincula a instância gerenciada (no exemplo, `obj`) ao primeiro argumento da função (isto é, `self`), como faz a função `functools.partial` (que vimos na <<functools_partial_sec>>).
-Para um entendimento mais profundo deste mecanismo, dê uma olhada no <<func_descriptor_ex>>.
+A outra lição fundamental do <<descriptorkinds_demo5>> é que `obj.spam` e
+`Managed.spam` devolvem objetos diferentes. Como de hábito com descritores, o
+`+__get__+` de uma função devolve uma referência para a própria função quando o
+acesso ocorre através da classe gerenciada. Mas quando o acesso vem através da
+instância, o `+__get__+` da função devolve um método vinculado: um invocável que
+embrulha a função e vincula a instância gerenciada (no exemplo, `obj`) ao
+primeiro argumento da função (isto é, `self`), como faz a função
+`functools.partial`, que vimos na https://fpy.li/cv[«Seção 7.8.2»] (vol.1).
+Para um entendimento mais profundo deste mecanismo, dê uma olhada no
+<<func_descriptor_ex>>.
 
 [[func_descriptor_ex]]
 .method_is_descriptor.py: uma classe `Text`, derivada de `UserString`
@@ -611,7 +619,7 @@ Descritores somente para leitura exigem um `+__set__+`:: Se você usar uma class
 Descritores de validação podem funcionar apenas com `+__set__+`:: Em um descritor projetado apenas para validação, o método `+__set__+` deve verificar o argumento `value` recebido e, se ele for válido, atualizar o `+__dict__+` da instância diretamente, usando o nome da instância do descritor como chave. Dessa forma, ler o atributo de mesmo nome a partir da instância será tão rápido quanto possível, pois não vai precisar de um `+__get__+`. Veja o código no <<lineitem_class_v4>>.
 
 _Caching_ pode ser feito eficientemente apenas com `+__get__+`:: Se você escrever apenas o método `+__get__+`, cria um descritor não dominante.
-Eles são úteis para executar alguma computação custosa e então armazenar o resultado, definindo um atributo com o mesmo nome na instânciafootnote:[Entretanto, lembre-se de que criar atributos de instância após o método `+__init__+` frustra a otimização de memória através de compartilhamento de chaves, como discutido na <<conseq_dict_internal_sec>>.].
+Eles são úteis para executar alguma computação custosa e então armazenar o resultado, definindo um atributo com o mesmo nome na instânciafootnote:[Entretanto, lembre-se de que criar atributos de instância após o método `+__init__+` frustra a otimização de memória através de compartilhamento de chaves, como discutido na https://fpy.li/82[«Seção 3.9»] (vol.1).].
 O atributo de mesmo nome na instância vai ocultar o descritor, daí acessos subsequentes àquele atributo vão buscá-lo diretamente no `+__dict__+` da instância, sem acionar mais o `+__get__+` do descritor.
 O decorador `@functools.cached_property` constrói um descritor não dominante.
 
