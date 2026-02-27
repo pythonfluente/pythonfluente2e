@@ -78,7 +78,7 @@ STOP = Sentinel()  # <4>
 SendType = Union[float, Sentinel]  # <5>
 # end::RETURNING_AVERAGER_TOP[]
 # tag::RETURNING_AVERAGER[]
-def averager2(verbose: bool = False) -> Generator[None, SendType, Result]:  # <1>
+def averager2(verbose:bool=False) -> Generator[None, SendType, Result]: # <1>
     total = 0.0
     count = 0
     average = 0.0

@@ -8,7 +8,6 @@ import reprlib
 
 RE_WORD = re.compile(r'\w+')
 
-
 class Sentence:
 
     def __init__(self, text):
@@ -20,9 +19,7 @@ class Sentence:
 
     def __iter__(self):
         for word in self.words:  # <1>
-            yield word  # <2>
-        # <3>
+            yield word  # <2> <3>
 
 # done! <4>
-
 # end::SENTENCE_GEN[]

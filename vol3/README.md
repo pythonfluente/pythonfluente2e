@@ -12,6 +12,6 @@ e faço as demais tarefas nestas cópias especiais para impressão.
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/online`|encurtar links externos|
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/online`|revisar estilo|
 |✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/online`|revisar ortografia e gramática|
-|   |   |   |   |   |   |   |   |`/vol3`| refazer e encurtar links entre volumes|
-|   |   |   |   |   |   |   |   |`/vol3`| exibir capítulo alvo em xrefs para exemplos de outros capítulos |
-|   |   |   |   |   |   |   |   |`/vol3`| rever paginação   |
+|✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol3`| refazer e encurtar links entre volumes|
+|✅ |✅ |✅ |✅ |✅ |✅ |✅ |✅ |`/vol3`| exibir capítulo alvo em xrefs para exemplos de outros capítulos |
+|✅ |   |   |   |   |   |   |   |`/vol3`| rever paginação   |

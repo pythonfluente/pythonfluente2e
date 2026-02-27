@@ -119,6 +119,8 @@ classe `Vector` da https://fpy.li/cb[«Seção 12.3»] (vol.2).
 Por default, `reprlib.repr` limita a string gerada a 30 caracteres. Veja como
 `Sentence` é usada na sessão de console do <<demo_sentence0>>.
 
+<<<
+
 [[demo_sentence0]]
 .Testando a iteração em uma instância de `Sentence`
 ====
@@ -170,12 +172,11 @@ exatamente o porquê disso.((("", startref="Isequence17")))((("",
 startref="seqpro17")))
 
 [[iter_func_sec]]
-=== Porque sequências são iteráveis: a função `iter`
+=== Como a função `iter` devolve iteradores
 
 Para((("functions", "iter() function")))((("iterators", "iter() function",
 id="Iinterfun17")))((("iter() function", id="iterfunc17")))
 iterar sobre um objeto `x`, o interpretador Python invoca `iter(x)`.
-
 A função embutida `iter`:
 
 . Verifica se o objeto implementa o método `+__iter__+`, e o invoca para obter
@@ -266,8 +267,9 @@ faça isso em um bloco `try/except` ao invés de realizar uma checagem explícit
 A checagem explícita pode fazer sentido se você estiver guardando o objeto para
 iterar sobre ele mais tarde; neste caso, falhar logo facilita o diagnóstico de erros.
 
-A função embutida `iter()` é usada mais frequentemente pelo Python do que em
-código que nós escrevemos. Há uma segunda maneira de usá-la, mas não é muito conhecida.
+A função embutida `iter()` é usada mais pelo próprio Python do que em
+código que nós escrevemos.
+Vejamos outra forma de usá-la, menos conhecida.
 
 
 [[iter_closer_look_sec]]
@@ -455,7 +457,7 @@ class Iterator(Iterable):
 e `issubclass`. Vimos isso na https://fpy.li/cd[«Seção 13.5.8»] (vol.2).
 
 <2> `_check_methods` percorre o atributo `+__mro__+` da classe, para checar se
-os métodos estão implementados em sua classe base ou outra superclasse.
+os métodos estão implementados em alguma superclasse.
 Ele está definido no mesmo
 módulo, __Lib/_collections_abc.py__. Se os métodos estiverem implementados, a
 classe `C` será reconhecida como uma subclasse virtual de `Iterator`. Em outras
@@ -681,7 +683,6 @@ capítulo.]
 
 Temos aqui mais uma implementação de `Sentence` que passa nos
 testes do <<demo_sentence0>>.
-
 No código de `Sentence` do <<ex_sentence1>>, `+__iter__+` chamava o construtor
 `SentenceIterator` para criar e devolver um iterador. Agora o iterador do
 <<ex_sentence2>> é um objeto gerador, criado automaticamente quando o
@@ -779,10 +780,10 @@ Acho útil ser rigoroso ao falar sobre valores obtidos a partir de um gerador. �
 confuso dizer que um gerador "devolve" ou "retorna" valores. Funções devolvem
 valores. A chamada a uma função geradora devolve um gerador. Um gerador produz
 (_yields_) valores. Um gerador não "devolve" valores no sentido comum do termo:
-a instrução `return` no corpo de uma função geradora faz com que uma
-`StopIteration` seja levantada pelo objeto gerador. Se você escrever `return x`
-na função geradora, quem a chamou pode recuperar o valor de `x` embrulhado na
-exceção `StopIteration`, mas normalmente isso é feito automaticamente usando a
+a instrução `return` no corpo de uma função geradora faz o objeto gerador levantar
+`StopIteration`. Se você escrever `return x`
+na função geradora, é possível obter o valor de `x` embrulhado na
+exceção `StopIteration`, mas normalmente isso é feito usando a
 sintaxe `yield from`, como veremos na <<coro_return_sec>>.
 
 ====
@@ -1129,6 +1130,7 @@ include::../code/17-it-generator/aritprog_v1.py[tags=ARITPROG_CLASS]
 
 <7> O próximo resultado em potencial é calculado. Ele pode nunca ser produzido, se o laço `while` terminar.
 
+<<<
 Na última linha do <<ex_ap_class>>,
 em vez de somar `self.step` ao `result` anterior a cada volta do laço,
 optei por ignorar o `result` existente: cada novo `result` é criado somando `self.begin` a `self.step` multiplicado por `index`.
@@ -1154,7 +1156,7 @@ podemos substituir a classe inteira por uma função geradora.
 Afinal, uma função geradora é uma fábrica de geradores.
 
 O <<ex_ap_genfunc1>> mostra uma função geradora chamada `aritprog_gen`, que
-realiza a mesma tarefa da `ArithmeticProgression`, mas com menos código. Se, em
+realiza a mesma tarefa da `ArithmeticProgression`, com menos código. Se, em
 vez de chamar `ArithmeticProgression`, você chamar `aritprog_gen`, os testes no
 <<ap_class_demo>> são todos bem-sucedidos.footnote:[O diretório
 __17-it-generator/__ no https://fpy.li/code[«repositório de código»] do _Python
@@ -1171,7 +1173,8 @@ include::../code/17-it-generator/aritprog_v2.py[tags=ARITPROG_GENFUNC]
 ----
 ====
 
-O <<ex_ap_genfunc1>> é elegante, mas lembre-se sempre: há muitos geradores prontos para uso na biblioteca padrão, e a próxima seção vai mostrar uma implementação mais curta, usando o módulo `itertools`.
+<<<
+O <<ex_ap_genfunc1>> é elegante, mas lembre-se: há muitos geradores prontos para uso na biblioteca padrão, e a próxima seção vai mostrar uma implementação mais curta, usando o módulo `itertools`.
 
 
 [[ap_itertools_sec]]
@@ -1206,6 +1209,7 @@ Por outro lado, temos também a função `itertools.takewhile`: ela devolve um
 gerador que consome outro gerador e para quando um predicado resulta falso.
 Então podemos combinar os dois e escrever o seguinte:
 
+<<<
 [source, python]
 ----
 >>> gen = itertools.takewhile(lambda n: n < 3, itertools.count(1, .5))
@@ -1269,22 +1273,6 @@ recebe uma `predicate` (uma função booleana de um argumento) que será aplicad
 cada item no iterável de entrada, para determinar se aquele item será incluído
 na saída. A exceção é `itertools.compress`, que consome dois iteráveis, sendo
 que o segundo iterável fornece valores para decidir quais itens do primeiro iterável serão produzidos.
-Veja o uso de `compress` no <<demo_filter_genfunc>>.
-
-<<<
-
-[[filter_genfunc_tbl]]
-.`itertools`: funções geradoras de seleção
-[options="header", cols="5,9"]
-|=======================
-|Função|Descrição
-|`compress(it, selector_it)`|Consome dois iteráveis em paralelo; produz itens de `it` sempre que o item correspondente em `selector_it` é verdadeiro
-|`dropwhile(predicate, it)`|Consome `it`, pulando itens enquanto `predicate` resultar verdadeiro, e daí produz todos os elementos restantes (nenhuma verificação adicional é realizada)
-|`filterfalse(predicate, it)`|Como a `filter`, mas invertendo a lógica: produz itens quando `predicate` resulta falso
-|`islice(it, stop)` +
- `islice(it, start, stop, step=1)`|Produz itens de uma fatia de `it`, similar a `s[:stop]` ou `s[start:stop:step]`, mas `it` é qualquer iterável e a operação é preguiçosa
-|`takewhile(predicate, it)`|Produz itens enquanto `predicate`  resultar verdadeiro, e daí para (nenhuma verificação adicional é realizada).
-|=======================
 
 A seção de console no <<demo_filter_genfunc>> demonstra o uso dos geradores de seleção.
 
@@ -1316,6 +1304,21 @@ A seção de console no <<demo_filter_genfunc>> demonstra o uso dos geradores de
 ----
 ====
 
+
+[[filter_genfunc_tbl]]
+.`itertools`: funções geradoras de seleção
+[options="header", cols="5,9"]
+|=======================
+|Função|Descrição
+|`compress(it, selector_it)`|Consome dois iteráveis em paralelo; produz itens de `it` sempre que o item correspondente em `selector_it` é verdadeiro
+|`dropwhile(predicate, it)`|Consome `it`, pulando itens enquanto `predicate` resultar verdadeiro, e daí produz todos os elementos restantes (nenhuma verificação adicional é realizada)
+|`filterfalse(predicate, it)`|Como a `filter`, mas invertendo a lógica: produz itens quando `predicate` resulta falso
+|`islice(it, stop)` +
+ `islice(it, start, stop, step=1)`|Produz itens de uma fatia de `it`, similar a `s[:stop]` ou `s[start:stop:step]`, mas `it` é qualquer iterável e a operação é preguiçosa
+|`takewhile(predicate, it)`|Produz itens enquanto `predicate`  resultar verdadeiro, e daí para (nenhuma verificação adicional é realizada).
+|=======================
+
+<<<
 ==== Funções geradoras de transformação
 
 [[map_fig_2]]
@@ -1427,6 +1430,7 @@ consomem os iteráveis de entrada um após o outro, enquanto `product`, e
 `zip_longest` consomem os iteráveis de entrada em paralelo, como faz a função
 `zip`.
 
+<<<
 [[merging_genfunc_tbl]]
 .`itertools`: funções geradoras que mesclam os iteráveis de entrada
 [options="header", cols="7,13"]
@@ -1523,6 +1527,7 @@ O <<demo_product_genfunc>> demonstra `itertools.product`.
 
 Outras((("input expanding generator functions"))) funções geradoras expandem a entrada, produzindo mais de um valor por item de entrada. Elas estão listadas na <<expanding_genfunc_tbl>>.
 
+<<<
 [[expanding_genfunc_tbl]]
 .`itertools`: funções geradoras que expandem cada item de entrada em múltiplos itens de saída
 [options="header", cols="6, 9"]
@@ -1725,6 +1730,7 @@ elas podem ser combinadas de muitas formas diferentes.
 
 Vamos agora revisar outro grupo de funções da biblioteca padrão que lidam com iteráveis.((("", startref="Ggenfunc17")))
 
+<<<
 [[iterable_reducing_sec]]
 === Funções de redução de iteráveis
 
@@ -1734,7 +1740,6 @@ image::../images/diag-reduce.png[align="center",pdfwidth=8cm]
 
 Todas((("generators", "iterable reducing functions", id="Greduc17")))((("iterables", "iterable reducing functions", id="Ireduc17")))((("reducing functions", id="redfunc17"))) as funções na <<tbl_iter_reducing>> recebem um iterável e devolvem um resultado único.
 Elas são conhecidas como funções de "redução", "dobra" (_folding_) ou "acumulação".
-
 A função de redução mais flexível é `functools.reduce`:
 
 `functools.reduce(func, it, [initial])`::
@@ -1966,6 +1971,8 @@ o nível zero.
 
 Dada uma classe raiz, o gerador `tree` no <<ex_tree_step0>> produz o nome dessa classe e para.
 
+<<<
+
 [[ex_tree_step0]]
 .tree/step0/tree.py: produz o nome da classe raiz e para
 ====
@@ -2073,8 +2080,10 @@ BaseException
 
 Você pode já ter percebido para onde isso segue, mas vou insistir mais uma vez nos pequenos passos:
 vamos atingir o nível 3, acrescentando ainda outro laço `for` aninhado.
+
 Não há novidades no resto do programa, então o <<ex_tree_step4>> mostra apenas o gerador `sub_tree`.
 
+<<<
 [[ex_tree_step4]]
 .O gerador `sub_tree` de _tree/step4/tree.py_
 ====
@@ -2112,7 +2121,7 @@ Um caso base é um ramo condicional que retorna sem fazer uma chamada recursiva.
 O caso base é frequentemente implementado com uma instrução `if`.
 No <<ex_tree_step5>>, `sub_tree` não tem um `if`,
 mas há uma condicional implícita no laço `for`:
-Se `cls.__subclasses__()` devolver uma lista vazia, o corpo do laço não é executado,
+se `cls.__subclasses__()` devolver uma lista vazia, o corpo do laço não é executado,
 e assim a chamada recursiva não ocorre.
 O caso base ocorre quando a classe `cls` não tem subclasses.
 Nesse caso, `sub_tree` não produz nada, apenas retorna.
@@ -2135,6 +2144,7 @@ include::../code/17-it-generator/tree/step6/tree.py[]
 ----
 ====
 
+<<<
 No início da <<yield_from_sec0>>, vimos como `yield from` conecta a subgeradora diretamente ao código cliente, escapando do gerador delegante.
 Aquela conexão se torna realmente importante quando geradores são usados como corrotinas, e não apenas produzem mas também consomem valores do código cliente, como veremos na <<classic_coroutines_sec>>.
 
@@ -2479,11 +2489,12 @@ Usar `|` em vez de `typing.Union` é tão conciso e legível que eu provavelment
 
 [source, python]
 ----
-def averager2(verbose: bool=False) -> Generator[None, float | Sentinel, Result]:
+def averager2(verbose:bool=False) -> Generator[None, float|Sentinel, Result]:
 ----
 
-Vamos agora estudar o código da corrotina em si (no <<ex_returning_averager_coro>>).
+Vamos agora estudar o código da corrotina em si no <<ex_returning_averager_coro>>.
 
+<<<
 [[ex_returning_averager_coro]]
 .coroaverager2.py: corrotina que devolve um resultado final
 ====
@@ -2501,6 +2512,7 @@ include::../code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER]
 Vamos ver agora como podemos usar essa corrotina,
 começando por um exemplo simples, que não devolve um resultado (no <<ex_coro_averager2_demo_1>>).
 
+<<<
 [[ex_coro_averager2_demo_1]]
 .coroaverager2.py: doctest mostrando `.cancel()`
 ====
@@ -2526,6 +2538,7 @@ include::../code/17-it-generator/coroaverager2.py[tags=RETURNING_AVERAGER_DEMO_2
 <2> A instância de `StopIteration` tem um atributo `value` vinculado ao valor do comando `return` que encerrou a corrotina.
 <3> Acredite se quiser!
 
+<<<
 Esta ideia de "contrabandear" o valor devolvido para fora de uma corrotina
 dentro de uma exceção `StopIteration` é um _hack_. Entretanto, este _hack_ é parte da
 https://fpy.li/pep342[_PEP 342—Coroutines via Enhanced Generators_],
@@ -2683,7 +2696,7 @@ ____
 
 Esta alegre discussão sobre variância encerra o capítulo mais longo do livro.
 
-
+<<<
 === Resumo do capítulo
 
 A iteração((("iterators", "overview of")))((("generators", "overview of")))((("coroutines", "overview of"))) está integrada tão profundamente à linguagem que gosto de dizer que Python _groks_ iteráveis.footnote:[De acordo com o https://fpy.li/17-26[_Jargon file_], "to grok" não é meramente entender algo, mas absorver de uma forma que "aquilo se torna parte de você, parte de sua identidade".]
@@ -2771,6 +2784,7 @@ Refatorei o código do exemplo do Jogo da Vida—separando funções e classes q
 Também reescrevi os testes como doctests, então você pode ver o resultados de várias corrotinas e classes sem executar o script.
 Publiquei o https://fpy.li/17-43[«exemplo refatorado»] como um https://fpy.li/17-44[_GitHub gist_].
 
+<<<
 .Ponto de Vista
 ****
 
@@ -2780,7 +2794,7 @@ Na((("iterators", "Soapbox discussion")))((("generators",
 "Soapbox discussion")))((("coroutines", "Soapbox discussion")))((("Soapbox sidebars",
 "minimalistic iterator interface"))) seção _Implementação_ do padrão
 _Iterator_,footnote:[Gamma et. al., _Design Patterns: Elements of Reusable
-Object-Oriented Software_, p. 261.], a Gangue dos Quatro escreveu:
+Object-Oriented Software_, p. 261.] a Gangue dos Quatro escreveu:
 
 [quote]
 ____
@@ -2835,6 +2849,7 @@ Seria ainda mais complicado ler dados usando duas APIs diferentes no mesmo laço
 
 A solução foi isolar a lógica de leitura em um par de funções geradoras: uma para cada formato de entrada suportado. No fim, dividi o script _isis2json.py_ em quatro funções. Você pode ver o código-fonte em Python 2, com suas dependências, no repositório https://fpy.li/17-46[_fluentpython/isis2json_] no GitHub.footnote:[O código está em Python 2 porque uma de suas dependências opcionais é uma biblioteca Java chamada _Bruma_, que podemos importar quando executamos o script com o Jython—que ainda não suporta Python 3.]
 
+<<<
 Aqui está uma visão geral em alto nível de como o script está estruturado:
 
 `main`:: A função `main` usa `argparse` para ler opções de linha de comando que configuram a estrutura dos registros de saída. Baseado na extensão do nome do arquivo de entrada, uma função geradora é selecionada para ler os dados e produzir os registros, um por vez.
