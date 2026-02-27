@@ -115,7 +115,7 @@ def label_targets(xrefs: list[XrefTarget]) -> list[XrefTarget]:
 if __name__ == '__main__':
     #print(find_git_root())
     long_short = map_short_urls()
-    xrefs = [find_xref_target(ident) for ident in list_invalid_xrefs(2)]
+    xrefs = [find_xref_target(ident) for ident in list_invalid_xrefs(3)]
     
     for xref in label_targets(xrefs):
         #print(xref)

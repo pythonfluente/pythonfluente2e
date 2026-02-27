@@ -47,7 +47,7 @@ INVALID_MSG = 'asciidoctor: INFO: possible invalid reference: '
 
 
 def list_invalid_xrefs() -> list[str]:
-    adoc = find_git_root() / 'vol2/vol2-cor.adoc'
+    adoc = find_git_root() / 'vol3/vol3-cor.adoc'
     cmd = f'''asciidoctor -v {adoc} -o lixo'''
     result = subprocess.run(cmd, shell=True, stderr=subprocess.PIPE, text=True)
     seen = set()
