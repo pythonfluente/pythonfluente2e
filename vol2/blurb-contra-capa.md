@@ -8,8 +8,7 @@ Veremos como os métodos `__dunder__`
 permitem criar objetos que integram naturalmente
 com as instruções da linguagem e sua biblioteca padrão.
 
-Os exemplos incluem suporte a casamento de padrões
-(match/case), proteção de atributos,
+Os exemplos incluem suporte a casamento de padrões, proteção de atributos,
 herança simples e múltipla, interfaces,
 classes abstratas, sobrecarga de operadores,
 e anotações de tipo avançadas.
