@@ -1,6 +1,7 @@
 # tag::BUILDERLIB_TOP[]
 print('@ builderlib module start')
 
+
 class Builder:  # <1>
     print('@ Builder body')
 
@@ -44,7 +45,6 @@ class Descriptor:  # <1>
 
     def __repr__(self):
         return '<Descriptor instance>'
-
 
 print('@ builderlib module end')
 # end::BUILDERLIB_BOTTOM[]

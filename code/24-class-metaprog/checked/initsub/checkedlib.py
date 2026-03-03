@@ -78,6 +78,7 @@ class Field:
             raise TypeError(f'{name!r} type hint must be callable')
         self.name = name
         self.constructor = constructor
+        
 
     def __set__(self, instance: Any, value: Any) -> None:
         if value is ...:  # <4>

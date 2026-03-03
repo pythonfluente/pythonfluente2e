@@ -63,6 +63,7 @@ class MetaBunch(type):  # <1>
         new_dict = dict(__slots__=[],
                         __init__=__init__,
                         __repr__=__repr__)  # <8>
+        
 
         for name, value in cls_dict.items():  # <9>
             if name.startswith('__') and name.endswith('__'):  # <10>

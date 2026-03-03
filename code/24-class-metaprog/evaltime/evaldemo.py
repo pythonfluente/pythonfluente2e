@@ -17,7 +17,6 @@ class Klass(Builder):  # <2>
     def __repr__(self):
         return '<Klass instance>'
 
-
 def main():  # <4>
     obj = Klass()
     obj.method_a()

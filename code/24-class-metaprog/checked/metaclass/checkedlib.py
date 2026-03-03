@@ -134,7 +134,8 @@ class Checked(metaclass=CheckedMeta):
         plural = 's' if len(names) > 1 else ''
         extra = ', '.join(f'{name!r}' for name in names)
         cls_name = repr(self.__class__.__name__)
-        raise AttributeError(f'{cls_name} object has no attribute{plural} {extra}')
+        raise AttributeError(
+            f'{cls_name} object has no attribute{plural} {extra}')
 
     def _asdict(self) -> dict[str, Any]:
         return {

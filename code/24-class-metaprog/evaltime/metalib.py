@@ -31,9 +31,7 @@ class MetaKlass(type):
 
         cls = super().__new__(
             meta_cls, cls_name, bases, cls_dict.data)  # <5>
-
         cls.method_c = inner_2  # <6>
-
         return cls  # <7>
 
     def __repr__(cls):  # <8>
