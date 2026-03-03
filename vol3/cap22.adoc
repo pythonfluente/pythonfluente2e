@@ -5,10 +5,12 @@
 
 [quote, Martelli&#x2c; Ravenscroft &#x26; Holden, Why properties are important (Porque propriedades são importantes)]
 ____
-A importância crucial das propriedades é que sua existência torna perfeitamente seguro,
-e até aconselhável, expor atributos de dados públicos como parte da interface pública
+
+As propriedades são muito importantes porque tornam perfeitamente seguro, e até
+aconselhável, expor publicamente atributos de dados como parte da interface pública
 de sua classe.footnote:[Alex Martelli, Anna Ravenscroft &#x26; Steve Holden,
 https://fpy.li/pynut3[Python in a Nutshell, Third Edition] (O'Reilly), p. 123.]
+
 ____
 
 No Python((("dynamic attributes and properties", "dynamic versus virtual attributes"))),
@@ -19,10 +21,16 @@ Isso atende ao _Princípio de Acesso Uniforme_ de Bertrand Meyer:
 
 [quote, Bertrand Meyer, Object-Oriented Software Construction (Construção de Software Orientada a Objetos)]
 ____
-Todos os serviços oferecidos por um módulo devem estar disponíveis por uma notação uniforme, que não revele se eles são implementados por armazenamento ou por computação.footnote:[Bertrand Meyer, Object-Oriented Software Construction, 2nd ed. (Pearson), p. 57.]
+
+Todos os serviços oferecidos por um módulo devem estar disponíveis através +
+de uma notação uniforme, que não revele se eles são implementados por
+armazenamento ou
+por computação.footnote:[Bertrand Meyer, Object-Oriented Software Construction,
+2nd ed. (Pearson), p. 57.]
+
 ____
 
-Há muitas formas de implementar atributos dinâmicos em Python.
+Há várias formas de implementar atributos dinâmicos em Python.
 Este capítulo trata das mais simples: o decorador `@property` e o método especial `+__getattr__+`.
 
 Uma((("virtual attributes")))((("attributes", "virtual attributes"))) classe
@@ -41,7 +49,7 @@ iniciaremos esse capítulo.
 
 === Novidades neste capítulo
 
-A atualizações ((("dynamic attributes and properties", "significant changes to")))
+As atualizações ((("dynamic attributes and properties", "significant changes to")))
 deste capítulo foram motivadas pela discussão relativa a
 `@functools.cached_property` (introduzido no Python 3.8), o uso
 combinado de `@property` e `@functools.cache` (novo no 3.9). Isto afetou o
@@ -52,7 +60,7 @@ https://fpy.li/pep412[_PEP 412—Key-Sharing Dictionary_]
 
 Para enfatizar as características mais relevantes, e ao mesmo tempo manter os
 exemplos legíveis, removi algum código não-essencial—fundindo a antiga classe
-`DbRecord` com `Record`, substituindo `shelve.Shelve` por um `dict` e suprimindo
+`DbRecord` com `Record`, substituindo `shelve.Shelve` por um `dict`, e suprimindo
 a lógica para baixar o conjunto de dados da OSCON—que os exemplos agora carregam de
 um arquivo local, disponível no https://fpy.li/code[«repositório de código»] do
 _Python Fluente_.
@@ -62,7 +70,7 @@ _Python Fluente_.
 Nos((("dynamic attributes and properties", "data wrangling with dynamic attributes", id="DAPwrangl22")))((("data wrangling", "with dynamic attributes", secondary-sortas="dynamic attributes", id="DWdyatt22"))) próximos exemplos, vamos nos valer dos atributos dinâmicos para trabalhar com um conjunto de dados JSON publicado pela O'Reilly, para a conferência OSCON 2014. O <<ex_osconfeed_json>> mostra quatro registros daquele conjunto de dados.footnote:[A OSCON—O'Reilly Open Source Conference (_Conferência O'Reilly de Código Aberto_)—foi uma vítima da pandemia de COVID-19. O arquivo JSON original de 744 KB, que usei para esses exemplos, não está mais disponível online hoje (10 de janeiro de 2021). Você pode obter uma cópia do https://fpy.li/22-1[_osconfeed.json_] no repositório de exemplos do livro.]
 
 [[ex_osconfeed_json]]
-.Amostra de registros do osconfeed.json; abreviei o conteúdo de alguns campos
+.Amostra de registros do osconfeed.json, com alguns dados abreviados.
 ====
 [source, json]
 ----
@@ -81,7 +89,7 @@ contém apenas aquele único registro exibido na segunda linha do <<ex_osconfeed
 registro inclui um campo `"serial"`, que é um identificador único do registro
 dentro da lista onde ele está.
 
-Usei o console de Python para explorar os dados, como mostra o <<ex_osconfeed_explore>>.
+Usei o console de Python para explorar os dados interativamente, como mostra o <<ex_osconfeed_explore>>.
 
 [[ex_osconfeed_explore]]
 .Exploração interativa do osconfeed.json
@@ -120,11 +128,10 @@ Escrevi `FrozenJSON`, que é mais simples que a maioria das soluções porque
 só permite leitura: ela serve apenas para explorar os dados. `FrozenJSON` é
 recursiva, lidando automaticamente com mapeamentos e listas aninhados.
 
-O <<ex_explore0_demo>> é uma demonstração da `FrozenJSON`,
-e o código-fonte aparece no <<ex_explore0>>.
+O <<ex_explore0_demo>> demonstra `FrozenJSON`; código-fonte no <<ex_explore0>>.
 
 [[ex_explore0_demo]]
-.`FrozenJSON`, do <<ex_explore0>>, permite ler atributos como `name`, e invocar métodos como `++.keys()++` e `++.items()++`
+.`FrozenJSON`, do <<ex_explore0>>, permite ler atributos como `talk.name`, e invocar métodos como `++feed.keys()++` e `++feed.items()++`
 ====
 [source, python]
 ----
@@ -142,7 +149,9 @@ include::../code/22-dyn-attr-prop/oscon/explore0.py[tags=EXPLORE0_DEMO]
 
 A pedra angular da classe `FrozenJSON` é o método `+__getattr__+`, que já usamos
 no exemplo `Vector` da https://fpy.li/cp[«Seção 12.6»] (vol.2), para recuperar componentes
-de `Vector` por letra: `v.x`, `v.y`, `v.z`, etc. É importante lembrar que o
+de `Vector` por letra: `v.x`, `v.y`, `v.z`, etc.
+
+É importante lembrar que o
 método especial `+__getattr__+` só é invocado pelo interpretador quando o
 processo habitual não consegue recuperar um atributo (isto é, quando o atributo
 acessado não é encontrado na instância, nem na sua classe ou suas superclasses).
@@ -457,6 +466,9 @@ o doctest para orientar este primeiro passo.
 include::../code/22-dyn-attr-prop/oscon/schedule_v1.py[tags=SCHEDULE1_DEMO]
 ----
 ====
+
+<<<
+
 <1> Constrói um `dict` com os dados JSON; a função `load` está no <<ex_schedule_v1>>.
 <2> As chaves em `records` são strings criadas a partir do tipo de registro e do número de série.
 <3> `speaker` é uma instância da classe `Record`, definida no <<ex_schedule_v1>>.
@@ -520,9 +532,9 @@ São duas razões. Primeiro, `FrozenJSON` funciona convertendo recursivamente os
 mapeamentos aninhados e listas, mas `Record` não precisa fazer isso, pois nosso
 conjunto de dados convertido não contém mapeamentos aninhados. Os
 registros contêm apenas strings, inteiros, listas de strings e listas de
-inteiros. A segunda razão: `FrozenJSON` oferece acesso aos atributos no `dict`
-embutido `+__data+`—que usamos para invocar métodos como `.keys()`—e aqui
-não precisamos desta funcionalidade.
+inteiros. A segunda razão: `FrozenJSON` permite acessar aos atributos no `dict`
+embutido `+__data+`—para invocar métodos como `.keys()`.
+`Record` não oferece este acessso.
 
 [NOTE]
 ====
@@ -568,7 +580,7 @@ include::../code/22-dyn-attr-prop/oscon/schedule_v2.py[tags=SCHEDULE2_DEMO]
 <2> Observe que `event` é uma instância da classe `Event`.
 <3> Acessar `event.venue` devolve uma instância de `Record`.
 <4> Agora é fácil encontrar o nome de um `event.venue`.
-<5> A instância de `Event` também tem um atributo `venue_serial`, vindo dos dados JSON.
+<5> `event` também tem um atributo `venue_serial`, vindo dos dados JSON.
 
 `Event` é uma subclasse de `Record`, acrescentando um `venue` para obter os registros relacionados, e um método `+__repr__+` especializado.
 
@@ -610,13 +622,13 @@ include::../code/22-dyn-attr-prop/oscon/schedule_v2.py[tags=SCHEDULE2_EVENT]
 [role="pagebreak-before less_space"]
 <1> `Event` estende `Record`.
 <2> Se a instância tem um atributo `name`, esse atributo será usado para produzir uma representação customizada.
-Caso contrário, delega para o `+__repr__+` de `Record`.
+Se não, invoca `+__repr__+` de `Record`.
 <3> A propriedade `venue` cria uma `key` a partir do atributo `venue_serial`, e a passa para o método de classe `fetch`, herdado de `Record` (a razão para usar `+self.__class__+` logo ficará clara).
 
 A segunda linha do método `venue` no <<ex_schedule_v2_event>> devolve
 `+self.__class__.fetch(key)+`.
-Por que não podemos simplesmente invocar `self.fetch(key)`?
-A forma simples funciona com esse conjunto específico de dados da OSCON
+Por que não podemos invocar `self.fetch(key)` diretamente?
+A forma direta funciona com esse conjunto específico de dados da OSCON
 porque não há registro de evento com uma chave `'fetch'`.
 Mas, se um registro de evento tivesse uma chave chamada `'fetch'`,
 então dentro daquela instância específica de `Event`,
@@ -686,7 +698,7 @@ informação na forma de uma propriedade `speakers` em instâncias de `Event`, q
 devolverá uma lista de instâncias de `Record`. Esta colisão de nomes exige uma
 atenção especial, como revela o <<ex_schedule_v3_speakers>>.
 
-
+<<<
 [[ex_schedule_v3_speakers]]
 .schedule_v3.py: a propriedade `speakers`
 ====
@@ -820,7 +832,7 @@ Vamos mergulhar nos descritores no <<ch_descriptors>>.
 O decorador `property` é uma API de alto nível para criar um _descritor dominante_.
 O <<ch_descriptors>> inclui uma explicação completa sobre descritores _dominantes_ e _não dominantes_.
 
-Por hora, vamos deixar de lado a implementação subjacente e nos concentrar nas
+Por hora, vamos deixar de lado a implementação e nos concentrar nas
 diferenças entre `cached_property` e `property` do ponto de vista de um usuário.
 Raymond Hettinger os explica muito bem na https://fpy.li/bg[«Documentação do
 Python»]:
@@ -869,14 +881,14 @@ se o método decorado acessa um atributo de instância de mesmo nome.
 Apesar destas limitações, `@cached_property` supre uma necessidade comum de um modo simples,
 e é seguro para usar com threads.
 Seu https://fpy.li/22-13[código Python] é um exemplo do uso de uma
-https://fpy.li/bp[_reentrant lock_] (trava reentrante ou trava recursiva).footnote:[Veja
+https://fpy.li/bp[_reentrant lock_] (trava reentrante).footnote:[Veja
 https://fpy.li/bq[«Mutex recursivo»] na Wikipédia.]
 
 
 A
 https://fpy.li/bh[documentação] de `@cached_property`
 recomenda uma solução alternativa que podemos usar com `speakers`:
-empilhar decoradores `@property` e `@cache`, como mostro no <<ex_schedule_v5_property_over_cache>>.
+empilhar decoradores.
 
 [[ex_schedule_v5_property_over_cache]]
 .Empilhando `@property` sobre `@cache`
@@ -962,6 +974,7 @@ sem mudar a interface pública de `LineItem`:
 para definir o `weight` de um `LineItem` ainda poderemos escrever
 `raisins.weight = 12`.
 
+<<<
 O <<lineitem_class_v2>> lista o código de uma propriedade de leitura e escrita para `weight`.
 
 [[lineitem_class_v2]]
@@ -980,7 +993,9 @@ include::../code/22-dyn-attr-prop/bulkfood/bulkfood_v2.py[tags=LINEITEM_V2]
 <6> Se o valor for maior que zero, atualizamos o `+__weight+` privado.
 <7> Caso contrário, um `ValueError` é levantado.
 
-Observe como agora não é possível criar uma `LineItem` com peso inválido:
+
+<<<
+Agora não é possível criar uma `LineItem` com peso inválido:
 
 [source, python]
 ----
@@ -1029,7 +1044,7 @@ property(fget=None, fset=None, fdel=None, doc=None)
 ----
 
 Todos os argumentos são opcionais, e se uma função não é fornecida para algum deles,
-a operação correspondente não será permitida pela propriedade resultante.
+a operação correspondente não será permitida pela propriedade.
 
 O tipo `property` foi introduzido no Python 2.2, mas a sintaxe `@` do decorador
 só surgiu no Python 2.4. Então, por alguns anos, propriedades eram definidas
@@ -1161,6 +1176,7 @@ Como uma demonstração final, vamos adicionar uma propriedade a `Class`, e vê-
 <5> Apaga a propriedade .
 <6> `obj.data` agora lê novamente o atributo de instância `data`.
 
+<<<
 O ponto principal desta seção é que uma expressão como `obj.data` não começa a
 busca por `data` em `obj`. A busca na verdade começa em `+obj.__class__+`, e
 Python só olha para a instância `obj` se não houver uma propriedade
@@ -1215,7 +1231,7 @@ startref="DAPpclass22")))((("", startref="proclass22")))
 
 Vamos((("dynamic attributes and properties", "coding property factories",
 id="DAPfactory22")))((("quantity properties", id="quantprop22"))) programar uma
-fábrica para criar propriedades `quantity` (quantidade)—assim denominada porque
+fábrica para criar propriedades `quantity` (quantidade). Os
 os atributos gerenciados representam quantidades que não podem ser negativas ou
 zero na aplicação. O <<lineitem_class_v2prop_class>> mostra a aparência
 cristalina da classe `LineItem` usando duas instâncias de propriedades
@@ -1229,12 +1245,19 @@ cristalina da classe `LineItem` usando duas instâncias de propriedades
 include::../code/22-dyn-attr-prop/bulkfood/bulkfood_v2prop.py[tags=LINEITEM_V2_PROP_CLASS]
 ----
 ====
-<1> Usa a fábrica para definir a primeira propriedade customizada, `weight`, como um atributo de classe.
-<2> Essa segunda chamada cria outra propriedade customizada, `price`.
-<3> Aqui a propriedade já está ativa, assegurando que um peso negativo ou `0` seja rejeitado.
+
+<1> A fábrica cria a propriedade customizada, `weight`...
+
+<2> e a propriedade, `price`, ambas como atributos da classse.
+
+<3> A propriedade já está ativa, rejeitando peso negativo ou `0`.
+
 <4> As propriedades também são usadas aqui, para recuperar os valores armazenados na instância.
 
-Recorde que propriedades são atributos de classe. Ao criar cada propriedade `quantity`, precisamos passar o nome do atributo de `LineItem` que será gerenciado por aquela propriedade específica. Ter que digitar a palavra `weight` duas vezes na linha abaixo é lamentável:
+Recorde que propriedades são atributos de classe. Ao criar cada propriedade
+`quantity`, precisamos passar o nome do atributo de `LineItem` que será
+gerenciado por aquela propriedade específica.
+É chato escrever `weight` duas vezes assim:
 
 [source, python]
 ----
@@ -1281,6 +1304,7 @@ As funções `qty_getter` e `qty_setter` serão encapsuladas pelo objeto `proper
 
 No <<lineitem_class_v2prop_demo>>, criei e inspecionei uma instância de `LineItem`, expondo os atributos armazenados.
 
+<<<
 [[lineitem_class_v2prop_demo]]
 .bulkfood_v2prop.py: explorando propriedades e atributos de armazenamento
 ====
@@ -1306,7 +1330,7 @@ Faremos isso no <<ch_descriptors>>.
 
 Vamos agora encerrar a discussão das propriedades com a questão da exclusão de atributos.((("", startref="DAPfactory22")))((("", startref="quantprop22")))
 
-
+<<<
 [[attribute_deletion_sec]]
 === Tratando a exclusão de atributos
 
@@ -1440,6 +1464,8 @@ feito usando a notação de ponto ou uma das funções embutidas listadas na
 <<bif_attribute_handling>>. Por exemplo, tanto `obj.atrib` quanto `getattr(obj,
 'atrib')` disparam `+Class.__getattribute__(obj, 'atrib')+`.
 
+<<<
+
 `+__delattr__(self, name)+`:: Sempre((("&#x005F;&#x005F;delattr&#x005F;&#x005F;"))) invocado quando ocorre uma tentativa de excluir um atributo usando a instrução `del`; por exemplo, `del obj.atrib` dispara `+Class.__delattr__(obj, 'atrib')+`.
 Se `atrib` for uma propriedade, seu método de exclusão nunca será invocado se a classe implementar
 `+__delattr__+`.
@@ -1462,6 +1488,8 @@ Sempre((("&#x005F;&#x005F;setattr&#x005F;&#x005F;"))) invocado quando há uma
 tentativa de atribuir um valor ao atributo nomeado. A notação de ponto e a
 função embutida `setattr` disparam esse método; por exemplo, tanto `obj.atrib =
 42` quanto `setattr(obj, 'atrib', 42)` disparam `+Class.__setattr__(obj, 'atrib', 42)+`.
+
+<<<
 
 [WARNING]
 ====
@@ -1565,7 +1593,7 @@ extremamente legível usada como pseudocódigo ao longo livro é
 na verdade a linguagem Eiffel.
 
 
-[role="pagebreak-before less_space"]
+<<<
 [[properties_soapbox]]
 .Ponto de Vista
 ****
@@ -1585,13 +1613,14 @@ https://fpy.li/22-27[_Uniform Access Principle_] (Princípio de Acesso Uniforme)
 
 Em linguagens de programação orientadas a objetos, a aplicação ou violação do Princípio de Acesso Uniforme muitas vezes gira em torno da sintaxe de leitura de atributos de dados públicos versus a invocação de métodos _getter/setter_.
 
-Smalltalk e Ruby resolvem essa questão de uma forma simples e elegante: elas não suportam nenhuma forma de atributos de dados públicos. Todo atributo de instância nessas linguagens é privado, então qualquer acesso a eles deve passar por métodos. Mas sua sintaxe torna isso indolor: em Ruby, `product.price` invoca o _getter_ de `price`; em Smalltalk, ele é simplesmente `product price`.
+Smalltalk e Ruby resolvem esta questão de uma forma simples e elegante: elas não suportam nenhuma forma de atributos de dados públicos. Todo atributo de instância nessas linguagens é privado, então qualquer acesso a eles deve passar por métodos. Mas sua sintaxe torna isso indolor: em Ruby, `product.price` invoca o _getter_ de `price`; em Smalltalk, ele é simplesmente `product price`.
 
+<<<
 Na outra ponta do espectro, a linguagem Java permite ao programador escolher entre quatro modificadores de nível de acesso—incluindo o default sem nome que o https://fpy.li/22-28[«Java Tutorial»] chama de "_package-private_".
 
 A prática geral, entretanto, não concorda com a sintaxe definida pelos projetistas de Java. Todos no campo de Java concordam que atributos devem ser `private`, e é necessário escrever isso explicitamente todas as vezes, porque não é o default. Quando todos os atributos são privados, todo acesso a eles de fora da classe precisa passar por métodos de acesso. Os IDEs de Java incluem atalhos para gerar métodos de acesso automaticamente. Infelizmente, o IDE não ajuda quando você precisa ler aquele código seis meses depois. É problema seu navegar por um oceano de métodos de acesso que não fazem nada, para encontrar aqueles que adicionam valor, implementando alguma lógica do negócio.
 
-Alex Martelli fala pela maioria da comunidade Python quando chama métodos de acesso de "idiomatismos patéticos", e então apresenta
+Alex Martelli representa a maioria da comunidade Python quando chama métodos de acesso de "idiomatismos patéticos", e então apresenta
 exemplos que parecem muito diferentes, mas fazem a mesma coisa:footnote:[Alex Martelli, _Python in a Nutshell_, 2ª ed. (O'Reilly), p. 101.]
 
 [source, python]
@@ -1611,16 +1640,21 @@ modificar o objeto, tal como `my_list.clear()`. Seria uma péssima ideia
 transformar isso em uma propriedade, de tal forma que o mero acesso a
 `my_list.clear` apagaria o conteúdo da lista!
 
-Na biblioteca GPIO https://fpy.li/22-29[_Pingo_]—mencionada na
-https://fpy.li/ct[«Seção 3.5.2»] (vol.1)—grande
+Na biblioteca GPIO https://fpy.li/22-29[_Pingo_] (mencionada na
+https://fpy.li/ct[«Seção 3.5.2»], vol.1), grande
 parte da API do usuário está baseada em propriedades. Por exemplo, para ler o
-valor atual de uma porta analógica, o usuário escreve `pin.value`, e definir o
-modo de uma porta digital é escrito `pin.mode = OUT`. Por trás da cortina, ler o
+valor atual de uma porta analógica escrevemos `pin.value`,
+e para definir o
+modo de uma porta,
+`pin.mode = OUT`.
+
+<<<
+Por trás da cortina, ler o
 valor de uma porta analógica ou definir o modo de uma porta digital pode
 implicar em bastante código, dependendo do driver específico da placa. Decidimos
 usar propriedades no Pingo porque queríamos que a API fosse confortável de usar
 até mesmo em ambientes interativos como um Jupyter Notebook, e achamos que
-`pin.mode = OUT` é mais fácil para os olhos e para os dedos que
+`pin.mode = OUT` é mais bonito e fácil de digitar que
 `pin.set_mode(OUT)`.
 
 Apesar de achar a solução de Smalltalk e de Ruby mais limpa, acho que a
@@ -1652,7 +1686,8 @@ uma API precisa decidir se vai fornecer um construtor simples ou
 investir em uma fábrica. Se a escolha inicial estiver errada, a correção pode
 ser cara—tudo porque `new` é um operador.
 
-Algumas vezes pode ser conveniente pegar o caminho inverso, e substituir uma função simples por uma classe.
+<<<
+Às vezes pode ser conveniente pegar o caminho inverso, e substituir uma função simples por uma classe.
 
 Em Python, classes e funções são intercambiáveis em muitas situações.
 Não apenas pela ausência de um operador `new` para construir instâncias,
