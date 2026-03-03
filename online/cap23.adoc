@@ -14,10 +14,10 @@ ____
 
 Descritores((("descriptors")))((("attribute descriptors", "purpose of"))) são
 uma forma de reutilizar a mesma lógica de acesso em múltiplos atributos. Por
-exemplo, são descritores os campos de registros em um ORM (_Object Relational Mapping_-Mapeamento
+exemplo, são descritores os campos de registros em um ORM (_Object Relational Mapping_, Mapeamento
 Objeto-Relacional) como o _SQLAlchemy_ ou ORM do _Django_.
-Nestes sistemas, são descritores que controlam a conversão
-e validação de dados dos atributos de objetos em Python
+Nestes sistemas, os descritores controlam a conversão
+e validação de dados dos atributos de objetos Python
 para campos nas tabelas do banco de dados.
 
 Um((("&#x005F;&#x005F;get&#x005F;&#x005F;")))((("&#x005F;&#x005F;set&#x005F;&#x005F;")))((("&#x005F;&#x005F;delete&#x005F;&#x005F;"))) descritor é uma classe que implementa um protocolo dinâmico, composto pelos métodos `+__get__+`, `+__set__+`, e `+__delete__+`. A classe `property` implementa o protocolo de descritor completo. Como habitual em protocolos dinâmicos, implementações parciais são aceitáveis. E, na verdade, a maioria dos descritores que vemos em código real implementa apenas
@@ -186,18 +186,20 @@ ValueError: value must be > 0
 Ao programar os métodos `+__get__+` e `+__set__+` de um descritor, tenha em mente o significado dos argumentos `self` e `instance`: `self` é a instância do descritor, `instance` é a instância gerenciada. Descritores que gerenciam atributos de instância devem armazenar os valores nas instâncias gerenciadas. É por isso que Python fornece o argumento `instance` aos métodos do descritor.
 ====
 
-Pode ser tentador, mas é um erro, armazenar o valor de cada atributo gerenciado na própria instância do descritor. Em outras palavras, em vez de escrever o método `+__set__+` assim:
+Pode ser tentador armazenar o valor de cada atributo gerenciado no próprio do descritor, mas é um erro. 
 
-[source, python]
-----
-    instance.__dict__[self.storage_name] = value  # certo
-----
-
-seria um erro escrever assim:
+Em outras palavras, seria errado armazenar o valor no `self.__dict__`:
 
 [source, python]
 ----
     self.__dict__[self.storage_name] = value  # errado
+----
+
+O correto é armazenar o valor no `instance.__dict__`:
+
+[source, python]
+----
+    instance.__dict__[self.storage_name] = value  # certo
 ----
 
 Para entender por que isso está errado, pense no significado dos dois primeiros
