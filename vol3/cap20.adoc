@@ -132,10 +132,11 @@ Nestes exemplos, a tarefa é baixar 20 arquivos, com poucos kilobytes cada um.
 Se você escalar a tarefa para centenas de downloads,
 os scripts concorrentes podem superar o código sequencial por um fator de 20 ou mais.
 
+<<<
 [WARNING]
 ====
 
-Ao testar clientes HTTP concorrentes usando servidores Web públicos, você pode
+Ao testar clientes HTTP concorrentes acessando servidores Web públicos, você pode
 acidentalmente lançar um ataque de negação de serviço (DoS, _Denial of Service_,
 negação de serviço),
 ou se tornar suspeito de tentar um ataque. No caso do
@@ -183,6 +184,7 @@ scripts que usam concorrência.
 
 ====
 
+<<<
 [[flags_module_ex]]
 .flags.py: script de download sequencial; algumas funções serão reutilizadas pelos outros scripts
 ====
@@ -260,13 +262,15 @@ https://fpy.li/20-5[_requests_],
 mas foi desenvolvida sobre bases mais modernas.
 Em particular, _HTTPX_ oferece APIs síncronas e assíncronas,
 então podemos usá-la em todos os exemplos de clientes HTTP neste capítulo e no próximo.
+
 A biblioteca padrão do Python contém o módulo `urllib.request`,
 mas sua API é somente síncrona, e não é nada amigável.
 ====
 
 Não há nada de novo em _flags.py_, mas serve de base para comparação
 com outros scripts, e o usei como uma biblioteca, para evitar código redundante ao implementá-los.
-Vamos ver agora uma reimplementação usando `concurrent.futures`.((("", startref="IOsequen20")))
+
+Vamos ver agora implementação concorrente usando `concurrent.futures`.((("", startref="IOsequen20")))
 
 [[downloading_with_futures_sec]]
 ==== Download com `concurrent.futures`
@@ -275,7 +279,7 @@ Os((("network I/O", "downloading with concurrent.futures",
 id="IOfutures20")))((("concurrent.futures", "downloading with", id="confut20")))
 principais recursos do pacote `concurrent.futures` são as classes
 `ThreadPoolExecutor` e `ProcessPoolExecutor`, que implementam uma API para
-submeter _callables_ (invocáveis) para execução em um banco de threads ou
+submeter  invocáveis (_callables_) para execução em um banco de threads ou
 processos (_thread pool_ ou _process pool_).
 As classes gerenciam de forma transparente um banco de threads ou
 processos de trabalho, e filas para distribuição de tarefas e coleta de
@@ -285,6 +289,7 @@ componentes em um caso de uso simples como nossos downloads de bandeiras.
 
 O <<flags_threadpool_ex>> mostra a forma mais fácil de implementar os downloads de forma concorrente, usando o método `ThreadPoolExecutor.map`.
 
+<<<
 [[flags_threadpool_ex]]
 .flags_threadpool.py: script de download com threads, usando `futures.ThreadPoolExecutor`
 ====
@@ -345,7 +350,8 @@ Concluindo: o valor default calculado de `max_workers` é razoável, e
 Entender a lógica por trás de `max_workers` pode ajudar a decidir quando e como
 definir um valor diferente do default em seu código.
 
-A biblioteca se chama `concurrency.futures`, mas não há qualquer _future_
+<<<
+A biblioteca chama-se `concurrency.futures`, mas não há qualquer _future_
 à vista no <<flags_threadpool_ex>>,
 então você pode estar se perguntando onde eles estão.
 A próxima seção explica.((("", startref="confut20")))((("", startref="IOfutures20")))
@@ -386,6 +392,7 @@ O código da aplicação não deve mudar o estado de um _future_:
 o framework de concorrência muda o estado de um _future_ quando
 o processamento que ele representa termina, e não controlamos quando isso acontece.
 
+<<<
 Os dois tipos de `Future` têm um método `.done()` não-bloqueante, que devolve um `bool` informando se o invocável encapsulado por aquele `future` foi ou não executado.
 Entretanto, em vez de perguntar repetidamente se um _future_ terminou, o código cliente em geral pede para ser notificado.
 Por isso as duas classes `Future` têm um método `.add_done_callback()`:
@@ -476,6 +483,7 @@ Aumentar `max_workers` para `5` aumentará a variação na ordem dos resultados.
 Diminuir aquele valor para `1` fará o script rodar sequencialmente, e a ordem dos resultados será sempre a ordem das chamadas a `submit`.
 ====
 
+<<<
 Vimos duas variantes do script de download usando `concurrent.futures`:
 uma no <<flags_threadpool_ex>> com `ThreadPoolExecutor.map` e
 uma no <<flags_threadpool_futures_ex>> com `futures.as_completed`.
@@ -524,6 +532,7 @@ O construtor de `ProcessPoolExecutor` também tem um parâmetro `max_workers`, q
 por default é `None`. Nesse caso, o executor limita o número de processos de
 trabalho ao número resultante de uma chamada a `os.cpu_count()`.
 
+<<<
 Processos usam mais memória e demoram mais para iniciar que threads, então o real valor de of `ProcessPoolExecutor` é em tarefas de uso intensivo da CPU.
 Vamos voltar ao exemplo de teste de checagem de números primos da <<naive_multiprocessing_sec>>, e reescrevê-lo com `concurrent.futures`.
 
@@ -575,7 +584,7 @@ Se você rodar o <<proc_pool_py>>, verá os resultados aparecendo em ordem rigor
 Por outro lado, a ordem da saída de _procs.py_ (da <<proc_based_solution>>) é determinada pela dificuldade em checar se cada número é ou não primo.
 Por exemplo, _procs.py_ mostra o resultado para 7777777777777777 próximo ao topo, pois ele tem 7 como divisor, então `is_prime` rapidamente determina que ele não é primo.
 
-O número 7777777536340681 é 88191709^2^. Como estes fatores grandes, `is_prime` vai demorar mais para determinar que é um número composto,
+O número 7777777536340681 é 88191709^2^. Como este fator é grande, `is_prime` vai demorar mais para determinar que é um número composto,
 e ainda mais para descobrir que 7777777777777753 é primo. Por isso esses números aparecem perto do final da saída do _procs.py_ original.
 
 Ao rodar _proc_pool.py_, podemos observar não apenas a ordem descendente dos resultados, mas também que o programa parece emperrar após mostrar o resultado de 9999999999999999.
@@ -756,6 +765,7 @@ ocorre com `loiter(3)`.
 <10> Há um intervalo de 2s até `loiter(4)` terminar, porque ela começou em
 15:56:51 e cochilou por 4s.
 
+<<<
 A função `Executor.map` é fácil de usar, mas muitas vezes é preferível obter o resultado
 de cada tarefa assim que esteja pronta, e não necessariamente na ordem em que foram submetidas.
 Para isso, precisamos de uma combinação do método
@@ -925,7 +935,8 @@ Em resumo, o _README.adoc_ descreve como rodar:
 
 ====
 
-Por default, cada script _flags2*.py_ irá baixar as bandeiras dos 20 países mais populosos do servidor `LOCAL` (`http://localhost:8000/flags`), usando um número default de conexões concorrentes, que varia de script para script.
+<<<
+Por padrão, cada script _flags2*.py_ irá baixar as bandeiras dos 20 países mais populosos do servidor `LOCAL` (`http://localhost:8000/flags`), usando um número default de conexões concorrentes, que varia de script para script.
 O <<flags2_sequential_run>> mostra uma execução padrão do script  _flags2_sequential.py_ usando as configurações default.
 Para rodá-lo, você precisa de um servidor local, como explicado acima.
 
@@ -1012,10 +1023,10 @@ include::../code/20-executors/getflags/flags2_sequential.py[tags=FLAGS2_BASIC_HT
 <6> Qualquer outra exceção de `HTTPStatusError` é re-emitida e propagada para quem chamou a função.
 <7> Se a opção de linha de comando `-v/--verbose` está vigente, o código do país e a mensagem de status são exibidos; é assim que você verá o progresso no modo `verbose`.
 
-O <<flags2_download_many_seq>> lista a versão sequencial da função
+O <<flags2_download_many_seq>> é a versão sequencial de
 `download_many`. O código é simples, mas vale a pena estudar para compará-lo com
-as versões concorrentes que veremos a seguir. Note como ele informa o
-progresso, trata erros, e conta os downloads.
+as versões concorrentes que veremos depois. Note como ele exibe o
+progresso, trata erros e conta os downloads.
 
 [[flags2_download_many_seq]]
 .flags2_sequential.py: a implementação sequencial de `download_many`
@@ -1257,6 +1268,7 @@ Elas proporcionam comportamento e desempenho mais previsíveis.
 Isto é uma grande vantagem em ambientes de missão crítica altamente concorrentes,
 onde o Go pretende substituir {cpp}, Java e Python.
 
+<<<
 Enquanto Elixir e Go são competidores diretos no espaço da alta concorrência,
 seus projetos e filosofias atraem públicos diferentes.
 Ambos têm boas chances de prosperar.
