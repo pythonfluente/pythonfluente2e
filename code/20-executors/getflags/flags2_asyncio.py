@@ -71,7 +71,8 @@ async def supervisor(cc_list: list[str],
             try:
                 status = await coro  # <8>
             except httpx.HTTPStatusError as exc:
-                error_msg = 'HTTP error {resp.status_code} - {resp.reason_phrase}'
+                error_msg = ('HTTP error {resp.status_code}' +
+                             ' - {resp.reason_phrase}')
                 error_msg = error_msg.format(resp=exc.response)
                 error = exc  # <9>
             except httpx.RequestError as exc:
