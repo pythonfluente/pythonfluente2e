@@ -142,6 +142,7 @@ Unidades de execução::
     Python suporta de forma nativa três tipos de unidade de execução:
     _processos_, _threads_, e _corrotinas_.
 
+<<<
 Processo::
     Uma((("processes", "definition of term"))) instância de um programa de computador em execução, usando parte da memória e uma fatia do tempo da CPU.
     Os sistemas operacionais modernos em nossos computadores e celulares rodam rotineiramente centenas de processos de forma concorrente, cada um deles isolado em seu próprio espaço de memória privado.
@@ -330,7 +331,7 @@ Se um tempo de espera (_timeout_) em segundos é passado para `Event.wait(s)`, e
 A função `supervisor`, que aparece no <<spinner_thread_rest_ex>>, usa um `Event` para sinalizar para a função `spin` que ela deve encerrar.
 
 
-
+<<<
 [[spinner_thread_rest_ex]]
 .spinner_thread.py: as funções `supervisor` e `main`
 ====
@@ -346,7 +347,7 @@ include::../code/19-concurrency/spinner_thread.py[tags=SPINNER_THREAD_REST]
 é o estado da thread—significando aqui que ela ainda não foi iniciada.
 <5> Inicia a thread `spinner`.
 <6> Chama `slow`, que bloqueia a thread principal. Enquanto isso, a thread secundária está rodando a animação.
-<7> Muda o estado de `Event` para `True`; isso vai encerrar o laço `for` dentro da função `spin`.
+<7> Muda o estado de `Event` para `True`; isto vai encerrar o laço `for` em `spin`.
 <8> Espera até que a thread `spinner` termine.
 <9> Roda a função `supervisor`. Escrevi `main` e `supervisor` como funções separadas para deixar esse exemplo mais parecido com a versão `asyncio` no <<spinner_async_start_ex>>.
 
@@ -373,11 +374,9 @@ facilitando a conversão de programas simples de threads para processos, como mo
 ----
 include::../code/19-concurrency/spinner_proc.py[tags=SPINNER_PROC_IMPORTS]
 
-# [snip] o resto das funções spin e slow são iguais a spinner_thread.py
+# as funções spin, slow e main são iguais a spinner_thread.py
 
 include::../code/19-concurrency/spinner_proc.py[tags=SPINNER_PROC_SUPER]
-
-# [snip] main function is unchanged as well
 ----
 ====
 <1> A API básica de `multiprocessing` imita a API de `threading`, mas as dicas de tipo e o Mypy revelam esta diferença: `multiprocessing.Event` é uma função (e não uma classe como `threading.Event`) que retorna uma instância de `synchronize.Event`...
@@ -452,6 +451,7 @@ O <<spinner_async_start_ex>> demonstra as três principais formas de rodar uma c
 `await coro()`::
     É invocada dentro de uma corrotina para transferir o controle para o objeto corrotina retornado por `coro()`. Isto suspende a corrotina atual até que `coro` retorne. O valor da expressão `await` será o que quer que `coro` devolva como resultado.
 
+<<<
 [NOTE]
 ====
 Lembre-se: invocar uma corrotina como `coro()` retorna imediatamente um objeto corrotina, mas não executa o corpo da função `coro`.
@@ -473,6 +473,7 @@ include::../code/19-concurrency/spinner_async.py[tags=SPINNER_ASYNC_TOP]
 <3> `asyncio.CancelledError` é lançada quando o método `cancel` é chamado na `Task` que controla essa corrotina. É hora de sair do laço.
 <4> A corrotina `slow` também usa `await asyncio.sleep` em vez de `time.sleep`.
 
+<<<
 ===== Experimento: quebrar a animação para revelar um fato
 
 Aqui está um experimento que recomendo para entender como _spinner_async.py_ funciona. Importe o módulo `time`, daí vá até a corrotina `slow` e substitua a linha `await asyncio.sleep(3)` por uma chamada a `time.sleep(3)`, como no <<spinner_async_time_sleep_ex>>.
@@ -552,9 +553,8 @@ https://fpy.li/gunicorn[_Gunicorn_]—mencionado na <<wsgi_app_server_sec>>.
 
 O((("spinners (loading indicators)", "comparing supervisor functions"))) número
 de linhas de _spinner_thread.py_ e _spinner_async.py_ é quase o mesmo.
-As funções `supervisor` são a parte mais importante destes exemplos. Vamos compará-las mais
-detalhadamente. O <<thread_supervisor_ex>> mostra apenas a `supervisor` do
-<<spinner_thread_rest_ex>>.
+As funções `supervisor` são a parte mais importante destes exemplos. Vamos compará-las
+em detalhes.
 
 [[thread_supervisor_ex]]
 .spinner_thread.py: a função `supervisor` com threads
@@ -574,7 +574,7 @@ def supervisor() -> int:
 ----
 ====
 
-Para comparar, o <<asyncio_supervisor_ex>> mostra a corrotina  `supervisor` do <<spinner_async_start_ex>>.
+Para comparar, o <<asyncio_supervisor_ex>> mostra a corrotina `supervisor` do <<spinner_async_start_ex>>.
 
 [[asyncio_supervisor_ex]]
 .spinner_async.py: a corrotina assíncrona `supervisor`
@@ -603,7 +603,7 @@ ele já está agendado para rodar, mas uma instância de `Thread` precisa ser in
 Objetos `Task` oferecem o método `.cancel()`, que levantará um `CancelledError` na expressão `await` onde a corrotina está suspensa naquele momento.
 * A corrotina `supervisor` é acionada com `asyncio.run` na função `main`.
 
-Essa comparação ajuda a entender como a concorrência é orquestrada com `asyncio`,
+Esta comparação ajuda a entender como a concorrência é orquestrada com `asyncio`,
 em contraste com como isso é feito com o módulo `threading`, que pode ser mais familiar
 para quem já usou threads em qualquer linguagem.
 
@@ -711,10 +711,10 @@ Conseguimos nos safar usando threads para uma tarefa de processamento intensivo 
 
 Mas se você tiver duas ou mais threads disputando mais tempo da CPU, seu programa será mais lento que um programa sequencial.
 
-
-.Soneca profunda com `sleep(0)`
+<<<
+._Power nap_ (soneca rápida) com `sleep(0)`
 ****
-Uma((("spinners (loading indicators)", "keeping alive"))) maneira de manter a animação funcionando é reescrever `is_prime` como uma corrotina,
+Um((("spinners (loading indicators)", "keeping alive"))) jeito de manter a animação funcionando é reescrever `is_prime` como uma corrotina,
 e periodicamente chamar `asyncio.sleep(0)` em uma expressão `await`, para passar o controle de volta para o laço de eventos, como no <<example-19-11>>.
 
 [[example-19-11]]
@@ -725,7 +725,7 @@ e periodicamente chamar `asyncio.sleep(0)` em uma expressão `await`, para passa
 include::../code/19-concurrency/primes/spinner_prime_async_nap.py[tags=PRIME_NAP]
 ----
 ====
-<1> Vai dormir a cada 50.000 iterações (porque o argumento `step` em `range` é 2).
+<1> Dormir a cada 50.000 iterações (porque o argumento `step` em `range` é 2).
 
 O https://fpy.li/19-20[_Issue #284_] no repositório do `asyncio` trata do uso de `asyncio.sleep(0)`.
 
@@ -736,6 +736,7 @@ animação foi suave mas o programa rodou por 4,9s na minha máquina, quase 50% 
 mais que a função `primes.is_prime` rodando sozinha com o mesmo argumento
 (`5_000_111_000_222_021`).
 
+<<<
 Usar `await asyncio.sleep(0)` pode ser uma medida paliativa até o código assíncrono ser refatorado para delegar computações de uso intensivo da CPU para outro processo.
 Veremos como fazer isso com o https://fpy.li/19-21[`asyncio.loop.run_in_executor`], abordado no <<ch_async>>. Outra opção seria uma fila de tarefas, que vamos discutir brevemente na <<distributed_task_queues_sec>>.
 ****
@@ -768,6 +769,7 @@ A amostra inclui números primos pequenos e grandes, bem como números compostos
 O((("sequential.py program"))) programa _sequential.py_ fornece a linha base de desempenho.
 Aqui está o resultado de uma execução de teste:
 
+<<<
 [source]
 ----
 $ python3 sequential.py
@@ -891,12 +893,6 @@ programação concorrente, e também em sistemas distribuídos.
 
 Muito do código novo em  _procs.py_ se refere a configurar e usar filas. O início do arquivo está no <<ex_primes_procs_top>>.
 
-[WARNING]
-====
-`SimpleQueue` foi acrescentada a `multiprocessing` no Python 3.9.
-Se você estiver usando uma versão anterior de Python,
-pode substituir `SimpleQueue` por `Queue` no <<ex_primes_procs_top>>.
-====
 
 [[ex_primes_procs_top]]
 .procs.py: checagem de primos com múltiplos processos; importações, tipos, e funções
@@ -923,6 +919,7 @@ Temos que chamar essa `SimpleQueue` para criar uma fila. Mas não podemos usá-l
 <14> Inicia cada processo filho.
 <15> Coloca um `0` na fila para cada processo, para encerrá-los.
 
+<<<
 [[good_poison_pill_tip]]
 .Laços, sentinelas e pílulas venenosas
 ****
@@ -1088,6 +1085,7 @@ e agora qualquer melhoria significativa no desempenho precisa vir
 do aproveitamento de múltiplos núcleos ou do _hyperthreading_,
 avanços que só beneficiam código escrito para execução concorrente.
 
+<<<
 A história de Python começa no início dos anos 1990, quando as CPUs ainda
 estavam ficando exponencialmente mais rápidas na execução de código sequencial.
 Naquele tempo não se falava de CPUs com múltiplos núcleos, exceto para
@@ -1188,6 +1186,7 @@ Estes são apenas alguns exemplos para ilustrar como a comunidade de ciência de
 dados está criando soluções que aproveitam o melhor de Python e superam as
 limitações do runtime do CPython.
 
+<<<
 [[server_side_sec]]
 ==== Servidires para Web/Computação Móvel
 
@@ -1230,6 +1229,7 @@ Um deles é Martin Kleppmann, o autor de _Designing Data-Intensive Applications_
 Observe a <<one_possible_architecture_fig>>, o primeiro de muitos diagramas de arquitetura que adaptamos do livro de Kleppmann.
 Aqui há alguns componentes que vi em muitos ambientes Python onde trabalhei ou que conheci pessoalmente:
 
+<<<
 * Caches de aplicação:footnote:[Compare os caches de aplicação—usados diretamente pelo código de sua aplicação—com caches HTTP, que estariam no limite superior da <<one_possible_architecture_fig>>, servindo recursos estáticos como imagens e arquivos CSS ou JS. Redes de Fornecimento de Conteúdo (CDNs de _Content Delivery Networks_) oferecem outro tipo de cache HTTP, instalados em datacenters próximos aos usuários finais de sua aplicação.] _memcached_, _Redis_, _Varnish_
 * Bancos de dados relacionais: _PostgreSQL_, _MySQL_
 * Bancos de documentos: _Apache CouchDB_, _MongoDB_
@@ -1237,7 +1237,7 @@ Aqui há alguns componentes que vi em muitos ambientes Python onde trabalhei ou 
 * Filas de mensagens: _RabbitMQ_, _Redis_
 
 [[one_possible_architecture_fig]]
-.Uma arquitetura possível para um sistema, combinando diversos componentes.footnote:[Diagrama adaptado da Figura 1-1, _Designing Data-Intensive Applications_ de Martin Kleppmann (O'Reilly).]
+.Uma arquitetura possível combinando diversos componentes.footnote:[Diagrama adaptado da Figura 1-1, _Designing Data-Intensive Applications_ de Martin Kleppmann (O'Reilly).]
 image::../images/flpy_1903.png[Arquitetura para um sistema de dados combinando diversos componentes]
 
 Há outros produtos de código aberto extremamente robustos em cada uma dessas categorias.
@@ -1317,7 +1317,6 @@ https://fpy.li/19-45[_EuroPython 2019_]. Muito recomendado para usuários de
 _uWSGI_.]
 
 Lançado em 2018, o _NGINX Unit_ é um novo produto dos desenvolvedores do conhecido servidor HTTP e proxy reverso _NGINX_.
-
 O _mod_wsgi_ e o _Gunicorn_ só suportam aplicações Web Python,
 enquanto o _uWSGI_ e o _NGINX Unit_ funcionam também com outras linguagens.
 Para saber mais, consulte a documentação de cada um deles.
@@ -1360,6 +1359,7 @@ Esses produtos encapsulam filas de mensagens e oferecem uma API de alto nível
 para delegar tarefas a processos executores, possivelmente rodando em máquinas
 diferentes.
 
+<<<
 [NOTE]
 ====
 
@@ -1371,7 +1371,7 @@ renderizadores de PDFs.
 
 ====
 
-Citando diretamente o https://fpy.li/19-49[FAQ] da Celery, eis alguns casos de uso:
+Citando diretamente o https://fpy.li/19-49[«FAQ do Celery»], eis alguns casos de uso:
 
 [quote]
 ____
@@ -1395,6 +1395,7 @@ A arquitetura distribuída do _Celery_ e do _RQ_ usa um esquema similar.
 Ambos suportam o uso do banco de dados NoSQL https://fpy.li/19-50[_Redis_] para armazenar as filas de mensagens e resultados.
 O _Celery_ também suporta outras filas de mensagens, como a _RabbitMQ_ ou a _Amazon SQS_, e também alguns bancos de dados para armazenar resultados.
 
+<<<
 Isto encerra nossa introdução à concorrência em Python.
 Os dois próximos capítulos continuam nesse tema com mais código, demonstrando os pacotes `concurrent.futures` e `asyncio` da biblioteca padrão.((("", startref="CMmulti19")))((("", startref="Pmulti19")))
 
@@ -1426,6 +1427,8 @@ A GIL domina as discussões sobre computação concorrente e paralela em Python,
 Este foi o tema da <<py_in_multicore_world_sec>>.
 Por exemplo, a GIL não afeta muitos dos casos de uso de Python em administração de sistemas.
 Por outro lado, as comunidades de ciência de dados e de desenvolvimento para servidores evitaram os problemas com a GIL usando soluções robustas, criadas sob medida para suas necessidades específicas.
+
+<<<
 As últimas duas seções mencionaram os dois elementos comuns que sustentam o uso de Python em aplicações de servidor escaláveis:
 servidores de aplicação WSGI e filas de tarefas distribuídas.
 
@@ -1664,7 +1667,6 @@ de Frank McSherry, Michael Isard, e Derek G. Murray.
 Os autores identificaram sistemas paralelos de processamento de grafos apresentados em simpósios acadêmicos que
 precisavam de centenas de núcleos para superar "uma implementação competente com uma única thread."
 Eles também encontraram sistemas que "têm desempenho pior que uma thread em todas as configurações documentadas."
-
 Estes((("", startref="CMfurther19"))) resultados me lembram uma piada clássica entre _hackers_:
 
 [quote]
