@@ -35,7 +35,6 @@ def is_prime(n: int) -> bool:
         return True
     if n % 2 == 0:
         return False
-
     root = math.isqrt(n)
     for i in range(3, root + 1, 2):
         if n % i == 0:

@@ -65,7 +65,7 @@ que você pode querer estudar para conseguir concorrência e paralelismo de alto
 para além do que é possível com a biblioteca padrão de Python.
 
 .Nota sobre o cenário em 2026
-[NOTE]
+[WARNING]
 ====
 Contratualmente, esta tradução precisa seguir o conteúdo do
 _Fluent Python, Second Edition_, que publiquei pela O'Reilly em 2022.
@@ -220,11 +220,11 @@ A thread pode então tentar readquirir a GIL, mas se existirem outras threads es
 . Quando escrevemos código Python, não temos controle sobre a GIL. Mas uma função embutida ou uma extensão escrita em C—ou qualquer linguagem que trabalhe no nível da API Python/C—pode liberar a GIL enquanto estiver rodando alguma tarefa demorada.
 
 . Toda função na biblioteca padrão de Python que executa uma _syscall_ libera a
-GILfootnote:[Uma syscall é uma chamada a partir do código do usuário para uma
+GIL.footnote:[Uma syscall é uma chamada a partir do código do usuário para uma
 função do núcleo (_kernel_) do sistema operacional. E/S, temporizadores e travas
 são alguns dos serviços do núcleo do SO disponíveis através de syscalls. Para
 aprender mais sobre esse tópico, leia o artigo https://fpy.li/a6[«Chamada de
-sistema»] na Wikipedia.]. Isto inclui todas as funções que executam operações de
+sistema»] na Wikipedia.] Isto inclui todas as funções que executam operações de
 escrita e leitura de arquivos, escrita e leitura na rede, e `time.sleep()`.
 Muitas funções de uso intensivo da CPU nas bibliotecas NumPy/SciPy, bem como as
 funções de compressão e descompressão dos módulos `zlib` e `bz2`, também
@@ -632,32 +632,34 @@ startref="CMhello19")))
 Na((("concurrency models", "Global Interpreter Lock impact",
 id="CMimpact19")))((("Global Interpreter Lock (GIL)", id="gil19")))((("spinners (loading indicators)",
 "Global Interpreter Lock impact", id="SPgil19"))) versão
-com threads(<<spinner_thread_top_ex>>), você pode trocar a chamada
+com threads (<<spinner_thread_top_ex>>), você pode trocar a chamada
 `time.sleep(3)` na função `slow` por uma requisição de cliente HTTP de sua
 biblioteca favorita, e a animação continuará girando. Isso acontece porque
 qualquer boa biblioteca de programação para rede vai liberar a GIL enquanto
 estiver esperando uma resposta. Por padrão, toda operação de E/S em Python
 libera a GIL.
-
 Você também pode trocar a expressão `asyncio.sleep(3)` na corrotina `slow` para
 fazer `await` esperar a resposta de uma corrotina de biblioteca bem desenhada de
 acesso assíncrono à rede. Tais bibliotecas implementam corrotinas para devolver
 o controle para o laço de eventos enquanto esperam por uma resposta da rede.
 Enquanto isso, a animação seguirá girando.
 
-Com código de uso intensivo da CPU, a história é outra.
-Considere a função `is_prime` no <<def_is_prime_ex>>,
-que retorna `True` se o argumento for um número primo, `False` se não for.
+Mas, tudo pode mudar trocando `sleep()` por `is_prime()` (<<def_is_prime_ex>>).
 
 [[def_is_prime_ex]]
-.primes.py: uma checagem de números primos fácil de entender, do exemplo em https://fpy.li/aa[`ProcessPoolExecutor`] na documentação de Python]
+.primes.py: uma checagem de números primos fácil de entender, do exemplo em https://fpy.li/aa[`ProcessPoolExecutor`] na documentação de Python
 ====
 [source, python]
 ----
 include::../code/19-concurrency/primes/primes.py[tags=IS_PRIME]
 ----
 ====
-A chamada `is_prime(5_000_111_000_222_021)` leva cerca de 3s no laptop da empresa que estou usando agora.footnote:[É um MacBook Pro 15” de 2018, com uma CPU Intel Core i7 2.2 GHz de 6 núcleos.]
+
+A função `is_prime` é intensiva em CPU.
+Ela retorna `True` se o argumento for um número primo, `False` se não for.
+A chamada `is_prime(5_000_111_000_222_021)` leva cerca de 3s no laptop
+da firma que estou usando
+agora.footnote:[É um MacBook Pro 15” de 2018, com uma CPU Intel Core i7 2.2 GHz de 6 núcleos.]
 
 ==== Teste Rápido
 
@@ -682,8 +684,18 @@ Depois, copie, modifique e rode os exemplos _spinner_ como sugerido.
 Agora as respostas, da mais fácil para a mais difícil.
 
 Resposta para multiprocessamento (_spinner_proc.py_)::
-A animação é controlada por um processo filho, então continua girando enquanto o teste de números primos é computado no processo raiz.footnote:[Isso é verdade hoje porque você provavelmente está usando um SO moderno, com _multitarefa preemptiva_. O Windows antes da era NT e o MacOS antes da era OSX não eram "preemptivos", então qualquer processo podia tomar 100% da CPU e paralisar o sistema inteiro. Não estamos inteiramente livres desse tipo de problema hoje, mas confie na minha barba branca: esse tipo de coisa assombrava todos os usuários nos anos 1990, e a única cura era um reset de hardware.]
+A animação é controlada por um processo filho,
+então continua girando enquanto o teste de números primos é computado no processo raiz.
+Isso é verdade porque hoje usamos sistemas operacionais capazes de multitarefa preemptiva:
+o SO sabe suspender um processo demorado para dar chance a outros processos.footnote:[O
+Windows antes da era NT e o MacOS antes da era OSX não eram preemptivos,
+então qualquer processo podia tomar 100% da CPU e paralisar o sistema inteiro.
+Não estamos inteiramente livres desse tipo de problema hoje,
+mas confie na minha barba branca:
+esse tipo de coisa assombrava todos os usuários nos anos 1990,
+e a única cura era um reset de hardware.]
 
+<<<
 Resposta para asyncio (_spinner_async.py_)::
 Se((("coroutines", "Global Interpreter Lock impact"))) você chamar `is_prime(5_000_111_000_222_021)` na corrotina `slow` do exemplo _spinner_async.py_,
 a animação nunca vai aparecer.
@@ -744,15 +756,17 @@ Veremos como fazer isso com o https://fpy.li/19-21[`asyncio.loop.run_in_executor
 Até aqui experimentamos com uma única chamada para uma função de uso intensivo de CPU. A próxima seção apresenta a execução concorrente de múltiplas chamadas de uso intensivo da CPU.
 
 [[naive_multiprocessing_sec]]
-=== Um pool de processos caseiro
+=== Um banco de processos caseiro
 
 [NOTE]
 ====
 
-Não conheço boas traduções para _process pool_.
-Uma alternativa seria "um banco de processos".
+Não conheço uma tradução consagrada para _process pool_,
+mas "um banco de processos" faz sentido.
 A ideia é que vários processos são iniciados e ficam aguardando tarefas.
-Este padrão amortiza o custo de subir um processo para cada tarefa.
+Subir um processo é demorado e custoso, então é bom ter processos
+prontos para realizar tarefas, e também aproveitar cada processo para
+computar várias tarefas ao longo da sua vida.
 
 Escrevi((("concurrency models", "process pools", id="CMprocess19")))((("process pools", "example problem")))
 esta seção para mostrar o uso de um banco de processos em cenários de uso intensivo de CPU,
@@ -806,7 +820,7 @@ Neste exemplo, o tempo total é aproximadamente a soma do tempo de cada checagem
 mas está computado separadamente, como se vê no <<primes_sequential_ex>>.
 
 [[primes_sequential_ex]]
-.sequential.py: checagem de números primos em um pequeno conjunto de dados
+.sequential.py: checagem sequencial de números primos
 ====
 [source, python]
 ----
@@ -819,6 +833,7 @@ include::../code/19-concurrency/primes/sequential.py[]
 <3> Para cada número na amostra, chamamos `check` e apresentamos o resultado.
 <4> Calcula e mostra o tempo total decorrido.
 
+<<<
 [[proc_based_solution]]
 ==== Solução baseada em processos
 
@@ -1053,7 +1068,7 @@ ____
 
 
 [[py_in_multicore_world_sec]]
-=== Python no mundo multi-núcleo.
+=== Python no mundo paralelo
 
 Considere((("Python", "functioning with multicore processors",
 id="Pmulti19")))((("concurrency models", "multicore processors and",
@@ -1129,7 +1144,8 @@ redes definidas por software (SDN, _software-defined networking_) e hacking
 bibliotecas e tutoriais de sua própria autoria, ou criados pela grande
 comunidade de usuários da linguagem.
 
-Nesse campo, scripts Python automatizam tarefas de configuração, emitindo
+<<<
+Na administração de sistemas, scripts Python automatizam tarefas de configuração, enviando
 comandos a serem executados pelas máquinas remotas, então raramente há operações
 limitadas pela CPU da máquina do administrador de sistemas. Threads ou
 corrotinas são bastante adequadas para tais atividades. Em particular, o pacote
@@ -1138,10 +1154,10 @@ realizar as mesmas operações em muitas máquinas remotas ao mesmo tempo, sem
 grande complexidade.
 
 Além da biblioteca padrão, há muitos projetos populares baseados em Python para gerenciar clusters (_agrupamentos_) de servidores:
-ferramentas como o
-https://fpy.li/19-30[_Ansible_] e o
+ferramentas como
+https://fpy.li/19-30[_Ansible_] e
 https://fpy.li/19-31[_Salt_],
-bem como bibliotecas como a
+e bibliotecas como a
 https://fpy.li/19-32[_Fabric_].
 
 Há também um número crescente de bibliotecas para administração de sistemas que suportam corrotinas e `asyncio`.
@@ -1226,23 +1242,25 @@ mas felizmente alguns profissionais da área escreveram livros acessíveis,
 baseados em pesquisas sólidas e experiência prática.
 Um deles é Martin Kleppmann, o autor de _Designing Data-Intensive Applications_ (Projetando Aplicações de Uso Intensivo de Dados) (O'Reilly).
 
-Observe a <<one_possible_architecture_fig>>, o primeiro de muitos diagramas de arquitetura que adaptamos do livro de Kleppmann.
-Aqui há alguns componentes que vi em muitos ambientes Python onde trabalhei ou que conheci pessoalmente:
+Observe a <<one_possible_architecture_fig>>, um dos muitos diagramas de arquitetura do livro de Kleppmann.
 
-<<<
+[[one_possible_architecture_fig]]
+.Uma arquitetura possível combinando diversos componentes. Diagrama adaptado da Figura 1-1, de _Designing Data-Intensive Applications_ de Martin Kleppmann (O'Reilly).
+image::../images/flpy_1903.png[align="center",pdfwidth=12cm]
+
+
+Estes são alguns componentes que vi em muitos ambientes Python onde trabalhei ou que conheci pessoalmente:
+
 * Caches de aplicação:footnote:[Compare os caches de aplicação—usados diretamente pelo código de sua aplicação—com caches HTTP, que estariam no limite superior da <<one_possible_architecture_fig>>, servindo recursos estáticos como imagens e arquivos CSS ou JS. Redes de Fornecimento de Conteúdo (CDNs de _Content Delivery Networks_) oferecem outro tipo de cache HTTP, instalados em datacenters próximos aos usuários finais de sua aplicação.] _memcached_, _Redis_, _Varnish_
 * Bancos de dados relacionais: _PostgreSQL_, _MySQL_
 * Bancos de documentos: _Apache CouchDB_, _MongoDB_
 * Full-text indexes (_índices de texto integral_): _Elasticsearch_, _Apache Solr_
 * Filas de mensagens: _RabbitMQ_, _Redis_
 
-[[one_possible_architecture_fig]]
-.Uma arquitetura possível combinando diversos componentes.footnote:[Diagrama adaptado da Figura 1-1, _Designing Data-Intensive Applications_ de Martin Kleppmann (O'Reilly).]
-image::../images/flpy_1903.png[Arquitetura para um sistema de dados combinando diversos componentes]
-
 Há outros produtos de código aberto extremamente robustos em cada uma dessas categorias.
 Os grandes fornecedores de serviços na nuvem também oferecem suas próprias alternativas proprietárias
 
+<<<
 O diagrama de Kleppmann é genérico e independente da linguagem—como seu livro.
 Para aplicações de servidor em Python, dois componentes específicos são comumente utilizados:
 
@@ -1276,9 +1294,10 @@ A <<app_server_fig>> ilustra uma instalação WSGI típica.
 [TIP]
 ====
 
-Se quiséssemos fundir os dois diagramas, o conteúdo do retângulo tracejado na
-<<app_server_fig>> substituiria o retângulo sólido "Application code"(_código da
-aplicação_) no topo da <<one_possible_architecture_fig>>.
+Se quiséssemos integrar os dois diagramas, a
+<<app_server_fig>> inteira substituiria o
+retângulo sólido _Application code_ (código da
+aplicação) no topo da <<one_possible_architecture_fig>>.
 
 ====
 
@@ -1294,20 +1313,20 @@ mas pronunciado como a letra grega "µ," então o nome completo soa como
 
 * https://fpy.li/19-43[_NGINX Unit_]
 
+[[app_server_fig]]
+.Clientes se conectam a um servidor HTTP que entrega arquivos estáticos e roteia outras requisições para o servidor de aplicação, que gerencia processos filhos para executar o código da aplicação, utilizando múltiplos núcleos de CPU. A API WSGI integra o servidor de aplicação ao código da aplicação Python.
+image::../images/flpy_1904.png[align="center",pdfwidth=11cm]
+
 Para usuários do servidor HTTP Apache, _mod_wsgi_ é a melhor opção. Ele é tão
 antigo quanto a própria WSGI, mas é ativamente mantido, e agora pode ser iniciado
 via linha de comando com o `mod_wsgi-express`, que o torna mais fácil de
 configurar e mais apropriado para uso com containers Docker.
 
-[[app_server_fig]]
-.Clientes se conectam a um servidor HTTP que entrega arquivos estáticos e roteia outras requisições para o servidor de aplicação, que gerencia processos filhos para executar o código da aplicação, utilizando múltiplos núcleos de CPU. A API WSGI integra o servidor de aplicação ao código da aplicação Python.
-image::../images/flpy_1904.png["Diagrama de bloco mostrando o cliente conectado ao servidor HTTP, conectado ao servidor de aplicação, conectado a quatro processos Python."]
-
 O _uWSGI_ e o _Gunicorn_ são as escolhas mais populares entre os projetos
 recentes que conheço. Ambos são frequentemente combinados com o servidor HTTP
 _NGINX_. _uWSGI_ oferece muita funcionalidade adicional, incluindo um cache de
 aplicação, uma fila de tarefas, tarefas periódicas estilo cron, e muitas outras.
-Por outro lado, o _uWSGI_ é mais difícil de configurar corretamente que o
+Porém, o _uWSGI_ é mais difícil de configurar corretamente que o
 _Gunicorn_.footnote:[Os engenheiros da Bloomberg Peter Sperl e Ben Green
 escreveram https://fpy.li/19-44[_Configuring uWSGI for Production Deployment_]
 (Configurando o uWSGI para Implantação em Produção), explicando como muitas
@@ -1525,7 +1544,7 @@ um mergulho profundo no suporte nativo de Python a threads e processos,
 incluindo o gerenciamento da GIL por extensões usando a API C/Python.
 
 David Beazley apresentou uma exploração detalhada em https://fpy.li/19-65[_Understanding the Python GIL_]
-(_Entendendo a GIL de Python_).footnote:[Agradeço a Lucas Brunialti por me enviar um link para essa palestra.]
+(Entendendo a GIL de Python).footnote:[Agradeço a Lucas Brunialti por me enviar um link para essa palestra.]
 No slide 54 da https://fpy.li/19-66[apresentação],
 Beazley relata um aumento no tempo de processamento de um benchmark específico com o novo algoritmo da GIL, introduzido no Python 3.2.
 O problema não tem importância com cargas de trabalho reais, de acordo com um
@@ -1535,7 +1554,10 @@ https://fpy.li/19-68[_Python issue #7946_].
 
 ==== Concorrência além da biblioteca padrão
 
-O _Python Fluente_ se concentra nos recursos fundamentais da linguagem e nas partes centrais da biblioteca padrão. https://fpy.li/19-69[_Full Stack Python_] é um ótimo complemento para esse livro: é sobre o ecossistema de Python, com seções chamadas "Development Environments (_Ambientes de Desenvolvimento_)," "Data (_Dados_)," "Web Development (_Desenvolvimento Web_)," e "DevOps," entre outros.
+O _Python Fluente_ se concentra nos recursos fundamentais da linguagem e nas partes centrais da biblioteca padrão.
+https://fpy.li/19-69[_Full Stack Python_] é um ótimo complemento para esse livro:
+é sobre o ecossistema de Python, com seções intituladas
+_Development Environments_, _Data_, _Web Development_ e _DevOps_, entre outras.
 
 Já mencionei dois livros que abordam a concorrência usando a biblioteca padrão
 de Python e também incluem conteúdo significativo sobre bibliotecas externas
@@ -1563,6 +1585,8 @@ https://fpy.li/19-75[_Architecture Patterns with Python: Enabling Test-Driven De
 Duas bibliotecas elegantes e fáceis de usar para a paralelização de processos são a https://fpy.li/19-77[_lelo_] de João S. O. Bueno e a https://fpy.li/19-78[_python-parallelize_] de Nat Pryce.
 O pacote _lelo_ define um decorador `@parallel` que você pode aplicar a qualquer função para torná-la magicamente não-bloqueante:
 quando você chama uma função decorada, sua execução é iniciada em outro processo.
+
+<<<
 O pacote _python-parallelize_ de Nat Pryce fornece um gerador `parallelize`, que distribui a execução de um laço `for` por múltiplas CPUs.
 Ambos os pacotes são baseados na biblioteca _multiprocessing_.
 
@@ -1580,7 +1604,7 @@ Mark Shannon—também um mantenedor do Python—criou uma
 https://fpy.li/19-80[«tabela»] bem útil
 comparando os modelos de concorrência em Python, referida em uma discussão sobre subinterpretadores entre ele, Eric Snow e outros desenvolvedores na lista de discussão https://fpy.li/19-81[_python-dev_].
 Na tabela de Shannon, a coluna "Ideal CSP" se refere ao modelo teórico
-https://fpy.li/19-82[_Communicating Sequential Processes_] (processos sequenciais comunicantes), proposto por Tony Hoare em 1978,
+https://fpy.li/19-82[_Communicating Sequential Processes_] (Processos Sequenciais Comunicantes), proposto por Tony Hoare em 1978,
 que influenciou o projeto da linguagem Go.
 Go também permite objetos compartilhados, violando uma das restrições essenciais
 do CSP: as unidades de execução devem se comunicar somente por mensagens
@@ -1612,10 +1636,10 @@ recomendo esse livro por sua abordagem dos conceitos, da motivação e dos model
 
 Aprendi muito lendo https://fpy.li/19-93[_Seven Concurrency Models in Seven Weeks_],
 de Paul Butcher (Pragmatic Bookshelf), que traz o eloquente subtítulo _When Threads Unravel_.footnote:[NT: Trocadilho intraduzível com thread no sentido de "fio" ou "linha", algo como "Quando as linhas desfiam."]
-O capítulo 1 do livro apresenta os conceitos centrais e os desafios da programação com threads e travas em Java.footnote:[As APIs Python `threading` e `concurrent.futures` foram fortemente influenciadas pela biblioteca padrão de Java.]
+O capítulo 1 do livro apresenta os conceitos centrais e os desafios da programação com threads e travas em Java.footnote:[As APIs `threading` e `concurrent.futures` do Python foram fortemente influenciadas pela biblioteca padrão de Java.]
 Os outros seis capítulos do livro são dedicados ao que o autor considera as melhores alternativas para programação concorrente e paralela, e como funcionam com diferentes linguagens, ferramentas e bibliotecas.
 Os exemplos usam Java, Clojure, Elixir, e
-C (no capítulo sobre programação paralela com o framework https://fpy.li/19-94[OpenCL]).
+C (no capítulo sobre programação paralela com o framework https://fpy.li/19-94[_OpenCL_]).
 O modelo CSP é exemplificado com código Clojure, e não Go—que popularizou esta abordagem.
 Elixir é a linguagem dos exemplos que ilustram o modelo de atores.
 Um https://fpy.li/19-95[«capítulo bonus»] (disponível online gratuitamente) sobre atores usa Scala e o framework Akka.
@@ -1629,7 +1653,7 @@ mas o que já está publicado reflete anos de experiência adquirida a duras pen
 em sistema de missão crítica.
 
 O https://fpy.li/19-98[_Designing Data-Intensive Applications_]
-(Projetando aplicações intensivas em dados), de Martin
+(Projetando Aplicações Intensivas em Dados), de Martin
 Kleppmann (O'Reilly), é um dos raros livros escritos por um profissional com
 vasta experiência prática e também conhecimento acadêmico avançado sobre
 sistemas distribuídos. O autor trabalhou com infraestrutura de dados em larga
@@ -1784,3 +1808,5 @@ maximizar o desempenho. É difícil abandonar velhos hábitos.((("",
 startref="CMsoap19")))((("", startref="SSthread19")))
 
 ****
+
+<<<
