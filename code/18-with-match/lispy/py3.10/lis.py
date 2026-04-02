@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ################ Lispy: Scheme Interpreter in Python 3.10
 
