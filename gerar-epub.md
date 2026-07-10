@@ -54,13 +54,13 @@ docker run --rm \
 
 Neste comando:
 
-- `-it`: executa o container em modo interativo;
 - `--rm`: remove o container automaticamente após a execução;
 - `-v "$PWD:/book"`: monta a raiz do repositório no diretório `/book` dentro do container;
-- `-w /book/online`: define `/book/online` como diretório de trabalho, onde está localizado o arquivo mestre `Livro.adoc`;
-- `gem install asciidoctor-epub3 --no-document`: instala a ferramenta responsável pela geração do EPUB sem baixar a documentação das gems;
-- `asciidoctor-epub3 Livro.adoc`: processa o arquivo `/book/online/Livro.adoc`;
-- `-o '/book/Python Fluente, Segunda Edição (2023).epub'`: salva o EPUB gerado na raiz do repositório.
+- `-w /book`: define a raiz do repositório como diretório de trabalho;
+- `gem install asciidoctor-epub3 --no-document`: instala a ferramenta responsável pela geração dos arquivos EPUB sem baixar a documentação das gems;
+- `asciidoctor-epub3 vol1/vol1-cor.adoc`: gera o EPUB do Volume 1;
+- `asciidoctor-epub3 vol2/vol2-cor.adoc`: gera o EPUB do Volume 2;
+- `asciidoctor-epub3 vol3/vol3-cor.adoc`: gera o EPUB do Volume 3;
+- os arquivos gerados são salvos na raiz do repositório.
 
-
-Após isso o container irá executar e salvar automaticamente o livro `.epub` em sua máquina. Basta agora enviar o arquivo para o seu leitor de e-books.
+Após a execução, os três arquivos `.epub` serão salvos na raiz do repositório. Basta enviá-los para o seu leitor de e-books.
