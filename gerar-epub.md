@@ -39,13 +39,17 @@ cd pythonfluente2e
 Na raiz do repositório recém clonado, iremos executar um container que irá instalar as dependências para gerar o livro, e gerar o `.epub` na mesma raiz. Basta executar o seguinte comando:
 
 ```bash
-docker run -it --rm \
+docker run --rm \
   -v "$PWD:/book" \
-  -w /book/online \
+  -w /book \
   ruby \
   sh -c "gem install asciidoctor-epub3 --no-document &&
-         asciidoctor-epub3 Livro.adoc \
-           -o '/book/Python Fluente, Segunda Edição (2023).epub'"
+         asciidoctor-epub3 vol1/vol1-cor.adoc \
+           -o '/book/Python Fluente, Segunda Edição (2026), Volume 1 - Dados e Funções.epub' &&
+         asciidoctor-epub3 vol2/vol2-cor.adoc \
+           -o '/book/Python Fluente, Segunda Edição (2026), Volume 2 - Classes e Protocolos.epub' &&
+         asciidoctor-epub3 vol3/vol3-cor.adoc \
+           -o '/book/Python Fluente, Segunda Edição (2026), Volume 3 - Controle e Metaprogramação.epub'"
 ```
 
 Neste comando:
