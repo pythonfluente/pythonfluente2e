@@ -39,14 +39,28 @@ cd pythonfluente2e
 Na raiz do repositório recém clonado, iremos executar um container que irá instalar as dependências para gerar o livro, e gerar o `.epub` na mesma raiz. Basta executar o seguinte comando:
 
 ```bash
-docker run -it --rm -v .:/book ruby sh -c "gem install asciidoctor-epub3 && asciidoctor-epub3 /book/Livro.adoc -o '/book/Python Fluente, Segunda Edição (2023).epub' 2> /dev/null"
+docker run --rm \
+  -v "$PWD:/book" \
+  -w /book \
+  ruby \
+  sh -c "gem install asciidoctor-epub3 --no-document &&
+         asciidoctor-epub3 vol1/vol1-cor.adoc \
+           -o '/book/Python Fluente, Segunda Edição (2026), Volume 1 - Dados e Funções.epub' &&
+         asciidoctor-epub3 vol2/vol2-cor.adoc \
+           -o '/book/Python Fluente, Segunda Edição (2026), Volume 2 - Classes e Protocolos.epub' &&
+         asciidoctor-epub3 vol3/vol3-cor.adoc \
+           -o '/book/Python Fluente, Segunda Edição (2026), Volume 3 - Controle e Metaprogramação.epub'"
 ```
 
 Neste comando:
 
-- `-it`: Permite entrar no modo iterativo.
-- `--rm`: Remove o container após a saída.
-- `-v .:/book`: Monta o volume com o caminho da pasta raiz no container na em /book.
-- `sh -c "gem install asciidoctor-epub3 && asciidoctor-epub3 /book/Livro.adoc -o '/book/Python Fluente, Segunda Edição (2023).epub' 2> /dev/null"`: Executa o comando especificado dentro do container. O comando faz a instalação do asciidoctor-epub3 dentro do container e realiza o build do livro.
+- `--rm`: remove o container automaticamente após a execução;
+- `-v "$PWD:/book"`: monta a raiz do repositório no diretório `/book` dentro do container;
+- `-w /book`: define a raiz do repositório como diretório de trabalho;
+- `gem install asciidoctor-epub3 --no-document`: instala a ferramenta responsável pela geração dos arquivos EPUB sem baixar a documentação das gems;
+- `asciidoctor-epub3 vol1/vol1-cor.adoc`: gera o EPUB do Volume 1;
+- `asciidoctor-epub3 vol2/vol2-cor.adoc`: gera o EPUB do Volume 2;
+- `asciidoctor-epub3 vol3/vol3-cor.adoc`: gera o EPUB do Volume 3;
+- os arquivos gerados são salvos na raiz do repositório.
 
-Após isso o container irá executar e salvar automaticamente o livro `.epub` em sua máquina. Basta agora enviar o arquivo para o seu leitor de e-books.
+Após a execução, os três arquivos `.epub` serão salvos na raiz do repositório. Basta enviá-los para o seu leitor de e-books.
